@@ -83,7 +83,7 @@ const createRepo = (token, name) => {
     private: true,
     auto_init: true,
     description:
-      'Collection of LeetCode questions to ace the coding interview! - Created using [baekjoonHub](https://github.com/QasimWani/baekjoonHub).',
+      'Collection of LeetCode questions to ace the coding interview! - Created using [baekjoonHub](https://github.com/flaxinger/baekjoonHub).',
   };
   data = JSON.stringify(data);
 
@@ -270,7 +270,7 @@ $('#hook_button').on('click', () => {
       if (token === null || token === undefined) {
         /* Not authorized yet. */
         $('#error').text(
-          'Authorization error - Grant baekjoonHub access to your GitHub account to continue (launch extension to proceed)',
+          'Authorization error - Grant BaekjoonHub access to your GitHub account to continue (launch extension to proceed)',
         );
         $('#error').show();
         $('#success').hide();
