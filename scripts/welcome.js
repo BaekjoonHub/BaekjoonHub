@@ -55,7 +55,7 @@ const statusCode = (res, status, name) => {
       chrome.storage.local.set({ mode_type: 'commit' }, () => {
         $('#error').hide();
         $('#success').html(
-          `Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="http://leetcode.com">LeetCoding</a>!`,
+          `Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="https://www.acmicpc.net/">BOJ</a>!`,
         );
         $('#success').show();
         $('#unlink').show();
@@ -176,7 +176,7 @@ const linkRepo = (token, name) => {
             () => {
               $('#error').hide();
               $('#success').html(
-                `Successfully linked <a target="blank" href="${res.html_url}">${name}</a> to baekjoonHub. Start <a href="http://leetcode.com">LeetCoding</a> now!`,
+                `Successfully linked <a target="blank" href="${res.html_url}">${name}</a> to baekjoonHub. Start <a href="https://www.acmicpc.net/">BOJ</a> now!`,
               );
               $('#success').show();
               $('#unlink').show();
@@ -190,12 +190,6 @@ const linkRepo = (token, name) => {
               /* Get problems solved count */
               chrome.storage.local.get('stats', (psolved) => {
                 const { stats } = psolved;
-                if (stats && stats.solved) {
-                  $('#p_solved').text(stats.solved);
-                  $('#p_solved_easy').text(stats.easy);
-                  $('#p_solved_medium').text(stats.medium);
-                  $('#p_solved_hard').text(stats.hard);
-                }
               });
             },
           );
@@ -259,12 +253,12 @@ $('#hook_button').on('click', () => {
     $('#success').show();
 
     /* 
-            Perform processing
-            - step 1: Check if current stage === hook.
-            - step 2: store repo name as repoName in chrome storage.
-            - step 3: if (1), POST request to repoName (iff option = create new repo) ; else display error message.
-            - step 4: if proceed from 3, hide hook_mode and display commit_mode (show stats e.g: files pushed/questions-solved/leaderboard)
-        */
+      Perform processing
+      - step 1: Check if current stage === hook.
+      - step 2: store repo name as repoName in chrome storage.
+      - step 3: if (1), POST request to repoName (iff option = create new repo) ; else display error message.
+      - step 4: if proceed from 3, hide hook_mode and display commit_mode (show stats e.g: files pushed/questions-solved/leaderboard)
+    */
     chrome.storage.local.get('baekjoonHub_token', (data) => {
       const token = data.baekjoonHub_token;
       if (token === null || token === undefined) {
