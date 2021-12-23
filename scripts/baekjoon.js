@@ -254,7 +254,6 @@ const discussionMsg = 'Prepend discussion post - baekjoonHub';
 const createNotesMsg = 'Create NOTES - baekjoonHub';
 
 
-
 /* state of upload for progress */
 let uploadState = { uploading: false }
 var bojData = {
