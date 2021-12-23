@@ -7,14 +7,14 @@
 </h1>
 
 <p align="center">
-  <a href="https://github.com/QasimWani/baekjoonHub/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
+  <a href="https://github.com/flaxinger/baekjoonHub/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
   <a href="https://discord.gg/anXT9vErxu"><img src="https://img.shields.io/discord/781373810251137074" alt="discord"></a>
   <a href="https://chrome.google.com/webstore/detail/baekjoonHub/aciombdipochlnkbpcbgdpjffcfdbggi"><img src="https://img.shields.io/chrome-web-store/v/aciombdipochlnkbpcbgdpjffcfdbggi.svg" alt="chrome-webstore"/></a>
   <a href="https://chrome.google.com/webstore/detail/baekjoonHub/aciombdipochlnkbpcbgdpjffcfdbggi"><img src="https://img.shields.io/chrome-web-store/d/aciombdipochlnkbpcbgdpjffcfdbggi.svg" alt="users"></a>
-  <a href="https://github.com/QasimWani/baekjoonHub/graphs/contributors" alt="Contributors">
-    <img src="https://img.shields.io/github/contributors/QasimWani/baekjoonHub" />
+  <a href="https://github.com/flaxinger/baekjoonHub/graphs/contributors" alt="Contributors">
+    <img src="https://img.shields.io/github/contributors/flaxinger/baekjoonHub" />
 </a>
-  <a href="https://twitter.com/intent/tweet?text=baekjoonHub%20-%20Automatically%20sync%20your%20code%20to%20GitHub%20after%20solving%20any%20leetcode%20problems!&url=https://github.com/QasimWani/baekjoonHub&hashtags=javascript,github,leetcode,coding,interview,chrome"> <img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social"> </a>
+  <a href="https://twitter.com/intent/tweet?text=baekjoonHub%20-%20Automatically%20sync%20your%20code%20to%20GitHub%20after%20solving%20any%20leetcode%20problems!&url=https://github.com/flaxinger/baekjoonHub&hashtags=javascript,github,leetcode,coding,interview,chrome"> <img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social"> </a>
  
 
 </p>
@@ -54,7 +54,7 @@ Moreover, pushing code manually to GitHub from BOJ is very time consuming. So, w
 
 ## How does baekjoonHub work?     
 
-<h4> Your baekjoonHub portfolio could like <a href="https://github.com/QasimWani/leetcode"> this </a>!  </h4>
+<h4> Your baekjoonHub portfolio could like <a href="https://github.com/flaxinger/leetcode"> this </a>!  </h4>
 <p>It's as simple as:</p>
 <ol>
   <li>After installation, launch baekjoonHub.</li>
@@ -64,7 +64,7 @@ Moreover, pushing code manually to GitHub from BOJ is very time consuming. So, w
 </ol>
 
 
-#### BONUS: Star [this repository](https://github.com/QasimWani/baekjoonHub) for further development of features. If you want a particular feature, simply [request](https://github.com/QasimWani/baekjoonHub/labels/feature) for it!
+#### BONUS: Star [this repository](https://github.com/flaxinger/baekjoonHub) for further development of features. If you want a particular feature, simply [request](https://github.com/flaxinger/baekjoonHub/labels/feature) for it!
 
 
 ## Why did I build baekjoonHub?

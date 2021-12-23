@@ -34,9 +34,8 @@
         "https://github.com/*"
       ],
       "js": [
-        "scripts/leetcode.js",
-        "scripts/authorize.js",
-        "scripts/gfg.js"
+        "scripts/baekjoon.js",
+        "scripts/authorize.js"
       ],
       "run_at": "document_idle"
     }
