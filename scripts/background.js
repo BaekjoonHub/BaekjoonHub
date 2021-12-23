@@ -6,19 +6,19 @@ function handleMessage(request) {
   ) {
     /* Set username */
     chrome.storage.local.set(
-      { leethub_username: request.username },
+      { baekjoonHub_username: request.username },
       () => {
-        window.localStorage.leethub_username = request.username;
+        window.localStorage.baekjoonHub_username = request.username;
       },
     );
 
     /* Set token */
-    chrome.storage.local.set({ leethub_token: request.token }, () => {
+    chrome.storage.local.set({ baekjoonHub_token: request.token }, () => {
       window.localStorage[request.KEY] = request.token;
     });
 
     /* Close pipe */
-    chrome.storage.local.set({ pipe_leethub: false }, () => {
+    chrome.storage.local.set({ pipe_baekjoonHub: false }, () => {
       console.log('Closed pipe.');
     });
 
