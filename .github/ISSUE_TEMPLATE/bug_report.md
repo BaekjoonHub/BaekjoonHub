@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve BaekjunHub
+about: Create a report to help us improve baekjoonHub
 title: ''
 labels: bug
 assignees: QasimWani

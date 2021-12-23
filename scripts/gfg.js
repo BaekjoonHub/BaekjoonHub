@@ -8,9 +8,9 @@
 
 // console.log("started gfg script");
 /* Commit messages */
-const README_MSG = 'Create README - BaekjunHub';
-const SUBMIT_MSG = 'Added solution - BaekjunHub';
-const UPDATE_MSG = 'Updated solution - BaekjunHub';
+const README_MSG = 'Create README - baekjoonHub';
+const SUBMIT_MSG = 'Added solution - baekjoonHub';
+const UPDATE_MSG = 'Updated solution - baekjoonHub';
 let START_MONITOR = true;
 const toKebabCase = (string) => {
   return string
@@ -61,7 +61,7 @@ function getCode() {
   // console.log(editorContent);
   var para = document.createElement("pre");
   para.innerText+=editorContent;
-  para.setAttribute("id","codeDataBaekjunHub")
+  para.setAttribute("id","codeDatabaekjoonHub")
   document.body.appendChild(para);
   // console.log(para);
   `;
@@ -76,7 +76,7 @@ function getCode() {
     document.head ||
     document.documentElement
   ).appendChild(script);
-  const text = document.getElementById('codeDataBaekjunHub').innerText;
+  const text = document.getElementById('codeDatabaekjoonHub').innerText;
 
   let nodeDeletionScript = `
   document.body.removeChild(para)
