@@ -249,9 +249,9 @@ const categories = {
 }
 
 /* Commit messages */
-const readmeMsg = 'Create README - BaekjunHub';
-const discussionMsg = 'Prepend discussion post - BaekjunHub';
-const createNotesMsg = 'Create NOTES - BaekjunHub';
+const readmeMsg = 'Create README - baekjoonHub';
+const discussionMsg = 'Prepend discussion post - baekjoonHub';
+const createNotesMsg = 'Create NOTES - baekjoonHub';
 
 
 
@@ -302,6 +302,7 @@ const loader = setInterval(() => {
     startUpload();
     chrome.storage.local.get('stats', (s) => {
       const { stats } = s;
+      if(debug) console.log(stats);
       const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
       let sha = null;
       let recentSubmissionId = null;
@@ -355,9 +356,7 @@ const loader = setInterval(() => {
           ); // Encode `code` to base64
         }, 2000);
       }
-    });
-
-    
+    });    
   }
 }, 1000);
 
@@ -475,15 +474,15 @@ function uploadGit(
   cb = undefined
 ) {
   /* Get necessary payload data */
-  chrome.storage.local.get('BaekjunHub_token', (t) => {
-    const token = t.BaekjunHub_token;
+  chrome.storage.local.get('baekjoonHub_token', (t) => {
+    const token = t.baekjoonHub_token;
     if (token) {
       chrome.storage.local.get('mode_type', (m) => {
         const mode = m.mode_type;
         if (mode === 'commit') {
           /* Get hook */
-          chrome.storage.local.get('BaekjunHub_hook', (h) => {
-            const hook = h.BaekjunHub_hook;
+          chrome.storage.local.get('baekjoonHub_hook', (h) => {
+            const hook = h.baekjoonHub_hook;
             if (hook) {
               /* Get SHA, if it exists */
 
@@ -556,7 +555,6 @@ function findData(){
 }
 
 function findFromResultTable(){
-
   bojData.submission.memory = document.getElementById("status-table").childNodes[1].childNodes[0].childNodes[4].innerText;
   bojData.submission.runtime = document.getElementById("status-table").childNodes[1].childNodes[0].childNodes[5].innerText;
   bojData.meta.language = document.getElementById("status-table").childNodes[1].childNodes[0].childNodes[6].childNodes[0].innerHTML;
@@ -611,7 +609,7 @@ function findSolvedAPI(){
       var leveldoc = JSON.parse(this.response);
       bojData.meta.title = leveldoc.titleKo.replace(/\s+/g, '-');
       bojData.meta.level = bj_level[leveldoc.level];
-      bojData.meta.message = `[${bojData.meta.level}] Title: ${bojData.meta.title} Time: ${bojData.submission.runtime} ms, Memory: ${bojData.submission.memory} KB -BaekjunHub`; 
+      bojData.meta.message = `[${bojData.meta.level}] Title: ${bojData.meta.title} Time: ${bojData.submission.runtime} ms, Memory: ${bojData.submission.memory} KB -baekjoonHub`; 
       var string = '';
       leveldoc.tags.forEach((tag)=>string+=categories[tag.key]+'('+tag.key+"), ");
       console.log(string.length);
@@ -695,14 +693,14 @@ function startUploadCountDown() {
 // Upload icon - Set Loading Icon
 /* start upload will inject a spinner on left side to the "Run Code" button */
 function startUpload() {
-  elem = document.getElementById('BaekjunHub_progress_anchor_element')
+  elem = document.getElementById('baekjoonHub_progress_anchor_element')
   if (elem !== undefined) {
     elem = document.createElement('span')
-    elem.id = "BaekjunHub_progress_anchor_element"
+    elem.id = "baekjoonHub_progress_anchor_element"
     elem.className = "runcode-wrapper__8rXm"
     elem.style = "margin-left: 10px;padding-top: 0px;"
   }
-  elem.innerHTML = `<div id="BaekjunHub_progress_elem" class="BaekjunHub_progress"></div>`
+  elem.innerHTML = `<div id="baekjoonHub_progress_elem" class="baekjoonHub_progress"></div>`
   target = document.getElementById("status-table").childNodes[1].childNodes[0].childNodes[3];
   if (target.childNodes.length > 0) {
     target.childNodes[0].append(elem);
@@ -712,9 +710,9 @@ function startUpload() {
 }
 
 // Upload icon - Set Completed Icon
-/* This will create a tick mark before "Run Code" button signalling BaekjunHub has done its job */
+/* This will create a tick mark before "Run Code" button signalling baekjoonHub has done its job */
 function markUploaded() {
-  elem = document.getElementById("BaekjunHub_progress_elem");
+  elem = document.getElementById("baekjoonHub_progress_elem");
   elem.className = "";
   style = 'display: inline-block;transform: rotate(45deg);height:13px;width:5px;border-bottom:3px solid #78b13f;border-right:3px solid #78b13f;'
   elem.style = style;
@@ -723,7 +721,7 @@ function markUploaded() {
 // Upload icon - Set Failed Icon
 /* This will create a failed tick mark before "Run Code" button signalling that upload failed */
 function markUploadFailed() {
-  elem = document.getElementById("BaekjunHub_progress_elem");
+  elem = document.getElementById("baekjoonHub_progress_elem");
   elem.className = "";
   style = 'display: inline-block;transform: rotate(45deg);height:13px;width:5px;border-bottom:3px solid red;border-right:3px solid red;'
   elem.style = style;
@@ -732,11 +730,11 @@ function markUploadFailed() {
 /* Sync to local storage */
 chrome.storage.local.get('isSync', (data) => {
   keys = [
-    'BaekjunHub_token',
-    'BaekjunHub_username',
-    'pipe_BaekjunHub',
+    'baekjoonHub_token',
+    'baekjoonHub_username',
+    'pipe_baekjoonHub',
     'stats',
-    'BaekjunHub_hook',
+    'baekjoonHub_hook',
     'mode_type',
   ];
   if (!data || !data.isSync) {
@@ -746,11 +744,11 @@ chrome.storage.local.get('isSync', (data) => {
       });
     });
     chrome.storage.local.set({ isSync: true }, (data) => {
-      if(debug) console.log('BaekjunHub Synced to local values');
+      if(debug) console.log('baekjoonHub Synced to local values');
     });
   } else {
     if(debug) console.log(data);
-    if(debug) console.log('BaekjunHub Local storage already synced!');
+    if(debug) console.log('baekjoonHub Local storage already synced!');
   }
 });
 
@@ -760,7 +758,7 @@ injectStyle();
 /* inject css style required for the upload progress feature */
 function injectStyle() {
   const style = document.createElement('style');
-  style.textContent = '.BaekjunHub_progress {\
+  style.textContent = '.baekjoonHub_progress {\
     display: inline-block; \
     pointer-events: none; \
     width: 0.8em; \

@@ -66,7 +66,7 @@ const statusCode = (res, status, name) => {
       });
       /* Set Repo Hook */
       chrome.storage.local.set(
-        { BaekjunHub_hook: res.full_name },
+        { baekjoonHub_hook: res.full_name },
         () => {
           console.log('Successfully set new repo hook');
         },
@@ -83,7 +83,7 @@ const createRepo = (token, name) => {
     private: true,
     auto_init: true,
     description:
-      'Collection of LeetCode questions to ace the coding interview! - Created using [BaekjunHub](https://github.com/QasimWani/BaekjunHub).',
+      'Collection of LeetCode questions to ace the coding interview! - Created using [baekjoonHub](https://github.com/QasimWani/baekjoonHub).',
   };
   data = JSON.stringify(data);
 
@@ -107,7 +107,7 @@ const linkStatusCode = (status, name) => {
     case 301:
       $('#success').hide();
       $('#error').html(
-        `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjunHub. <br> This repository has been moved permenantly. Try creating a new one.`,
+        `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to baekjoonHub. <br> This repository has been moved permenantly. Try creating a new one.`,
       );
       $('#error').show();
       break;
@@ -115,7 +115,7 @@ const linkStatusCode = (status, name) => {
     case 403:
       $('#success').hide();
       $('#error').html(
-        `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjunHub. <br> Forbidden action. Please make sure you have the right access to this repository.`,
+        `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to baekjoonHub. <br> Forbidden action. Please make sure you have the right access to this repository.`,
       );
       $('#error').show();
       break;
@@ -123,7 +123,7 @@ const linkStatusCode = (status, name) => {
     case 404:
       $('#success').hide();
       $('#error').html(
-        `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjunHub. <br> Resource not found. Make sure you enter the right repository name.`,
+        `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to baekjoonHub. <br> Resource not found. Make sure you enter the right repository name.`,
       );
       $('#error').show();
       break;
@@ -156,10 +156,10 @@ const linkRepo = (token, name) => {
           // unable to gain access to repo in commit mode. Must switch to hook mode.
           /* Set mode type to hook */
           chrome.storage.local.set({ mode_type: 'hook' }, () => {
-            console.log(`Error linking ${name} to BaekjunHub`);
+            console.log(`Error linking ${name} to baekjoonHub`);
           });
           /* Set Repo Hook to NONE */
-          chrome.storage.local.set({ BaekjunHub_hook: null }, () => {
+          chrome.storage.local.set({ baekjoonHub_hook: null }, () => {
             console.log('Defaulted repo hook to NONE');
           });
 
@@ -176,7 +176,7 @@ const linkRepo = (token, name) => {
             () => {
               $('#error').hide();
               $('#success').html(
-                `Successfully linked <a target="blank" href="${res.html_url}">${name}</a> to BaekjunHub. Start <a href="http://leetcode.com">LeetCoding</a> now!`,
+                `Successfully linked <a target="blank" href="${res.html_url}">${name}</a> to baekjoonHub. Start <a href="http://leetcode.com">LeetCoding</a> now!`,
               );
               $('#success').show();
               $('#unlink').show();
@@ -184,7 +184,7 @@ const linkRepo = (token, name) => {
           );
           /* Set Repo Hook */
           chrome.storage.local.set(
-            { BaekjunHub_hook: res.full_name },
+            { baekjoonHub_hook: res.full_name },
             () => {
               console.log('Successfully set new repo hook');
               /* Get problems solved count */
@@ -220,7 +220,7 @@ const unlinkRepo = () => {
     console.log(`Unlinking repo`);
   });
   /* Set Repo Hook to NONE */
-  chrome.storage.local.set({ BaekjunHub_hook: null }, () => {
+  chrome.storage.local.set({ baekjoonHub_hook: null }, () => {
     console.log('Defaulted repo hook to NONE');
   });
 
@@ -265,24 +265,24 @@ $('#hook_button').on('click', () => {
             - step 3: if (1), POST request to repoName (iff option = create new repo) ; else display error message.
             - step 4: if proceed from 3, hide hook_mode and display commit_mode (show stats e.g: files pushed/questions-solved/leaderboard)
         */
-    chrome.storage.local.get('BaekjunHub_token', (data) => {
-      const token = data.BaekjunHub_token;
+    chrome.storage.local.get('baekjoonHub_token', (data) => {
+      const token = data.baekjoonHub_token;
       if (token === null || token === undefined) {
         /* Not authorized yet. */
         $('#error').text(
-          'Authorization error - Grant BaekjunHub access to your GitHub account to continue (launch extension to proceed)',
+          'Authorization error - Grant baekjoonHub access to your GitHub account to continue (launch extension to proceed)',
         );
         $('#error').show();
         $('#success').hide();
       } else if (option() === 'new') {
         createRepo(token, repositoryName());
       } else {
-        chrome.storage.local.get('BaekjunHub_username', (data2) => {
-          const username = data2.BaekjunHub_username;
+        chrome.storage.local.get('baekjoonHub_username', (data2) => {
+          const username = data2.baekjoonHub_username;
           if (!username) {
             /* Improper authorization. */
             $('#error').text(
-              'Improper Authorization error - Grant BaekjunHub access to your GitHub account to continue (launch extension to proceed)',
+              'Improper Authorization error - Grant baekjoonHub access to your GitHub account to continue (launch extension to proceed)',
             );
             $('#error').show();
             $('#success').hide();
@@ -309,12 +309,12 @@ chrome.storage.local.get('mode_type', (data) => {
 
   if (mode && mode === 'commit') {
     /* Check if still access to repo */
-    chrome.storage.local.get('BaekjunHub_token', (data2) => {
-      const token = data2.BaekjunHub_token;
+    chrome.storage.local.get('baekjoonHub_token', (data2) => {
+      const token = data2.baekjoonHub_token;
       if (token === null || token === undefined) {
         /* Not authorized yet. */
         $('#error').text(
-          'Authorization error - Grant BaekjunHub access to your GitHub account to continue (click BaekjunHub extension on the top right to proceed)',
+          'Authorization error - Grant baekjoonHub access to your GitHub account to continue (click baekjoonHub extension on the top right to proceed)',
         );
         $('#error').show();
         $('#success').hide();
@@ -324,12 +324,12 @@ chrome.storage.local.get('mode_type', (data) => {
         document.getElementById('commit_mode').style.display = 'none';
       } else {
         /* Get access to repo */
-        chrome.storage.local.get('BaekjunHub_hook', (repoName) => {
-          const hook = repoName.BaekjunHub_hook;
+        chrome.storage.local.get('baekjoonHub_hook', (repoName) => {
+          const hook = repoName.baekjoonHub_hook;
           if (!hook) {
             /* Not authorized yet. */
             $('#error').text(
-              'Improper Authorization error - Grant BaekjunHub access to your GitHub account to continue (click BaekjunHub extension on the top right to proceed)',
+              'Improper Authorization error - Grant baekjoonHub access to your GitHub account to continue (click baekjoonHub extension on the top right to proceed)',
             );
             $('#error').show();
             $('#success').hide();
