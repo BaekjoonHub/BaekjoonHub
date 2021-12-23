@@ -35,8 +35,7 @@
       ],
       "js": [
         "scripts/baekjoon.js",
-        "scripts/authorize.js",
-        "scripts/gfg.js"
+        "scripts/authorize.js"
       ],
       "run_at": "document_idle"
     }
