@@ -1,8 +1,8 @@
 {
-  "name": "baekjoonHub",
-  "version": "0.0.8",
+  "name": "BaekjoonHub",
+  "version": "1.0.0",
   "private": true,
-  "description": "Automatically integrate your code with LeetCode and GitHub",
+  "description": "Automatically integrate your BOJ submissions to GitHub",
   "scripts": {
     "setup": "npm i",
     "format": "prettier --write **/*.{js,jsx,ts,tsx,css,html}",
