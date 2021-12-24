@@ -249,9 +249,9 @@ const categories = {
 }
 
 /* Commit messages */
-const readmeMsg = 'Create README - baekjoonHub';
-const discussionMsg = 'Prepend discussion post - baekjoonHub';
-const createNotesMsg = 'Create NOTES - baekjoonHub';
+const readmeMsg = 'Create README - BaekjoonHub';
+const discussionMsg = 'Prepend discussion post - BaekjoonHub';
+const createNotesMsg = 'Create NOTES - BaekjoonHub';
 
 
 /* state of upload for progress */
@@ -473,15 +473,15 @@ function uploadGit(
   cb = undefined
 ) {
   /* Get necessary payload data */
-  chrome.storage.local.get('baekjoonHub_token', (t) => {
-    const token = t.baekjoonHub_token;
+  chrome.storage.local.get('BaekjoonHub_token', (t) => {
+    const token = t.BaekjoonHub_token;
     if (token) {
       chrome.storage.local.get('mode_type', (m) => {
         const mode = m.mode_type;
         if (mode === 'commit') {
           /* Get hook */
-          chrome.storage.local.get('baekjoonHub_hook', (h) => {
-            const hook = h.baekjoonHub_hook;
+          chrome.storage.local.get('BaekjoonHub_hook', (h) => {
+            const hook = h.BaekjoonHub_hook;
             if (hook) {
               /* Get SHA, if it exists */
 
@@ -608,7 +608,7 @@ function findSolvedAPI(){
       var leveldoc = JSON.parse(this.response);
       bojData.meta.title = leveldoc.titleKo.replace(/\s+/g, '-');
       bojData.meta.level = bj_level[leveldoc.level];
-      bojData.meta.message = `[${bojData.meta.level}] Title: ${bojData.meta.title} Time: ${bojData.submission.runtime} ms, Memory: ${bojData.submission.memory} KB -baekjoonHub`; 
+      bojData.meta.message = `[${bojData.meta.level}] Title: ${bojData.meta.title} Time: ${bojData.submission.runtime} ms, Memory: ${bojData.submission.memory} KB -BaekjoonHub`; 
       var string = '';
       leveldoc.tags.forEach((tag)=>string+=categories[tag.key]+'('+tag.key+"), ");
       console.log(string.length);
@@ -692,14 +692,14 @@ function startUploadCountDown() {
 // Upload icon - Set Loading Icon
 /* start upload will inject a spinner on left side to the "Run Code" button */
 function startUpload() {
-  elem = document.getElementById('baekjoonHub_progress_anchor_element')
+  elem = document.getElementById('BaekjoonHub_progress_anchor_element')
   if (elem !== undefined) {
     elem = document.createElement('span')
-    elem.id = "baekjoonHub_progress_anchor_element"
+    elem.id = "BaekjoonHub_progress_anchor_element"
     elem.className = "runcode-wrapper__8rXm"
     elem.style = "margin-left: 10px;padding-top: 0px;"
   }
-  elem.innerHTML = `<div id="baekjoonHub_progress_elem" class="baekjoonHub_progress"></div>`
+  elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`
   target = document.getElementById("status-table").childNodes[1].childNodes[0].childNodes[3];
   if (target.childNodes.length > 0) {
     target.childNodes[0].append(elem);
@@ -709,9 +709,9 @@ function startUpload() {
 }
 
 // Upload icon - Set Completed Icon
-/* This will create a tick mark before "Run Code" button signalling baekjoonHub has done its job */
+/* This will create a tick mark before "Run Code" button signalling BaekjoonHub has done its job */
 function markUploaded() {
-  elem = document.getElementById("baekjoonHub_progress_elem");
+  elem = document.getElementById("BaekjoonHub_progress_elem");
   elem.className = "";
   style = 'display: inline-block;transform: rotate(45deg);height:13px;width:5px;border-bottom:3px solid #78b13f;border-right:3px solid #78b13f;'
   elem.style = style;
@@ -720,7 +720,7 @@ function markUploaded() {
 // Upload icon - Set Failed Icon
 /* This will create a failed tick mark before "Run Code" button signalling that upload failed */
 function markUploadFailed() {
-  elem = document.getElementById("baekjoonHub_progress_elem");
+  elem = document.getElementById("BaekjoonHub_progress_elem");
   elem.className = "";
   style = 'display: inline-block;transform: rotate(45deg);height:13px;width:5px;border-bottom:3px solid red;border-right:3px solid red;'
   elem.style = style;
@@ -729,11 +729,11 @@ function markUploadFailed() {
 /* Sync to local storage */
 chrome.storage.local.get('isSync', (data) => {
   keys = [
-    'baekjoonHub_token',
-    'baekjoonHub_username',
-    'pipe_baekjoonHub',
+    'BaekjoonHub_token',
+    'BaekjoonHub_username',
+    'pipe_BaekjoonHub',
     'stats',
-    'baekjoonHub_hook',
+    'BaekjoonHub_hook',
     'mode_type',
   ];
   if (!data || !data.isSync) {
@@ -743,11 +743,11 @@ chrome.storage.local.get('isSync', (data) => {
       });
     });
     chrome.storage.local.set({ isSync: true }, (data) => {
-      if(debug) console.log('baekjoonHub Synced to local values');
+      if(debug) console.log('BaekjoonHub Synced to local values');
     });
   } else {
     if(debug) console.log(data);
-    if(debug) console.log('baekjoonHub Local storage already synced!');
+    if(debug) console.log('BaekjoonHub Local storage already synced!');
   }
 });
 
@@ -757,7 +757,7 @@ injectStyle();
 /* inject css style required for the upload progress feature */
 function injectStyle() {
   const style = document.createElement('style');
-  style.textContent = '.baekjoonHub_progress {\
+  style.textContent = '.BaekjoonHub_progress {\
     display: inline-block; \
     pointer-events: none; \
     width: 0.8em; \
