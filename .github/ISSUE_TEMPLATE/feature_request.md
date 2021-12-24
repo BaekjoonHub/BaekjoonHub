@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: What would enhance your baekjoonHub experience?
+about: What would enhance your BaekjoonHub experience?
 title: ''
 labels: ''
 assignees: ''

@@ -19,8 +19,8 @@ $('#hook_URL').attr(
   `chrome-extension://${chrome.runtime.id}/welcome.html`,
 );
 
-chrome.storage.local.get('baekjoonHub_token', (data) => {
-  const token = data.baekjoonHub_token;
+chrome.storage.local.get('BaekjoonHub_token', (data) => {
+  const token = data.BaekjoonHub_token;
   if (token === null || token === undefined) {
     action = true;
     $('#auth_mode').show();
@@ -38,7 +38,7 @@ chrome.storage.local.get('baekjoonHub_token', (data) => {
               $('#commit_mode').show();
               /* Get problem stats and repo link */
               chrome.storage.local.get(
-                ['stats', 'baekjoonHub_hook'],
+                ['stats', 'BaekjoonHub_hook'],
                 (data3) => {
                   const { stats } = data3;
                   if (stats && stats.solved) {
@@ -47,10 +47,10 @@ chrome.storage.local.get('baekjoonHub_token', (data) => {
                     $('#p_solved_medium').text(stats.medium);
                     $('#p_solved_hard').text(stats.hard);
                   }
-                  const baekjoonHubHook = data3.baekjoonHub_hook;
-                  if (baekjoonHubHook) {
+                  const BaekjoonHubHook = data3.BaekjoonHub_hook;
+                  if (BaekjoonHubHook) {
                     $('#repo_url').html(
-                      `<a target="blank" style="color: cadetblue !important; font-size:0.8em;" href="https://github.com/${baekjoonHubHook}">${baekjoonHubHook}</a>`,
+                      `<a target="blank" style="color: cadetblue !important; font-size:0.8em;" href="https://github.com/${BaekjoonHubHook}">${BaekjoonHubHook}</a>`,
                     );
                   }
                 },
@@ -62,7 +62,7 @@ chrome.storage.local.get('baekjoonHub_token', (data) => {
         } else if (xhr.status === 401) {
           // bad oAuth
           // reset token and redirect to authorization process again!
-          chrome.storage.local.set({ baekjoonHub_token: null }, () => {
+          chrome.storage.local.set({ BaekjoonHub_token: null }, () => {
             console.log(
               'BAD oAuth!!! Redirecting back to oAuth process',
             );
