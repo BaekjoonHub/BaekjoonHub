@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve baekjoonHub
+about: Create a report to help us improve BaekjoonHub
 title: ''
 labels: bug
 assignees: flaxinger
