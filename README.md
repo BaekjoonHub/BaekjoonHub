@@ -31,9 +31,10 @@
 </tr></table>
 
 ## 백준허브란?(What is BaekjoonHub?)
-<p>백준 허브는 LeetCode의 개인 풀이를 github에 자동 커밋해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에 영감을 받아 만든 프로젝트입니다. 백준을 통해 알고리즘 공부를 하시는 분들이 보다 쉽게 코드를 저장하고 관리할 수 있도록 하기 위해 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.</p>
-<p>A chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://www.acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a> a similar extension for Leetcode.</p>
 
+<p>백준 허브는 LeetCode의 개인 풀이를 github에 자동 커밋해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에 영감을 받아 만든 프로젝트입니다. 백준을 통해 알고리즘 공부를 하시는 분들이 보다 쉽게 코드를 저장하고 관리할 수 있도록 하기 위해 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.()</p>
+<p>A chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://www.acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a> a similar extension for Leetcode.</p>
+<a href="https://github.com/flaxinger/BOJAutoCommit"> 예시 Repository</a>
 
 ## 작동방식(How it works)
 
@@ -61,11 +62,8 @@
 </ol>
 
 
-## How does BaekjoonHub work?     
-
-<h4> 예시 Repository: <a href="https://github.com/flaxinger/BOJAutoCommit"> flaxinger의 BaekjoonHub Repository </a></h4>
-<p>Setup 방식:</p>
-<strong>백준허브는 모든 정보를 크롬의 local storage에 저장합니다. 따라서 개인정보 유출에 대한 걱정은 하지 않으셔도 좋습니다.</strong>
+## Setup 방식(How to set it up)
+<strong>!! 백준허브는 모든 정보를 크롬의 local storage에 저장합니다. 따라서 개인정보 유출에 대한 걱정은 하지 않으셔도 좋습니다. !!</strong>
 <ol>
   <li>크롬에서 설치 후 우측 상단의 popup 버튼을 클릭합니다.</li>
   <li>"Authorize with GitHub" 버튼을 누르면 Repository 연동 화면이 표시됩니다.</li>
@@ -74,35 +72,6 @@
 </ol>
 
 
-#### BONUS: Star [this repository](https://github.com/flaxinger/BaekjoonHub) for further development of features. If you want a particular feature, simply [request](https://github.com/flaxinger/BaekjoonHub/labels/feature) for it!
 
 
-## Why did I build BaekjoonHub?
-<p>
-The coding interview is arguably the most important part of your interview process, given you get the interview first. As someone who's received multiple internship offers from Fortune 100 companies, getting the interview in the first place is not easy!<br>
-And that's what BaekjoonHub is supposed to do: indirectly improving your coding skills while improving your portfolio to ACE that interview at <em>insert_name_here</em>!
-</p>
 
-
-# How to set up BaekjoonHub for local development?
-
-<ol>
-  <li>Fork this repo and clone to your local machine</li>
-  <li>Go to <a href="chrome://extensions">chrome://extensions</a> </li>
-  <li>Enable <a href="https://www.mstoic.com/enable-developer-mode-in-chrome/">Developer mode</a> by toggling the switch on top right corner</li>
-  <li>Click 'Load unpacked'</li>
-  <li>Select the entire BaekjoonHub folder</li>
-  <li>Run "npm run setup" to install the developer dependencies</li>
-</ol>
-
-Other npm commands available:
-
-```
-npm run               Show list of commands available
-npm run format        Auto-format JavaScript, HTML/CSS
-npm run format-test   Test all code is formatted properly
-npm run lint          Lint JavaScript
-npm run lint-test     Test all code is linted proprely
-```
-
-#### And that should be it! Get Hacking...
