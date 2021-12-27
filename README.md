@@ -19,9 +19,6 @@
 </p>
 
 ## 지금 크롬 마켓에서 확인하세요!
-
-### Available on:
-
 <table style="border-collapse: separate;"><tr>
   <td style="border-spacing:2em 0"> 
       <a href="https://chrome.google.com/webstore/detail/BaekjoonHub/ccammcjdkpgjmcpijpahlehmapgmphmk">
