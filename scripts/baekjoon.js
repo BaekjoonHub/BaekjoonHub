@@ -1,7 +1,7 @@
 /* Enum for languages supported by LeetCode. */
 
 // Set to true to enable console log
-const debug = true;
+const debug = false;
 
 // Languages supported by BOJ
 const languages = {
@@ -58,6 +58,7 @@ const bj_level = {
   30:	"Ruby I",
 }
 
+// Solved.ac 기준 문제 분류
 const categories = {
   'math':'수학',
   'implementation':'구현',
@@ -256,6 +257,8 @@ const createNotesMsg = 'Create NOTES - BaekjoonHub';
 
 /* state of upload for progress */
 let uploadState = { uploading: false }
+
+// 파싱된 데이터를 저장하는 오브젝트
 var bojData = {
   // Meta data of problem
   'meta': {
@@ -277,7 +280,7 @@ var bojData = {
   }
 }
 
-
+// 메인 함수
 const loader = setInterval(() => {
 
   const successTagpre = document.getElementById("status-table");
@@ -314,6 +317,7 @@ const loader = setInterval(() => {
         recentSubmissionId = stats.submission[filePath].submissionId;
       }
 
+      // 현재 제출 번호가 기존 제출 번호와 같다면 실행 중지
       if(recentSubmissionId === bojData.submission.submissionId){
         if(uploadState['countdown']) clearTimeout(uploadState['countdown']); 
         delete uploadState['countdown']
@@ -322,11 +326,19 @@ const loader = setInterval(() => {
         console.log("Git up to date with submission ID "+recentSubmissionId);
         return;
       }
+      // 신규 제출 번호라면
       else{
         if(debug) console.log("Stats:");
         if(debug) console.log(stats);
         if(debug) console.log(bojData.meta.title.replace(/\s+/g, '-')); 
+        
+        // TODO: mumwa
+        // local storage의 submissionId와 현재 파싱된 bojData의 submissionId가 다를 때,
+        // 기존에 제출 내역이 있다면(기존 submissionId가 null이 아니라면) readme update
+        // Update의 역할:
+        //    실행 시간, 메모리 사용량 업데이트
 
+        // 신규 문제라면 문제 설명 커밋
         if (sha === null) {
           uploadGit(
             btoa(unescape(encodeURIComponent(bojData.meta.readme))),
@@ -336,7 +348,16 @@ const loader = setInterval(() => {
             'upload',
           );
         }
-        /* Upload code to Git */
+        
+        // TODO: mumwa
+        // local storage의 submissionId와 현재 파싱된 bojData의 submissionId가 다를 때,
+        // 기존에 제출 내역이 있다면(기존 submissionId가 null이 아니라면) 코드 업데이트
+        // 기존 제출 내역이 없다면 신규 코드 커밋
+        // 변경 방법:
+        //    uploadGit() 함수의 action 값을 'update'으로 바꾼다
+        //    update() 함수를 위의 목적에 맞게 변경한다.
+
+        // 코드 커밋
         setTimeout(function () {
           uploadGit(
             btoa(unescape(encodeURIComponent(bojData.submission.code))),
@@ -361,7 +382,9 @@ const loader = setInterval(() => {
 
 
 /* Main function for uploading code to GitHub repo, and callback cb is called if success */
+// 업로드 함수 - 신규 코드 커밋에 사용됨
 const upload = (token, hook, code, directory, filename, sha, msg, cb=undefined) => {
+
   // To validate user, load user object from GitHub.
   const URL = `https://api.github.com/repos/${hook}/contents/${directory}/${filename}`;
 
@@ -421,6 +444,7 @@ const upload = (token, hook, code, directory, filename, sha, msg, cb=undefined) 
 /* Main function for updating code on GitHub Repo */
 /* Currently only used for prepending discussion posts to README */
 /* callback cb is called on success if it is defined */
+// 업데이트 함수
 const update = (token, hook, addition, directory, msg, prepend, cb=undefined) => {
   const URL = `https://api.github.com/repos/${hook}/contents/${directory}/README.md`;
 
