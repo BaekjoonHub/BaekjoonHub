@@ -60,7 +60,6 @@
 
 
 ## Setup 방식(How to set it up)
-<strong>! 백준허브는 모든 정보를 크롬의 local storage에 저장합니다. 따라서 개인정보 유출에 대한 걱정은 하지 않으셔도 좋습니다. !</strong>
 <ol>
   <li>크롬에서 설치 후 우측 상단의 popup 버튼을 클릭합니다.</li>
   <li>"Authorize with GitHub" 버튼을 누르면 Repository 연동 화면이 표시됩니다.</li>
