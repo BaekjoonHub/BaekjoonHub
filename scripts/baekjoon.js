@@ -544,7 +544,7 @@ function findData(){
   bojData.meta.readme+="# ["+bojData.meta.level+"] "+bojData.meta.title+' - '+bojData.meta.problemId+'\n\n';
   bojData.meta.readme+="### 성능 요약\n\n";
   bojData.meta.readme+="메모리: "+bojData.submission.memory+'KB, ';
-  bojData.meta.readme+="시간: "+bojData.submission.memory+'ms\n\n';
+  bojData.meta.readme+="시간: "+bojData.submission.runtime+'ms\n\n';
   bojData.meta.readme+="### 분류\n\n";
   bojData.meta.readme+=bojData.meta.category+'\n\n';
   bojData.meta.readme+="### 문제 설명\n\n";
