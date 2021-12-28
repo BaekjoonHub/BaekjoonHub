@@ -1,7 +1,7 @@
 /* Enum for languages supported by LeetCode. */
 
 // Set to true to enable console log
-const debug = true;
+const debug = false;
 
 // Languages supported by BOJ
 const languages = {
@@ -541,14 +541,14 @@ function findData(){
   // code, message, title, difficulty
   findCode();
   bojData.meta.fileName = bojData.meta.title+languages[bojData.meta.language];
-  bojData.meta.readme+="# ["+bojData.meta.level+"] "+bojData.meta.title+' - '+bojData.meta.problemId+'\n\n';
-  bojData.meta.readme+="### 성능 요약\n\n";
-  bojData.meta.readme+="메모리: "+bojData.submission.memory+'KB, ';
-  bojData.meta.readme+="시간: "+bojData.submission.runtime+'ms\n\n';
-  bojData.meta.readme+="### 분류\n\n";
-  bojData.meta.readme+=bojData.meta.category+'\n\n';
-  bojData.meta.readme+="### 문제 설명\n\n";
-  bojData.meta.readme+=bojData.meta.problemDescription+'\n\n';
+  bojData.meta.readme+= `# [${bojData.meta.level}] ${bojData.meta.title} - ${bojData.meta.problemId} \n\n`;
+  bojData.meta.readme+= `[문제 링크](https://www.acmicpc.net/problem/${bojData.meta.problemId}) \n\n`;
+  bojData.meta.readme+= "### 성능 요약\n\n";
+  bojData.meta.readme+= `메모리: ${bojData.submission.memory} KB, `;
+  bojData.meta.readme+= `시간: ${bojData.submission.runtime} ms\n\n`;
+  bojData.meta.readme+= `### 분류\n\n`;
+  bojData.meta.readme+= bojData.meta.category+'\n\n';
+  bojData.meta.readme+= bojData.meta.problemDescription+'\n\n';
 
   console.log(bojData);
 }
@@ -574,7 +574,7 @@ function findCode() {
   // const e = document.getElementsByClassName('status-column__3SUg');
   if (checkElem(bojData.submission.submissionId)) {
     // for normal problem submisson
-    submissionURL = "https://www.acmicpc.net/source/" + bojData.submission.submissionId;
+    submissionURL = `https://www.acmicpc.net/source/${bojData.submission.submissionId}`;
     if(debug) console.log("https://www.acmicpc.net/source/"+bojData.submission.submissionId);
   } else{
     return;
@@ -591,7 +591,6 @@ function findCode() {
           'text/html',
         );
         var code = doc.getElementsByClassName('codemirror-textarea')[0].innerHTML;
-        
         bojData.submission.code = code.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');        
       }
     };
@@ -608,7 +607,7 @@ function findSolvedAPI(){
       var leveldoc = JSON.parse(this.response);
       bojData.meta.title = leveldoc.titleKo.replace(/\s+/g, '-');
       bojData.meta.level = bj_level[leveldoc.level];
-      bojData.meta.message = `[${bojData.meta.level}] Title: ${bojData.meta.title} Time: ${bojData.submission.runtime} ms, Memory: ${bojData.submission.memory} KB -BaekjoonHub`; 
+      bojData.meta.message = `[${bojData.meta.level}] Title: ${bojData.meta.title}, Time: ${bojData.submission.runtime} ms, Memory: ${bojData.submission.memory} KB -BaekjoonHub`; 
       var string = '';
       leveldoc.tags.forEach((tag)=>string+=categories[tag.key]+'('+tag.key+"), ");
       console.log(string.length);
@@ -665,8 +664,11 @@ function findProblemDescription() {
           this.responseText,
           'text/html',
         );
-        questionDescription = doc.getElementById('problem_description').innerText;
-        questionDescription = questionDescription.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\t/g, ' ').trim();
+        
+        questionDescription += `### 문제 설명\n\n${doc.getElementById('problem_description').innerText.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\t/g, ' ').trim()}\n`;
+        questionDescription += `### 입력 \n\n ${doc.getElementById('problem_input').innerText.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\t/g, ' ').trim()}\n`;
+        questionDescription += `### 출력 \n\n ${doc.getElementById('problem_output').innerText.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\t/g, ' ').trim()}\n`;
+        
       }
     };
     xhttp.open('GET', submissionURL, false);
