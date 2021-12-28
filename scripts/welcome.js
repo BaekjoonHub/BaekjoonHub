@@ -83,7 +83,7 @@ const createRepo = (token, name) => {
     private: true,
     auto_init: true,
     description:
-      'Collection of Baekjoon Online Judge questions to ace the coding interview! - Created using [BaekjoonHub](https://github.com/flaxinger/BaekjoonHub).',
+      '[백준 허브](https://github.com/flaxinger/BaekjoonHub)로 생성된 자동 푸시 리포지토리입니다',
   };
   data = JSON.stringify(data);
 
