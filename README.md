@@ -59,7 +59,7 @@
     (기본값은 private으로 되어있습니다).</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
-보다 구체적인 사용 방법을 알고 싶다면 다음 [링크](https://velog.io/@flaxinger/%EB%B0%B1%EC%A4%80%ED%97%88%EB%B8%8C-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95) 를 확인해주세요
+보다 구체적인 사용 방법을 알고 싶다면 다음 [링크](https://velog.io/@flaxinger/백준허브-사용-방법) 를 확인해주세요
 <br />
 <br />
 
