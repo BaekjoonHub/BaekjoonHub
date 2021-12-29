@@ -18,9 +18,11 @@
 ## 목차
 1. [크롬 마켓 링크](#지금-크롬-마켓에서-확인하세요)
 2. [백준허브란?](#백준허브란what-is-baekjoonhub) 
-3. [작동 방식](#작동방식how-it-works)
-   3.1. [업로드 시점](#1-업로드-시점)
-   3.2. [저장되는 정보](#2-저장되는-정보)
+3. [설치 및 연동](#설치-및-연동how-to-set-it-up)
+4. [작동 ](#작동원리how-it-works)
+     1. [업로드 시점](#1-업로드-시점)
+     2. [저장되는 정보](#2-저장되는-정보)
+5. [개발 참여](#개발-참여)
 
 
 ## 지금 크롬 마켓에서 확인하세요!
@@ -32,13 +34,28 @@
   </td>
 </tr></table>
 
+
+
 ## 백준허브란?(What is BaekjoonHub?)
 
 <p>백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. 백준을 통해 알고리즘 공부를 하시는 분들이 보다 쉽게 코드를 저장하고 관리할 수 있도록 하기 위해 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.()</p>
 <p>BaekjoonHub is a chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://www.acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>, a similar extension for Leetcode.</p>
 <a href="https://github.com/flaxinger/BOJAutoPush"> 예시 Repository</a>
 
-## 작동방식(How it works)
+
+
+## 설치 및 연동(How to set it up)
+<ol>
+  <li>크롬에서 설치 후 우측 상단의 popup 버튼을 클릭합니다.</li>
+  <li>"Authorize with GitHub" 버튼을 누르면 Repository 연동 화면이 표시됩니다.</li>
+  <li>신규 혹은 기존의 Repository를 선택하면 BaekjoonHub과 연동이 완료됩니다
+    (기본값은 private으로 되어있습니다).</li>
+  <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
+</ol>
+
+
+
+## 작동원리(How it works)
 
 ![](assets/extension/output.gif)
 
@@ -61,16 +78,6 @@
   <li>코드</li>
   <li>사용한 메모리</li>
   <li>실행 시간</li>
-</ol>
-
-
-## Setup 방식(How to set it up)
-<ol>
-  <li>크롬에서 설치 후 우측 상단의 popup 버튼을 클릭합니다.</li>
-  <li>"Authorize with GitHub" 버튼을 누르면 Repository 연동 화면이 표시됩니다.</li>
-  <li>신규 혹은 기존의 Repository를 선택하면 BaekjoonHub과 연동이 완료됩니다
-    (기본값은 private으로 되어있습니다).</li>
-  <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
 
 ## 개발 참여
