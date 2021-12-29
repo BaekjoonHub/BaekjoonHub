@@ -68,7 +68,9 @@
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
 
+## 개발 참여
 
+향후 과제를 확인하고 싶다면 [링크](https://github.com/flaxinger/BaekjoonHub/blob/main/TODO.md)를 확인하세요.
 
 
 
