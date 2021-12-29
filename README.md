@@ -23,8 +23,11 @@
      1. [업로드 시점](#1-업로드-시점)
      2. [저장되는 정보](#2-저장되는-정보)
 5. [개발 참여](#개발-참여)
+<br />
+<br />
 
 
+<!--- 마켓  --->
 ## 지금 크롬 마켓에서 확인하세요!
 <table style="border-collapse: separate;"><tr>
   <td style="border-spacing:2em 0"> 
@@ -33,9 +36,12 @@
       </a>  
   </td>
 </tr></table>
+<br />
+<br />
 
 
 
+<!--- 소개 --->
 ## 백준허브란?(What is BaekjoonHub?)
 
 <p>백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. 백준을 통해 알고리즘 공부를 하시는 분들이 보다 쉽게 코드를 저장하고 관리할 수 있도록 하기 위해 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.</p>
@@ -43,10 +49,9 @@
 <a href="https://github.com/flaxinger/BOJAutoPush"> 예시 Repository</a>
 <br />
 <br />
-<br />
 
 
-
+<!--- 설치 및 연동 --->
 ## 설치 및 연동(How to set it up)
 <ol>
   <li>크롬에서 설치 후 우측 상단의 popup 버튼을 클릭합니다.</li>
@@ -55,12 +60,12 @@
     (기본값은 private으로 되어있습니다).</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
-[//]: # (should be a comment)
-<br />
 <br />
 <br />
 
 
+
+<!--- 작동 원리 --->
 ## 작동원리(How it works)
 
 ![](assets/extension/output.gif)
@@ -85,10 +90,15 @@
   <li>사용한 메모리</li>
   <li>실행 시간</li>
 </ol>
+<br />
+<br />
 
+<!--- 개발 참여 --->
 ## 개발 참여
 
 향후 과제를 확인하고 싶다면 [링크](https://github.com/flaxinger/BaekjoonHub/blob/main/TODO.md)를 확인하세요.
+<br />
+<br />
 
 
 
