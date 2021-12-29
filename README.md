@@ -96,7 +96,7 @@
 <!--- 개발 참여 --->
 ## 개발 참여 및 버그 신고
 
-버그 를 하고 싶다면: [버그 신고](https://github.com/flaxinger/BaekjoonHub/issues)<br/>
+버그 신고를 하고 싶다면: [버그 신고](https://github.com/flaxinger/BaekjoonHub/issues)<br/>
 향후 과제를 확인하고 싶다면: [향후 과제](https://github.com/flaxinger/BaekjoonHub/blob/main/TODO.md)<br/>
 협업을 위한 공식 문서: [작성중]()
 <br />
