@@ -38,9 +38,12 @@
 
 ## 백준허브란?(What is BaekjoonHub?)
 
-<p>백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. 백준을 통해 알고리즘 공부를 하시는 분들이 보다 쉽게 코드를 저장하고 관리할 수 있도록 하기 위해 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.()</p>
+<p>백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. 백준을 통해 알고리즘 공부를 하시는 분들이 보다 쉽게 코드를 저장하고 관리할 수 있도록 하기 위해 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.</p>
 <p>BaekjoonHub is a chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://www.acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>, a similar extension for Leetcode.</p>
 <a href="https://github.com/flaxinger/BOJAutoPush"> 예시 Repository</a>
+<br />
+<br />
+<br />
 
 
 
@@ -52,7 +55,10 @@
     (기본값은 private으로 되어있습니다).</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
-
+[//]: # (should be a comment)
+<br />
+<br />
+<br />
 
 
 ## 작동원리(How it works)
