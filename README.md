@@ -19,10 +19,10 @@
 1. [크롬 마켓](#지금-크롬-마켓에서-확인하세요)
 2. [백준허브란?](#백준허브란what-is-baekjoonhub) 
 3. [설치 및 연동](#설치-및-연동how-to-set-it-up)
-4. [작동 ](#작동원리how-it-works)
+4. [작동 원리](#작동원리how-it-works)
      1. [업로드 시점](#1-업로드-시점)
      2. [저장되는 정보](#2-저장되는-정보)
-5. [개발 참여](#개발-참여)
+5. [개발 참여 및 버그 신고](#개발-참여-및-버그-신고)
 <br />
 <br />
 
@@ -36,7 +36,6 @@
       </a>  
   </td>
 </tr></table>
-<br />
 <br />
 
 
@@ -60,6 +59,7 @@
     (기본값은 private으로 되어있습니다).</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
+보다 구체적인 사용 방법을 알고 싶다면 다음 [링크](https://velog.io/@flaxinger/%EB%B0%B1%EC%A4%80%ED%97%88%EB%B8%8C-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95) 를 확인해주세요
 <br />
 <br />
 
@@ -94,9 +94,11 @@
 <br />
 
 <!--- 개발 참여 --->
-## 개발 참여
+## 개발 참여 및 버그 신고
 
-향후 과제를 확인하고 싶다면 [링크](https://github.com/flaxinger/BaekjoonHub/blob/main/TODO.md)를 확인하세요.
+버그 를 하고 싶다면: [버그 신고](https://github.com/flaxinger/BaekjoonHub/issues)<br/>
+향후 과제를 확인하고 싶다면: [향후 과제](https://github.com/flaxinger/BaekjoonHub/blob/main/TODO.md)<br/>
+협업을 위한 공식 문서: [작성중]()
 <br />
 <br />
 
