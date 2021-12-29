@@ -13,11 +13,12 @@
   <a href="https://github.com/flaxinger/BaekjoonHub/graphs/contributors" alt="Contributors">
     <img src="https://img.shields.io/github/contributors/flaxinger/BaekjoonHub" />
 </a>
+</p>
 
 ## 목차
 1. [크롬 마켓 링크](#지금-크롬-마켓에서-확인하세요!)
 2. [백준허브란?](#백준허브란?)
-</p>
+
 
 ## 지금 크롬 마켓에서 확인하세요!
 <table style="border-collapse: separate;"><tr>
