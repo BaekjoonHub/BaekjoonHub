@@ -33,7 +33,11 @@
         "https://github.com/*"
       ],
       "js": [
-        "scripts/baekjoon.js",
+        "scripts/baekjoon/variables.js",
+        "scripts/baekjoon/keyfunctions.js",
+        "scripts/baekjoon/parsing.js",
+        "scripts/baekjoon/util.js",
+        "scripts/baekjoon/baekjoon.js",
         "scripts/authorize.js"
       ],
       "run_at": "document_idle"
