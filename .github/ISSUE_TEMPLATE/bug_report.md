@@ -9,10 +9,10 @@ assignees: flaxinger
 
 ## Please review previous closed issues before filling out a new one! Duplicate issues will be closed without comment.
 
-**Describe the bug**
+**버그를 설명해주세요**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+**재현 방법을 기술해주세요**
 Steps to reproduce the behavior:
 1. Go to '...'
 2. Click on '....'
@@ -22,8 +22,8 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
+**스크린샷**
 If applicable, add screenshots to help explain your problem.
 
-**Additional context**
+**추가 **
 Add any other context about the problem here.
