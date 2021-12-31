@@ -102,5 +102,9 @@
 <br />
 <br />
 
-
+<!--- 패치 노트 --->
+## 패치노트
+  
+[1.0.1 패치노트](https://github.com/flaxinger/BaekjoonHub/blob/main/Patch_Notes/1.0.1.md)</br>
+[1.0.2 패치노트](https://github.com/flaxinger/BaekjoonHub/blob/main/Patch_Notes/1.0.2.md)
 

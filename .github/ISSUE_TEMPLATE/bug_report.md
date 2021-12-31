@@ -9,21 +9,21 @@ assignees: flaxinger
 
 ## Please review previous closed issues before filling out a new one! Duplicate issues will be closed without comment.
 
-**Describe the bug**
+**버그를 설명해주세요**</br>
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+**재현 방법을 기술해주세요**</br>
 Steps to reproduce the behavior:
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
+**Expected behavior**</br>
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
+**스크린샷**</br>
 If applicable, add screenshots to help explain your problem.
 
-**Additional context**
+**추가 **</br>
 Add any other context about the problem here.
