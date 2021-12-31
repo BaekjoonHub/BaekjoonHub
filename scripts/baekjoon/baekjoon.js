@@ -43,12 +43,12 @@ const loader = setInterval(() => {
         if (debug) console.log(bojData.meta.title.replace(/\s+/g, '-'));
 
         if (sha === null) {
-          uploadGit(btoa(unescape(encodeURIComponent(bojData.meta.readme))), bojData.meta.directory, 'README.md', readmeMsg, 'upload');
+          uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', readmeMsg, 'upload');
         }
         /* Upload code to Git */
         setTimeout(function () {
           uploadGit(
-            btoa(unescape(encodeURIComponent(bojData.submission.code))),
+            b64EncodeUnicode(bojData.submission.code),
             bojData.meta.directory,
             bojData.meta.fileName,
             bojData.meta.message,

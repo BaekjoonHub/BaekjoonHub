@@ -53,7 +53,7 @@ function findCode() {
         /* received submission details as html reponse. */
         const doc = new DOMParser().parseFromString(this.responseText, 'text/html');
         const code = doc.getElementsByClassName('codemirror-textarea')[0].innerHTML;
-        bojData.submission.code = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+        bojData.submission.code = code.unescapeHtml();
       }
     };
     xhttp.open('GET', submissionURL, false);
@@ -124,9 +124,9 @@ function findProblemDescription() {
         /* received submission details as html reponse. */
         const doc = new DOMParser().parseFromString(this.responseText, 'text/html');
 
-        questionDescription += `### 문제 설명\n\n${doc.getElementById('problem_description').innerText.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\t/g, ' ').trim()}\n`;
-        questionDescription += `### 입력 \n\n ${doc.getElementById('problem_input').innerText.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\t/g, ' ').trim()}\n`;
-        questionDescription += `### 출력 \n\n ${doc.getElementById('problem_output').innerText.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\t/g, ' ').trim()}\n`;
+        questionDescription += `### 문제 설명\n\n${doc.getElementById('problem_description').innerText.replace(/\t/g, ' ').unescapeHtml().trim()}\n`;
+        questionDescription += `### 입력 \n\n ${doc.getElementById('problem_input').innerText.unescapeHtml().trim()}\n`;
+        questionDescription += `### 출력 \n\n ${doc.getElementById('problem_output').innerText.unescapeHtml().trim()}\n`;
       }
     };
     xhttp.open('GET', submissionURL, false);
