@@ -56,17 +56,72 @@ function checkElem(elem) {
   return elem && elem.length > 0;
 }
 
-function ready() {
-  if (bojData.meta.title === '') return false;
-  if (bojData.meta.problemId === '') return false;
-  if (bojData.meta.level === '') return false;
-  if (bojData.meta.problemDescription === '') return false;
-  if (bojData.meta.language === '') return false;
-  if (bojData.meta.message === '') return false;
-  if (bojData.meta.fileName === '') return false;
-  if (bojData.submission.submissionId === '') return false;
-  if (bojData.submission.code === '') return false;
-  if (bojData.submission.memory === '') return false;
-  if (bojData.submission.runtime === '') return false;
+/* A function that recursively checks that all values of object are not '' */
+function isNotEmpty(obj) {
+  if (obj === undefined || obj === null || obj === '' || obj === [] || obj === {}) return false;
+  if (typeof obj !== 'object') return true;
+  if (obj.length === 0) return false;
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key in obj) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (obj.hasOwnProperty(key)) {
+      // eslint-disable-next-line no-unused-vars
+      if (!isNotEmpty(obj[key])) return false;
+    }
+  }
   return true;
+}
+
+function ready() {
+  return isNotEmpty(bojData);
+}
+
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+
+  return text.replace(/[&<>"']/g, function (m) {
+    return map[m];
+  });
+}
+
+function unescapeHtml(text) {
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'");
+}
+
+String.prototype.escapeHtml = function () {
+  return escapeHtml(this);
+};
+
+String.prototype.unescapeHtml = function () {
+  return unescapeHtml(this);
+};
+
+function b64EncodeUnicode(str) {
+  return btoa(
+    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+      return String.fromCharCode(`0x${p1}`);
+    }),
+  );
+}
+
+function b64DecodeUnicode(b64str) {
+  return decodeURIComponent(
+    atob(b64str)
+      .split('')
+      .map(function (c) {
+        return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
+      })
+      .join(''),
+  );
 }

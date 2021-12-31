@@ -68,13 +68,13 @@ const update = (token, hook, addition, directory, msg, prepend, cb = undefined) 
     if (xhr.readyState === 4) {
       if (xhr.status === 200 || xhr.status === 201) {
         const response = JSON.parse(xhr.responseText);
-        const existingContent = decodeURIComponent(escape(atob(response.content)));
+        const existingContent = b64DecodeUnicode(response.content);
         let newContent = '';
 
         /* Discussion posts prepended at top of README */
         /* Future implementations may require appending to bottom of file */
         if (prepend) {
-          newContent = btoa(unescape(encodeURIComponent(addition + existingContent)));
+          newContent = b64EncodeUnicode(addition + existingContent);
         }
 
         /* Write file with new content to GitHub */
