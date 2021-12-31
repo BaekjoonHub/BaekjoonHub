@@ -91,12 +91,21 @@ function escapeHtml(text) {
 }
 
 function unescapeHtml(text) {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'");
+  const unescaped = {
+    '&amp;': '&',
+    '&#38;': '&',
+    '&lt;': '<',
+    '&#60;': '<',
+    '&gt;': '>',
+    '&#62;': '>',
+    '&apos;': "'",
+    '&#39;': "'",
+    '&quot;': '"',
+    '&#34;': '"',
+  };
+  return text.replace(/&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34);/g, function (m) {
+    return unescaped[m];
+  });
 }
 
 String.prototype.escapeHtml = function () {
