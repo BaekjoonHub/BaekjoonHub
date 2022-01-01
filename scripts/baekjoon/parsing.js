@@ -83,16 +83,17 @@ function findSubmissionId() {
 
 function findProblemId() {
   const problemElem = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[2];
-
+  console.log("findProblem", problemElem);
   if (debug) console.log('getProblemId: ');
   if (debug) console.log(problemElem);
   let resultId = '';
   for (let i = 0; i <= problemElem.childElementCount; i++) {
-    const temp_name = problemElem.childNodes[i].innerHTML;
+    const temp_name = problemElem.childNodes[i];
     if (temp_name == null || temp_name == 'undefined' || temp_name == undefined) continue;
-    if (temp_name.length > resultId.length) {
-      if (debug) console.log(`adding: ${temp_name}`);
-      resultId = temp_name;
+    const temp_text = temp_name.innerHTML;
+    if (temp_text.length > resultId.length) {
+      if (debug) console.log(`adding: ${temp_text}`);
+      resultId = temp_text;
     }
   }
   if (debug) console.log(resultId);
