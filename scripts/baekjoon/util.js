@@ -73,18 +73,6 @@ function ready() {
   if (debug) {
     console.log('ready', bojData);
   }
-  // if (bojData.meta.title === '') return false;
-  // if (bojData.meta.problemId === '') return false;
-  // if (bojData.meta.level === '') return false;
-  // if (bojData.meta.problemDescription === '') return false;
-  // if (bojData.meta.language === '') return false;
-  // if (bojData.meta.message === '') return false;
-  // if (bojData.meta.fileName === '') return false;
-  // if (bojData.submission.submissionId === '') return false;
-  // if (bojData.submission.code === '') return false;
-  // if (bojData.submission.memory === '') return false;
-  // if (bojData.submission.runtime === '') return false;
-  // return true;
   return isNotEmpty(bojData);
 }
 
