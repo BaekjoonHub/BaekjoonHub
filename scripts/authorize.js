@@ -9,10 +9,8 @@ const localAuth = {
    */
   init() {
     this.KEY = 'leethub_token';
-    this.ACCESS_TOKEN_URL =
-      'https://github.com/login/oauth/access_token';
-    this.AUTHORIZATION_URL =
-      'https://github.com/login/oauth/authorize';
+    this.ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token';
+    this.AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
     this.CLIENT_ID = 'beb4f0aa19ab8faf5004';
     this.CLIENT_SECRET = '843f835609c7ef02ef0f2f1645bc49514c0e65a6';
     this.REDIRECT_URL = 'https://github.com/'; // for example, https://github.com
@@ -51,9 +49,7 @@ const localAuth = {
     xhr.addEventListener('readystatechange', function () {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
-          that.finish(
-            xhr.responseText.match(/access_token=([^&]*)/)[1],
-          );
+          that.finish(xhr.responseText.match(/access_token=([^&]*)/)[1]);
         } else {
           chrome.runtime.sendMessage({
             closeWebPage: true,
