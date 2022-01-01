@@ -5,14 +5,11 @@ const debug = true;
 const loader = setInterval(() => {
   const successTagpre = document.getElementById('status-table');
   if (successTagpre == null || typeof successTagpre === 'undefined') return null;
-  // var success = false;
   const successTag = successTagpre.childNodes[1].childNodes[0].childNodes[3].childNodes[0].innerHTML;
   if (checkElem(successTag)) {
     if (successTag === '맞았습니다!!') {
       if (debug) console.log('맞았네..???');
       findData();
-      // clearInterval(loader);
-      // success=true;
     } else if (successTag === '틀렸습니다') {
       clearTimeout(loader);
     }
