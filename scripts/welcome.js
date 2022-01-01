@@ -66,7 +66,7 @@ const createRepo = (token, name) => {
     name,
     private: true,
     auto_init: true,
-    description: '[백준 허브](https://github.com/flaxinger/BaekjoonHub)로 생성된 자동 푸시 리포지토리입니다',
+    description: 'This is a auto push repository for Baekjoon Online Judge created with [BaekjoonHub](https://github.com/flaxinger/BaekjoonHub).',
   };
   data = JSON.stringify(data);
 
