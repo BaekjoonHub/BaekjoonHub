@@ -42,7 +42,7 @@ function findWithPromise() {
         bojData.submission.code = codeText;
         if (debug) console.log('findWithPromise - code', codeText);
         /* Get Solved Response */
-        bojData.meta.title = solvedJson.titleKo.replace(/\s+/g, '-');
+        bojData.meta.title = solvedJson.titleKo;
         bojData.meta.level = bj_level[solvedJson.level];
         bojData.meta.directory = `백준/${bojData.meta.level.replace(/ .*/, '')}/${bojData.meta.problemId}.${bojData.meta.title.replace(/\s+/g, '-').replace(titleRegex, '')}`;
         bojData.meta.message = `[${bojData.meta.level}] Title: ${bojData.meta.title}, Time: ${bojData.submission.runtime} ms, Memory: ${bojData.submission.memory} KB -BaekjoonHub`;
@@ -53,7 +53,7 @@ function findWithPromise() {
         bojData.meta.category = str.substring(0, length - 2);
         if (debug) console.log('findWithPromise - leveldoc', solvedJson);
         /* Create Readme */
-        bojData.meta.fileName = bojData.meta.title + languages[bojData.meta.language];
+        bojData.meta.fileName = bojData.meta.title.replace(/\s+/g, '-') + languages[bojData.meta.language];
         // eslint-disable-next-line prettier/prettier
         bojData.meta.readme = `# [${bojData.meta.level}] ${bojData.meta.title} - ${bojData.meta.problemId} \n\n` 
                             + `[문제 링크](https://www.acmicpc.net/problem/${bojData.meta.problemId}) \n\n`
