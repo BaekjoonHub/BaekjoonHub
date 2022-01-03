@@ -8,13 +8,58 @@ function findData() {
   console.log(bojData);
 }
 
+function findUsername() {
+  return document.querySelector('a.username').innerText;
+}
+
+function isExistResultTable() {
+  return document.getElementById('status-table') !== null;
+}
+
+/* Returns the value rows in the table. */
+function findResultTableList() {
+  const table = document.getElementById('status-table');
+  if (table === null || table === undefined || table.length === 0) return [];
+  const headers = Array.from(table.rows[0].cells, (x) => convertResultTableHeader(x.innerText.trim()));
+
+  const list = [];
+  for (let i = 1; i < table.rows.length; i++) {
+    const row = table.rows[i];
+    const cells = Array.from(row.cells, (x, index) => {
+      switch (headers[index]) {
+        case 'language':
+          return x.innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
+        case 'submissionTime':
+          return x.firstChild.getAttribute('data-original-title');
+        default:
+          return x.innerText.trim();
+      }
+    });
+    const obj = {};
+    for (let j = 0; j < headers.length; j++) {
+      obj[headers[j]] = cells[j];
+    }
+    list.push(obj);
+  }
+  if (debug) console.log('TableList', list);
+  return list;
+}
+
 function findFromResultTable() {
-  const submissionEle = document.getElementById('status-table').childNodes[1].childNodes[0];
-  bojData.submission.memory = submissionEle.childNodes[4].innerText;
-  bojData.submission.runtime = submissionEle.childNodes[5].innerText;
-  bojData.meta.language = submissionEle.childNodes[6].childNodes[0].innerHTML;
-  findSubmissionId();
-  findProblemId();
+  if (isExistResultTable()) {
+    const resultList = findResultTableList();
+    if (resultList.length === 0) return;
+    const row = resultList[0];
+    if (row.username !== findUsername()) {
+      if (debug) console.log('Username does not match', row.username, findUsername());
+      return;
+    }
+    bojData.submission.memory = row.memory;
+    bojData.submission.runtime = row.runtime;
+    bojData.submission.submissionId = row.submissionId;
+    bojData.meta.language = row.language;
+    bojData.meta.problemId = row.problemId;
+  } else if (debug) console.log('Result table not found');
 }
 
 function findWithPromise() {
@@ -73,31 +118,6 @@ function findWithPromise() {
         markUploadFailed();
       });
   }
-}
-
-// Get Submission Number
-function findSubmissionId() {
-  const problemElem = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[0];
-  bojData.submission.submissionId = problemElem.innerText;
-}
-
-function findProblemId() {
-  const problemElem = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[2];
-  console.log("findProblem", problemElem);
-  if (debug) console.log('getProblemId: ');
-  if (debug) console.log(problemElem);
-  let resultId = '';
-  for (let i = 0; i <= problemElem.childElementCount; i++) {
-    const temp_name = problemElem.childNodes[i];
-    if (temp_name == null || temp_name == 'undefined' || temp_name == undefined) continue;
-    const temp_text = temp_name.innerHTML;
-    if (temp_text.length > resultId.length) {
-      if (debug) console.log(`adding: ${temp_text}`);
-      resultId = temp_text;
-    }
-  }
-  if (debug) console.log(resultId);
-  bojData.meta.problemId = resultId;
 }
 
 /* Since we dont yet have callbacks/promises that helps to find out if things went bad */
