@@ -90,12 +90,7 @@ const languages = {
   'Coq': '.v',
   'Minecraft': '.mca',
   'SystemVerilog': '.sv',
-  'APECODE': '.ape',
-  // 'C++': '.cc',
-  // 'Java': '.java',
-  // 'Python': '.py',
-  // 'C': '.c',
-  // 'MS SQL Server': '.sql'
+  'APECODE': '.ape'
 };
 
 // BOJ Levels
@@ -327,8 +322,6 @@ const categories = {
 
 /* Commit messages */
 const readmeMsg = 'Create README - BaekjoonHub';
-// const discussionMsg = 'Prepend discussion post - BaekjoonHub';
-// const createNotesMsg = 'Create NOTES - BaekjoonHub';
 
 const titleRegex = new RegExp('[^a-zA-Z0-9가-힣 -]', 'i');
 
