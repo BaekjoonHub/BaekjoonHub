@@ -1,5 +1,5 @@
 // Set to true to enable console log
-const debug = true;
+const debug = false;
 
 // 메인 함수
 const loader = setInterval(() => {
