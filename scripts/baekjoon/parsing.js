@@ -1,11 +1,17 @@
-// Parse all BOJ Data
+/*
+  문제가 맞았다면 문제 관련 데이터를 파싱하는 함수의 모음입니다.
+  모든 해당 파일의 모든 함수는 findData()를 통해 호출됩니다.
+*/
+
+
+/*
+  bojData를 초기화하는 함수로 문제 요약과 코드를 파싱합니다.
+*/
 function findData() {
-  // language, submisssionId, problemId, memory, runtime
+  
   findFromResultTable();
-  // problemDescription
   findWithPromise();
 
-  console.log(bojData);
 }
 
 function findUsername() {
@@ -16,7 +22,8 @@ function isExistResultTable() {
   return document.getElementById('status-table') !== null;
 }
 
-/* Returns the value rows in the table. */
+
+
 function findResultTableList() {
   const table = document.getElementById('status-table');
   if (table === null || table === undefined || table.length === 0) return [];
@@ -45,6 +52,17 @@ function findResultTableList() {
   return list;
 }
 
+
+/*
+  제출 화면의 데이터를 파싱하는 함수로 다음 데이터를 확인합니다.
+
+    - 메모리: bojData.submission.memory
+    - 실행시간: bojData.submission.runtime
+    - 언어: bojData.meta.language
+    - 제출번호: bojData.submission.submissionId
+    - 문제번호: bojData.meta.problemId
+
+*/
 function findFromResultTable() {
   if (isExistResultTable()) {
     const resultList = findResultTableList();
@@ -62,6 +80,21 @@ function findFromResultTable() {
   } else if (debug) console.log('Result table not found');
 }
 
+
+/*
+  Fetch를 사용하여 정보를 구하는 함수로 다음 정보를 확인합니다.
+
+    - 문제 설명: bojData.meta.problemDescription
+    - 제출 코드: bojData.submission.code
+    - 문제 제목: bojData.meta.title
+    - 문제 등급: bojData.meta.level 
+    - Github repo에 저장될 디렉토리: bojData.meta.directory
+    - 커밋 메시지: bojData.meta.message 
+    - 백준 문제 카테고리: bojData.meta.category
+    - 파일명: bojData.meta.fileName
+    - Readme 내용 : bojData.meta.readme
+
+*/
 function findWithPromise() {
   if (debug) console.log('in find with promise');
   if (checkElem(bojData.meta.problemId) && checkElem(bojData.submission.submissionId)) {
@@ -76,7 +109,6 @@ function findWithPromise() {
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionText, 'text/html');
         if (doc != null) {
-          // eslint-disable-next-line prettier/prettier
           questionDescription = `### 문제 설명\n\n${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}\n\n`
                               + `### 입력 \n\n ${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}\n\n`
                               + `### 출력 \n\n ${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}\n\n`;
@@ -97,9 +129,9 @@ function findWithPromise() {
         const { length } = str;
         bojData.meta.category = str.substring(0, length - 2);
         if (debug) console.log('findWithPromise - leveldoc', solvedJson);
-        /* Create Readme */
+        /* 파일명 */
         bojData.meta.fileName = bojData.meta.title.replace(/\s+/g, '-').replace(titleRegex, '') + languages[bojData.meta.language];
-        // eslint-disable-next-line prettier/prettier
+        /* Create Readme */
         bojData.meta.readme = `# [${bojData.meta.level}] ${bojData.meta.title} - ${bojData.meta.problemId} \n\n` 
                             + `[문제 링크](https://www.acmicpc.net/problem/${bojData.meta.problemId}) \n\n`
                             + `### 성능 요약\n\n`
