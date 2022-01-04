@@ -1,3 +1,14 @@
+/* 백준 허브의 전역 변수 선언 파일입니다. */
+/* 포함된 변수는 다음과 같습니다. 
+    languages: 백준의 언어 및 그에 맞는 file extension
+    bj_level: Solved.ac의 레벨별 매핑입니다. API 호출 시 0~31까지의 번호로 레벨이 표현되는데 이를 문자열로 매핑하였습니다.
+    categories: Solved.ac의 문제 카테로기를 한글 번역본으로 매핑하는 역할을 합니다.
+    CommitType: uploadGit에 사용되는 enum으로 readme 혹은 code를 업로드할 때 사용됩니다.
+    titleRegex: 제목 형식의 regex 정의입니다.
+    uploadState: 현재 업로드 중인지를 저장하는 boolean입니다.
+    bojData: 깃허브에 업로드되는 사용자의 코드와 문제 요약을 담고 있습니다.
+*/
+
 /* Enum for languages supported by LeetCode. */
 
 // prettier-ignore
@@ -320,8 +331,10 @@ const categories = {
   'differential_cryptanalysis': '차분 공격',
 };
 
-/* Commit messages */
-const readmeMsg = 'Create README - BaekjoonHub';
+const CommitType = {
+  readme: 'readmeSha',
+  code: 'codeSha',
+};
 
 const titleRegex = new RegExp('[^a-zA-Z0-9가-힣 -]', 'i');
 
