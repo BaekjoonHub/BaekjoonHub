@@ -1,0 +1,29 @@
+.BaekjoonHub_progress {
+    display: inline-block; 
+    pointer-events: none; 
+    width: 0.8em; 
+    height: 0.8em; 
+    border: 0.4em solid transparent; 
+    border-color: #eee; 
+    border-top-color: #3E67EC; 
+    border-radius: 50%; 
+    animation: loadingspin 1.0s linear infinite; 
+} @keyframes loadingspin { 100% { transform: rotate(360deg) }}
+
+#BaekjoonHub_progress_elem.markuploadfailed {
+    display: inline-block;
+    transform: rotate(45deg);
+    height:13px;
+    width:5px;
+    border-bottom:3px solid red;
+    border-right:3px solid red;
+}
+
+#BaekjoonHub_progress_elem.markuploaded{
+    display: inline-block;
+    transform: rotate(45deg);
+    height:13px;
+    width:5px;
+    border-bottom:3px solid #78b13f;
+    border-right:3px solid #78b13f;
+}

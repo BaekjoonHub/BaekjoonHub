@@ -19,53 +19,20 @@ function startUpload() {
 
 // Upload icon - Set Completed Icon
 /* This will create a tick mark before "Run Code" button signalling BaekjoonHub has done its job */
-function markUploaded() {
-  if (uploadState.countdown) clearTimeout(uploadState.countdown);
-  delete uploadState.countdown;
-  uploadState.uploading = false;
+function markUploadedCSS() {
   const elem = document.getElementById('BaekjoonHub_progress_elem');
-  elem.className = '';
-  const style = 'display: inline-block;transform: rotate(45deg);height:13px;width:5px;border-bottom:3px solid #78b13f;border-right:3px solid #78b13f;';
-  elem.style = style;
+  elem.className = 'markuploaded';
 }
 
 // Upload icon - Set Failed Icon
 /* This will create a failed tick mark before "Run Code" button signalling that upload failed */
-function markUploadFailed() {
-  if (uploadState.uploading === true) uploadState.uploading = false;
+function markUploadFailedCSS() {
   const elem = document.getElementById('BaekjoonHub_progress_elem');
-  elem.className = '';
-  const style = 'display: inline-block;transform: rotate(45deg);height:13px;width:5px;border-bottom:3px solid red;border-right:3px solid red;';
-  elem.style = style;
+  elem.className = 'markuploadfailed';
 }
 
-/* Since we dont yet have callbacks/promises that helps to find out if things went bad */
-/* we will start 10 seconds counter and even after that upload is not complete, then we conclude its failed */
-function startUploadCountDown() {
-  uploadState.uploading = true;
-  uploadState.countdown = setTimeout(() => {
-    if (uploadState.uploading === true) {
-      // still uploading, then it failed
-      uploadState.uploading = false;
-      markUploadFailed();
-    }
-  }, 10000);
-}
-
-/* inject css style required for the upload progress feature */
-function injectStyle() {
-  const style = document.createElement('style');
-  style.textContent = '.BaekjoonHub_progress {\
-    display: inline-block; \
-    pointer-events: none; \
-    width: 0.8em; \
-    height: 0.8em; \
-    border: 0.4em solid transparent; \
-    border-color: #eee; \
-    border-top-color: #3E67EC; \
-    border-radius: 50%; \
-    animation: loadingspin 1.0s linear infinite; } @keyframes loadingspin { 100% { transform: rotate(360deg) }}';
-  document.head.append(style);
+function getVersion() {
+  return chrome.runtime.getManifest().version;
 }
 
 /* Util function to check if an element exists */
@@ -84,13 +51,6 @@ function isNotEmpty(obj) {
     }
   }
   return true;
-}
-
-function ready() {
-  if (debug) {
-    console.log('ready', bojData);
-  }
-  return isNotEmpty(bojData);
 }
 
 function escapeHtml(text) {
