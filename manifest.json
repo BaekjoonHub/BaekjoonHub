@@ -37,6 +37,7 @@
         "scripts/baekjoon/keyfunctions.js",
         "scripts/baekjoon/parsing.js",
         "scripts/baekjoon/util.js",
+        "scripts/baekjoon/UpdateForNewVersion.js",
         "scripts/baekjoon/baekjoon.js",
         "scripts/authorize.js"
       ],
