@@ -5,30 +5,42 @@ const debug = true;
   문제 제출 맞음 여부를 확인하는 함수
   2초마다 문제를 파싱하여 확인
 */
-const loader = setInterval(() => {
-  const successTagpre = document.getElementById('status-table');
-  if (successTagpre == null || typeof successTagpre === 'undefined') return null;
-  const successTag = successTagpre.childNodes[1].childNodes[0].childNodes[3].childNodes[0].innerHTML;
-  if (checkElem(successTag)) {
-    if (successTag === '맞았습니다!!') {
-      if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
-      findData();
-    } else if (successTag === '틀렸습니다') {
-      clearTimeout(loader);
-    }
-  }
-}, 2000);
+let loader;
 
+function startLoader() {
+  loader = setInterval(async () => {
+    if (isExistResultTable()) {
+      const { username, result } = findFromResultTable();
+      if (username !== findUsername() || result === '틀렸습니다') {
+        stopLoader();
+        return;
+      }
+      if (username === findUsername() && result === '맞았습니다!!') {
+        if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+        stopLoader();
+        const bojData = await findData();
+        beginUpload(bojData);
+      }
+    }
+  }, 2000);
+}
+
+function stopLoader() {
+  clearInterval(loader);
+}
+
+startLoader();
 
 /* 파싱 직후 실행되는 함수 */
-const beginUpload = () => {
-  if (ready()) {
-    clearTimeout(loader);
+function beginUpload(bojData) {
+  console.log('bojData', bojData);
+  if (isNotEmpty(bojData)) {
     startUpload();
     chrome.storage.local.get('stats', (s) => {
       const { stats } = s;
       if (debug) console.log('stats in beginUpload()', stats);
 
+      if (debug) console.log('stats version', stats.version, 'current version', getVersion());
       /* 버전 차이 업로드 */
       if (stats.version !== '1.0.2') {
         markUploadFailed();
@@ -46,12 +58,12 @@ const beginUpload = () => {
       }
       /* 현재 제출 번호가 기존 제출 번호와 같다면 실행 중지 */
       if (recentSubmissionId === bojData.submission.submissionId) {
-        markUploaded();
+        markUploadedCSS();
         console.log(`Git up to date with submission ID ${recentSubmissionId}`);
       } else {
         /* 신규 제출 번호라면 */
         // 문제 설명 커밋
-        uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', CommitType.readme);
+        uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', CommitType.readme, undefined, bojData);
 
         /* Upload code to Git */
         setTimeout(function () {
@@ -62,17 +74,15 @@ const beginUpload = () => {
             CommitType.code,
             // callback is called when the code upload to git is a success
             () => {
-              markUploaded();
+              markUploadedCSS();
             },
+            bojData,
           ); // Encode `code` to base64
         }, 2000);
       }
     });
   } else console.log('in begin upload: not ready');
-};
-
-// inject the style
-injectStyle();
+}
 
 /* Sync to local storage */
 chrome.storage.local.get('isSync', (data) => {
