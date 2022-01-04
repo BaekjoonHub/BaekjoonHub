@@ -7,7 +7,7 @@
     type: CommitType의 readme or code
     cb: Callback 함수(업로드 후 로딩 아이콘 처리를 맡는다
 */
-function uploadGit(code, directory, fileName, type, cb = undefined) {
+function uploadGit(code, directory, fileName, type, cb = undefined, bojData) {
   /* Get necessary payload data */
   chrome.storage.local.get('BaekjoonHub_token', (t) => {
     const token = t.BaekjoonHub_token;
@@ -29,7 +29,7 @@ function uploadGit(code, directory, fileName, type, cb = undefined) {
                   sha = stats.submission[filePath][type];
                 }
 
-                upload(token, hook, code, directory, fileName, type, sha, cb);
+                upload(token, hook, code, directory, fileName, type, sha, cb, bojData);
               });
             }
           });
@@ -51,7 +51,7 @@ function uploadGit(code, directory, fileName, type, cb = undefined) {
     sha: 현재 업로드된 파일의 SHA
     cb: Callback 함수(업로드 후 로딩 아이콘 처리를 맡는다
 */
-const upload = (token, hook, code, directory, filename, type, sha, cb = undefined) => {
+function upload(token, hook, code, directory, filename, type, sha, cb = undefined, bojData) {
   // To validate user, load user object from GitHub.
 
   fetch(`https://api.github.com/repos/${hook}/contents/${directory}/${filename}`, {
@@ -61,8 +61,8 @@ const upload = (token, hook, code, directory, filename, type, sha, cb = undefine
   })
     .then((res) => res.json())
     .then((data) => {
-      if (debug && type == CommitType.readme) console.log('data', data);
-      if (data != null && (data != data.content) != null && data.content.sha != null && data.content.sha != undefined) {
+      if (debug && type === CommitType.readme) console.log('data', data);
+      if (data != null && (data !== data.content) != null && data.content.sha != null && data.content.sha !== undefined) {
         const { sha } = data.content; // get updated SHA.
         chrome.storage.local.get('stats', (data) => {
           let { stats } = data;
@@ -93,4 +93,4 @@ const upload = (token, hook, code, directory, filename, type, sha, cb = undefine
         });
       }
     });
-};
+}
