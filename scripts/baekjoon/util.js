@@ -114,6 +114,12 @@ function b64DecodeUnicode(b64str) {
   );
 }
 
+/* Excludes duplicate values in the array. */
+function unique(arr, key) {
+  if (key === undefined) return arr.filter((obj, index, self) => self.indexOf(obj) === index);
+  return arr.filter((obj, index, self) => self.findIndex((t) => t[key] === obj[key]) === index);
+}
+
 function convertResultTableHeader(header) {
   switch (header) {
     case '문제번호':
