@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /*
   문제가 맞았다면 문제 관련 데이터를 파싱하는 함수의 모음입니다.
   모든 해당 파일의 모든 함수는 findData()를 통해 호출됩니다.
@@ -184,17 +185,12 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
         /* Get Question Description */
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionText, 'text/html');
-        let problem_description;
-        let problem_input;
-        let problem_output;
-        if (doc != null) {
-          problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
-          problem_input =       `${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}`;
-          problem_output =      `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
-        }
+        const problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
+        const problem_input       = `${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}`;
+        const problem_output      = `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
         /* Get Code */
         const code = codeText;
-        if (debug) console.log('findWithPromise - code', code);
+        if (debug) console.log('findProblemDetailsAndSubmissionCode - code', code);
         /* Get Solved Response */
         const { tags } = solvedJson;
         const title = solvedJson.titleKo;
