@@ -98,7 +98,8 @@
 
 버그 신고를 하고 싶다면: [버그 신고](https://github.com/flaxinger/BaekjoonHub/issues)<br/>
 향후 과제를 확인하고 싶다면: [향후 과제](https://github.com/flaxinger/BaekjoonHub/blob/main/TODO.md)<br/>
-협업을 위한 공식 문서: [작성중]()
+협업을 위한 공식 문서: [작성중]()</br>
+협업 오픈 카톡방: [오픈 카톡방 링크](https://open.kakao.com/o/gOWn2ySd)
 <br />
 <br />
 
