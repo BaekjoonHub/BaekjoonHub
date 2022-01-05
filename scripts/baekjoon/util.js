@@ -36,8 +36,8 @@ function getVersion() {
 }
 
 /* Util function to check if an element exists */
-function checkElem(elem) {
-  return elem && elem.length > 0;
+function isElementExists(element) {
+  return element !== undefined && element !== null && element.length > 0;
 }
 
 /* A function that recursively checks that all values of object are not '' */
