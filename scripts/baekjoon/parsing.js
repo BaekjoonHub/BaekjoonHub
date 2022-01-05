@@ -252,7 +252,7 @@ async function findResultTableByProblemIdAndUsername(problemId, username) {
 /**
  * user가 "맞았습니다!!" 결과를 맞은 중복되지 않은 제출 결과 리스트를 가져오는 함수
  * @param username: 백준 아이디
- * @returns Promise<Array<String>>
+ * @returns Promise<Array<Object>>
  */
 async function findUniqueResultTableListByUsername(username) {
   return unique(await findResultTableListByUsername(username), 'problemId');
@@ -261,7 +261,7 @@ async function findUniqueResultTableListByUsername(username) {
 /**
  * user가 "맞았습니다!!" 결과를 맞은 모든 제출 결과 리스트를 가져오는 함수
  * @param username: 백준 아이디
- * @return Promise<Array<String>>
+ * @return Promise<Array<Object>>
  */
 async function findResultTableListByUsername(username) {
   const rsult = [];
