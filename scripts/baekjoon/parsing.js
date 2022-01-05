@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /*
   문제가 맞았다면 문제 관련 데이터를 파싱하는 함수의 모음입니다.
   모든 해당 파일의 모든 함수는 findData()를 통해 호출됩니다.
@@ -222,29 +221,28 @@ function startUploadCountDown() {
   }, 10000);
 }
 
-
 /**
  * user가 푼 백준의 문제번호 리스트를 가져오는 함수
  * @param username: 백준 아이디
  * @return Promise<Array<String>>
  */
- async function findSolvedProblemsList(username) {
-  return fetch(`https://www.acmicpc.net/user/${username}`, {method:'GET'})
-    .then(html => html.getElementsByClassName('result-ac'))
-    .then(collections => Array.from(collections))
-    .then(arr => arr.map(name => name.textContent));
+async function findSolvedProblemsList(username) {
+  return fetch(`https://www.acmicpc.net/user/${username}`, { method: 'GET' })
+    .then((html) => html.getElementsByClassName('result-ac'))
+    .then((collections) => Array.from(collections))
+    .then((arr) => arr.map((name) => name.textContent));
 }
 
 /**
  * user가 problemId 에 제출한 리스트를 가져오는 함수
- * @param problemId: 문제 번호 
+ * @param problemId: 문제 번호
  * @param username: 백준 아이디
  * @return Promise<Array<String>>
  */
 async function findResultTableByProblemIdAndUsername(problemId, username) {
   return fetch(`https://www.acmicpc.net/status?from_mine=1&problem_id=${problemId}&user_id=${username}`, { method: 'GET' })
-    .then(html => html.text())
-    .then(text => {
+    .then((html) => html.text())
+    .then((text) => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, 'text/html');
       return parsingResultTableList(doc);
