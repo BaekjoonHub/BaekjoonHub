@@ -42,8 +42,8 @@ function beginUpload(bojData) {
 
       if (debug) console.log('stats version', stats.version, 'current version', getVersion());
       /* 버전 차이 업로드 */
-      if (stats.version !== '1.0.2') {
-        markUploadFailed();
+      if (stats.version !== getVersion()) {
+        markUploadFailedCSS();
         alert('버전 차이가 확인되었습니다. 확장 프로그램을 열어 패치노트를 확인해주세요.');
         insertUpdateButton();
         return;
