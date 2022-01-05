@@ -340,24 +340,3 @@ const titleRegex = new RegExp('[^a-zA-Z0-9가-힣 -]', 'i');
 
 /* state of upload for progress */
 const uploadState = { uploading: false };
-const bojData = {
-  // Meta data of problem
-  meta: {
-    title: '',
-    problemId: '',
-    level: '',
-    problemDescription: '',
-    language: '',
-    message: '',
-    fileName: '',
-    category: '',
-    readme: '',
-    directory: '',
-  },
-  submission: {
-    submissionId: '',
-    code: '',
-    memory: '',
-    runtime: '',
-  },
-};

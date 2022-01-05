@@ -32,6 +32,9 @@
         "https://www.acmicpc.net/status*",
         "https://github.com/*"
       ],
+      "css": [
+        "css/inject.css"
+      ],
       "js": [
         "scripts/baekjoon/variables.js",
         "scripts/baekjoon/keyfunctions.js",
