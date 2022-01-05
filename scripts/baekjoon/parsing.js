@@ -109,7 +109,11 @@ function isExistResultTable() {
 }
 
 function findResultTableList() {
-  const table = document.getElementById('status-table');
+  return parsingResultTableList(document);
+}
+
+function parsingResultTableList(doc) {
+  const table = doc.getElementById('status-table');
   if (table === null || table === undefined || table.length === 0) return [];
   const headers = Array.from(table.rows[0].cells, (x) => convertResultTableHeader(x.innerText.trim()));
 
@@ -216,4 +220,33 @@ function startUploadCountDown() {
       markUploadFailedCSS();
     }
   }, 10000);
+}
+
+
+/**
+ * user가 푼 백준의 문제번호 리스트를 가져오는 함수
+ * @param username: 백준 아이디
+ * @return Promise<Array<String>>
+ */
+ async function findSolvedProblemsList(username) {
+  return fetch(`https://www.acmicpc.net/user/${username}`, {method:'GET'})
+    .then(html => html.getElementsByClassName('result-ac'))
+    .then(collections => Array.from(collections))
+    .then(arr => arr.map(name => name.textContent));
+}
+
+/**
+ * user가 problemId 에 제출한 리스트를 가져오는 함수
+ * @param problemId: 문제 번호 
+ * @param username: 백준 아이디
+ * @return Promise<Array<String>>
+ */
+async function findResultTableByProblemIdAndUsername(problemId, username) {
+  return fetch(`https://www.acmicpc.net/status?from_mine=1&problem_id=${problemId}&user_id=${username}`, { method: 'GET' })
+    .then(html => html.text())
+    .then(text => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      return parsingResultTableList(doc);
+    });
 }
