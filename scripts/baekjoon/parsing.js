@@ -250,3 +250,44 @@ async function findResultTableByProblemIdAndUsername(problemId, username) {
       return parsingResultTableList(doc);
     });
 }
+
+/**
+ * user가 "맞았습니다!!" 결과를 맞은 중복되지 않은 제출 결과 리스트를 가져오는 함수
+ * @param username: 백준 아이디
+ * @returns Promise<Array<String>>
+ */
+async function findUniqueResultTableListByUsername(username) {
+  return unique(await findResultTableListByUsername(username), 'problemId');
+}
+
+/**
+ * user가 "맞았습니다!!" 결과를 맞은 모든 제출 결과 리스트를 가져오는 함수
+ * @param username: 백준 아이디
+ * @return Promise<Array<String>>
+ */
+async function findResultTableListByUsername(username) {
+  const rsult = [];
+  let doc = await findHtmlDocumentByUrl(`https://www.acmicpc.net/status?user_id=${username}&result_id=4`);
+  let next_page = doc.getElementById('next_page');
+  do {
+    rsult.push(...parsingResultTableList(doc));
+    doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
+  } while ((next_page = doc.getElementById('next_page')) !== null);
+  rsult.push(...parsingResultTableList(doc));
+
+  return rsult;
+}
+
+/**
+ * url에 해당하는 html 문서를 가져오는 함수
+ * @param url: url 주소
+ * @returns html document
+ */
+async function findHtmlDocumentByUrl(url) {
+  return fetch(url, { method: 'GET' })
+    .then((html) => html.text())
+    .then((text) => {
+      const parser = new DOMParser();
+      return parser.parseFromString(text, 'text/html');
+    });
+}
