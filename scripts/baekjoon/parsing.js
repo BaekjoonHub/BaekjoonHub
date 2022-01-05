@@ -175,7 +175,7 @@ function findFromResultTable() {
 
 async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   if (debug) console.log('in find with promise');
-  if (checkElem(problemId) && checkElem(submissionId)) {
+  if (isElementExists(problemId) && isElementExists(submissionId)) {
     const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
     const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
     const SolvedAPI = fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' });
