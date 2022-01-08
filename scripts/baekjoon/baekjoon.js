@@ -19,7 +19,7 @@ function startLoader() {
         if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
         stopLoader();
         const bojData = await findData();
-        beginUpload(bojData);
+        await beginUpload(bojData);
       }
     }
   }, 2000);
@@ -32,7 +32,7 @@ function stopLoader() {
 startLoader();
 
 /* 파싱 직후 실행되는 함수 */
-function beginUpload(bojData) {
+async function beginUpload(bojData) {
   console.log('bojData', bojData);
   if (isNotEmpty(bojData)) {
     startUpload();
@@ -84,3 +84,25 @@ function beginUpload(bojData) {
   } else console.log('in begin upload: not ready');
 }
 
+/* 모든 코드를 제출하는 함수 */
+// async function uploadAllSolvedProblem() {
+//   const tree_items = [];
+//   const username = await getGithubUsername();
+//   const hook = await getHook();
+//   const token = await getToken();
+
+//   const tree = await findUniqueResultTableListByUsername().then((list) => {
+//     Promise.all(
+//       list.map(async (problem) => {
+//         const bojData = await findData(problem);
+//         if (isNull(bojData)) return;
+//         tree_items.push(await createBlob(username, hook, token, bojData.submission.code)); // )); // 소스코드 파일
+//         tree_items.push(await createBlob(username, hook, token, bojData.submission.problemDescription)); // )); // readme 파일
+//       }),
+//     ).then(async (_) => await createTree(username, hook, token, baseSHA, tree_items));
+//   });
+
+//   const commitSHA = await createCommit(username, hook, token, '전체 코드 업데이트', tree.sha, baseSHA);
+//   updateHead(username, hook, token, commitSHA);
+//   console.log('commit', commitSHA);
+// }
