@@ -79,3 +79,85 @@ function upload(token, hook, code, directory, filename, type, sha, cb = undefine
       }
     });
 }
+
+/** create a Blob
+ * @param {string} username - github username
+ * @param {string} hook - github repository
+ * @param {string} token - github token
+ * @param {string} content - the content on base64 to add the repository
+ * @param {string} path - the path to add the repository
+ * @return {Promise} - the promise for the http request
+ */
+async function createBlob(username, hook, token, content, path) {
+  return fetch(`https://api.github.com/repos/${username}/${hook}/git/blobs`, {
+    method: 'POST',
+    body: JSON.stringify({ content: b64EncodeUnicode(content), encoding: 'base64' }),
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      return { path, sha: data.sha, mode: '100644', type: 'blob' };
+    });
+}
+
+/** create a new tree in git
+ * @param {string} username - the github username
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @param {object} tree_items - the tree items
+ * @param {string} baseSHA - the root sha of the tree
+ * @return {Promise} - the promise for the http request
+ */
+async function createTree(username, hook, token, baseSHA, tree_items) {
+  return fetch(`https://api.github.com/repos/${username}/${hook}/git/trees`, {
+    method: 'POST',
+    body: JSON.stringify({ tree: tree_items, base_tree: baseSHA }),
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      return data.sha;
+    });
+}
+
+/** create a commit in git
+ * @param {string} username - the github username
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @param {string} message - the commit message
+ * @param {string} tree - the tree sha
+ * @param {string} parent - the parent sha
+ * @return {Promise} - the promise for the http request
+ */
+async function createCommit(username, hook, token, message, tree, parent) {
+  return fetch(`https://api.github.com/repos/${username}/${hook}/git/commits`, {
+    method: 'POST',
+    body: JSON.stringify({ message, tree, parents: [parent] }),
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      return data.sha;
+    });
+}
+
+/** update a ref
+ * @param {string} username - the github username
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @param {string} ref - the ref to update
+ * @param {string} commitSHA - the commit sha
+ * @param {boolean} force - force update
+ * @return {Promise} - the promise for the http request
+ */
+async function updateHead(username, hook, token, ref, commitSHA, force = true) {
+  return fetch(`https://api.github.com/repos/${username}/${hook}/git/refs/${ref}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ sha: commitSHA, force }),
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      return data.sha;
+    });
+}
