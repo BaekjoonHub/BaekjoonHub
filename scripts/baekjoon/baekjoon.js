@@ -85,24 +85,21 @@ async function beginUpload(bojData) {
 }
 
 /* 모든 코드를 제출하는 함수 */
-// async function uploadAllSolvedProblem() {
-//   const tree_items = [];
-//   const username = await getGithubUsername();
-//   const hook = await getHook();
-//   const token = await getToken();
+async function uploadAllSolvedProblem() {
+  const tree_items = [];
+  const git = new GitHub(await getGithubUsername(), await getHook(), await getToken());
+  const ref = await git.createReference();
+  const tree = await findUniqueResultTableListByUsername().then((list) => {
+    Promise.all(
+      list.map(async (problem) => {
+        const bojData = await findData(problem);
+        if (isNull(bojData)) return;
+        tree_items.push(await git.createBlob(bojData.submission.code, bojData.meta.directory)); // )); // 소스코드 파일
+        tree_items.push(await git.createBlob(bojData.submission.problemDescription, bojData.meta.directory)); // )); // readme 파일
+      }),
+    ).then(async (_) => git.createTree(ref, tree_items));
+  });
 
-//   const tree = await findUniqueResultTableListByUsername().then((list) => {
-//     Promise.all(
-//       list.map(async (problem) => {
-//         const bojData = await findData(problem);
-//         if (isNull(bojData)) return;
-//         tree_items.push(await createBlob(username, hook, token, bojData.submission.code)); // )); // 소스코드 파일
-//         tree_items.push(await createBlob(username, hook, token, bojData.submission.problemDescription)); // )); // readme 파일
-//       }),
-//     ).then(async (_) => await createTree(username, hook, token, baseSHA, tree_items));
-//   });
-
-//   const commitSHA = await createCommit(username, hook, token, '전체 코드 업데이트', tree.sha, baseSHA);
-//   updateHead(username, hook, token, commitSHA);
-//   console.log('commit', commitSHA);
-// }
+  await git.createCommit('전체 코드 업데이트', tree, ref).then((commit) => git.updateHead(commit));
+  if (debug) console.log('전체 코드 업로드 완료');
+}

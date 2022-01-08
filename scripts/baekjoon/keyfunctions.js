@@ -82,6 +82,7 @@ function upload(token, hook, code, directory, filename, type, sha, cb = undefine
 
 class GitHub {
   constructor(username, hook, token) {
+    if (debug) console('GitHub constructor', username, hook, token);
     this.update(username, hook, token);
   }
 
