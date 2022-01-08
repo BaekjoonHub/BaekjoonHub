@@ -7,36 +7,26 @@
     type: CommitType의 readme or code
     cb: Callback 함수(업로드 후 로딩 아이콘 처리를 맡는다
 */
-function uploadGit(code, directory, fileName, type, cb = undefined, bojData) {
+async function uploadGit(code, directory, fileName, type, cb = undefined, bojData) {
   /* Get necessary payload data */
-  chrome.storage.local.get('BaekjoonHub_token', (t) => {
-    const token = t.BaekjoonHub_token;
-    if (debug) console.log('token', token);
-    if (token) {
-      chrome.storage.local.get('mode_type', (m) => {
-        const mode = m.mode_type;
-        if (mode === 'commit') {
-          /* Local Storage에 저장된 Github Repository(hook) 주소를 찾습니다 */
-          chrome.storage.local.get('BaekjoonHub_hook', (h) => {
-            const hook = h.BaekjoonHub_hook;
-            if (hook) {
-              /* 현재 업로드되어 있는 코드가 있다면 해당 코드의 SHA를 구합니다. */
-              const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
-              chrome.storage.local.get('stats', (s) => {
-                const { stats } = s;
-                let sha = null;
-                if (stats !== undefined && stats.submission !== undefined && stats.submission[filePath] !== undefined) {
-                  sha = stats.submission[filePath][type];
-                }
+  const token = await getToken();
+  if (debug) console.log('token', token);
+  const mode = await getModeType();
+  if (mode === 'commit') {
+    /* Local Storage에 저장된 Github Repository(hook) 주소를 찾습니다 */
+    const hook = await getHook();
 
-                upload(token, hook, code, directory, fileName, type, sha, cb, bojData);
-              });
-            }
-          });
-        }
-      });
+    /* 현재 업로드되어 있는 코드가 있다면 해당 코드의 SHA를 구합니다. */
+    const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
+    const stats = await getStats();
+
+    let sha = null;
+    if (stats !== undefined && stats.submission !== undefined && stats.submission[filePath] !== undefined) {
+      sha = stats.submission[filePath][type];
     }
-  });
+
+    return upload(token, hook, code, directory, fileName, type, sha, cb, bojData);
+  }
 }
 
 /* Github 업로드 함수 */
@@ -54,7 +44,7 @@ function uploadGit(code, directory, fileName, type, cb = undefined, bojData) {
 function upload(token, hook, code, directory, filename, type, sha, cb = undefined, bojData) {
   // To validate user, load user object from GitHub.
 
-  fetch(`https://api.github.com/repos/${hook}/contents/${directory}/${filename}`, {
+  return fetch(`https://api.github.com/repos/${hook}/contents/${directory}/${filename}`, {
     method: 'PUT',
     body: JSON.stringify({ message: bojData.meta.message, content: code, sha }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
@@ -63,10 +53,8 @@ function upload(token, hook, code, directory, filename, type, sha, cb = undefine
     .then((data) => {
       if (debug && type === CommitType.readme) console.log('data', data);
       if (data != null && (data !== data.content) != null && data.content.sha != null && data.content.sha !== undefined) {
-        const { sha } = data.content; // get updated SHA.
-        chrome.storage.local.get('stats', (data) => {
-          let { stats } = data;
-
+        const { sha } = data.content; // get updated SHA
+        getStats().then((stats) => {
           /* Local Storage에 Stats Object가 없다면 초기화한다. */
           if (stats === null || stats === {} || stats === undefined) {
             // create stats object
@@ -77,18 +65,15 @@ function upload(token, hook, code, directory, filename, type, sha, cb = undefine
           const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
           const { submissionId } = bojData.submission;
 
-          if (stats.submission[filePath] === null || stats.submission[filePath] == undefined) {
+          if (isNull(stats.submission[filePath])) {
             stats.submission[filePath] = {};
           }
 
           stats.submission[filePath].submissionId = submissionId;
           stats.submission[filePath][type] = sha; // update sha key.
-          chrome.storage.local.set({ stats }, () => {
+          saveStats(stats).then(() => {
             if (debug) console.log(`Successfully committed ${filename} to github`);
-            // if callback is defined, call it
-            if (cb !== undefined) {
-              cb();
-            }
+            if (cb !== undefined) cb();
           });
         });
       }
