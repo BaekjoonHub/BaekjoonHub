@@ -37,6 +37,7 @@
       ],
       "js": [
         "scripts/baekjoon/variables.js",
+        "scripts/baekjoon/storage.js",
         "scripts/baekjoon/keyfunctions.js",
         "scripts/baekjoon/parsing.js",
         "scripts/baekjoon/util.js",
