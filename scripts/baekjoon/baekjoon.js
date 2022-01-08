@@ -84,20 +84,3 @@ function beginUpload(bojData) {
   } else console.log('in begin upload: not ready');
 }
 
-/* Sync to local storage */
-chrome.storage.local.get('isSync', (data) => {
-  keys = ['BaekjoonHub_token', 'BaekjoonHub_username', 'pipe_BaekjoonHub', 'stats', 'BaekjoonHub_hook', 'mode_type'];
-  if (!data || !data.isSync) {
-    keys.forEach((key) => {
-      chrome.storage.sync.get(key, (data) => {
-        chrome.storage.local.set({ [key]: data[key] });
-      });
-    });
-    chrome.storage.local.set({ isSync: true }, (data) => {
-      if (debug) console.log('BaekjoonHub Synced to local values');
-    });
-  } else {
-    if (debug) console.log('Upload Completed. Local Storage status:', data);
-    if (debug) console.log('BaekjoonHub Local storage already synced!');
-  }
-});
