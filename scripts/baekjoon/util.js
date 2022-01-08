@@ -40,6 +40,10 @@ function isElementExists(element) {
   return element !== undefined && element !== null && element.length > 0;
 }
 
+function isNull(value) {
+  return value === null || value === undefined;
+}
+
 /* A function that recursively checks that all values of object are not '' */
 function isNotEmpty(obj) {
   if (obj === undefined || obj === null || obj === '' || obj === [] || obj === {}) return false;
