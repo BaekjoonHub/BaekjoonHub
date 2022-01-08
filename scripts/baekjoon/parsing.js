@@ -13,73 +13,27 @@
   - 파일명: fileName
   - Readme 내용 : readme
 */
-async function findData() {
-  const bojData = {
-    // Meta data of problem
-    meta: {
-      title: '',
-      problemId: '',
-      level: '',
-      problemDescription: '',
-      language: '',
-      message: '',
-      fileName: '',
-      category: '',
-      readme: '',
-      directory: '',
-    },
-    submission: {
-      submissionId: '',
-      code: '',
-      memory: '',
-      runtime: '',
-    },
-  };
-
+async function findData(data) {
   try {
+    if (isNull(data)) data = findFromResultTable();
     const { 
-      username, 
-      result, 
-      memory, 
-      runtime, 
-      language, 
-      submissionTime, 
-      submissionId, 
-      problemId 
-    } = findFromResultTable();
-    const {
       title, 
       level, 
-      code,
-      tags,
-      problem_description, 
-      problem_input, 
-      problem_output 
-    } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
-    const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
-                            + `### 입력 \n\n ${problem_input}\n\n`
-                            + `### 출력 \n\n ${problem_output}\n\n`;
-    const directory = `백준/${level.replace(/ .*/, '')}/${problemId}.${title.replace(/\s+/g, '-').replace(titleRegex, '')}`;
-    const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
-    const tagl = [];
-    tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
-    const category = tagl.join(', ');
-    const fileName = title.replace(/\s+/g, '-').replace(titleRegex, '') + languages[language];
-    const readme = `# [${level}] ${title} - ${problemId} \n\n` 
-                + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
-                + `### 성능 요약\n\n`
-                + `메모리: ${memory} KB, `
-                + `시간: ${runtime} ms\n\n`
-                + `### 분류\n\n`
-                + `${category}\n\n`
-                + `${problemDescription}\n\n`;
+      code, 
+      problemDescription, 
+      directory, 
+      message, 
+      category, 
+      fileName, 
+      readme 
+    } = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
     return {
       meta: {
         title,
-        problemId,
+        problemId: data.problemId,
         level,
         problemDescription,
-        language,
+        language: data.language,
         message,
         fileName,
         category,
@@ -87,16 +41,59 @@ async function findData() {
         directory,
       },
       submission: {
-        submissionId,
+        submissionId: data.submissionId,
         code,
-        memory,
-        runtime,
+        memory: data.memory,
+        runtime: data.runtime,
       },
     };
   } catch (error) {
     console.error(error);
   }
-  return bojData;
+  return null;
+}
+
+async function makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime) {
+  const {
+    title, 
+    level, 
+    code,
+    tags,
+    problem_description, 
+    problem_input, 
+    problem_output 
+  } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
+
+  const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
+                          + `### 입력 \n\n ${problem_input}\n\n`
+                          + `### 출력 \n\n ${problem_output}\n\n`;
+  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}.${title.replace(/\s+/g, '-').replace(titleRegex, '')}`;
+  const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
+  const tagl = [];
+  tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
+  const category = tagl.join(', ');
+  const fileName = title.replace(/\s+/g, '-').replace(titleRegex, '') + languages[language];
+  const readme = `# [${level}] ${title} - ${problemId} \n\n` 
+              + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
+              + `### 성능 요약\n\n`
+              + `메모리: ${memory} KB, `
+              + `시간: ${runtime} ms\n\n`
+              + `### 분류\n\n`
+              + `${category}\n\n`
+              + `${problemDescription}\n\n`;
+  return {
+    problemId,
+    submissionId,
+    title,
+    level,
+    code,
+    problemDescription,
+    directory,
+    message,
+    category,
+    fileName,
+    readme,
+  };
 }
 
 function findUsername() {
