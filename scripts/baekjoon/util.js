@@ -91,6 +91,45 @@ function unescapeHtml(text) {
   });
 }
 
+/* 일반 특수문자를 전각문자로 변환하는 함수 */
+function convertSingleCharToDoubleChar(text) {
+  // singleChar to doubleChar mapping
+  const map = {
+    '!': '！',
+    '%': '％',
+    '&': '＆',
+    '(': '（',
+    ')': '）',
+    '*': '＊',
+    '+': '＋',
+    ',': '，',
+    '-': '－',
+    '.': '．',
+    '/': '／',
+    ':': '：',
+    ';': '；',
+    '<': '＜',
+    '=': '＝',
+    '>': '＞',
+    '?': '？',
+    '@': '＠',
+    '[': '［',
+    '\\': '＼',
+    ']': '］',
+    '^': '＾',
+    '_': '＿',
+    '`': '｀',
+    '{': '｛',
+    '|': '｜',
+    '}': '｝',
+    '~': '～',
+    ' ': ' ', // 공백만 전각문자가 아닌 FOUR-PER-EM SPACE로 변환
+  };
+  return text.replace(/[!%&()*+,\-./:;<=>?@\[\\\]^_`{|}~ ]/g, function (m) {
+    return map[m];
+  });
+}
+
 String.prototype.escapeHtml = function () {
   return escapeHtml(this);
 };
