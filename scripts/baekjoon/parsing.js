@@ -67,12 +67,12 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
                           + `### 입력 \n\n ${problem_input}\n\n`
                           + `### 출력 \n\n ${problem_output}\n\n`;
-  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}.${title.replace(/\s+/g, '-').replace(titleRegex, '')}`;
+  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}.${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
   const tagl = [];
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
   const category = tagl.join(', ');
-  const fileName = title.replace(/\s+/g, '-').replace(titleRegex, '') + languages[language];
+  const fileName = convertSingleCharToDoubleChar(title) + languages[language];
   const readme = `# [${level}] ${title} - ${problemId} \n\n` 
               + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
               + `### 성능 요약\n\n`
@@ -97,7 +97,9 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
 }
 
 function findUsername() {
-  return document.querySelector('a.username').innerText;
+  const el = document.querySelector('a.username');
+  if (isNull(el)) return null;
+  return el.innerText;
 }
 
 function isExistResultTable() {
