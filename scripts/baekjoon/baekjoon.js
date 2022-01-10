@@ -19,7 +19,7 @@ function startLoader() {
         if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
         stopLoader();
         const bojData = await findData();
-        beginUpload(bojData);
+        await beginUpload(bojData);
       }
     }
   }, 2000);
@@ -32,7 +32,7 @@ function stopLoader() {
 startLoader();
 
 /* 파싱 직후 실행되는 함수 */
-function beginUpload(bojData) {
+async function beginUpload(bojData) {
   console.log('bojData', bojData);
   if (isNotEmpty(bojData)) {
     startUpload();
@@ -40,11 +40,11 @@ function beginUpload(bojData) {
       const { stats } = s;
       if (debug) console.log('stats in beginUpload()', stats);
 
-      if (debug) console.log('stats version', stats.version, 'current version', getVersion());
-      /* 버전 차이 업로드 */
-      if (stats.version !== '1.0.2') {
-        markUploadFailed();
-        alert('버전 차이가 확인되었습니다. 확장 프로그램을 열어 패치노트를 확인해주세요.');
+      // if (debug) console.log('stats version', stats.version, 'current version', getVersion());
+      // /* 버전 차이 업로드 */
+      if (stats.version === undefined || stats.version !== getVersion()) {
+        markUploadFailedCSS();
+        alert('버전 차이가 확인되었습니다. \n확장 프로그램을 열어 패치노트 확인 후 업데이트를 실행해주세요.');
         insertUpdateButton();
         return;
       }
@@ -83,21 +83,3 @@ function beginUpload(bojData) {
     });
   } else console.log('in begin upload: not ready');
 }
-
-/* Sync to local storage */
-chrome.storage.local.get('isSync', (data) => {
-  keys = ['BaekjoonHub_token', 'BaekjoonHub_username', 'pipe_BaekjoonHub', 'stats', 'BaekjoonHub_hook', 'mode_type'];
-  if (!data || !data.isSync) {
-    keys.forEach((key) => {
-      chrome.storage.sync.get(key, (data) => {
-        chrome.storage.local.set({ [key]: data[key] });
-      });
-    });
-    chrome.storage.local.set({ isSync: true }, (data) => {
-      if (debug) console.log('BaekjoonHub Synced to local values');
-    });
-  } else {
-    if (debug) console.log('Upload Completed. Local Storage status:', data);
-    if (debug) console.log('BaekjoonHub Local storage already synced!');
-  }
-});
