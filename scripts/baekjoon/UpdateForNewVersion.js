@@ -4,28 +4,17 @@
 */
 
 function insertUpdateButton() {
-  let elem = document.getElementById('BaekjoonHub_update_element');
-  if (elem !== undefined) {
-    elem = document.createElement('span');
-    elem.id = 'BaekjoonHub_update_element';
-    elem.className = 'runcode-wrapper__8rXm';
-  }
 
-  const button = document.createElement('button');
-  button.className = 'BaekjoonHub_update';
-  button.id = 'BaekjoonHub_update_elem';
-  button.innerHTML = '업데이트 실행';
+  const button = createButton('업데이트 실행');
   button.onclick = updateAlert;
-  elem.append(button);
-
   const target = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[3];
   if (target.childNodes.length > 0) {
-    target.childNodes[0].append(elem);
+    target.childNodes[0].append(button);
   }
 }
 
 function updateAlert() {
-  if (confirm('업데이트 사항을 확인하였습니다')) {
+  if (confirm('업데이트 전에 팝업의 링크를 통해 패치 노트를 확인해주세요')) {
     updateLocalStorageAndGit();
   }
 }
@@ -87,12 +76,12 @@ async function updateLocalStorageAndGit() {
                             if(startDate < Date.parse(resJson[0].commit.committer.date)){
                               console.log(`deleteList ${data[0].path}`, deleteList);
                               return {
-                                'submissionId': subId,
+                                'problemId': bojData.problemId,
                                 'file1': data[0].path,
-                                'Url1': data[0].url,
+                                // 'Url1': data[0].url,
                                 'Sha1': data[0].sha,
                                 'file2': data[1].path,
-                                'Url2': data[1].url,
+                                // 'Url2': data[1].url,
                                 'Sha2': data[1].sha,
                                 'CommitDate': resJson[0].commit.committer.date
                               };
@@ -115,12 +104,9 @@ async function updateLocalStorageAndGit() {
 
                     const refinedDelList = data.filter(elem => elem !== undefined);
                     if(debug) console.log('refinedDelList', refinedDelList);
-
-                    const notification = refinedDelList.map(({CommitDate, file1, file2}) => {
-                      return { CommitDate, file1, file2 }
-                    });
-
-                    if(debug) console.log('notification', notification);
+                    
+                    // window.alert(notification);
+                    insertBoard(refinedDelList, token, hook);
                   })
                 }
               });
@@ -293,3 +279,114 @@ const ulanguages = {
   'Rust 2018': '.rs',
   'MS SQL Server': '.sql'
 };
+
+
+function insertBoard(delList, token, hook){
+
+  let notification = "백준허브 1.0.2번 패치에는 파일 저장 형식 변경이 있어 <u>백준허브</u>로 기존에 제출되었던 문제가 제거되고 새로 제출됩니다.</br> \
+                    이와 관련하여 꼭 패치노트를 확인 후 업데이트를 실행해주시길 바랍니다.</br></br>\
+                    제거 및 다시 제출될 파일 목록은 다음과 같습니다.</br></br>";
+  // const notification = refinedDelList.map(({CommitDate, file1, file2}) => {
+  //   return { CommitDate, file1, file2 }
+  // });
+  delList.map(({CommitDate, file1, file2})=>{
+    notification+=`제출일: ${CommitDate.substring(0,10)}</br>`;
+    notification+=`${file1}</br>`;
+    notification+=`${file2}</br></br>`;
+  })               
+
+  if(debug) console.log('notification', notification);
+  const board = document.createElement('div');
+  board.className = 'BJH_deletion_board';
+
+  const text = document.createElement('p');
+  text.innerHTML = notification;
+
+  const deletionList = document.createElement('div');
+  deletionList.className = 'BJH_deletion_list';
+
+  const closeButton = document.createElement('span');
+  closeButton.classList.add('BJH_deletion_board_close', 'BJH_button');
+  closeButton.innerHTML = '&times';
+  closeButton.onclick = () => {
+    board.style.display = "none";
+  }
+
+  const yesButton = createButton('동의 및 실행하겠습니다');
+  const selfButton = createButton('직접 변경하겠습니다.')  
+  const noButton = createButton('아직 변경하지 않겠습니다.')
+
+  yesButton.onclick = async () =>{
+
+    const deletePromise = [];
+    delList.map(async (data) =>{
+      const f1 = fetch(`https://api.github.com/repos/${hook}/contents/${data.file1}`, {
+        method: 'DELETE',
+        body: JSON.stringify({sha: data.Sha1, message: "백준허브 업데이트"}),
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+      })
+      .then(res => res.json())
+      .then(data => console.log(data));
+      
+      const f2 = fetch(`https://api.github.com/repos/${hook}/contents/${data.file2}`, {
+        method: 'DELETE',
+        body: JSON.stringify({sha: data.Sha2, message: "백준허브 업데이트"}),
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+      })
+      .then(res => res.json())
+      .then(data => console.log(data));
+
+      deletePromise.add(...{f1, f2});
+    });
+
+    if(debug) console.log(deletePromise);
+    Promise.all(deletePromise)
+    .then(prom => Promise.all(prom))
+    .then(() => console.log('삭제가 완료되었습니다'));
+  }
+  selfButton.onclick = async () =>{
+    if(confirm("확인을 누르면 앞으로 업데이트 버튼이 표시되지 않습니다.\n진행하시겠습니까?")){
+      board.style.display = "none";
+      getStats()
+      .then((stats)=>{
+        // TODO: 1.0.2로 바꿔야함
+        stats.version = '1.0.1';
+        saveStats(stats);
+      });
+    }
+  }
+
+  noButton.onclick = () =>{
+    board.style.display = "none";
+  }
+
+
+  deletionList.append(closeButton);
+  deletionList.append(text);
+  deletionList.append(yesButton);
+  deletionList.append(selfButton);
+  deletionList.append(noButton);
+  board.append(deletionList);
+
+
+
+
+  document.body.appendChild(board);
+}
+
+function createButton(text){
+
+  let elem = document.getElementById('BJH_update_element');
+  if (elem !== undefined) {
+    elem = document.createElement('span');
+    elem.id = 'BJH_update_element';
+    elem.classList.add('runcode-wrapper__8rXm', 'BJH_button_wrap');
+  }
+
+  const button = document.createElement('div');
+  button.classList.add('BJH_update', 'BJH_button');
+  button.innerHTML = `<u>${text}</u>`;
+  elem.append(button);
+
+  return elem;
+}

@@ -44,7 +44,7 @@ async function beginUpload(bojData) {
       // /* 버전 차이 업로드 */
       if (stats.version === undefined || stats.version !== getVersion()) {
         markUploadFailedCSS();
-        alert('버전 차이가 확인되었습니다. 확장 프로그램을 열어 패치노트를 확인해주세요.');
+        alert('버전 차이가 확인되었습니다. \n확장 프로그램을 열어 패치노트 확인 후 업데이트를 실행해주세요.');
         insertUpdateButton();
         return;
       }
