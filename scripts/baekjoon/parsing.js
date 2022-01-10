@@ -164,7 +164,7 @@ function findFromResultTable() {
   const resultList = parsingResultTableList(document);
   if (resultList.length === 0) return;
   // const row = resultList[0];
-  return unique(resultList, 'problemId')[0];
+  return selectBestSubmissionList(resultList)[0];
 }
 
 /*
@@ -259,7 +259,7 @@ async function findResultTableByProblemIdAndUsername(problemId, username) {
  * @returns Promise<Array<Object>>
  */
 async function findUniqueResultTableListByUsername(username) {
-  return unique(await findResultTableListByUsername(username), 'problemId');
+  return selectBestSubmissionList(await findResultTableListByUsername(username));
 }
 
 /**

@@ -158,51 +158,66 @@ function b64DecodeUnicode(b64str) {
       .join(''),
   );
 }
-
-/**  
-  * 파싱된 문제별로 최고 성능의 제출 내역 하나씩을 리턴합니다 
-  * @param arr: 파싱된
-**/
-function unique(arr, key) {
-  
-  if (key === undefined) return arr.filter((obj, index, self) => self.indexOf(obj) === index);
-  const returnList = [];
-
-  // O(N) 비교 함수
-  arr.forEach((obj) => {
-    let idx = returnList.findIndex((t) => t[key] === obj[key]);
-    if(idx < 0) returnList.push(obj);
-    else if(betterSubmission(returnList[idx], obj)>0){
-      returnList.splice(idx, 1, obj);
-    }
-  });
-  // return arr.filter((obj, index, self) => self.findIndex((t) => t[key] === obj[key]) === index);
-  console.log("returnList", returnList);
-  return returnList;
+/** key 값을 기준으로 array를 그룹핑하여 map으로 반환합니다.
+ * @param {object} array - array to be sorted
+ * @param {string} key - key to sort
+ * @returns {object} - key 기준으로 그룹핑된 객체들 배열을 value로 갖는 map
+ */
+function groupBy(array, key) {
+  return array.reduce(function (rv, x) {
+    (rv[x[key]] = rv[x[key]] || []).push(x);
+    return rv;
+  }, {});
 }
-
 
 /**
-  * 제출 목록 비교함수입니다
-  * comparator로 사용할 수 있도록 1:-1 반환
-  * submission1이 났다면 -1, submission2가 났다면 1 리턴
-**/
-function betterSubmission(submission1, submission2){
-
-  if(+submission1.runtime > +submission2.runtime) return 1;
-  if(+submission1.runtime < +submission2.runtime) return -1;
-
-  if(+submission1.memory > +submission2.memory) return 1;
-  if(+submission1.memory < +submission2.memory) return -1;
-
-  if(+submission1.codeLength > +submission2.codeLength) return 1;
-  if(+submission1.codeLength < +submission2.codeLength) return -1;
-
-  // 주어진 배열은 시간 순이므로 모든게 동일하다면 먼저 전자 리턴
-  return -1;
+ * arr에서 같은 key 그룹 내의 요소 중 최고의 값을 리스트화하여 반환합니다.
+ * @param arr: 비교할 요소가 있는 배열
+ * @param key: 같은 그룹으로 묶을 키 값
+ * @param compare: 비교할 함수
+ * @returns {array<object>} : 같은 key 그룹 내의 요소 중 최고의 값을 반환합니다.
+ * */
+function maxValuesGroupBykey(arr, key, compare) {
+  const map = groupBy(arr, key);
+  const result = [];
+  for (const [key, value] of Object.entries(map)) {
+    const maxValue = value.reduce((max, current) => {
+      return compare(max, current) > 0 ? max : current;
+    });
+    result.push(maxValue);
+  }
+  return result;
+}
+/**
+ * 제출 목록 비교함수입니다
+ * @param {object} a - 제출 요소 피연산자 a
+ * @param {object} b - 제출 요소 피연산자 b
+ * @returns {number} - a와 b 아래의 우선순위로 값을 비교하여 정수값을 반환합니다.
+ * 1. 실행시간(runtime)의 차이가 있을 경우 그 차이 값을 반환합니다.
+ * 2. 사용메모리(memory)의 차이가 있을 경우 그 차이 값을 반환합니다.
+ * 3. 코드길이(codeLength)의 차이가 있을 경우 그 차이 값을 반환합니다.
+ * 4. 위의 요소가 모두 같은 경우 제출한 요소(submissionId)의 그 차이 값의 역을 반환합니다.
+ * */
+function compareSubmission(a, b) {
+  return a.runtime === b.runtime
+          ? a.memory === b.memory
+            ? a.codeLength === b.codeLength
+              ? -(a.submissionId - b.submissionId)
+              : a.codeLength - b.codeLength
+            : a.memory - b.memory
+          : a.runtime - b.runtime
+  ;
 }
 
-
+/**
+ * 파싱된 문제별로 최고의 성능의 제출 내역을 하나씩 뽑아서 배열로 반환합니다.
+ * @param {array} submissions - 제출 목록 배열
+ * @returns {array} - 목록 중 문제별로 최고의 성능 제출 내역을 담은 배열
+ */
+function selectBestSubmissionList(submissions) {
+  if (isNull(submissions) || submissions.length === 0) return [];
+  return maxValuesGroupBykey(submissions, 'problemId', (a, b) => -compareSubmission(a, b));
+}
 
 function convertResultTableHeader(header) {
   switch (header) {
