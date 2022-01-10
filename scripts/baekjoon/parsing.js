@@ -129,17 +129,18 @@ function parsingResultTableList(doc) {
         case 'language':
           return x.innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
         case 'submissionTime':
-          return x.firstChild.getAttribute('data-original-title');
+          const el = x.querySelector('a.show-date');
+          if (isNull(el)) return null;
+          return el.getAttribute('data-original-title');
         default:
           return x.innerText.trim();
       }
     });
     const obj = {};
-    obj.element = row;
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
-    if(obj.result == '맞았습니다!!') list.push(obj);
+    if (obj.result === '맞았습니다!!') list.push(obj);
   }
   if (debug) console.log('TableList', list);
   return list;
