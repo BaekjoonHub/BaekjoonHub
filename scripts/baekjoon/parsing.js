@@ -220,7 +220,6 @@ function startUploadCountDown() {
   uploadState.countdown = setTimeout(() => {
     if (uploadState.uploading === true) {
       // still uploading, then it failed
-      uploadState.uploading = false;
       markUploadFailedCSS();
     }
   }, 10000);

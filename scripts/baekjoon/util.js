@@ -20,6 +20,7 @@ function startUpload() {
 // Upload icon - Set Completed Icon
 /* This will create a tick mark before "Run Code" button signalling BaekjoonHub has done its job */
 function markUploadedCSS() {
+  uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
   elem.className = 'markuploaded';
 }
@@ -27,6 +28,7 @@ function markUploadedCSS() {
 // Upload icon - Set Failed Icon
 /* This will create a failed tick mark before "Run Code" button signalling that upload failed */
 function markUploadFailedCSS() {
+  uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
   elem.className = 'markuploadfailed';
 }
