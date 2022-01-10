@@ -13,73 +13,27 @@
   - 파일명: fileName
   - Readme 내용 : readme
 */
-async function findData() {
-  const bojData = {
-    // Meta data of problem
-    meta: {
-      title: '',
-      problemId: '',
-      level: '',
-      problemDescription: '',
-      language: '',
-      message: '',
-      fileName: '',
-      category: '',
-      readme: '',
-      directory: '',
-    },
-    submission: {
-      submissionId: '',
-      code: '',
-      memory: '',
-      runtime: '',
-    },
-  };
-
+async function findData(data) {
   try {
+    if (isNull(data)) data = findFromResultTable();
     const { 
-      username, 
-      result, 
-      memory, 
-      runtime, 
-      language, 
-      submissionTime, 
-      submissionId, 
-      problemId 
-    } = findFromResultTable();
-    const {
       title, 
       level, 
-      code,
-      tags,
-      problem_description, 
-      problem_input, 
-      problem_output 
-    } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
-    const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
-                            + `### 입력 \n\n ${problem_input}\n\n`
-                            + `### 출력 \n\n ${problem_output}\n\n`;
-    const directory = `백준/${level.replace(/ .*/, '')}/${problemId}.${title.replace(/\s+/g, '-').replace(titleRegex, '')}`;
-    const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
-    const tagl = [];
-    tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
-    const category = tagl.join(', ');
-    const fileName = title.replace(/\s+/g, '-').replace(titleRegex, '') + languages[language];
-    const readme = `# [${level}] ${title} - ${problemId} \n\n` 
-                + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
-                + `### 성능 요약\n\n`
-                + `메모리: ${memory} KB, `
-                + `시간: ${runtime} ms\n\n`
-                + `### 분류\n\n`
-                + `${category}\n\n`
-                + `${problemDescription}\n\n`;
+      code, 
+      problemDescription, 
+      directory, 
+      message, 
+      category, 
+      fileName, 
+      readme 
+    } = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
     return {
       meta: {
         title,
-        problemId,
+        problemId: data.problemId,
         level,
         problemDescription,
-        language,
+        language: data.language,
         message,
         fileName,
         category,
@@ -87,28 +41,83 @@ async function findData() {
         directory,
       },
       submission: {
-        submissionId,
+        submissionId: data.submissionId,
         code,
-        memory,
-        runtime,
+        memory: data.memory,
+        runtime: data.runtime,
       },
     };
   } catch (error) {
     console.error(error);
   }
-  return bojData;
+  return null;
 }
 
+async function makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime) {
+  const {
+    title, 
+    level, 
+    code,
+    tags,
+    problem_description, 
+    problem_input, 
+    problem_output 
+  } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
+
+  const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
+                          + `### 입력 \n\n ${problem_input}\n\n`
+                          + `### 출력 \n\n ${problem_output}\n\n`;
+  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}.${convertSingleCharToDoubleChar(title)}`;
+  const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
+  const tagl = [];
+  tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
+  const category = tagl.join(', ');
+  const fileName = convertSingleCharToDoubleChar(title) + languages[language];
+  const readme = `# [${level}] ${title} - ${problemId} \n\n` 
+              + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
+              + `### 성능 요약\n\n`
+              + `메모리: ${memory} KB, `
+              + `시간: ${runtime} ms\n\n`
+              + `### 분류\n\n`
+              + `${category}\n\n`
+              + `${problemDescription}\n\n`;
+  return {
+    problemId,
+    submissionId,
+    title,
+    level,
+    code,
+    problemDescription,
+    directory,
+    message,
+    category,
+    fileName,
+    readme,
+  };
+}
+
+
+/*
+  현재 로그인된 유저를 파싱합니다.
+*/
 function findUsername() {
-  return document.querySelector('a.username').innerText;
+  const el = document.querySelector('a.username');
+  if (isNull(el)) return null;
+  return el.innerText;
 }
 
+/*
+  결과 테이블의 존재 여부를 확인합니다.
+*/
 function isExistResultTable() {
   return document.getElementById('status-table') !== null;
 }
 
-function findResultTableList() {
-  const table = document.getElementById('status-table');
+/*
+  결과 테이블을 파싱하는 함수입니다.
+*/
+function parsingResultTableList(doc) {
+  const table = doc.getElementById('status-table');
   if (table === null || table === undefined || table.length === 0) return [];
   const headers = Array.from(table.rows[0].cells, (x) => convertResultTableHeader(x.innerText.trim()));
 
@@ -120,17 +129,18 @@ function findResultTableList() {
         case 'language':
           return x.innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
         case 'submissionTime':
-          return x.firstChild.getAttribute('data-original-title');
+          const el = x.querySelector('a.show-date');
+          if (isNull(el)) return null;
+          return el.getAttribute('data-original-title');
         default:
           return x.innerText.trim();
       }
     });
     const obj = {};
-    obj.element = row;
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
-    list.push(obj);
+    if (obj.result === '맞았습니다!!') list.push(obj);
   }
   if (debug) console.log('TableList', list);
   return list;
@@ -152,10 +162,10 @@ function findFromResultTable() {
   if (!isExistResultTable()) {
     if (debug) console.log('Result table not found');
   }
-  const resultList = findResultTableList();
+  const resultList = parsingResultTableList(document);
   if (resultList.length === 0) return;
-  const row = resultList[0];
-  return row;
+  // const row = resultList[0];
+  return selectBestSubmissionList(resultList)[0];
 }
 
 /*
@@ -174,7 +184,7 @@ function findFromResultTable() {
 
 async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   if (debug) console.log('in find with promise');
-  if (checkElem(problemId) && checkElem(submissionId)) {
+  if (elementExists(problemId) && elementExists(submissionId)) {
     const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
     const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
     const SolvedAPI = fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' });
@@ -184,17 +194,11 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
         /* Get Question Description */
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionText, 'text/html');
-        let problem_description;
-        let problem_input;
-        let problem_output;
-        if (doc != null) {
-          problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
-          problem_input =       `${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}`;
-          problem_output =      `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
-        }
+        const problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
+        const problem_input       = `${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}`;
+        const problem_output      = `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
         /* Get Code */
         const code = codeText;
-        if (debug) console.log('findWithPromise - code', code);
         /* Get Solved Response */
         const { tags } = solvedJson;
         const title = solvedJson.titleKo;
@@ -209,15 +213,71 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   }
 }
 
-/* Since we dont yet have callbacks/promises that helps to find out if things went bad */
-/* we will start 10 seconds counter and even after that upload is not complete, then we conclude its failed */
-function startUploadCountDown() {
-  uploadState.uploading = true;
-  uploadState.countdown = setTimeout(() => {
-    if (uploadState.uploading === true) {
-      // still uploading, then it failed
-      uploadState.uploading = false;
-      markUploadFailedCSS();
-    }
-  }, 10000);
+/**
+ * user가 푼 백준의 문제번호 리스트를 가져오는 함수
+ * @param username: 백준 아이디
+ * @return Promise<Array<String>>
+ */
+async function findSolvedProblemsList(username) {
+  return fetch(`https://www.acmicpc.net/user/${username}`, { method: 'GET' })
+    .then((html) => html.getElementsByClassName('result-ac'))
+    .then((collections) => Array.from(collections))
+    .then((arr) => arr.map((name) => name.textContent));
+}
+
+/**
+ * user가 problemId 에 제출한 리스트를 가져오는 함수
+ * @param problemId: 문제 번호
+ * @param username: 백준 아이디
+ * @return Promise<Array<String>>
+ */
+async function findResultTableByProblemIdAndUsername(problemId, username) {
+  return fetch(`https://www.acmicpc.net/status?from_mine=1&problem_id=${problemId}&user_id=${username}`, { method: 'GET' })
+    .then((html) => html.text())
+    .then((text) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      return parsingResultTableList(doc);
+    });
+}
+
+/**
+ * user가 "맞았습니다!!" 결과를 맞은 중복되지 않은 제출 결과 리스트를 가져오는 함수
+ * @param username: 백준 아이디
+ * @returns Promise<Array<Object>>
+ */
+async function findUniqueResultTableListByUsername(username) {
+  return selectBestSubmissionList(await findResultTableListByUsername(username));
+}
+
+/**
+ * user가 "맞았습니다!!" 결과를 맞은 모든 제출 결과 리스트를 가져오는 함수
+ * @param username: 백준 아이디
+ * @return Promise<Array<Object>>
+ */
+async function findResultTableListByUsername(username) {
+  const result = [];
+  let doc = await findHtmlDocumentByUrl(`https://www.acmicpc.net/status?user_id=${username}&result_id=4`);
+  let next_page = doc.getElementById('next_page');
+  do {
+    result.push(...parsingResultTableList(doc));
+    if(next_page!==null) doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
+  } while ((next_page = doc.getElementById('next_page')) !== null);
+  result.push(...parsingResultTableList(doc));
+
+  return result;
+}
+
+/**
+ * url에 해당하는 html 문서를 가져오는 함수
+ * @param url: url 주소
+ * @returns html document
+ */
+async function findHtmlDocumentByUrl(url) {
+  return fetch(url, { method: 'GET' })
+    .then((html) => html.text())
+    .then((text) => {
+      const parser = new DOMParser();
+      return parser.parseFromString(text, 'text/html');
+    });
 }
