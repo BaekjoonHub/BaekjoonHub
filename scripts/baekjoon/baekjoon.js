@@ -40,9 +40,9 @@ async function beginUpload(bojData) {
       const { stats } = s;
       if (debug) console.log('stats in beginUpload()', stats);
 
-      if (debug) console.log('stats version', stats.version, 'current version', getVersion());
-      /* 버전 차이 업로드 */
-      if (stats.version !== getVersion()) {
+      // if (debug) console.log('stats version', stats.version, 'current version', getVersion());
+      // /* 버전 차이 업로드 */
+      if (stats.version === undefined || stats.version !== getVersion()) {
         markUploadFailedCSS();
         alert('버전 차이가 확인되었습니다. 확장 프로그램을 열어 패치노트를 확인해주세요.');
         insertUpdateButton();
@@ -82,31 +82,4 @@ async function beginUpload(bojData) {
       }
     });
   } else console.log('in begin upload: not ready');
-}
-
-/* 모든 코드를 github에 업로드하는 함수 */
-async function uploadAllSolvedProblem() {
-  const tree_items = [];
-  const git = new GitHub(await getHook(), await getToken());
-  const { refSHA, ref } = await git.getReference();
-  await findUniqueResultTableListByUsername(findUsername())
-    .then((list) => {
-      return Promise.all(
-        list.map(async (problem) => {
-          const bojData = await findData(problem);
-          if (isNull(bojData)) return;
-          tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
-          tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // )); // readme 파일
-        }),
-      );
-    })
-    .then((_) => git.createTree(refSHA, tree_items))
-    .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
-    .then((commitSHA) => git.updateHead(ref, commitSHA))
-    .then((_) => {
-      if (debug) console.log('전체 코드 업로드 완료');
-    })
-    .catch((e) => {
-      if (debug) console.log('전체 코드 업로드 실패', e);
-    });
 }

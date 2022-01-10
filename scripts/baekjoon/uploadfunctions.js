@@ -79,3 +79,31 @@ function upload(token, hook, code, directory, filename, type, sha, cb = undefine
       }
     });
 }
+
+
+/* 모든 코드를 github에 업로드하는 함수 */
+async function uploadAllSolvedProblem() {
+  const tree_items = [];
+  const git = new GitHub(await getHook(), await getToken());
+  const { refSHA, ref } = await git.getReference();
+  await findUniqueResultTableListByUsername(findUsername())
+    .then((list) => {
+      return Promise.all(
+        list.map(async (problem) => {
+          const bojData = await findData(problem);
+          if (isNull(bojData)) return;
+          tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
+          tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // )); // readme 파일
+        }),
+      );
+    })
+    .then((_) => git.createTree(refSHA, tree_items))
+    .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
+    .then((commitSHA) => git.updateHead(ref, commitSHA))
+    .then((_) => {
+      if (debug) console.log('전체 코드 업로드 완료');
+    })
+    .catch((e) => {
+      if (debug) console.log('전체 코드 업로드 실패', e);
+    });
+}
