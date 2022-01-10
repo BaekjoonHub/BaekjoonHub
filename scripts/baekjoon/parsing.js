@@ -199,7 +199,6 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
         const problem_output      = `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
         /* Get Code */
         const code = codeText;
-        if (debug) console.log('findProblemDetailsAndSubmissionCode - code', code);
         /* Get Solved Response */
         const { tags } = solvedJson;
         const title = solvedJson.titleKo;
@@ -212,18 +211,6 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
     //   markUploadFailedCSS();
     // });
   }
-}
-
-/* Since we dont yet have callbacks/promises that helps to find out if things went bad */
-/* we will start 10 seconds counter and even after that upload is not complete, then we conclude its failed */
-function startUploadCountDown() {
-  uploadState.uploading = true;
-  uploadState.countdown = setTimeout(() => {
-    if (uploadState.uploading === true) {
-      // still uploading, then it failed
-      markUploadFailedCSS();
-    }
-  }, 10000);
 }
 
 /**
