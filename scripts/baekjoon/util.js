@@ -36,7 +36,7 @@ function getVersion() {
 }
 
 /* Util function to check if an element exists */
-function isElementExists(element) {
+function elementExists(element) {
   return element !== undefined && element !== null && element.length > 0;
 }
 
@@ -157,11 +157,50 @@ function b64DecodeUnicode(b64str) {
   );
 }
 
-/* Excludes duplicate values in the array. */
+/**  
+  * 파싱된 문제별로 최고 성능의 제출 내역 하나씩을 리턴합니다 
+  * @param arr: 파싱된
+**/
 function unique(arr, key) {
+  
   if (key === undefined) return arr.filter((obj, index, self) => self.indexOf(obj) === index);
-  return arr.filter((obj, index, self) => self.findIndex((t) => t[key] === obj[key]) === index);
+  const returnList = [];
+
+  // O(N) 비교 함수
+  arr.forEach((obj) => {
+    let idx = returnList.findIndex((t) => t[key] === obj[key]);
+    if(idx < 0) returnList.push(obj);
+    else if(betterSubmission(returnList[idx], obj)>0){
+      returnList.splice(idx, 1, obj);
+    }
+  });
+  // return arr.filter((obj, index, self) => self.findIndex((t) => t[key] === obj[key]) === index);
+  console.log("returnList", returnList);
+  return returnList;
 }
+
+
+/**
+  * 제출 목록 비교함수입니다
+  * comparator로 사용할 수 있도록 1:-1 반환
+  * submission1이 났다면 -1, submission2가 났다면 1 리턴
+**/
+function betterSubmission(submission1, submission2){
+
+  if(+submission1.runtime > +submission2.runtime) return 1;
+  if(+submission1.runtime < +submission2.runtime) return -1;
+
+  if(+submission1.memory > +submission2.memory) return 1;
+  if(+submission1.memory < +submission2.memory) return -1;
+
+  if(+submission1.codeLength > +submission2.codeLength) return 1;
+  if(+submission1.codeLength < +submission2.codeLength) return -1;
+
+  // 주어진 배열은 시간 순이므로 모든게 동일하다면 먼저 전자 리턴
+  return -1;
+}
+
+
 
 function convertResultTableHeader(header) {
   switch (header) {

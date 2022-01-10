@@ -139,7 +139,7 @@ function parsingResultTableList(doc) {
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
-    list.push(obj);
+    if(obj.result == '맞았습니다!!') list.push(obj);
   }
   if (debug) console.log('TableList', list);
   return list;
@@ -163,8 +163,8 @@ function findFromResultTable() {
   }
   const resultList = parsingResultTableList(document);
   if (resultList.length === 0) return;
-  const row = resultList[0];
-  return row;
+  // const row = resultList[0];
+  return unique(resultList, 'problemId')[0];
 }
 
 /*
@@ -183,7 +183,7 @@ function findFromResultTable() {
 
 async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   if (debug) console.log('in find with promise');
-  if (isElementExists(problemId) && isElementExists(submissionId)) {
+  if (elementExists(problemId) && elementExists(submissionId)) {
     const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
     const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
     const SolvedAPI = fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' });
@@ -269,16 +269,16 @@ async function findUniqueResultTableListByUsername(username) {
  * @return Promise<Array<Object>>
  */
 async function findResultTableListByUsername(username) {
-  const rsult = [];
+  const result = [];
   let doc = await findHtmlDocumentByUrl(`https://www.acmicpc.net/status?user_id=${username}&result_id=4`);
   let next_page = doc.getElementById('next_page');
   do {
-    rsult.push(...parsingResultTableList(doc));
+    result.push(...parsingResultTableList(doc));
     doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
   } while ((next_page = doc.getElementById('next_page')) !== null);
-  rsult.push(...parsingResultTableList(doc));
+  result.push(...parsingResultTableList(doc));
 
-  return rsult;
+  return result;
 }
 
 /**
