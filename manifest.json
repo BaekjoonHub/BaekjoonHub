@@ -43,7 +43,8 @@
         "scripts/baekjoon/util.js",
         "scripts/baekjoon/UpdateForNewVersion.js",
         "scripts/baekjoon/baekjoon.js",
-        "scripts/authorize.js"
+        "scripts/authorize.js",
+        "scripts/Github.js"
       ],
       "run_at": "document_idle"
     }

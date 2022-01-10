@@ -96,20 +96,26 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   };
 }
 
+
+/*
+  현재 로그인된 유저를 파싱합니다.
+*/
 function findUsername() {
   const el = document.querySelector('a.username');
   if (isNull(el)) return null;
   return el.innerText;
 }
 
+/*
+  결과 테이블의 존재 여부를 확인합니다.
+*/
 function isExistResultTable() {
   return document.getElementById('status-table') !== null;
 }
 
-function findResultTableList() {
-  return parsingResultTableList(document);
-}
-
+/*
+  결과 테이블을 파싱하는 함수입니다.
+*/
 function parsingResultTableList(doc) {
   const table = doc.getElementById('status-table');
   if (table === null || table === undefined || table.length === 0) return [];
@@ -155,7 +161,7 @@ function findFromResultTable() {
   if (!isExistResultTable()) {
     if (debug) console.log('Result table not found');
   }
-  const resultList = findResultTableList();
+  const resultList = parsingResultTableList(document);
   if (resultList.length === 0) return;
   const row = resultList[0];
   return row;
