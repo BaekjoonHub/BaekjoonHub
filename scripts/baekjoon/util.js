@@ -1,5 +1,6 @@
-// Upload icon - Set Loading Icon
-/* start upload will inject a spinner on left side to the "Run Code" button */
+/**
+ * 로딩 버튼 추가
+ */
 function startUpload() {
   let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
   if (elem !== undefined) {
@@ -17,20 +18,34 @@ function startUpload() {
   startUploadCountDown();
 }
 
-// Upload icon - Set Completed Icon
-/* This will create a tick mark before "Run Code" button signalling BaekjoonHub has done its job */
+/**
+ * 업로드 완료 아이콘 표시
+ */
 function markUploadedCSS() {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
   elem.className = 'markuploaded';
 }
 
-// Upload icon - Set Failed Icon
-/* This will create a failed tick mark before "Run Code" button signalling that upload failed */
+/**
+ * 업로드 실패 아이콘 표시
+ */
 function markUploadFailedCSS() {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
   elem.className = 'markuploadfailed';
+}
+
+/**
+ * 총 실행시간이 10초를 초과한다면 실패로 간주합니다.
+ */
+function startUploadCountDown() {
+  uploadState.uploading = true;
+  uploadState.countdown = setTimeout(() => {
+    if (uploadState.uploading === true) {
+      markUploadFailedCSS();
+    }
+  }, 10000);
 }
 
 function getVersion() {
