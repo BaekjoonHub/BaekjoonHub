@@ -273,7 +273,7 @@ async function findResultTableListByUsername(username) {
   let next_page = doc.getElementById('next_page');
   do {
     result.push(...parsingResultTableList(doc));
-    doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
+    if(next_page!==null) doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
   } while ((next_page = doc.getElementById('next_page')) !== null);
   result.push(...parsingResultTableList(doc));
 
