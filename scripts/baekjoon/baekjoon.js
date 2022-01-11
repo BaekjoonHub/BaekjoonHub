@@ -1,5 +1,5 @@
 // Set to true to enable console log
-const debug = true;
+const debug = false;
 
 /* 
   문제 제출 맞음 여부를 확인하는 함수
