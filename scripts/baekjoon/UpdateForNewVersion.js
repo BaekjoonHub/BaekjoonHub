@@ -371,9 +371,10 @@ function insertBoard(delList, token, hook){
         const bojData = await findData(problem);
         if(isNull(bojData)) return;
         tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
-        if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.code);
+        if(debug) console.log('tree slice', tree_items.slice(-1));
+        if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
         tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // )); // readme 파일
-        if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.readme);
+        if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
       }))
       .then((_) => git.createTree(refSHA, tree_items))
       .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
