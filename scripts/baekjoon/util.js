@@ -286,7 +286,7 @@ function updateStatsPostUpload(bojData, sha, type){
     stats.submission[filePath].submissionId = submissionId;
     stats.submission[filePath][type] = sha; // update sha key.
     saveStats(stats).then(() => {
-      if (debug) console.log(`Successfully committed ${filename} to github`);
+      if (debug) console.log(`Successfully committed ${bojData.meta.fileName} to github`);
       if (cb !== undefined) cb();
     });
   })
