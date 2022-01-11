@@ -77,6 +77,7 @@ async function updateLocalStorageAndGit() {
                               console.log(`deleteList ${data[0].path}`, deleteList);
                               return {
                                 'problemId': bojData.problemId,
+                                'key': bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language,
                                 'file1': data[0].path,
                                 // 'Url1': data[0].url,
                                 'Sha1': data[0].sha,
@@ -333,8 +334,7 @@ function insertBoard(delList, token, hook){
           return data;
         });
       
-      console.log('result1', result1);
-      await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file2}`, {
+      let result2 = await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file2}`, {
           method: 'DELETE',
           body: JSON.stringify({sha: elem.Sha2, message: "백준허브 업데이트"}),
           headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
@@ -344,6 +344,14 @@ function insertBoard(delList, token, hook){
           console.log(`data2 ${idx}`, data);
           return data;
         });
+      
+      if(result1 && result2){
+        await getStats()
+        .then((stats)=>{
+          delete stats[elem.key];
+          saveStats(stats);
+        })
+      }
     }
     
     
@@ -354,7 +362,9 @@ function insertBoard(delList, token, hook){
       getStats()
       .then((stats)=>{
         // TODO: 1.0.2로 바꿔야함
+        stats = {};
         stats.version = '1.0.1';
+        stats.submission = {};
         saveStats(stats);
       });
     }
