@@ -367,6 +367,7 @@ function insertBoard(delList, token, hook){
     const { refSHA, ref } = await git.getReference();
     await Promise.all(
       delList.map(async (problem, index) => {
+        console.log(`uploading ${index}`, problem);
         const bojData = await findData(problem);
         if(isNull(bojData)) return;
         tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
