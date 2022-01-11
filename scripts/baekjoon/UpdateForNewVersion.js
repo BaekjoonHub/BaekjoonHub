@@ -340,16 +340,15 @@ function insertBoard(delList, token, hook){
       incMultiLoader(0.5);
     }
     
-    board.style.display = "none";
     getStats()
-      .then((stats)=>{
+    .then((stats)=>{
         // TODO: 1.0.2로 바꿔야함
         stats = {};
         stats.version = '1.0.2';
         stats.submission = {};
         saveStats(stats);
-    });
-    
+      });
+      
     const tree_items = [];
     const git = new GitHub(await getHook(), await getToken());
     const { refSHA, ref } = await git.getReference();
@@ -357,23 +356,24 @@ function insertBoard(delList, token, hook){
       delList.map(async (problem, index) => {
         const bojData = await findData(problem);
         if(isNull(bojData)) return;
-        tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
+        tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // 소스코드 파일
         if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
+        tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // readme 파일
         if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
         incMultiLoader(0.5);
-      }))
-      .then((_) => git.createTree(refSHA, tree_items))
-      .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
-      .then((commitSHA) => git.updateHead(ref, commitSHA))
-      .then((_) => {
-        if (debug) console.log('레포 업데이트 완료');
-        incMultiLoader(1);
-      })
-      .catch((e) => {
-        if (debug) console.log('레포 업데이트 실패', e);
-      });
-    
-
+    }))
+    .then((_) => git.createTree(refSHA, tree_items))
+    .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
+    .then((commitSHA) => git.updateHead(ref, commitSHA))
+    .then((_) => {
+      if (debug) console.log('레포 업데이트 완료');
+      incMultiLoader(1);
+    })
+    .catch((e) => {
+      if (debug) console.log('레포 업데이트 실패', e);
+    });
+        
+    board.style.display = "none";
     
   };
   selfButton.onclick = async () =>{
@@ -394,16 +394,12 @@ function insertBoard(delList, token, hook){
     board.style.display = "none";
   }
 
-
   deletionList.append(closeButton);
   deletionList.append(text);
   deletionList.append(yesButton);
   deletionList.append(selfButton);
   deletionList.append(noButton);
   board.append(deletionList);
-
-
-
 
   document.body.appendChild(board);
 }
