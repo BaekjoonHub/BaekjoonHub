@@ -21,7 +21,9 @@ else if(currentUrl.includes('.net/user')){
 function startLoader() {
   loader = setInterval(async () => {
     if (isExistResultTable()) {
-      const { username, result } = findFromResultTable();
+      const table = findFromResultTable();
+      if (isNull(table) || table.length === 0) return;
+      const { username, result } = table;
       if (username !== findUsername() || result === '틀렸습니다') {
         stopLoader();
         return;
