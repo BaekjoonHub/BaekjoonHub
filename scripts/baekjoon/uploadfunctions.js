@@ -49,8 +49,8 @@ async function upload(token, hook, code, directory, filename, type, sha = null, 
     body: JSON.stringify({ message: bojData.meta.message, content: code, sha }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   })
-    .then(res => res.json())
-    .then(async data => {
+    .then((res) => res.json())
+    .then(async (data) => {
       if (debug && type === CommitType.readme) console.log('data', data);
 
       if (data !== undefined && data.content !== undefined && data.content.sha !== null && data.content.sha !== undefined) {
@@ -63,17 +63,15 @@ async function upload(token, hook, code, directory, filename, type, sha = null, 
           method: 'GET',
           headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
         })
-        .then(res => res.json())
-        .then(data => {
-          return data.sha;
-        });
+          .then((res) => res.json())
+          .then((data) => {
+            return data.sha;
+          });
 
         return upload(token, hook, code, directory, filename, type, sha, cb, bojData);
       }
-    })
-    
+    });
 }
-
 
 /* 모든 코드를 github에 업로드하는 함수 */
 async function uploadAllSolvedProblem() {

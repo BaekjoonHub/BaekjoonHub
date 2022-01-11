@@ -44,10 +44,10 @@ function stopLoader() {
 
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
-  if(debug) console.log('bojData', bojData);
+  if (debug) console.log('bojData', bojData);
   if (isNotEmpty(bojData)) {
     startUpload();
-    
+
     const stats = await getStats();
     if (debug) console.log('stats in beginUpload()', stats);
 
@@ -63,15 +63,14 @@ async function beginUpload(bojData) {
     const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
     let recentSubmissionId = null;
     if (stats !== undefined && stats.submission !== undefined && stats.submission[filePath] !== undefined) {
-      /**  
+      /**
        * 1.0.2 버전 한정 로직으로 1.0.3에는 지워야함
        * 여기까지 왔다면 이미 버전체크가 된 상태이므로 변경되지 않은 파일에 대하여 하드 포맷
-       */ 
-      if(stats.submission[filePath].codeSha === undefined || stats.submission[filePath].readmeSha === undefined){
+       */
+      if (stats.submission[filePath].codeSha === undefined || stats.submission[filePath].readmeSha === undefined) {
         delete stats.submission[filePath];
         saveStats(stats);
-      }
-      else recentSubmissionId = stats.submission[filePath].submissionId;
+      } else recentSubmissionId = stats.submission[filePath].submissionId;
     }
 
     /* 현재 제출 번호가 기존 제출 번호와 같다면 실행 중지 */
