@@ -281,13 +281,16 @@ const ulanguages = {
 function insertBoard(delList, token, hook){
 
   let notification = "백준허브 1.0.2 버전 패치에는 파일 저장 형식 변경이 있어 <u>백준허브</u>로 기존에 제출되었던 문제가 제거되고 새로 제출됩니다.</br> \
-                    이와 관련하여 꼭 패치노트를 확인 후 업데이트를 실행해주시길 바랍니다.</br></br>\
-                    제거 및 다시 제출될 파일 목록은 다음과 같습니다.</br></br>";
+                    이와 관련하여 꼭 패치노트를 확인 후 업데이트를 실행해주시길 바랍니다.(패치노트는 팝업창에서 확인하실 수 있습니다.)</br></br>\
+                    제거 후 다시 제출될 파일 목록은 다음과 같습니다.</br></br>";
   delList.map(({CommitDate, file1, file2})=>{
     notification+=`제출일: ${CommitDate.substring(0,10)}</br>`;
     notification+=`${file1}</br>`;
     notification+=`${file2}</br></br>`;
   })               
+  notification += `</br></br>업데이트 방식에 대한 요약은 다음과 같습니다. 자세한 내용은 패치 노트에서 확인 부탁드립니다.</br>
+                  <b>동의 후 실행</b>: 백준허브에서 감지한 파일을 삭제 후 다시 제출합니다(일부 파일은 삭제되지 않을 수 있습니다).</br>
+                  <b>직접 변경</b>: 기존 제출 내역을 변경하지 않고 업그레이드를 합니다.(직접 레파지토리에서 삭제하지 않으면 중복 제출이 발생합니다)`;
 
   const board = document.createElement('div');
   board.className = 'BJH_deletion_board';
@@ -304,77 +307,79 @@ function insertBoard(delList, token, hook){
   closeButton.onclick = () => {
     board.style.display = "none";
   }
+  
 
-  const yesButton = createButton('동의 및 실행하겠습니다');
-  const selfButton = createButton('직접 변경하겠습니다.')  
+  const yesButton = createButton('동의 및 실행');
+  const selfButton = createButton('직접 변경.')  
   const noButton = createButton('아직 변경하지 않겠습니다.')
 
   yesButton.onclick = async () =>{
 
-    const problemIdList = [];
-    
-    yesButton.append(insertMultiLoader());
-    setMultiLoaderDenom(delList.length);
-    for(let idx = 0; idx < delList.length; idx++){
-      let elem = delList[idx];
-      problemIdList.push(delList.problemId);
-      let result1 = await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file1}`, {
-          method: 'DELETE',
-          body: JSON.stringify({sha: elem.Sha1, message: "백준허브 업데이트"}),
-          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-          return data;
-        });
+    if(confirm('목록의 파일이 삭제되고 자동으로 업로드 됩니다.\n진행하시겠습니까?')){
+      const problemIdList = [];
       
-      let result2 = await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file2}`, {
-          method: 'DELETE',
-          body: JSON.stringify({sha: elem.Sha2, message: "백준허브 업데이트"}),
-          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-          return data;
-        });
-      incMultiLoader(0.5);
-    }
-    
-    getStats()
-    .then((stats)=>{
-        // TODO: 1.0.2로 바꿔야함
-        stats = {};
-        stats.version = '1.0.2';
-        stats.submission = {};
-        saveStats(stats);
-      });
-      
-    const tree_items = [];
-    const git = new GitHub(await getHook(), await getToken());
-    const { refSHA, ref } = await git.getReference();
-    await Promise.all(
-      delList.map(async (problem, index) => {
-        const bojData = await findData(problem);
-        if(isNull(bojData)) return;
-        tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // 소스코드 파일
-        if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
-        tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // readme 파일
-        if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
-        incMultiLoader(0.5);
-    }))
-    .then((_) => git.createTree(refSHA, tree_items))
-    .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
-    .then((commitSHA) => git.updateHead(ref, commitSHA))
-    .then((_) => {
-      if (debug) console.log('레포 업데이트 완료');
-      incMultiLoader(1);
-    })
-    .catch((e) => {
-      if (debug) console.log('레포 업데이트 실패', e);
-    });
+      yesButton.append(insertMultiLoader());
+      setMultiLoaderDenom(delList.length);
+      for(let idx = 0; idx < delList.length; idx++){
+        let elem = delList[idx];
+        problemIdList.push(delList.problemId);
+        let result1 = await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file1}`, {
+            method: 'DELETE',
+            body: JSON.stringify({sha: elem.Sha1, message: "백준허브 업데이트"}),
+            headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+          })
+          .then(res => res.json())
+          .then(data => {
+            return data;
+          });
         
-    board.style.display = "none";
-    
+        let result2 = await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file2}`, {
+            method: 'DELETE',
+            body: JSON.stringify({sha: elem.Sha2, message: "백준허브 업데이트"}),
+            headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+          })
+          .then(res => res.json())
+          .then(data => {
+            return data;
+          });
+        incMultiLoader(0.5);
+      }
+      
+      getStats()
+      .then((stats)=>{
+          // TODO: 1.0.2로 바꿔야함
+          stats = {};
+          stats.version = '1.0.2';
+          stats.submission = {};
+          saveStats(stats);
+        });
+        
+      const tree_items = [];
+      const git = new GitHub(await getHook(), await getToken());
+      const { refSHA, ref } = await git.getReference();
+      await Promise.all(
+        delList.map(async (problem, index) => {
+          const bojData = await findData(problem);
+          if(isNull(bojData)) return;
+          tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // 소스코드 파일
+          if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
+          tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // readme 파일
+          if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
+          incMultiLoader(0.5);
+      }))
+      .then((_) => git.createTree(refSHA, tree_items))
+      .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
+      .then((commitSHA) => git.updateHead(ref, commitSHA))
+      .then((_) => {
+        if (debug) console.log('레포 업데이트 완료');
+        incMultiLoader(1);
+      })
+      .catch((e) => {
+        if (debug) console.log('레포 업데이트 실패', e);
+      });
+          
+      board.style.display = "none";
+    }  
   };
   selfButton.onclick = async () =>{
     if(confirm("확인을 누르면 앞으로 업데이트 버튼이 표시되지 않습니다.\n진행하시겠습니까?")){
