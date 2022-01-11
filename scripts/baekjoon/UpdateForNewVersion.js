@@ -283,7 +283,7 @@ const ulanguages = {
 
 function insertBoard(delList, token, hook){
 
-  let notification = "백준허브 1.0.2번 패치에는 파일 저장 형식 변경이 있어 <u>백준허브</u>로 기존에 제출되었던 문제가 제거되고 새로 제출됩니다.</br> \
+  let notification = "백준허브 1.0.2 버전 패치에는 파일 저장 형식 변경이 있어 <u>백준허브</u>로 기존에 제출되었던 문제가 제거되고 새로 제출됩니다.</br> \
                     이와 관련하여 꼭 패치노트를 확인 후 업데이트를 실행해주시길 바랍니다.</br></br>\
                     제거 및 다시 제출될 파일 목록은 다음과 같습니다.</br></br>";
   // const notification = refinedDelList.map(({CommitDate, file1, file2}) => {
@@ -317,33 +317,37 @@ function insertBoard(delList, token, hook){
   const noButton = createButton('아직 변경하지 않겠습니다.')
 
   yesButton.onclick = async () =>{
+    console.log('clicked onclick');
 
-    const deletePromise = [];
-    delList.map(async (data) =>{
-      const f1 = fetch(`https://api.github.com/repos/${hook}/contents/${data.file1}`, {
-        method: 'DELETE',
-        body: JSON.stringify({sha: data.Sha1, message: "백준허브 업데이트"}),
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-      })
-      .then(res => res.json())
-      .then(data => console.log(data));
+    
+    for(let idx = 0; idx < delList.length; idx++){
+      let elem = delList[idx];
+      let result1 = await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file1}`, {
+          method: 'DELETE',
+          body: JSON.stringify({sha: elem.Sha1, message: "백준허브 업데이트"}),
+          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log(`data1 ${idx}`, data)
+          return data;
+        });
       
-      const f2 = fetch(`https://api.github.com/repos/${hook}/contents/${data.file2}`, {
-        method: 'DELETE',
-        body: JSON.stringify({sha: data.Sha2, message: "백준허브 업데이트"}),
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-      })
-      .then(res => res.json())
-      .then(data => console.log(data));
-
-      deletePromise.add(...{f1, f2});
-    });
-
-    if(debug) console.log(deletePromise);
-    Promise.all(deletePromise)
-    .then(prom => Promise.all(prom))
-    .then(() => console.log('삭제가 완료되었습니다'));
-  }
+      console.log('result1', result1);
+      await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file2}`, {
+          method: 'DELETE',
+          body: JSON.stringify({sha: elem.Sha2, message: "백준허브 업데이트"}),
+          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log(`data2 ${idx}`, data);
+          return data;
+        });
+    }
+    
+    
+  };
   selfButton.onclick = async () =>{
     if(confirm("확인을 누르면 앞으로 업데이트 버튼이 표시되지 않습니다.\n진행하시겠습니까?")){
       board.style.display = "none";
