@@ -288,8 +288,8 @@ function insertBoard(delList, token, hook){
     notification+=`${file1}</br>`;
     notification+=`${file2}</br></br>`;
   })               
-  notification += `</br></br>업데이트 방식에 대한 요약은 다음과 같습니다. 자세한 내용은 패치 노트에서 확인 부탁드립니다.</br>
-                  <b>동의 후 실행</b>: 백준허브에서 감지한 파일을 삭제 후 다시 제출합니다(일부 파일은 삭제되지 않을 수 있습니다).</br>
+  notification += `업데이트 방식에 대한 요약은 다음과 같습니다. 자세한 내용은 패치 노트에서 확인 부탁드리며 꼭 숙지 후 업데이트를 실행하시길 바랍니다.</br>
+                  <b>동의 후 실행</b>: 백준허브가 감지한 파일을 삭제 후 다시 제출합니다(일부 파일은 삭제되지 않을 수 있습니다).</br>
                   <b>직접 변경</b>: 기존 제출 내역을 변경하지 않고 업그레이드를 합니다.(직접 레파지토리에서 삭제하지 않으면 중복 제출이 발생합니다)`;
 
   const board = document.createElement('div');
@@ -310,12 +310,12 @@ function insertBoard(delList, token, hook){
   
 
   const yesButton = createButton('동의 및 실행');
-  const selfButton = createButton('직접 변경.')  
+  const selfButton = createButton('직접 변경')  
   const noButton = createButton('아직 변경하지 않겠습니다.')
 
   yesButton.onclick = async () =>{
 
-    if(confirm('목록의 파일이 삭제되고 자동으로 업로드 됩니다.\n진행하시겠습니까?')){
+    if(confirm('목록의 파일이 삭제되고 자동으로 업로드됩니다.\n진행하시겠습니까?')){
       const problemIdList = [];
       
       yesButton.append(insertMultiLoader());
@@ -347,38 +347,40 @@ function insertBoard(delList, token, hook){
       
       getStats()
       .then((stats)=>{
-          // TODO: 1.0.2로 바꿔야함
           stats = {};
-          stats.version = '1.0.2';
+          stats.version = getVersion();
           stats.submission = {};
           saveStats(stats);
         });
         
-      const tree_items = [];
-      const git = new GitHub(await getHook(), await getToken());
-      const { refSHA, ref } = await git.getReference();
-      await Promise.all(
-        delList.map(async (problem, index) => {
-          const bojData = await findData(problem);
-          if(isNull(bojData)) return;
-          tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // 소스코드 파일
-          if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
-          tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // readme 파일
-          if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
-          incMultiLoader(0.5);
-      }))
-      .then((_) => git.createTree(refSHA, tree_items))
-      .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
-      .then((commitSHA) => git.updateHead(ref, commitSHA))
-      .then((_) => {
-        if (debug) console.log('레포 업데이트 완료');
-        incMultiLoader(1);
-      })
-      .catch((e) => {
-        if (debug) console.log('레포 업데이트 실패', e);
-      });
+      if(delList.length > 0){
+        const tree_items = [];
+        const git = new GitHub(await getHook(), await getToken());
+        const { refSHA, ref } = await git.getReference();
+        await Promise.all(
+          delList.map(async (problem, index) => {
+            const bojData = await findData(problem);
+            if(isNull(bojData)) return;
+            tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // 소스코드 파일
+            if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
+            tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // readme 파일
+            if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
+            incMultiLoader(0.5);
+        }))
+        .then((_) => git.createTree(refSHA, tree_items))
+        .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
+        .then((commitSHA) => git.updateHead(ref, commitSHA))
+        .then((_) => {
+          if (debug) console.log('레포 업데이트 완료');
+          incMultiLoader(1);
+        })
+        .catch((e) => {
+          if (debug) console.log('레포 업데이트 실패', e);
+        });
+      }
           
       board.style.display = "none";
+      location.reload();
     }  
   };
   selfButton.onclick = async () =>{
@@ -386,12 +388,12 @@ function insertBoard(delList, token, hook){
       board.style.display = "none";
       getStats()
       .then((stats)=>{
-        // TODO: 1.0.2로 바꿔야함
         stats = {};
-        stats.version = '1.0.2';
+        stats.version = getVersion();
         stats.submission = {};
         saveStats(stats);
       });
+      location.reload();
     }
   }
 

@@ -300,7 +300,7 @@ function insertUploadAllButton(){
   uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">백준허브 업데이트</a>';
   profileNav.append(uploadButton);
   uploadButton.onclick = () =>{
-    if(confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용설명서를 참고하시는것을 추천드립니다.\n\n진행하시겠습니까?')){
+    if(confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용 설명서를 참고하시는 것을 추천드립니다.\n\n진행하시겠습니까?')){
       uploadButton.append(insertMultiLoader());
       uploadAllSolvedProblem();
     }
