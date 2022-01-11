@@ -264,3 +264,30 @@ function convertResultTableHeader(header) {
       return 'unknown';
   }
 }
+
+function updateStatsPostUpload(bojData, sha, type){
+
+  getStats().then((stats)=>{
+    
+    if (stats === null || stats === {} || stats === undefined) {
+      // create stats object
+      stats = {};
+      stats.version = '1.0.2';
+      stats.submission = {};
+    }
+
+    const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
+    const { submissionId } = bojData.submission;
+
+    if (isNull(stats.submission[filePath])) {
+      stats.submission[filePath] = {};
+    }
+
+    stats.submission[filePath].submissionId = submissionId;
+    stats.submission[filePath][type] = sha; // update sha key.
+    saveStats(stats).then(() => {
+      if (debug) console.log(`Successfully committed ${filename} to github`);
+      if (cb !== undefined) cb();
+    });
+  })
+}

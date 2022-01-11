@@ -84,7 +84,12 @@ async function updateLocalStorageAndGit() {
                                 'file2': data[1].path,
                                 // 'Url2': data[1].url,
                                 'Sha2': data[1].sha,
-                                'CommitDate': resJson[0].commit.committer.date
+                                'CommitDate': resJson[0].commit.committer.date,
+                                'memory': bojData.submission.memory,
+                                'runtime': bojData.submission.runtime,
+                                'submissionId': bojData.submission.submissionId,
+                                'language': bojData.meta.language
+
                               };
                             }
                             else return null;
@@ -320,9 +325,10 @@ function insertBoard(delList, token, hook){
   yesButton.onclick = async () =>{
     console.log('clicked onclick');
 
-    
+    const problemIdList = [];
     for(let idx = 0; idx < delList.length; idx++){
       let elem = delList[idx];
+      problemIdList.push(delList.problemId);
       let result1 = await fetch(`https://api.github.com/repos/${hook}/contents/${elem.file1}`, {
           method: 'DELETE',
           body: JSON.stringify({sha: elem.Sha1, message: "백준허브 업데이트"}),
@@ -344,17 +350,41 @@ function insertBoard(delList, token, hook){
           console.log(`data2 ${idx}`, data);
           return data;
         });
-      
-      if(result1 !== undefined && result2 !== undefined){
-        await getStats()
-        .then((stats)=>{
-          console.log("deleting");
-          delete stats.submission[elem.key];
-          saveStats(stats);
-        })
-      }
     }
     
+    board.style.display = "none";
+    getStats()
+      .then((stats)=>{
+        // TODO: 1.0.2로 바꿔야함
+        stats = {};
+        stats.version = '1.0.2';
+        stats.submission = {};
+        saveStats(stats);
+    });
+    
+    const tree_items = [];
+    const git = new GitHub(await getHook(), await getToken());
+    const { refSHA, ref } = await git.getReference();
+    await (async () =>{
+      return delList.map(async (problem, index) => {
+        const bojData = await findData(problem);
+        if(isNull(bojData)) return;
+        tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
+        if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.code);
+        tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // )); // readme 파일
+        if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.readme);
+      })
+      .then((_) => git.createTree(refSHA, tree_items))
+      .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
+      .then((commitSHA) => git.updateHead(ref, commitSHA))
+      .then((_) => {
+        if (debug) console.log('레포 업데이트 완료');
+      })
+      .catch((e) => {
+        if (debug) console.log('레포 업데이트 실패', e);
+      });
+    });
+
     
   };
   selfButton.onclick = async () =>{
@@ -364,7 +394,7 @@ function insertBoard(delList, token, hook){
       .then((stats)=>{
         // TODO: 1.0.2로 바꿔야함
         stats = {};
-        stats.version = '1.0.1';
+        stats.version = '1.0.2';
         stats.submission = {};
         saveStats(stats);
       });
