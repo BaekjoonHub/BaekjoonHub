@@ -283,7 +283,7 @@ const ulanguages = {
 
 
 function insertBoard(delList, token, hook){
-
+  console.log("delList", delList);
   let notification = "백준허브 1.0.2 버전 패치에는 파일 저장 형식 변경이 있어 <u>백준허브</u>로 기존에 제출되었던 문제가 제거되고 새로 제출됩니다.</br> \
                     이와 관련하여 꼭 패치노트를 확인 후 업데이트를 실행해주시길 바랍니다.</br></br>\
                     제거 및 다시 제출될 파일 목록은 다음과 같습니다.</br></br>";
@@ -349,7 +349,7 @@ function insertBoard(delList, token, hook){
         await getStats()
         .then((stats)=>{
           console.log("deleting");
-          delete stats[elem.key];
+          delete stats.submission[elem.key];
           saveStats(stats);
         })
       }
