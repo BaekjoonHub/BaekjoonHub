@@ -288,7 +288,8 @@ const ulanguages = {
 
 
 function insertBoard(delList, token, hook){
-  console.log("delList", delList);
+
+  // console.log("delList", delList);
   let notification = "백준허브 1.0.2 버전 패치에는 파일 저장 형식 변경이 있어 <u>백준허브</u>로 기존에 제출되었던 문제가 제거되고 새로 제출됩니다.</br> \
                     이와 관련하여 꼭 패치노트를 확인 후 업데이트를 실행해주시길 바랍니다.</br></br>\
                     제거 및 다시 제출될 파일 목록은 다음과 같습니다.</br></br>";
@@ -301,7 +302,7 @@ function insertBoard(delList, token, hook){
     notification+=`${file2}</br></br>`;
   })               
 
-  if(debug) console.log('notification', notification);
+  // if(debug) console.log('notification', notification);
   const board = document.createElement('div');
   board.className = 'BJH_deletion_board';
 
@@ -326,6 +327,9 @@ function insertBoard(delList, token, hook){
     console.log('clicked onclick');
 
     const problemIdList = [];
+    
+    yesButton.append(insertMultiLoader());
+    setMultiLoaderDenom(delList);
     for(let idx = 0; idx < delList.length; idx++){
       let elem = delList[idx];
       problemIdList.push(delList.problemId);
@@ -350,6 +354,7 @@ function insertBoard(delList, token, hook){
           console.log(`data2 ${idx}`, data);
           return data;
         });
+      incMultiLoader(0.5);
     }
     
     board.style.display = "none";
@@ -373,12 +378,14 @@ function insertBoard(delList, token, hook){
         tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
         if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
         if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
+        incMultiLoader(0.5);
       }))
       .then((_) => git.createTree(refSHA, tree_items))
       .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
       .then((commitSHA) => git.updateHead(ref, commitSHA))
       .then((_) => {
         if (debug) console.log('레포 업데이트 완료');
+        incMultiLoader(1);
       })
       .catch((e) => {
         if (debug) console.log('레포 업데이트 실패', e);

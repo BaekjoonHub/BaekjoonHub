@@ -293,3 +293,48 @@ function updateStatsPostUpload(bojData, sha, type, cb = undefined){
     });
   })
 }
+
+function insertUploadAllButton(){
+  const profileNav = document.getElementsByClassName('nav-tabs')[0];
+  if(debug) console.log('profileNav', profileNav);
+  const uploadButton = document.createElement('li');
+  uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">백준허브 업데이트</a>';
+  profileNav.append(uploadButton);
+  uploadButton.onclick = () =>{
+    if(confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용설명서를 참고하시는것을 추천드립니다.\n\n진행하시겠습니까?')){
+      uploadButton.append(insertMultiLoader());
+      uploadAllSolvedProblem();
+    }
+  }
+}
+
+function insertMultiLoader(){
+
+  multiloader.wrap = document.createElement('div');
+  multiloader.wrap.classList.add('BJH_loading_wrap');
+
+  multiloader.nom = document.createElement('div');
+  multiloader.nom.classList.add('BJH_loading_number');
+  multiloader.nom.innerText = -1;
+  
+  let hyphen = document.createElement('div');
+  hyphen.classList.add('BJH_loading_number');
+  hyphen.innerText = '/';
+
+  multiloader.denom = document.createElement('div');
+  multiloader.denom.classList.add('BJH_loading_number');
+  multiloader.denom.innerText = 'loading';
+  
+  multiloader.wrap.append(multiloader.nom);
+  multiloader.wrap.append(hyphen);
+  multiloader.wrap.append(multiloader.denom);
+  return multiloader.wrap;
+}
+
+function setMultiLoaderDenom(num){
+  multiloader.denom.innerText = num;
+}
+
+function incMultiLoader(num){
+  multiloader.nom.innerText = +multiloader.nom.innerText + num;
+}
