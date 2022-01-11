@@ -43,7 +43,6 @@ async function updateLocalStorageAndGit() {
                     }
                   })
                   const startDate = Date.parse("2021-12-25");
-                  console.log('replacementFiles in updateLocalStorage', replacementFiles);
 
                   /* array to get final list */
                   const parsedDelList = replacementFiles.map(async subId =>{
@@ -61,10 +60,7 @@ async function updateLocalStorageAndGit() {
                       .then((data) =>{
                         if(data.length < 2){
                           throw Error(data);
-                        }
-                        console.log(data);
-
-                        
+                        }                        
                         return ( async () => {
                           return fetch(`https://api.github.com/repos/${hook}/commits?path=${encodeURIComponent(data[0].path)}&page=1&per_page=1`, {
                             method: 'GET',
@@ -72,9 +68,7 @@ async function updateLocalStorageAndGit() {
                           })
                           .then(res => res.json())
                           .then(resJson =>{
-                            console.log('resJson', resJson, Date.parse(resJson[0].commit.committer.date));
                             if(startDate < Date.parse(resJson[0].commit.committer.date)){
-                              console.log(`deleteList ${data[0].path}`, deleteList);
                               return {
                                 'problemId': bojData.meta.problemId,
                                 'key': bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language,
@@ -106,11 +100,8 @@ async function updateLocalStorageAndGit() {
                   Promise.all(parsedDelList)
                   .then(prom => Promise.all(prom))
                   .then(data =>{
-                    if(debug) console.log('parsedDelList', data);
 
                     const refinedDelList = data.filter(elem => elem !== undefined);
-                    if(debug) console.log('refinedDelList', refinedDelList);
-                    
                     // window.alert(notification);
                     insertBoard(refinedDelList, token, hook);
                   })
@@ -289,20 +280,15 @@ const ulanguages = {
 
 function insertBoard(delList, token, hook){
 
-  // console.log("delList", delList);
   let notification = "백준허브 1.0.2 버전 패치에는 파일 저장 형식 변경이 있어 <u>백준허브</u>로 기존에 제출되었던 문제가 제거되고 새로 제출됩니다.</br> \
                     이와 관련하여 꼭 패치노트를 확인 후 업데이트를 실행해주시길 바랍니다.</br></br>\
                     제거 및 다시 제출될 파일 목록은 다음과 같습니다.</br></br>";
-  // const notification = refinedDelList.map(({CommitDate, file1, file2}) => {
-  //   return { CommitDate, file1, file2 }
-  // });
   delList.map(({CommitDate, file1, file2})=>{
     notification+=`제출일: ${CommitDate.substring(0,10)}</br>`;
     notification+=`${file1}</br>`;
     notification+=`${file2}</br></br>`;
   })               
 
-  // if(debug) console.log('notification', notification);
   const board = document.createElement('div');
   board.className = 'BJH_deletion_board';
 
@@ -324,7 +310,6 @@ function insertBoard(delList, token, hook){
   const noButton = createButton('아직 변경하지 않겠습니다.')
 
   yesButton.onclick = async () =>{
-    console.log('clicked onclick');
 
     const problemIdList = [];
     
@@ -340,7 +325,6 @@ function insertBoard(delList, token, hook){
         })
         .then(res => res.json())
         .then(data => {
-          console.log(`data1 ${idx}`, data)
           return data;
         });
       
@@ -351,7 +335,6 @@ function insertBoard(delList, token, hook){
         })
         .then(res => res.json())
         .then(data => {
-          console.log(`data2 ${idx}`, data);
           return data;
         });
       incMultiLoader(0.5);
@@ -372,7 +355,6 @@ function insertBoard(delList, token, hook){
     const { refSHA, ref } = await git.getReference();
     await Promise.all(
       delList.map(async (problem, index) => {
-        console.log(`uploading ${index}`, problem);
         const bojData = await findData(problem);
         if(isNull(bojData)) return;
         tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일

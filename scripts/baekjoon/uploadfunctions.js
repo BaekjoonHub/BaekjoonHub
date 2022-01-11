@@ -58,14 +58,13 @@ async function upload(token, hook, code, directory, filename, type, sha = null, 
         updateStatsPostUpload(bojData, sha, type, cb);
       }
       if (sha === null && data.content === undefined){
-        if(debug) console.log("In upload(), revovering from local storage error");
+        console.log("In upload(), revovering from local storage error");
         sha = await fetch(`https://api.github.com/repos/${hook}/contents/${directory}/${filename}`, {
           method: 'GET',
           headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
         })
         .then(res => res.json())
         .then(data => {
-          console.log('recovery data', data);
           return data.sha;
         });
 

@@ -1,5 +1,5 @@
 // Set to true to enable console log
-const debug = true;
+const debug = false;
 
 /* 
   문제 제출 맞음 여부를 확인하는 함수
@@ -37,7 +37,7 @@ function stopLoader() {
 
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
-  console.log('bojData', bojData);
+  if(debug) console.log('bojData', bojData);
   if (isNotEmpty(bojData)) {
     startUpload();
     
