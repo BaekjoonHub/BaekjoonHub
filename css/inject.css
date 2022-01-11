@@ -86,6 +86,7 @@
 .BJH_loading_wrap{
     display: inline-block;
     margin-left: 4px;
+    margin-right: 4px;
 }
 
 .BJH_loading_number{
