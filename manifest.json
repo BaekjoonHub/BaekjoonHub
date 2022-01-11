@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "BaekjoonHub",
   "description": "Automatically integrate your BOJ submissions to GitHub",
-  "homepage_url": "https://github.com/flaxinger/BaekjoonHub",
+  "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
   "version": "1.0.2",
   "author": "flaxinger",
   "browser_action": {
