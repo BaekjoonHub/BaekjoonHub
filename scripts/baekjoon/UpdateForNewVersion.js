@@ -345,9 +345,10 @@ function insertBoard(delList, token, hook){
           return data;
         });
       
-      if(result1 && result2){
+      if(result1 !== undefined && result2 !== undefined){
         await getStats()
         .then((stats)=>{
+          console.log("deleting");
           delete stats[elem.key];
           saveStats(stats);
         })
