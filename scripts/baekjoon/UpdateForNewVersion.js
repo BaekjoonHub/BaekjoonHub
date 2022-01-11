@@ -314,7 +314,7 @@ function insertBoard(delList, token, hook){
     const problemIdList = [];
     
     yesButton.append(insertMultiLoader());
-    setMultiLoaderDenom(delList);
+    setMultiLoaderDenom(delList.length);
     for(let idx = 0; idx < delList.length; idx++){
       let elem = delList[idx];
       problemIdList.push(delList.problemId);
