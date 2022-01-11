@@ -56,7 +56,7 @@ function upload(token, hook, code, directory, filename, type, sha, cb = undefine
       if (data != null && (data !== data.content) != null && data.content.sha != null && data.content.sha !== undefined) {
 
         const { sha } = data.content; // get updated SHA
-        updateStatsPostUpload(bojData, sha, type);
+        updateStatsPostUpload(bojData, sha, type, cb);
         // getStats().then((stats) => {
         //   /* Local Storage에 Stats Object가 없다면 초기화한다. */
         //   if (stats === null || stats === {} || stats === undefined) {
