@@ -17,25 +17,20 @@
 </p>
 
 </br>
-</br>
-</br>
-</br>
 
 ## Contributors
----
+
 
 <a href = "https://github.com/flaxinger/baekjoonhub/graphs/contributors">
   <img src = "https://contrib.rocks/image?repo=flaxinger/baekjoonhub"/>
 </a>
 
 
-</br>
-</br>
+
 </br>
 </br>
 
 ## 목차
----
 
 1. [크롬 마켓](#지금-크롬-마켓에서-확인하세요)
 2. [백준허브란?](#백준허브란what-is-baekjoonhub) 
@@ -50,7 +45,7 @@
 
 <!--- 마켓  --->
 ## 지금 크롬 마켓에서 확인하세요!
----
+
 <table style="border-collapse: separate;"><tr>
   <td style="border-spacing:2em 0"> 
       <a href="https://chrome.google.com/webstore/detail/BaekjoonHub/ccammcjdkpgjmcpijpahlehmapgmphmk">
@@ -64,7 +59,6 @@
 
 <!--- 소개 --->
 ## 백준허브란?(What is BaekjoonHub?)
----
 <p>백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. 백준을 통해 알고리즘 공부를 하시는 분들이 보다 쉽게 코드를 저장하고 관리할 수 있도록 하기 위해 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.</p>
 <p>BaekjoonHub is a chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://www.acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>, a similar extension for Leetcode.</p>
 <a href="https://github.com/flaxinger/BOJAutoPush"> 예시 Repository</a>
@@ -74,7 +68,6 @@
 
 <!--- 설치 및 연동 --->
 ## 설치 및 연동(How to set it up)
----
 <ol>
   <li>크롬에서 설치 후 우측 상단의 popup 버튼을 클릭합니다.</li>
   <li>"Authorize with GitHub" 버튼을 누르면 Repository 연동 화면이 표시됩니다.</li>
@@ -90,7 +83,6 @@
 
 <!--- 작동 원리 --->
 ## 작동원리(How it works)
----
 ![](assets/extension/output.gif)
 
 ### 1. 업로드 시점
@@ -118,7 +110,6 @@
 
 <!--- 개발 참여 --->
 ## 개발 참여 및 버그 신고
----
 버그 신고를 하고 싶다면: [버그 신고](https://github.com/BaekjoonHub/BaekjoonHub/issues)<br/>
 향후 과제를 확인하고 싶다면: [향후 과제](https://github.com/BaekjoonHub/BaekjoonHub/blob/main/TODO.md)<br/>
 협업을 위한 공식 문서: [작성중]()</br>
@@ -128,7 +119,6 @@
 
 <!--- 패치 노트 --->
 ## 패치노트
----
 [1.0.1 패치노트](https://github.com/BaekjoonHub/BaekjoonHub/blob/main/Patch_Notes/1.0.1.md)</br>
 [1.0.2 패치노트](https://github.com/BaekjoonHub/BaekjoonHub/blob/main/Patch_Notes/1.0.2.md)
 
