@@ -265,7 +265,7 @@ function convertResultTableHeader(header) {
   }
 }
 
-function updateStatsPostUpload(bojData, sha, type){
+function updateStatsPostUpload(bojData, sha, type, cb = undefined){
 
   getStats().then((stats)=>{
     
