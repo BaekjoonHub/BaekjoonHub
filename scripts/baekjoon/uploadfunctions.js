@@ -41,7 +41,7 @@ async function uploadGit(code, directory, fileName, type, cb = undefined, bojDat
     sha: 현재 업로드된 파일의 SHA
     cb: Callback 함수(업로드 후 로딩 아이콘 처리를 맡는다
 */
-function upload(token, hook, code, directory, filename, type, sha, cb = undefined, bojData) {
+async function upload(token, hook, code, directory, filename, type, sha = null, cb = undefined, bojData) {
   // To validate user, load user object from GitHub.
 
   return fetch(`https://api.github.com/repos/${hook}/contents/${directory}/${filename}`, {
@@ -49,38 +49,30 @@ function upload(token, hook, code, directory, filename, type, sha, cb = undefine
     body: JSON.stringify({ message: bojData.meta.message, content: code, sha }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   })
-    .then((res) => res.json())
-    .then((data) => {
+    .then(res => res.json())
+    .then(async data => {
       if (debug && type === CommitType.readme) console.log('data', data);
 
-      if (data != null && (data !== data.content) != null && data.content.sha != null && data.content.sha !== undefined) {
-
+      if (data !== undefined && data.content !== undefined && data.content.sha !== null && data.content.sha !== undefined) {
         const { sha } = data.content; // get updated SHA
         updateStatsPostUpload(bojData, sha, type, cb);
-        // getStats().then((stats) => {
-        //   /* Local Storage에 Stats Object가 없다면 초기화한다. */
-        //   if (stats === null || stats === {} || stats === undefined) {
-        //     // create stats object
-        //     stats = {};
-        //     stats.version = '1.0.2';
-        //     stats.submission = {};
-        //   }
-        //   const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
-        //   const { submissionId } = bojData.submission;
-
-        //   if (isNull(stats.submission[filePath])) {
-        //     stats.submission[filePath] = {};
-        //   }
-
-        //   stats.submission[filePath].submissionId = submissionId;
-        //   stats.submission[filePath][type] = sha; // update sha key.
-        //   saveStats(stats).then(() => {
-        //     if (debug) console.log(`Successfully committed ${filename} to github`);
-        //     if (cb !== undefined) cb();
-        //   });
-        // });
       }
-    });
+      if (sha === null && data.content === undefined){
+        if(debug) console.log("In upload(), revovering from local storage error");
+        sha = await fetch(`https://api.github.com/repos/${hook}/contents/${directory}/${filename}`, {
+          method: 'GET',
+          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log('recovery data', data);
+          return data.sha;
+        });
+
+        return upload(token, hook, code, directory, filename, type, sha, cb, bojData);
+      }
+    })
+    
 }
 
 
@@ -96,10 +88,8 @@ async function uploadAllSolvedProblem() {
           const bojData = await findData(problem);
           if (isNull(bojData)) return;
           tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
-          if(debug) console.log('tree slice', tree_items.slice(-1));
           if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.code);
           tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // )); // readme 파일
-          if(debug) console.log('tree slice', tree_items.slice(-1));
           if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.readme);
         }),
       );
