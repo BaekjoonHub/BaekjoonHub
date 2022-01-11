@@ -347,7 +347,6 @@ function insertBoard(delList, token, hook){
       
       getStats()
       .then((stats)=>{
-          // TODO: 1.0.2로 바꿔야함
           stats = {};
           stats.version = getVersion();
           stats.submission = {};
@@ -389,9 +388,8 @@ function insertBoard(delList, token, hook){
       board.style.display = "none";
       getStats()
       .then((stats)=>{
-        // TODO: 1.0.2로 바꿔야함
         stats = {};
-        stats.version = '1.0.2';
+        stats.version = getVersion();
         stats.submission = {};
         saveStats(stats);
       });
