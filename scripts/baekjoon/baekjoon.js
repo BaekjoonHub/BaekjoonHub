@@ -7,6 +7,12 @@ const debug = true;
 */
 let loader;
 
+if(currentUrl.includes('problem_id'))
+  startLoader();
+else if(currentUrl.includes('.net/user')){
+  insertUploadAllButton();
+}
+
 function startLoader() {
   loader = setInterval(async () => {
     if (isExistResultTable()) {
@@ -28,8 +34,6 @@ function startLoader() {
 function stopLoader() {
   clearInterval(loader);
 }
-
-startLoader();
 
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {

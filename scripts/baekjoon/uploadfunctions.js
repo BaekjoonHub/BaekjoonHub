@@ -83,6 +83,7 @@ async function uploadAllSolvedProblem() {
   const { refSHA, ref } = await git.getReference();
   await findUniqueResultTableListByUsername(findUsername())
     .then((list) => {
+      setMultiLoaderDenom(list.length);
       return Promise.all(
         list.map(async (problem) => {
           const bojData = await findData(problem);
@@ -91,6 +92,7 @@ async function uploadAllSolvedProblem() {
           if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.code);
           tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // )); // readme 파일
           if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.readme);
+          incMultiLoader(1);
         }),
       );
     })
@@ -99,6 +101,7 @@ async function uploadAllSolvedProblem() {
     .then((commitSHA) => git.updateHead(ref, commitSHA))
     .then((_) => {
       if (debug) console.log('전체 코드 업로드 완료');
+      incMultiLoader(1);
     })
     .catch((e) => {
       if (debug) console.log('전체 코드 업로드 실패', e);

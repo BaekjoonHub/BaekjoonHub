@@ -82,3 +82,12 @@
   text-decoration: none;
   cursor: pointer;
 }
+
+.BJH_loading_wrap{
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.BJH_loading_number{
+    display: inline-block;
+}
