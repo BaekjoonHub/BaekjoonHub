@@ -340,3 +340,11 @@ const titleRegex = new RegExp('[^a-zA-Z0-9가-힣 -]', 'i');
 
 /* state of upload for progress */
 const uploadState = { uploading: false };
+
+const currentUrl = window.location.href;
+
+const multiloader = {
+  wrap: null,
+  nom: null,
+  denom: null
+};

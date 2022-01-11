@@ -2,8 +2,8 @@
   "manifest_version": 2,
   "name": "BaekjoonHub",
   "description": "Automatically integrate your BOJ submissions to GitHub",
-  "homepage_url": "https://github.com/flaxinger/BaekjoonHub",
-  "version": "1.0.1",
+  "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
+  "version": "1.0.2",
   "author": "flaxinger",
   "browser_action": {
     "default_icon": "assets/thumbnail.png",
@@ -28,8 +28,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.acmicpc.net/submit/*",
         "https://www.acmicpc.net/status*",
+        "https://www.acmicpc.net/user/*",
         "https://github.com/*"
       ],
       "css": [
@@ -37,12 +37,14 @@
       ],
       "js": [
         "scripts/baekjoon/variables.js",
-        "scripts/baekjoon/keyfunctions.js",
+        "scripts/baekjoon/storage.js",
         "scripts/baekjoon/parsing.js",
+        "scripts/Github.js",
         "scripts/baekjoon/util.js",
+        "scripts/baekjoon/uploadfunctions.js",
         "scripts/baekjoon/UpdateForNewVersion.js",
         "scripts/baekjoon/baekjoon.js",
-        "scripts/authorize.js"
+        "scripts/authorize.js"        
       ],
       "run_at": "document_idle"
     }
