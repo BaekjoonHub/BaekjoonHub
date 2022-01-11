@@ -76,7 +76,7 @@ async function updateLocalStorageAndGit() {
                             if(startDate < Date.parse(resJson[0].commit.committer.date)){
                               console.log(`deleteList ${data[0].path}`, deleteList);
                               return {
-                                'problemId': bojData.problemId,
+                                'problemId': bojData.meta.problemId,
                                 'key': bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language,
                                 'file1': data[0].path,
                                 // 'Url1': data[0].url,

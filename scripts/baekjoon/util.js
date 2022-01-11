@@ -267,6 +267,8 @@ function convertResultTableHeader(header) {
 
 function updateStatsPostUpload(bojData, sha, type, cb = undefined){
 
+  console.log('in updateStatsPostUpload', bojData, sha, type);
+
   getStats().then((stats)=>{
     
     if (stats === null || stats === {} || stats === undefined) {
