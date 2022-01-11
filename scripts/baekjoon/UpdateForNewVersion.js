@@ -310,7 +310,7 @@ function insertBoard(delList, token, hook){
   
 
   const yesButton = createButton('동의 및 실행');
-  const selfButton = createButton('직접 변경.')  
+  const selfButton = createButton('직접 변경')  
   const noButton = createButton('아직 변경하지 않겠습니다.')
 
   yesButton.onclick = async () =>{
@@ -349,36 +349,39 @@ function insertBoard(delList, token, hook){
       .then((stats)=>{
           // TODO: 1.0.2로 바꿔야함
           stats = {};
-          stats.version = '1.0.2';
+          stats.version = getVersion();
           stats.submission = {};
           saveStats(stats);
         });
         
-      const tree_items = [];
-      const git = new GitHub(await getHook(), await getToken());
-      const { refSHA, ref } = await git.getReference();
-      await Promise.all(
-        delList.map(async (problem, index) => {
-          const bojData = await findData(problem);
-          if(isNull(bojData)) return;
-          tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // 소스코드 파일
-          if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
-          tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // readme 파일
-          if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
-          incMultiLoader(0.5);
-      }))
-      .then((_) => git.createTree(refSHA, tree_items))
-      .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
-      .then((commitSHA) => git.updateHead(ref, commitSHA))
-      .then((_) => {
-        if (debug) console.log('레포 업데이트 완료');
-        incMultiLoader(1);
-      })
-      .catch((e) => {
-        if (debug) console.log('레포 업데이트 실패', e);
-      });
+      if(delList.length > 0){
+        const tree_items = [];
+        const git = new GitHub(await getHook(), await getToken());
+        const { refSHA, ref } = await git.getReference();
+        await Promise.all(
+          delList.map(async (problem, index) => {
+            const bojData = await findData(problem);
+            if(isNull(bojData)) return;
+            tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // 소스코드 파일
+            if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.code);
+            tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // readme 파일
+            if(tree_items.slice(-1)[0].sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1)[0].sha, CommitType.readme);
+            incMultiLoader(0.5);
+        }))
+        .then((_) => git.createTree(refSHA, tree_items))
+        .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
+        .then((commitSHA) => git.updateHead(ref, commitSHA))
+        .then((_) => {
+          if (debug) console.log('레포 업데이트 완료');
+          incMultiLoader(1);
+        })
+        .catch((e) => {
+          if (debug) console.log('레포 업데이트 실패', e);
+        });
+      }
           
       board.style.display = "none";
+      location.reload();
     }  
   };
   selfButton.onclick = async () =>{
@@ -392,6 +395,7 @@ function insertBoard(delList, token, hook){
         stats.submission = {};
         saveStats(stats);
       });
+      location.reload();
     }
   }
 

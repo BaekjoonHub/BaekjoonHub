@@ -151,8 +151,16 @@ const linkRepo = (token, name) => {
             $('#success').html(`Successfully linked <a target="blank" href="${res.html_url}">${name}</a> to BaekjoonHub. Start <a href="https://www.acmicpc.net/">BOJ</a> now!`);
             $('#success').show();
             $('#unlink').show();
+            
           });
           /* Set Repo Hook */
+
+          stats = {};
+          stats.version = chrome.runtime.getManifest().version;;
+          stats.submission = {};
+          console.log(stats);
+          chrome.storage.local.set({stats});
+
           chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
             console.log('Successfully set new repo hook');
             /* Get problems solved count */
