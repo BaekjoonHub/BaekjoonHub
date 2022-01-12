@@ -14,6 +14,7 @@ else if(currentUrl.includes('.net/user')){
   .then(stats =>{
     if(stats.version === getVersion()){
       insertUploadAllButton();
+      insertDownloadAllButton();
     }
   });
 }
