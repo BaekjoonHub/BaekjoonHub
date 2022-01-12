@@ -15,17 +15,21 @@
 */
 async function findData(data) {
   try {
-    if (isNull(data)) data = findFromResultTable();
-    const { 
-      title, 
-      level, 
-      code, 
-      problemDescription, 
-      directory, 
-      message, 
-      category, 
-      fileName, 
-      readme 
+    if (isNull(data)) {
+      const table = findFromResultTable();
+      if (isNull(table)) return null;
+      data = selectBestSubmissionList(table)[0];
+    }
+    const {
+      title,
+      level,
+      code,
+      problemDescription,
+      directory,
+      message,
+      category,
+      fileName,
+      readme
     } = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
     return {
       meta: {
@@ -161,10 +165,7 @@ function findFromResultTable() {
   if (!isExistResultTable()) {
     if (debug) console.log('Result table not found');
   }
-  const resultList = parsingResultTableList(document);
-  if (resultList.length === 0) return;
-  // const row = resultList[0];
-  return selectBestSubmissionList(resultList)[0];
+  return parsingResultTableList(document);
 }
 
 /*
