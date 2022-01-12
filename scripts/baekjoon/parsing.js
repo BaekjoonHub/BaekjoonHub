@@ -96,7 +96,6 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   };
 }
 
-
 /*
   현재 로그인된 유저를 파싱합니다.
 */
@@ -261,7 +260,7 @@ async function findResultTableListByUsername(username) {
   let next_page = doc.getElementById('next_page');
   do {
     result.push(...parsingResultTableList(doc));
-    if(next_page!==null) doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
+    if (next_page !== null) doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
   } while ((next_page = doc.getElementById('next_page')) !== null);
   result.push(...parsingResultTableList(doc));
 
