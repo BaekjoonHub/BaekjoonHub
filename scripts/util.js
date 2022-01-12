@@ -11,7 +11,7 @@ function getVersion() {
  * @returns {boolean} - 존재하면 true, 존재하지 않으면 false
  */
 function elementExists(element) {
-  return element !== undefined && element !== null && element.length > 0;
+  return element !== undefined && element !== null && element.hasOwnProperty('length') && element.length > 0;
 }
 
 /**
@@ -29,7 +29,7 @@ function isNull(value) {
  * @returns {boolean} - 비어있으면 true, 비어있지 않으면 false
  */
 function isEmpty(value) {
-  return isNull(value) || value === '' || value === [] || value === {};
+  return isNull(value) || (value.hasOwnProperty('length') && value.length === 0);
 }
 
 /** 객체 또는 배열의 모든 요소를 재귀적으로 순회하여 값이 비어있지 않은지 체크합니다.
