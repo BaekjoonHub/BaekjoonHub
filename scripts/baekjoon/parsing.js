@@ -16,8 +16,8 @@
 async function findData(data) {
   try {
     if (isNull(data)) {
-      const table = findFromResultTable();
-      if (isNull(table)) return null;
+      const table = filter(findFromResultTable(), 'result', '맞았습니다!!');
+      if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
     }
     const {
@@ -143,7 +143,7 @@ function parsingResultTableList(doc) {
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
-    if (obj.result === '맞았습니다!!') list.push(obj);
+    list.push(obj);
   }
   if (debug) console.log('TableList', list);
   return list;
