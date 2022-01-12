@@ -48,161 +48,6 @@ function startUploadCountDown() {
   }, 10000);
 }
 
-function getVersion() {
-  return chrome.runtime.getManifest().version;
-}
-
-/* Util function to check if an element exists */
-function elementExists(element) {
-  return element !== undefined && element !== null && element.length > 0;
-}
-
-function isNull(value) {
-  return value === null || value === undefined;
-}
-
-/* A function that recursively checks that all values of object are not '' */
-function isNotEmpty(obj) {
-  if (obj === undefined || obj === null || obj === '' || obj === [] || obj === {}) return false;
-  if (typeof obj !== 'object') return true;
-  if (obj.length === 0) return false;
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      if (!isNotEmpty(obj[key])) return false;
-    }
-  }
-  return true;
-}
-
-function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-  };
-
-  return text.replace(/[&<>"']/g, function (m) {
-    return map[m];
-  });
-}
-
-function unescapeHtml(text) {
-  const unescaped = {
-    '&amp;': '&',
-    '&#38;': '&',
-    '&lt;': '<',
-    '&#60;': '<',
-    '&gt;': '>',
-    '&#62;': '>',
-    '&apos;': "'",
-    '&#39;': "'",
-    '&quot;': '"',
-    '&#34;': '"',
-    '&nbsp;': ' ',
-    '&#160;': ' ',
-  };
-  return text.replace(/&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34|nbsp|#160);/g, function (m) {
-    return unescaped[m];
-  });
-}
-
-/* 일반 특수문자를 전각문자로 변환하는 함수 */
-function convertSingleCharToDoubleChar(text) {
-  // singleChar to doubleChar mapping
-  const map = {
-    '!': '！',
-    '%': '％',
-    '&': '＆',
-    '(': '（',
-    ')': '）',
-    '*': '＊',
-    '+': '＋',
-    ',': '，',
-    '-': '－',
-    '.': '．',
-    '/': '／',
-    ':': '：',
-    ';': '；',
-    '<': '＜',
-    '=': '＝',
-    '>': '＞',
-    '?': '？',
-    '@': '＠',
-    '[': '［',
-    '\\': '＼',
-    ']': '］',
-    '^': '＾',
-    '_': '＿',
-    '`': '｀',
-    '{': '｛',
-    '|': '｜',
-    '}': '｝',
-    '~': '～',
-    ' ': ' ', // 공백만 전각문자가 아닌 FOUR-PER-EM SPACE로 변환
-  };
-  return text.replace(/[!%&()*+,\-./:;<=>?@\[\\\]^_`{|}~ ]/g, function (m) {
-    return map[m];
-  });
-}
-
-String.prototype.escapeHtml = function () {
-  return escapeHtml(this);
-};
-
-String.prototype.unescapeHtml = function () {
-  return unescapeHtml(this);
-};
-
-function b64EncodeUnicode(str) {
-  return btoa(
-    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
-      return String.fromCharCode(`0x${p1}`);
-    }),
-  );
-}
-
-function b64DecodeUnicode(b64str) {
-  return decodeURIComponent(
-    atob(b64str)
-      .split('')
-      .map(function (c) {
-        return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
-      })
-      .join(''),
-  );
-}
-/** key 값을 기준으로 array를 그룹핑하여 map으로 반환합니다.
- * @param {object} array - array to be sorted
- * @param {string} key - key to sort
- * @returns {object} - key 기준으로 그룹핑된 객체들 배열을 value로 갖는 map
- */
-function groupBy(array, key) {
-  return array.reduce(function (rv, x) {
-    (rv[x[key]] = rv[x[key]] || []).push(x);
-    return rv;
-  }, {});
-}
-
-/**
- * arr에서 같은 key 그룹 내의 요소 중 최고의 값을 리스트화하여 반환합니다.
- * @param arr: 비교할 요소가 있는 배열
- * @param key: 같은 그룹으로 묶을 키 값
- * @param compare: 비교할 함수
- * @returns {array<object>} : 같은 key 그룹 내의 요소 중 최고의 값을 반환합니다.
- * */
-function maxValuesGroupBykey(arr, key, compare) {
-  const map = groupBy(arr, key);
-  const result = [];
-  for (const [key, value] of Object.entries(map)) {
-    const maxValue = value.reduce((max, current) => {
-      return compare(max, current) > 0 ? max : current;
-    });
-    result.push(maxValue);
-  }
-  return result;
-}
 /**
  * 제출 목록 비교함수입니다
  * @param {object} a - 제출 요소 피연산자 a
@@ -265,11 +110,8 @@ function convertResultTableHeader(header) {
   }
 }
 
-function updateStatsPostUpload(bojData, sha, type, cb = undefined){
-
-
-  getStats().then((stats)=>{
-    
+function updateStatsPostUpload(bojData, sha, type, cb = undefined) {
+  getStats().then((stats) => {
     if (stats === null || stats === {} || stats === undefined) {
       // create stats object
       stats = {};
@@ -290,50 +132,49 @@ function updateStatsPostUpload(bojData, sha, type, cb = undefined){
       if (debug) console.log(`Successfully committed ${bojData.meta.fileName} to github`);
       if (cb !== undefined) cb();
     });
-  })
+  });
 }
 
-function insertUploadAllButton(){
+function insertUploadAllButton() {
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
-  if(debug) console.log('profileNav', profileNav);
+  if (debug) console.log('profileNav', profileNav);
   const uploadButton = document.createElement('li');
   uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">백준허브 업데이트</a>';
   profileNav.append(uploadButton);
-  uploadButton.onclick = () =>{
-    if(confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용 설명서를 참고하시는 것을 추천드립니다.\n\n진행하시겠습니까?')){
+  uploadButton.onclick = () => {
+    if (confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용 설명서를 참고하시는 것을 추천드립니다.\n\n진행하시겠습니까?')) {
       uploadButton.append(insertMultiLoader());
       uploadAllSolvedProblem();
     }
-  }
+  };
 }
 
-function insertMultiLoader(){
-
+function insertMultiLoader() {
   multiloader.wrap = document.createElement('div');
   multiloader.wrap.classList.add('BJH_loading_wrap');
 
   multiloader.nom = document.createElement('div');
   multiloader.nom.classList.add('BJH_loading_number');
   multiloader.nom.innerText = -1;
-  
-  let hyphen = document.createElement('div');
+
+  const hyphen = document.createElement('div');
   hyphen.classList.add('BJH_loading_number');
   hyphen.innerText = '/';
 
   multiloader.denom = document.createElement('div');
   multiloader.denom.classList.add('BJH_loading_number');
   multiloader.denom.innerText = 'loading';
-  
+
   multiloader.wrap.append(multiloader.nom);
   multiloader.wrap.append(hyphen);
   multiloader.wrap.append(multiloader.denom);
   return multiloader.wrap;
 }
 
-function setMultiLoaderDenom(num){
+function setMultiLoaderDenom(num) {
   multiloader.denom.innerText = num;
 }
 
-function incMultiLoader(num){
+function incMultiLoader(num) {
   multiloader.nom.innerText = +multiloader.nom.innerText + num;
 }

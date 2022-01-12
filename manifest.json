@@ -36,15 +36,16 @@
         "css/inject.css"
       ],
       "js": [
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js",
         "scripts/baekjoon/variables.js",
         "scripts/baekjoon/storage.js",
         "scripts/baekjoon/parsing.js",
-        "scripts/Github.js",
         "scripts/baekjoon/util.js",
         "scripts/baekjoon/uploadfunctions.js",
         "scripts/baekjoon/UpdateForNewVersion.js",
-        "scripts/baekjoon/baekjoon.js",
-        "scripts/authorize.js"        
+        "scripts/baekjoon/baekjoon.js"
       ],
       "run_at": "document_idle"
     }

@@ -346,5 +346,5 @@ const currentUrl = window.location.href;
 const multiloader = {
   wrap: null,
   nom: null,
-  denom: null
+  denom: null,
 };

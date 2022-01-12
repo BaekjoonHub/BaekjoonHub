@@ -49,31 +49,29 @@ async function upload(token, hook, code, directory, filename, type, sha = null, 
     body: JSON.stringify({ message: bojData.meta.message, content: code, sha }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   })
-    .then(res => res.json())
-    .then(async data => {
+    .then((res) => res.json())
+    .then(async (data) => {
       if (debug && type === CommitType.readme) console.log('data', data);
 
       if (data !== undefined && data.content !== undefined && data.content.sha !== null && data.content.sha !== undefined) {
         const { sha } = data.content; // get updated SHA
         updateStatsPostUpload(bojData, sha, type, cb);
       }
-      if (sha === null && data.content === undefined){
-        console.log("In upload(), revovering from local storage error");
+      if (sha === null && data.content === undefined) {
+        console.log('In upload(), recovering from local storage error');
         sha = await fetch(`https://api.github.com/repos/${hook}/contents/${directory}/${filename}`, {
           method: 'GET',
           headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
         })
-        .then(res => res.json())
-        .then(data => {
-          return data.sha;
-        });
+          .then((res) => res.json())
+          .then((data) => {
+            return data.sha;
+          });
 
         return upload(token, hook, code, directory, filename, type, sha, cb, bojData);
       }
-    })
-    
+    });
 }
-
 
 /* 모든 코드를 github에 업로드하는 함수 */
 async function uploadAllSolvedProblem() {
@@ -87,10 +85,11 @@ async function uploadAllSolvedProblem() {
         list.map(async (problem) => {
           const bojData = await findData(problem);
           if (isNull(bojData)) return;
-          tree_items.push(await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`)); // )); // 소스코드 파일
-          if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.code);
-          tree_items.push(await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`)); // )); // readme 파일
-          if(tree_items.slice(-1).sha!==undefined) updateStatsPostUpload(bojData, tree_items.slice(-1).sha, CommitType.readme);
+          const source = await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`); // 소스코드 파일
+          const readme = await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`); // readme 파일
+          tree_items.push(...[source, readme]);
+          if (!isNull(source.sha)) updateStatsPostUpload(bojData, source.sha, CommitType.code);
+          if (!isNull(readme.sha)) updateStatsPostUpload(bojData, readme.sha, CommitType.readme);
           incMultiLoader(1);
         }),
       );
