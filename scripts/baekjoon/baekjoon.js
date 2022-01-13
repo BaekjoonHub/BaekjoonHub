@@ -15,24 +15,27 @@ else if(currentUrl.includes('.net/user')){
     if(stats.version === getVersion()){
       insertUploadAllButton();
     }
-  })
+  });
 }
 
 function startLoader() {
   loader = setInterval(async () => {
     if (isExistResultTable()) {
       const table = findFromResultTable();
-      if (isNull(table) || table.length === 0) return;
-      const { username, result } = table;
-      if (username !== findUsername() || result === '틀렸습니다') {
-        stopLoader();
-        return;
-      }
-      if (username === findUsername() && result === '맞았습니다!!') {
-        if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
-        stopLoader();
-        const bojData = await findData();
-        await beginUpload(bojData);
+      if (isEmpty(table)) return;
+      const data = table[0];
+      if (data.hasOwnProperty('username') && data.hasOwnProperty('result')) {
+        const { username, result } = data;
+        if (username !== findUsername() || result === '틀렸습니다') {
+          stopLoader();
+          return;
+        }
+        if (username === findUsername() && result === '맞았습니다!!') {
+          if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+          stopLoader();
+          const bojData = await findData();
+          await beginUpload(bojData);
+        }
       }
     }
   }, 2000);
@@ -51,9 +54,8 @@ async function beginUpload(bojData) {
     const stats = await getStats();
     if (debug) console.log('stats in beginUpload()', stats);
 
-    // if (debug) console.log('stats version', stats.version, 'current version', getVersion());
-    // /* 버전 차이 업로드 */
-    if (stats.version === undefined || stats.version !== getVersion()) {
+    /* 버전 차이 업로드 */
+    if (isNull(stats.version) || stats.version !== getVersion()) {
       markUploadFailedCSS();
       alert('버전 차이가 확인되었습니다. \n확장 프로그램을 열어 패치노트 확인 후 업데이트를 실행해주세요.');
       insertUpdateButton();
@@ -62,40 +64,35 @@ async function beginUpload(bojData) {
 
     const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
     let recentSubmissionId = null;
-    if (stats !== undefined && stats.submission !== undefined && stats.submission[filePath] !== undefined) {
-      /**
-       * 1.0.2 버전 한정 로직으로 1.0.3에는 지워야함
-       * 여기까지 왔다면 이미 버전체크가 된 상태이므로 변경되지 않은 파일에 대하여 하드 포맷
-       */
-      if (stats.submission[filePath].codeSha === undefined || stats.submission[filePath].readmeSha === undefined) {
+    if (!isNull(stats) && !isNull(stats.submission[filePath])) {
+      /* code 또는 readme의 sha가 storage에 저장되어 있지 않은 경우, 잘못된 기록이므로 해당 문제에 대한 기록을 초기화 */
+      if (isNull(stats.submission[filePath][CommitType.code]) || isNull(stats.submission[filePath][CommitType.readme])) {
         delete stats.submission[filePath];
         saveStats(stats);
-      } else recentSubmissionId = stats.submission[filePath].submissionId;
+      } else {
+        recentSubmissionId = stats.submission[filePath].submissionId;
+      }
     }
 
     /* 현재 제출 번호가 기존 제출 번호와 같다면 실행 중지 */
     if (recentSubmissionId === bojData.submission.submissionId) {
       markUploadedCSS();
-      console.log(`Git up to date with submission ID ${recentSubmissionId}`);
-    } else {
-      /* 신규 제출 번호라면 */
-      // 문제 설명 커밋
-      uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', CommitType.readme, undefined, bojData);
-
-      /* Upload code to Git */
-      setTimeout(function () {
-        uploadGit(
-          b64EncodeUnicode(bojData.submission.code),
-          bojData.meta.directory,
-          bojData.meta.fileName,
-          CommitType.code,
-          // callback is called when the code upload to git is a success
-          () => {
-            markUploadedCSS();
-          },
-          bojData,
-        ); // Encode `code` to base64
-      }, 2000);
+      console.log(`현재 제출번호를 업로드한 기록이 있습니다. ID ${recentSubmissionId}`);
+      return;
     }
-  } else console.log('in begin upload: not ready');
+    /* 신규 제출 번호라면 */
+    // 문제 설명 커밋
+    uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', CommitType.readme, undefined, bojData);
+    uploadGit(
+      b64EncodeUnicode(bojData.submission.code),
+      bojData.meta.directory,
+      bojData.meta.fileName,
+      CommitType.code,
+      // callback is called when the code upload to git is a success
+      () => {
+        markUploadedCSS();
+      },
+      bojData,
+    );
+  }
 }
