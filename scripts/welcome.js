@@ -77,6 +77,12 @@ const createRepo = (token, name) => {
     }
   });
 
+  stats = {};
+  stats.version = chrome.runtime.getManifest().version;
+  stats.submission = {};
+  console.log(stats);
+  chrome.storage.local.set({ stats });
+  
   xhr.open('POST', AUTHENTICATION_URL, true);
   xhr.setRequestHeader('Authorization', `token ${token}`);
   xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
