@@ -110,41 +110,56 @@ function convertResultTableHeader(header) {
   }
 }
 
-function updateStatsPostUpload(bojData, sha, type, cb = undefined) {
-  getStats().then((stats) => {
-    if (stats === null || stats === {} || stats === undefined) {
-      // create stats object
-      stats = {};
-      stats.version = '1.0.2';
-      stats.submission = {};
-    }
+/** github에 업로드한 파일의 sha 정보를 업데이트 합니다.
+ * @param {object} bojData - 문제 정보
+ * @param {string} sha - 업로드 파일 sha 정보
+ * @param {enum<CommitType>} type - 업로드 파일의 타입
+ * @param {function} cb - 저장을 완료한 후 호출할 콜백함수
+ * @returns {void}
+ */
+async function updateStatsPostUpload(bojData, sha, type, cb) {
+  const stats = await getStats();
 
-    const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
-    const { submissionId } = bojData.submission;
+  const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
 
-    if (isNull(stats.submission[filePath])) {
-      stats.submission[filePath] = {};
-    }
+  if (isNull(stats.submission[filePath])) {
+    stats.submission[filePath] = {};
+  }
 
-    stats.submission[filePath].submissionId = submissionId;
-    stats.submission[filePath][type] = sha; // update sha key.
-    saveStats(stats).then(() => {
-      if (debug) console.log(`Successfully committed ${bojData.meta.fileName} to github`);
-      if (cb !== undefined) cb();
-    });
-  });
+  stats.submission[filePath] = { ...stats.submission[filePath], ...{ submissionId: bojData.submission.submissionId, [type]: sha } };
+  await saveStats(stats);
+  if (debug) console.log(`Successfully committed ${bojData.meta.fileName} ${type} to github`);
+  if (typeof cb === 'function') cb();
 }
 
 function insertUploadAllButton() {
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
   const uploadButton = document.createElement('li');
-  uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">백준허브 업데이트</a>';
+  uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">전체제출 업로드</a>';
   profileNav.append(uploadButton);
   uploadButton.onclick = () => {
     if (confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용 설명서를 참고하시는 것을 추천드립니다.\n\n진행하시겠습니까?')) {
       uploadButton.append(insertMultiLoader());
       uploadAllSolvedProblem();
+    }
+  };
+}
+
+function insertDownloadAllButton() {
+  
+  // 2500 솔 이하일 때 표시하지 않음
+  if(+document.getElementById('u-solved').innerText <= 2500) return;
+
+  const profileNav = document.getElementsByClassName('nav-tabs')[0];
+  if (debug) console.log('profileNav', profileNav);
+  const downloadButton = document.createElement('li');
+  downloadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">전체제출 다운로드</a>';
+  profileNav.append(downloadButton);
+  downloadButton.onclick = () => {
+    if (confirm('현재까지 해결한 모든 문제가 다운로드 됩니다.\n\n진행하시겠습니까?')) {
+      downloadButton.append(insertMultiLoader());
+      downloadAllSolvedProblem();
     }
   };
 }
@@ -177,4 +192,8 @@ function setMultiLoaderDenom(num) {
 
 function incMultiLoader(num) {
   multiloader.nom.innerText = +multiloader.nom.innerText + num;
+}
+
+function MultiloaderUpToDate(){
+  multiloader.wrap.innerHTML = "Up To Date";
 }
