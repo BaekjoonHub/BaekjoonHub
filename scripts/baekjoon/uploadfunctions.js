@@ -105,3 +105,34 @@ async function uploadAllSolvedProblem() {
       if (debug) console.log('전체 코드 업로드 실패', e);
     });
 }
+
+/* 모든 코드를 zip 파일로 저장하는 함수 */
+async function downloadAllSolvedProblem() {
+  const zip = new JSZip();
+  await findUniqueResultTableListByUsername(findUsername())
+    .then((list) => {
+      setMultiLoaderDenom(list.length);
+      return Promise.all(
+        list.map(async (problem) => {
+          const bojData = await findData(problem);
+          if (isNull(bojData)) return;
+          const folder = zip.folder(bojData.meta.directory);
+          folder.file(`${bojData.meta.fileName}`, bojData.submission.code);
+          folder.file('README.md', bojData.meta.readme);
+          incMultiLoader(1);
+        }),
+      );
+    })
+    .then((_) =>
+      zip.generateAsync({ type: 'blob' }).then((content) => {
+        saveAs(content, 'all_solved_problem.zip');
+      }),
+    )
+    .then((_) => {
+      if (debug) console.log('전체 코드 다운로드 완료');
+      incMultiLoader(1);
+    })
+    .catch((e) => {
+      if (debug) console.log('전체 코드 다운로드 실패', e);
+    });
+}
