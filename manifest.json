@@ -21,7 +21,6 @@
     "persistent": false
   },
   "permissions": [
-    "tabs",
     "unlimitedStorage",
     "storage"
   ],
