@@ -78,8 +78,18 @@ async function uploadAllSolvedProblem() {
   const tree_items = [];
   const git = new GitHub(await getHook(), await getToken());
   const { refSHA, ref } = await git.getReference();
+  const stat_list = [];
   await findUniqueResultTableListByUsername(findUsername())
-    .then((list) => {
+    .then(async list => {
+      const stats = await getStats();
+      return list.filter((problem) => isNull(stats.submission[problem.problemId + problem.problemId + problem.language]) || 
+            problem.submissionId!==stats.submission[problem.problemId + problem.problemId + problem.language].submissionId);
+    })
+    .then(list => {
+      if(list.length === 0){
+        MultiloaderUpToDate();
+        return null;
+      }
       setMultiLoaderDenom(list.length);
       return Promise.all(
         list.map(async (problem) => {
@@ -88,11 +98,16 @@ async function uploadAllSolvedProblem() {
           const source = await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`); // 소스코드 파일
           const readme = await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`); // readme 파일
           tree_items.push(...[source, readme]);
-          if (!isNull(source.sha)) updateStatsPostUpload(bojData, source.sha, CommitType.code);
-          if (!isNull(readme.sha)) updateStatsPostUpload(bojData, readme.sha, CommitType.readme);
+          let curfilePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
+          stat_list.push({filepath: curfilePath, readmeSha: readme.sha, codeSha: source.sha, submissionId: bojData.submission.submissionId});
           incMultiLoader(1);
         }),
       );
+    })
+    .then(async () => {
+      const stats = await getStats();
+      stat_list.forEach(({filepath, readmeSha, codeSha, submissionId}) => stats.submission[filepath] = {submissionId, readmeSha, codeSha});
+      await saveStats(stats);
     })
     .then((_) => git.createTree(refSHA, tree_items))
     .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
