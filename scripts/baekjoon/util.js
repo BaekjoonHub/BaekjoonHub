@@ -141,12 +141,26 @@ function insertUploadAllButton() {
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
   const uploadButton = document.createElement('li');
-  uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">백준허브 업데이트</a>';
+  uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">전체제출 업로드</a>';
   profileNav.append(uploadButton);
   uploadButton.onclick = () => {
     if (confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용 설명서를 참고하시는 것을 추천드립니다.\n\n진행하시겠습니까?')) {
       uploadButton.append(insertMultiLoader());
       uploadAllSolvedProblem();
+    }
+  };
+}
+
+function insertDownloadAllButton() {
+  const profileNav = document.getElementsByClassName('nav-tabs')[0];
+  if (debug) console.log('profileNav', profileNav);
+  const downloadButton = document.createElement('li');
+  downloadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">전체제출 다운로드</a>';
+  profileNav.append(downloadButton);
+  downloadButton.onclick = () => {
+    if (confirm('현재까지 해결한 모든 문제가 다운로드 됩니다.\n\n진행하시겠습니까?')) {
+      downloadButton.append(insertMultiLoader());
+      downloadAllSolvedProblem();
     }
   };
 }
