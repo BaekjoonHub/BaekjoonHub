@@ -63,7 +63,7 @@ async function beginUpload(bojData) {
 
     const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
     let recentSubmissionId = null;
-    if (!isNull(stats) && !isNull(stats.submission[filePath])) {
+    if (!isNull(stats.submission[filePath])) {
       /* code 또는 readme의 sha가 storage에 저장되어 있지 않은 경우, 잘못된 기록이므로 해당 문제에 대한 기록을 초기화 */
       if (isNull(stats.submission[filePath][CommitType.code]) || isNull(stats.submission[filePath][CommitType.readme])) {
         delete stats.submission[filePath];
@@ -81,7 +81,7 @@ async function beginUpload(bojData) {
     }
     /* 신규 제출 번호라면 */
     // 문제 설명 커밋
-    uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', CommitType.readme, undefined, bojData);
+    await uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', CommitType.readme, undefined, bojData);
     uploadGit(
       b64EncodeUnicode(bojData.submission.code),
       bojData.meta.directory,

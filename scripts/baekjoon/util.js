@@ -117,24 +117,19 @@ function convertResultTableHeader(header) {
  * @param {function} cb - 저장을 완료한 후 호출할 콜백함수
  * @returns {void}
  */
-function updateStatsPostUpload(bojData, sha, type, cb) {
-  getStats().then((stats) => {
-    if (isEmpty(stats)) {
-      stats = { version: getVersion(), submissions: {} };
-    }
+async function updateStatsPostUpload(bojData, sha, type, cb) {
+  const stats = await getStats();
 
-    const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
+  const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
 
-    if (isNull(stats.submission[filePath])) {
-      stats.submission[filePath] = {};
-    }
+  if (isNull(stats.submission[filePath])) {
+    stats.submission[filePath] = {};
+  }
 
-    stats.submission[filePath] = { ...stats.submission[filePath], ...{ submissionId: bojData.submission.submissionId, [type]: sha } };
-    saveStats(stats).then(() => {
-      if (debug) console.log(`Successfully committed ${bojData.meta.fileName} to github`);
-      if (typeof cb === 'function') cb();
-    });
-  });
+  stats.submission[filePath] = { ...stats.submission[filePath], ...{ submissionId: bojData.submission.submissionId, [type]: sha } };
+  await saveStats(stats);
+  if (debug) console.log(`Successfully committed ${bojData.meta.fileName} ${type} to github`);
+  if (typeof cb === 'function') cb();
 }
 
 function insertUploadAllButton() {
@@ -152,6 +147,10 @@ function insertUploadAllButton() {
 }
 
 function insertDownloadAllButton() {
+  
+  // 2500 솔 이하일 때 표시하지 않음
+  if(+document.getElementById('u-solved').innerText <= 2500) return;
+
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
   const downloadButton = document.createElement('li');
@@ -193,4 +192,8 @@ function setMultiLoaderDenom(num) {
 
 function incMultiLoader(num) {
   multiloader.nom.innerText = +multiloader.nom.innerText + num;
+}
+
+function MultiloaderUpToDate(){
+  multiloader.wrap.innerHTML = "Up To Date";
 }
