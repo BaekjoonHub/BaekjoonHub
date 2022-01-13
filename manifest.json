@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "BaekjoonHub",
+  "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
   "version": "1.0.2",
