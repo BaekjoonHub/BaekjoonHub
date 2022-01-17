@@ -2,8 +2,10 @@
 | ------ | -------- | ---- | -------- | ------ |
 | | 지원 언어 및 랭크 추가 | 백준 및 solved.ac 기준으로 모든 언어 및 랭크 추가 | O | getCurrentThread |
 | | XHR -> Fetch 리팩토링| 기존 XHR api를 Fetch로 변경 | O | getCurrentThread |
-| | 기존 문제 업로드 | https://www.acmicpc.net/user/{id} 의 모든 문제를 업로드하는 기능 | X | getCurrentThread |
-| | 최근 코드 업데이트 | 한개 이상의 풀이가 있을 때 가장 최근 코드를 푸시 | X | flaxinger |
+| | 기존 문제 업로드 | https://www.acmicpc.net/user/{id} 의 모든 문제를 업로드하는 기능 | O | getCurrentThread |
+| | 최근 코드 업데이트 | 한개 이상의 풀이가 있을 때 가장 최근 코드를 푸시 | O | flaxinger |
 | | 깃 업로드 중 페이지 이동 방지 | 이동 시 alert를 띄워 에러가 발생할 수 있음을 알림 | X |    |
-| | 코드 업데이트 기능 | 성능 비교 후 성능이 좋은 코드로 업데이트 | X | flaxinger |
+| | 코드 업데이트 기능 | 성능 비교 후 성능이 좋은 코드로 업데이트 | O | flaxinger |
 | | 프로그래머스 지원 | 프로그래머스 코드 저장 기능 | X |    |
+| | 코드포스 지원 | 코드포스 코드 저장 기능 | X | |
+| | 백준 서브태스크 처리 로직 | 백준 서브 태스크 완료 시 맞았습니다 처리 | X | |
