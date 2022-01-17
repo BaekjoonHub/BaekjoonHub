@@ -132,6 +132,51 @@ async function updateStatsPostUpload(bojData, sha, type, cb) {
   if (typeof cb === 'function') cb();
 }
 
+/**
+ * update stats from path recursively
+ * ex) updateOptimizedStatsfromPath('백준/README.md', '1342259dssd') -> stats.submission.append({백준: {README.md: '1342259dssd'}})
+ * updateOptimizedStatsfromPath('백준/1000.테스트/테스트.cpp', 'sfgbdksalf144') -> stats.submission.append({백준: {'1000.테스트': {'테스트.cpp': 'sfgbdksalf144'}}}})
+ * updateOptimizedStatsfromPath('백준/1000.테스트/aaa/README.md', '123savvsvfffbb') -> stats.submission.append({백준: {'1000.테스트': {'aaa': {'README.md': '123savvsvfffbb'}}}})
+ * @param {string} path - path to file
+ * @param {string} sha - sha of file
+ * @returns {Promise<void>}
+ */
+async function updateOptimizedStatsfromPath(path, sha) {
+  const stats = await getStats();
+  
+  let currentStats = stats.submission;
+  // split path into array and filter out empty strings
+  const pathArray = path.split('/').filter(p => p !== '');
+  for(const path of pathArray.slice(0, -1)) {
+    if(isNull(currentStats[path])) {
+      currentStats[path] = {};
+    }
+    currentStats = currentStats[path];
+  }
+  currentStats[pathArray.pop()] = sha;
+  await saveStats(stats);
+}
+
+/**
+ * get stats from path recursively
+ * @param {string} path - path to file
+ * @returns {Promise<string>} - sha of file
+ */
+async function getOptimizedStatsfromPath(path){
+  const stats = await getStats();
+  let currentStats = stats.submission;
+  const pathArray = path.split('/').filter(p => p !== '');
+  for(const path of pathArray.slice(0, -1)) {
+    if(isNull(currentStats[path])) {
+      return null;
+    }
+    currentStats = currentStats[path];
+  }
+  return currentStats[pathArray.pop()];
+}
+
+
+
 function insertUploadAllButton() {
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
