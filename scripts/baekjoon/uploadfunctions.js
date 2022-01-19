@@ -1,5 +1,4 @@
-
-/** 푼 문제들에 대한 단일 업로드는 uploadGit 함수로 합니다.  
+/** 푼 문제들에 대한 단일 업로드는 uploadGit 함수로 합니다.
  * 파라미터는 아래와 같습니다.
  * @param {string} filePath - 업로드할 파일의 경로
  * @param {string} sourceCode - 업로드하는 소스코드 내용
@@ -8,27 +7,18 @@
  * @param {string} commitMessage - 커밋 메시지
  * @param {function} cb - 콜백 함수 (ex. 업로드 후 로딩 아이콘 처리 등)
  * @returns {Promise<void>}
-*/
+ */
 async function uploadOneSolveProblemOnGit(bojData, cb) {
-    const token = await getToken();
-    const hook = await getHook();
-    if(isNull(token) || isNull(hook)) {
-      console.error("token or hook is null", token, hook);
-      return;
-    }
-    return upload(
-      token, 
-      hook, 
-      bojData.submission.code, 
-      bojData.meta.readme,
-      bojData.meta.directory, 
-      bojData.meta.fileName,
-      bojData.meta.message,
-      cb);
+  const token = await getToken();
+  const hook = await getHook();
+  if (isNull(token) || isNull(hook)) {
+    console.error('token or hook is null', token, hook);
+    return;
   }
+  return upload(token, hook, bojData.submission.code, bojData.meta.readme, bojData.meta.directory, bojData.meta.fileName, bojData.meta.message, cb);
 }
 
-/** Github api를 사용하여 업로드를 합니다. 
+/** Github api를 사용하여 업로드를 합니다.
  * @see https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
  * @param {string} token - github api 토큰
  * @param {string} hook - github api hook
@@ -38,9 +28,8 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
  * @param {string} filename - 업로드할 파일명
  * @param {string} commitMessage - 커밋 메시지
  * @param {function} cb - 콜백 함수 (ex. 업로드 후 로딩 아이콘 처리 등)
-*/
+ */
 async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
-
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
   const { refSHA, ref } = await git.getReference();
@@ -48,11 +37,11 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
   const treeSHA = await git.createTree(refSHA, [source, readme]);
   const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
-  /*await */git.updateHead(ref, commitSHA);
-  
+  /* await */ git.updateHead(ref, commitSHA);
+
   /* stats의 값을 갱신합니다. */
   await updateStatsSHAfromPath(`${hook}/${source.path}`, source.sha);
-  /*await */updateStatsSHAfromPath(`${hook}/${readme.path}`, readme.sha);
+  /* await */ updateStatsSHAfromPath(`${hook}/${readme.path}`, readme.sha);
   // 콜백 함수 실행
   if (typeof cb === 'function') cb();
 }
@@ -60,17 +49,17 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
 /* 모든 코드를 github에 업로드하는 함수 */
 async function uploadAllSolvedProblem() {
   const tree_items = [];
-  const hook = await getHook(),
+  const hook = await getHook();
   const token = await getToken();
   const git = new GitHub(hook, token);
   const stats = await getStats();
   const { refSHA, ref } = await git.getReference();
   await findUniqueResultTableListByUsername(findUsername())
     .then(async (list) => {
-      const {submission} = stats;
+      const { submission } = stats;
       return list.filter((problem) => {
         const sha = getObjectDatafromPath(submission, `${hook}/${bojData.meta.directory}/${bojData.meta.fileName}`);
-        return (isNull(sha) || sha !== calculateBlobSHA(problem.submission.code));
+        return isNull(sha) || sha !== calculateBlobSHA(problem.submission.code);
       });
     })
     .then((list) => {
@@ -91,7 +80,7 @@ async function uploadAllSolvedProblem() {
       );
     })
     .then(async () => {
-      const {submission} = stats;
+      const { submission } = stats;
       tree_items.forEach((item) => {
         updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
       });
@@ -146,8 +135,7 @@ async function updateLocalStorageStats() {
   const token = await getToken();
   const git = new GitHub(hook, token);
   const stats = await getStats();
-  if(isEmpty(stats))
-    stats = {};
+  if (isEmpty(stats)) stats = {};
   const tree_items = [];
   await git.getTree().then((tree) => {
     tree.forEach((item) => {
@@ -156,11 +144,10 @@ async function updateLocalStorageStats() {
       }
     });
   });
-  if(isEmpty(stats['submission'])) 
-    stats['submission'] = {};
+  if (isEmpty(stats.submission)) stats.submission = {};
   const { submission } = stats;
   tree_items.forEach((item) => {
-    await getObjectDatafromPath(submission, item.path);
+    updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
   });
   await saveStats(stats);
 }
