@@ -33,6 +33,11 @@ class GitHub {
     // username, hook, token, commitSHA, force = true)
     return updateHead(this.hook, this.token, ref, commitSHA, true);
   }
+
+  async getTree() {
+    // hook, token
+    return getTree(this.hook, this.token);
+  }
 }
 
 /** get a reference
@@ -130,5 +135,22 @@ async function updateHead(hook, token, ref, commitSHA, force = true) {
     .then((res) => res.json())
     .then((data) => {
       return data.sha;
+    });
+}
+
+/** get a tree recursively
+ * @see https://docs.github.com/en/rest/reference/git#get-a-tree
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @return {Promise} - the promise for the tree items
+ */
+async function getTree(hook, token) {
+  return fetch(`https://api.github.com/repos/${hook}/git/trees/HEAD?recursive=1`, {
+    method: 'GET',
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      return data.tree;
     });
 }

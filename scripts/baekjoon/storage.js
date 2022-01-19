@@ -147,3 +147,53 @@ async function saveToken(token) {
 async function saveStats(stats) {
   return await saveObjectInLocalStorage({ stats });
 }
+
+/**
+ * update stats from path recursively
+ * ex) updateOptimizedStatsfromPath('_owner/_repo/백준/README.md', '1342259dssd') -> stats.submission.append({_owner: {_repo: {백준: {README.md: '1342259dssd'}}}})
+ * updateOptimizedStatsfromPath('_owner/_repo/백준/1000.테스트/테스트.cpp', 'sfgbdksalf144') -> stats.submission.append({_owner: {_repo: {백준: {'1000.테스트': {'테스트.cpp': 'sfgbdksalf144'}}}}}})
+ * updateOptimizedStatsfromPath('_owner/_repo/백준/1000.테스트/aaa/README.md', '123savvsvfffbb') -> stats.submission.append({_owner: {_repo: {백준: {'1000.테스트': {'aaa': {'README.md': '123savvsvfffbb'}}}}}})
+ * @param {string} path - path to file
+ * @param {string} sha - sha of file
+ * @returns {Promise<void>}
+ */
+async function updateStatsSHAfromPath(path, sha) {
+  const stats = await getStats();
+  await updateObjectDatafromPath(stats.submission, path, sha);
+  await saveStats(stats);
+}
+
+async function updateObjectDatafromPath(obj, path, data) {
+  let current = obj;
+  // split path into array and filter out empty strings
+  const pathArray = path.split('/').filter((p) => p !== '');
+  for (const path of pathArray.slice(0, -1)) {
+    if (isNull(current[path])) {
+      current[path] = {};
+    }
+    current = current[path];
+  }
+  current[pathArray.pop()] = data;
+}
+
+/**
+ * get stats from path recursively
+ * @param {string} path - path to file
+ * @returns {Promise<string>} - sha of file
+ */
+async function getStatsSHAfromPath(path) {
+  const stats = await getStats();
+  return getObjectDatafromPath(stats.submission, path);
+}
+
+async function getObjectDatafromPath(obj, path) {
+  let current = obj;
+  const pathArray = path.split('/').filter((p) => p !== '');
+  for (const path of pathArray.slice(0, -1)) {
+    if (isNull(current[path])) {
+      return null;
+    }
+    current = current[path];
+  }
+  return current[pathArray.pop()];
+}

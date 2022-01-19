@@ -215,3 +215,30 @@ function filter(arr, key, val) {
     return item[key] === val;
   });
 }
+
+/** 더 새로운 버전인지 확인합니다.
+ * @param {string} currentVersion - 현재 버전
+ * @param {string} latestVersion - 최신 버전
+ * @returns {boolean} - 최신 버전인지 여부
+ */
+function isNewVersion(currentVersion, latestVersion) {
+  const current = currentVersion.split('.').map(Number);
+  const latest = latestVersion.split('.').map(Number);
+  for (let i = 0; i < current.length; i++) {
+    if (current[i] > latest[i]) {
+      return false;
+    }
+    if (current[i] < latest[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** calculate github blob file SHA
+ * @param {string} content - file content
+ * @returns {string} - SHA hash
+ */
+function calculateBlobSHA(content) {
+  return sha1(`blob ${content.length}\0${content}`);
+}
