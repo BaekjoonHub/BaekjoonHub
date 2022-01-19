@@ -35,6 +35,7 @@
         "css/inject.css"
       ],
       "js": [
+        "library/sha1.min.js",
         "library/jszip.min.js",
         "library/FileSaver.min.js",
         "scripts/util.js",

@@ -234,3 +234,11 @@ function isNewVersion(currentVersion, latestVersion) {
   }
   return false;
 }
+
+/** calculate github blob file SHA
+ * @param {string} content - file content
+ * @returns {string} - SHA hash
+ */
+function calculateBlobSHA(content) {
+  return sha1(`blob ${content.length}\0${content}`);
+}
