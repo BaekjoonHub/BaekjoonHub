@@ -7,12 +7,12 @@ const debug = false;
 */
 let loader;
 
-if(currentUrl.includes('problem_id'))
-  startLoader();
-else if(currentUrl.includes('.net/user')){
-  getStats()
-  .then(stats =>{
-    if(stats.version === getVersion()){
+const currentUrl = window.location.href;
+
+if (currentUrl.includes('problem_id')) startLoader();
+else if (currentUrl.includes('.net/user')) {
+  getStats().then((stats) => {
+    if (stats.version === getVersion()) {
       insertUploadAllButton();
       insertDownloadAllButton();
     }
@@ -48,45 +48,25 @@ async function beginUpload(bojData) {
   if (isNotEmpty(bojData)) {
     startUpload();
 
-    const stats = await getStats();
     if (debug) console.log('stats in beginUpload()', stats);
 
-    /* 버전 차이 업로드 */
-    if (isNull(stats.version) && isNewVersion(stats.version, getVersion())) {
-      return;
+    const currentVersion = (await getStats()).version;
+    /* 버전 차이가 발생하는 경우, localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
+    if (isNull(currentVersion) && isNewVersion(currentVersion, getVersion())) {
+      await updateLocalStorageStats();
+      // update version.
+      const stats = await getStats();
+      stats.version = getVersion();
+      await saveStats(stats);
     }
 
-    const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
-    let recentSubmissionId = null;
-    if (!isNull(stats.submission[filePath])) {
-      /* code 또는 readme의 sha가 storage에 저장되어 있지 않은 경우, 잘못된 기록이므로 해당 문제에 대한 기록을 초기화 */
-      if (isNull(stats.submission[filePath][CommitType.code]) || isNull(stats.submission[filePath][CommitType.readme])) {
-        delete stats.submission[filePath];
-        saveStats(stats);
-      } else {
-        recentSubmissionId = stats.submission[filePath].submissionId;
-      }
-    }
-
-    /* 현재 제출 번호가 기존 제출 번호와 같다면 실행 중지 */
-    if (recentSubmissionId === bojData.submission.submissionId) {
+    /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
+    if (getStatsSHAfromPath(`${hook}/${bojData.meta.directory}/${bojData.meta.fileName}`) === calculateBlobSHA(bojData.submission.code)) {
       markUploadedCSS();
-      console.log(`현재 제출번호를 업로드한 기록이 있습니다. ID ${recentSubmissionId}`);
+      console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submission.submissionId}`);
       return;
     }
-    /* 신규 제출 번호라면 */
-    // 문제 설명 커밋
-    await uploadGit(b64EncodeUnicode(bojData.meta.readme), bojData.meta.directory, 'README.md', CommitType.readme, undefined, bojData);
-    uploadGit(
-      b64EncodeUnicode(bojData.submission.code),
-      bojData.meta.directory,
-      bojData.meta.fileName,
-      CommitType.code,
-      // callback is called when the code upload to git is a success
-      () => {
-        markUploadedCSS();
-      },
-      bojData,
-    );
+    /* 신규 제출 번호라면 새롭게 커밋  */
+    await uploadOneSolveProblemOnGit(bojData);
   }
 }
