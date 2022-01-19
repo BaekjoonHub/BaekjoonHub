@@ -54,6 +54,7 @@ async function uploadAllSolvedProblem() {
   const git = new GitHub(hook, token);
   const stats = await getStats();
   const { refSHA, ref } = await git.getReference();
+  await updateLocalStorageStats();
   await findUniqueResultTableListByUsername(findUsername())
     .then(async (list) => {
       const { submission } = stats;
@@ -150,4 +151,5 @@ async function updateLocalStorageStats() {
     updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
   });
   await saveStats(stats);
+  if (debug) console.log('update stats', stats);
 }
