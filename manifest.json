@@ -45,7 +45,6 @@
         "scripts/baekjoon/parsing.js",
         "scripts/baekjoon/util.js",
         "scripts/baekjoon/uploadfunctions.js",
-        "scripts/baekjoon/UpdateForNewVersion.js",
         "scripts/baekjoon/baekjoon.js"
       ],
       "run_at": "document_idle"
