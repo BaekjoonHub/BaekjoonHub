@@ -159,18 +159,21 @@ async function saveStats(stats) {
  */
 async function updateStatsSHAfromPath(path, sha) {
   const stats = await getStats();
+  await updateObjectDatafromPath(stats.submission, path, sha);
+  await saveStats(stats);
+}
 
-  let currentStats = stats.submission;
+async function updateObjectDatafromPath(obj, path, data) {
+  let current = obj;
   // split path into array and filter out empty strings
   const pathArray = path.split('/').filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
-    if (isNull(currentStats[path])) {
-      currentStats[path] = {};
+    if (isNull(current[path])) {
+      current[path] = {};
     }
-    currentStats = currentStats[path];
+    current = current[path];
   }
-  currentStats[pathArray.pop()] = sha;
-  await saveStats(stats);
+  current[pathArray.pop()] = data;
 }
 
 /**
@@ -180,13 +183,17 @@ async function updateStatsSHAfromPath(path, sha) {
  */
 async function getStatsSHAfromPath(path) {
   const stats = await getStats();
-  let currentStats = stats.submission;
+  return getObjectDatafromPath(stats.submission, path);
+}
+
+async function getObjectDatafromPath(obj, path) {
+  let current = obj;
   const pathArray = path.split('/').filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
-    if (isNull(currentStats[path])) {
+    if (isNull(current[path])) {
       return null;
     }
-    currentStats = currentStats[path];
+    current = current[path];
   }
-  return currentStats[pathArray.pop()];
+  return current[pathArray.pop()];
 }
