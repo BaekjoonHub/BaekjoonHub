@@ -166,7 +166,9 @@ async function updateStatsSHAfromPath(path, sha) {
 async function updateObjectDatafromPath(obj, path, data) {
   let current = obj;
   // split path into array and filter out empty strings
-  const pathArray = path.split('/').filter((p) => p !== '');
+  const pathArray = _baekjoonRankRemoverFilter(path)
+    .split('/')
+    .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
     if (isNull(current[path])) {
       current[path] = {};
@@ -188,7 +190,9 @@ async function getStatsSHAfromPath(path) {
 
 async function getObjectDatafromPath(obj, path) {
   let current = obj;
-  const pathArray = path.split('/').filter((p) => p !== '');
+  const pathArray = _baekjoonRankRemoverFilter(path)
+    .split('/')
+    .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
     if (isNull(current[path])) {
       return null;
@@ -196,4 +200,16 @@ async function getObjectDatafromPath(obj, path) {
     current = current[path];
   }
   return current[pathArray.pop()];
+}
+
+/**
+ * @deprecated
+ * level과 관련된 경로를 지우는 임의의 함수 (문제 level이 변경되는 경우 중복된 업로드 파일이 생성됨을 방지하기 위한 목적)
+ * ex) _owner/_repo/백준/Gold/1000.테스트/테스트.cpp -> _owner/_repo/백준/1000.테스트/테스트.cpp
+ *     _owner/_repo/백준/Silver/1234.테스트/테스트.cpp -> _owner/_repo/백준/1234.테스트/테스트.cpp
+ * @param {string} path - path to file
+ * @returns {string} - removed baekjoon level on path
+ */
+function _baekjoonRankRemoverFilter(path) {
+  return path.replace(/\/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)\//g, '/');
 }
