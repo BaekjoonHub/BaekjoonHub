@@ -1,3 +1,4 @@
+# DROP
 // Set to true to enable console log
 const debug = false;
 
