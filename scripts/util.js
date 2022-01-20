@@ -240,5 +240,5 @@ function isNewVersion(currentVersion, latestVersion) {
  * @returns {string} - SHA hash
  */
 function calculateBlobSHA(content) {
-  return sha1(`blob ${content.length}\0${content}`);
+  return sha1('blob ' + new Blob([content]).size + '\0' + content);
 }

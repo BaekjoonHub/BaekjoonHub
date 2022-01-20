@@ -98,7 +98,7 @@ const link = window.location.href;
 
 /* Check for open pipe */
 if (window.location.host === 'github.com') {
-  chrome.storage.local.get('pipe_leethub', (data) => {
+  chrome.storage.local.get('pipe_BaekjoonHub', (data) => {
     if (data && data.pipe_leethub) {
       localAuth.parseAccessCode(link);
     }
