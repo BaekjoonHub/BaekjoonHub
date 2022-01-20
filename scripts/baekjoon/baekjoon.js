@@ -1,3 +1,5 @@
+const { version } = require("prettier");
+
 // Set to true to enable console log
 const debug = true;
 
@@ -12,7 +14,7 @@ if(currentUrl.includes('problem_id'))
 else if(currentUrl.includes('.net/user')){
   getStats()
   .then(stats =>{
-    if(stats.version === getVersion()){
+    if(versionAutoUpdate.includes(stats.version) || stats.version === getVersion()){
       insertUploadAllButton();
       insertDownloadAllButton();
     }
