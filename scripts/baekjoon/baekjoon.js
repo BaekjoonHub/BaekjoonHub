@@ -1,5 +1,5 @@
 // Set to true to enable console log
-const debug = false;
+const debug = true;
 
 /* 
   문제 제출 맞음 여부를 확인하는 함수
@@ -60,6 +60,7 @@ async function beginUpload(bojData) {
     }
     if (!isNull(stats.version) && versionAutoUpdate.includes(stats.version)){
       stats.version = getVersion();
+      await saveStats(stats);
     }
 
     const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
