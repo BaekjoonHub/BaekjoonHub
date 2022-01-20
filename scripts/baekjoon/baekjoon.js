@@ -7,16 +7,6 @@ const debug = false;
 */
 let loader;
 
-// Stats 초기값이 없는 경우, 기본값을 생성하고 업데이트한다.
-getStats().then((stats) => {
-  if (isNull(stats)) stats = { version: '0.0.0', submission: {} };
-  // 1.0.2 버전의 제출 내역을 초기화하기 위한 임시코드
-  if (stats.version === '1.0.2') {
-    stats.submission = {};
-  }
-  saveStats(stats);
-});
-
 const currentUrl = window.location.href;
 
 // 문제 제출 사이트의 경우에는 로더를 실행하고, 유저 페이지의 경우에는 버튼을 생성한다.
