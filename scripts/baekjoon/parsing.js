@@ -16,7 +16,7 @@
 async function findData(data) {
   try {
     if (isNull(data)) {
-      const table = filter(findFromResultTable(), 'result', '맞았습니다!!');
+      const table = filter(findFromResultTable(), 'result', correctCase);
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
     }
