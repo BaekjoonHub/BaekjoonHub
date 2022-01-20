@@ -37,11 +37,11 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
   const treeSHA = await git.createTree(refSHA, [source, readme]);
   const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
-  /* await */ git.updateHead(ref, commitSHA);
+  await git.updateHead(ref, commitSHA);
 
   /* stats의 값을 갱신합니다. */
   await updateStatsSHAfromPath(`${hook}/${source.path}`, source.sha);
-  /* await */ updateStatsSHAfromPath(`${hook}/${readme.path}`, readme.sha);
+  await updateStatsSHAfromPath(`${hook}/${readme.path}`, readme.sha);
   // 콜백 함수 실행
   if (typeof cb === 'function') cb();
 }
@@ -52,16 +52,22 @@ async function uploadAllSolvedProblem() {
   const hook = await getHook();
   const token = await getToken();
   const git = new GitHub(hook, token);
-  const stats = await getStats();
   const { refSHA, ref } = await git.getReference();
-  await updateLocalStorageStats();
+  const stats = await updateLocalStorageStats(); // 업로드된 모든 파일에 대한 SHA 업데이트
   await findUniqueResultTableListByUsername(findUsername())
     .then(async (list) => {
       const { submission } = stats;
-      return list.filter((problem) => {
-        const sha = getObjectDatafromPath(submission, `${hook}/${bojData.meta.directory}/${bojData.meta.fileName}`);
-        return isNull(sha) || sha !== calculateBlobSHA(problem.submission.code);
-      });
+      const bojDatas = [];
+      await Promise.all(
+        list.map(async (problem) => {
+          const bojData = await findData(problem);
+          const sha = getObjectDatafromPath(submission, `${hook}/${bojData.meta.directory}/${bojData.meta.fileName}`);
+          if (isNull(sha) || sha !== calculateBlobSHA(bojData.submission.code)) {
+            bojDatas.push(bojData);
+          }
+        }),
+      );
+      return bojDatas;
     })
     .then((list) => {
       if (list.length === 0) {
@@ -70,9 +76,7 @@ async function uploadAllSolvedProblem() {
       }
       setMultiLoaderDenom(list.length);
       return Promise.all(
-        list.map(async (problem) => {
-          const bojData = await findData(problem);
-          if (isNull(bojData)) return;
+        list.map(async (bojData) => {
           const source = await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`); // 소스코드 파일
           const readme = await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`); // readme 파일
           tree_items.push(...[source, readme]);
@@ -136,7 +140,6 @@ async function updateLocalStorageStats() {
   const token = await getToken();
   const git = new GitHub(hook, token);
   const stats = await getStats();
-  if (isEmpty(stats)) stats = {};
   const tree_items = [];
   await git.getTree().then((tree) => {
     tree.forEach((item) => {
@@ -145,11 +148,11 @@ async function updateLocalStorageStats() {
       }
     });
   });
-  if (isEmpty(stats.submission)) stats.submission = {};
   const { submission } = stats;
   tree_items.forEach((item) => {
     updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
   });
   await saveStats(stats);
   if (debug) console.log('update stats', stats);
+  return stats;
 }
