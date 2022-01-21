@@ -330,6 +330,30 @@ const categories = {
   'multipoint_evaluation': '다중 대입값 계산',
   'differential_cryptanalysis': '차분 공격',
 };
+/**
+ * 채점 결과에 대한 각 카테고리별로 구분
+ * 영어권에서는 추가적으로 "-eng" 라는 문자열을 붙여서 사용한다.
+ */
+const result_category = {
+  'wait': '기다리는 중',
+  'rejudge-wait': '재채점을 기다리는 중',
+  'will-be-change': '재채점 중',
+  'no-judge': '채점하지 않음',
+  'compile': '채점 준비 중',
+  'judging': '채점 중',
+  'ac': '맞았습니다!!',
+  'pac': '맞았습니다!!', // 부분적으로 맞은 경우
+  'pe': '출력 형식이 잘못되었습니다.',
+  'wa': '틀렸습니다.',
+  'awa': '!맞았습니다', // 이전에 맞았지만, 재채점 결과가 틀린 경우
+  'tle': '시간 초과',
+  'mle': '메모리 초과',
+  'ole': '출력 초과',
+  're': '재채점 요청',
+  'rte': '런타임 에러',
+  'ce': '컴파일 에러',
+  'co': '채점 불가',
+};
 
 /* state of upload for progress */
 const uploadState = { uploading: false };
