@@ -204,7 +204,7 @@ function maxValuesGroupBykey(arr, key, compare) {
   return result;
 }
 
-/** 배열 내의 key:val 값을 가지고 있는 요소만을 반환합니다.
+/** 배열 내의 key에 val 값을 포함하고 있는 요소만을 반환합니다.
  * @param {array} arr - array to be filtered
  * @param {string} key - key to filter
  * @param {string} val - value to filter

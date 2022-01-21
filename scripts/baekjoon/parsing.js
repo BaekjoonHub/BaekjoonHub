@@ -16,7 +16,7 @@
 async function findData(data) {
   try {
     if (isNull(data)) {
-      const table = filter(findFromResultTable(), 'result', correctCase);
+      const table = filter(findFromResultTable(), 'resultCategory', 'ac');
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
     }
@@ -32,7 +32,6 @@ async function findData(data) {
       readme
     } = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
     return {
-      meta: {
         title,
         problemId: data.problemId,
         level,
@@ -43,13 +42,10 @@ async function findData(data) {
         category,
         readme,
         directory,
-      },
-      submission: {
         submissionId: data.submissionId,
         code,
         memory: data.memory,
         runtime: data.runtime,
-      },
     };
   } catch (error) {
     console.error(error);
@@ -129,6 +125,8 @@ function parsingResultTableList(doc) {
     const row = table.rows[i];
     const cells = Array.from(row.cells, (x, index) => {
       switch (headers[index]) {
+        case 'result':
+          return {result: x.innerText.trim(), resultCategory: element.firstChild.getAttribute("data-color").trim()}
         case 'language':
           return x.innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
         case 'submissionTime':
@@ -140,9 +138,11 @@ function parsingResultTableList(doc) {
       }
     });
     const obj = {};
+    obj.elementId = row.id;
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
+    obj = {...obj, ...obj.result};
     list.push(obj);
   }
   if (debug) console.log('TableList', list);
