@@ -1,4 +1,3 @@
-# DROP
 // Set to true to enable console log
 const debug = false;
 
@@ -14,7 +13,7 @@ const currentUrl = window.location.href;
 if (currentUrl.includes('problem_id')) startLoader();
 else if (currentUrl.includes('.net/user')) {
   getStats().then((stats) => {
-    if (stats.version === getVersion()) {
+    if (!isEmpty(stats.version) && !isNewVersion(stats.version, getVersion())) {
       insertUploadAllButton();
       insertDownloadAllButton();
     }
@@ -29,9 +28,9 @@ function startLoader() {
       const data = table[0];
       if (data.hasOwnProperty('username') && data.hasOwnProperty('result')) {
         const { username, result } = data;
-        if (username === findUsername() && result === '맞았습니다!!') {
+        if (username === findUsername() && correctCase.includes(result)) {
           stopLoader();
-          if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+          console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
           const bojData = await findData();
           await beginUpload(bojData);
         }
@@ -52,8 +51,6 @@ async function beginUpload(bojData) {
 
     const stats = await getStats();
     const hook = await getHook();
-
-    if (debug) console.log('stats in beginUpload()', stats);
 
     const currentVersion = stats.version;
     /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */

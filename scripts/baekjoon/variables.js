@@ -339,3 +339,5 @@ const multiloader = {
   nom: null,
   denom: null,
 };
+
+const correctCase = ['맞았습니다!!', '100점'];
