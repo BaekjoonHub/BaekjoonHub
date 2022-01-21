@@ -212,6 +212,6 @@ function maxValuesGroupBykey(arr, key, compare) {
  */
 function filter(arr, key, val) {
   return arr.filter(function (item) {
-    return item[key] === val;
+    return val.includes(item[key]);
   });
 }

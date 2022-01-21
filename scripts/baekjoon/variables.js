@@ -348,3 +348,9 @@ const multiloader = {
   nom: null,
   denom: null,
 };
+
+const correctCase = ['맞았습니다!!', '100점'];
+
+const versionNeedsUpdate = ['1.0.0', '1.0.1'];
+
+const versionAutoUpdate = ['1.0.2'];
