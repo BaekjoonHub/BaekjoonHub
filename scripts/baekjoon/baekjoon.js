@@ -12,7 +12,7 @@ if(currentUrl.includes('problem_id'))
 else if(currentUrl.includes('.net/user')){
   getStats()
   .then(stats =>{
-    if(stats.version === getVersion()){
+    if(versionAutoUpdate.includes(stats.version) || stats.version === getVersion()){
       insertUploadAllButton();
       insertDownloadAllButton();
     }
@@ -27,9 +27,9 @@ function startLoader() {
       const data = table[0];
       if (data.hasOwnProperty('username') && data.hasOwnProperty('result')) {
         const { username, result } = data;
-        if (username === findUsername() && result === '맞았습니다!!') {
+        if (username === findUsername() && correctCase.includes(result)) {
           stopLoader();
-          if (debug) console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+          console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
           const bojData = await findData();
           await beginUpload(bojData);
         }
@@ -52,11 +52,15 @@ async function beginUpload(bojData) {
     if (debug) console.log('stats in beginUpload()', stats);
 
     /* 버전 차이 업로드 */
-    if (isNull(stats.version) || stats.version !== getVersion()) {
+    if (isNull(stats.version) || versionNeedsUpdate.includes(stats.version)) {
       markUploadFailedCSS();
       alert('버전 차이가 확인되었습니다. \n확장 프로그램을 열어 패치노트 확인 후 업데이트를 실행해주세요.');
       insertUpdateButton();
       return;
+    }
+    if (!isNull(stats.version) && versionAutoUpdate.includes(stats.version)){
+      stats.version = getVersion();
+      await saveStats(stats);
     }
 
     const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
