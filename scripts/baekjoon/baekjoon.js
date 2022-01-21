@@ -28,7 +28,7 @@ function startLoader() {
       const data = table[0];
       if (data.hasOwnProperty('username') && data.hasOwnProperty('resultCategory')) {
         const { username, resultCategory } = data;
-        if (username === findUsername() && resultCategory.includes('ac')) {
+        if (username === findUsername() && resultCategory.includes(RESULT_CATEGORY.RESULT_ACCEPTED)) {
           stopLoader();
           console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
           const bojData = await findData();
@@ -63,7 +63,7 @@ async function beginUpload(bojData) {
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    if(debug) console.log("local:", await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), "calcSHA:", calculateBlobSHA(bojData.code));
+    if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
     if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
       markUploadedCSS();
       console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submissionId}`);
