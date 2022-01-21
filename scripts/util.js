@@ -212,14 +212,14 @@ function maxValuesGroupBykey(arr, key, compare) {
  */
 function filter(arr, key, val) {
   return arr.filter(function (item) {
-    return item[key] === val;
+    return val.includes(item[key]);
   });
 }
 
-/** 더 새로운 버전인지 확인합니다.
+/** 더 새로운 버전이 존재하는지 확인합니다.
  * @param {string} currentVersion - 현재 버전
  * @param {string} latestVersion - 최신 버전
- * @returns {boolean} - 최신 버전인지 여부
+ * @returns {boolean} - 새로운 버전이 나왔는지 여부
  */
 function isNewVersion(currentVersion, latestVersion) {
   const current = currentVersion.split('.').map(Number);
@@ -240,5 +240,5 @@ function isNewVersion(currentVersion, latestVersion) {
  * @returns {string} - SHA hash
  */
 function calculateBlobSHA(content) {
-  return sha1('blob ' + new Blob([content]).size + '\0' + content);
+  return sha1(`blob ${new Blob([content]).size}\0${content}`);
 }
