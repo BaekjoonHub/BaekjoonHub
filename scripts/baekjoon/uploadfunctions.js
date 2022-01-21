@@ -15,7 +15,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     console.error('token or hook is null', token, hook);
     return;
   }
-  return upload(token, hook, bojData.submission.code, bojData.meta.readme, bojData.meta.directory, bojData.meta.fileName, bojData.meta.message, cb);
+  return upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb);
 }
 
 /** Github api를 사용하여 업로드를 합니다.
@@ -61,8 +61,8 @@ async function uploadAllSolvedProblem() {
       await Promise.all(
         list.map(async (problem) => {
           const bojData = await findData(problem);
-          const sha = getObjectDatafromPath(submission, `${hook}/${bojData.meta.directory}/${bojData.meta.fileName}`);
-          if (isNull(sha) || sha !== calculateBlobSHA(bojData.submission.code)) {
+          const sha = getObjectDatafromPath(submission, `${hook}/${bojData.directory}/${bojData.fileName}`);
+          if (isNull(sha) || sha !== calculateBlobSHA(bojData.code)) {
             bojDatas.push(bojData);
           }
         }),
@@ -77,8 +77,8 @@ async function uploadAllSolvedProblem() {
       setMultiLoaderDenom(list.length);
       return Promise.all(
         list.map(async (bojData) => {
-          const source = await git.createBlob(bojData.submission.code, `${bojData.meta.directory}/${bojData.meta.fileName}`); // 소스코드 파일
-          const readme = await git.createBlob(bojData.meta.readme, `${bojData.meta.directory}/README.md`); // readme 파일
+          const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
+          const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
           tree_items.push(...[source, readme]);
           incMultiLoader(1);
         }),
@@ -113,9 +113,9 @@ async function downloadAllSolvedProblem() {
         list.map(async (problem) => {
           const bojData = await findData(problem);
           if (isNull(bojData)) return;
-          const folder = zip.folder(bojData.meta.directory);
-          folder.file(`${bojData.meta.fileName}`, bojData.submission.code);
-          folder.file('README.md', bojData.meta.readme);
+          const folder = zip.folder(bojData.directory);
+          folder.file(`${bojData.fileName}`, bojData.code);
+          folder.file('README.md', bojData.readme);
           incMultiLoader(1);
         }),
       );

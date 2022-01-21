@@ -1,5 +1,5 @@
 // Set to true to enable console log
-const debug = false;
+const debug = true;
 
 /* 
   문제 제출 맞음 여부를 확인하는 함수
@@ -63,9 +63,10 @@ async function beginUpload(bojData) {
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    if ((await getStatsSHAfromPath(`${hook}/${bojData.meta.directory}/${bojData.meta.fileName}`)) === calculateBlobSHA(bojData.submission.code)) {
+    if(debug) console.log("local:", await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), "calcSHA:", calculateBlobSHA(bojData.code));
+    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
       markUploadedCSS();
-      console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submission.submissionId}`);
+      console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submissionId}`);
       return;
     }
     /* 신규 제출 번호라면 새롭게 커밋  */
