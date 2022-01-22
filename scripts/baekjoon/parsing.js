@@ -104,7 +104,7 @@ function parsingResultTableList(doc) {
     const cells = Array.from(row.cells, (x, index) => {
       switch (headers[index]) {
         case 'result':
-          return { result: x.innerText.trim(), resultCategory: element.firstChild.getAttribute('data-color').replace('-eng', '').trim() };
+          return { result: x.innerText.trim(), resultCategory: x.firstChild.getAttribute('data-color').replace('-eng', '').trim() };
         case 'language':
           return x.innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
         case 'submissionTime':
@@ -115,7 +115,7 @@ function parsingResultTableList(doc) {
           return x.innerText.trim();
       }
     });
-    const obj = {};
+    let obj = {};
     obj.elementId = row.id;
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];

@@ -170,11 +170,11 @@ async function saveStats(stats) {
  */
 async function updateStatsSHAfromPath(path, sha) {
   const stats = await getStats();
-  await updateObjectDatafromPath(stats.submission, path, sha);
+  updateObjectDatafromPath(stats.submission, path, sha);
   await saveStats(stats);
 }
 
-async function updateObjectDatafromPath(obj, path, data) {
+function updateObjectDatafromPath(obj, path, data) {
   let current = obj;
   // split path into array and filter out empty strings
   const pathArray = _baekjoonRankRemoverFilter(path)
@@ -199,7 +199,7 @@ async function getStatsSHAfromPath(path) {
   return getObjectDatafromPath(stats.submission, path);
 }
 
-async function getObjectDatafromPath(obj, path) {
+function getObjectDatafromPath(obj, path) {
   let current = obj;
   const pathArray = _baekjoonRankRemoverFilter(path)
     .split('/')
