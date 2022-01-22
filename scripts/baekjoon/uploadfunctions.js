@@ -54,53 +54,50 @@ async function uploadAllSolvedProblem() {
   const git = new GitHub(hook, token);
   const { refSHA, ref } = await git.getReference();
   const stats = await updateLocalStorageStats(); // 업로드된 모든 파일에 대한 SHA 업데이트
-  await findUniqueResultTableListByUsername(findUsername())
-    .then(async (list) => {
-      const { submission } = stats;
-      const bojDatas = [];
-      await Promise.all(
-        list.map(async (problem) => {
-          const bojData = await findData(problem);
-          const sha = getObjectDatafromPath(submission, `${hook}/${bojData.directory}/${bojData.fileName}`);
-          if (isNull(sha) || sha !== calculateBlobSHA(bojData.code)) {
-            bojDatas.push(bojData);
-          }
-        }),
-      );
-      return bojDatas;
-    })
-    .then((list) => {
-      if (list.length === 0) {
-        MultiloaderUpToDate();
-        return null;
+  const list = await findUniqueResultTableListByUsername(findUsername());
+  const { submission } = stats;
+  const bojDatas = [];
+  await Promise.all(
+    list.map(async (problem) => {
+      const bojData = await findData(problem);
+      const sha = getObjectDatafromPath(submission, `${hook}/${bojData.directory}/${bojData.fileName}`);
+      if (debug) console.log('sha', sha, 'calcSHA:', calculateBlobSHA(bojData.code));
+      if (isNull(sha) || sha !== calculateBlobSHA(bojData.code)) {
+        bojDatas.push(bojData);
       }
-      setMultiLoaderDenom(list.length);
-      return Promise.all(
-        list.map(async (bojData) => {
-          const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
-          const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
-          tree_items.push(...[source, readme]);
-          incMultiLoader(1);
-        }),
-      );
-    })
-    .then(async () => {
-      const { submission } = stats;
+    }),
+  );
+
+  if (bojDatas.length === 0) {
+    MultiloaderUpToDate();
+    if (debug) console.log('업로드 할 새로운 코드가 하나도 없습니다.');
+    return null;
+  }
+  setMultiLoaderDenom(list.length);
+  await Promise.all(
+    list.map(async (bojData) => {
+      const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
+      const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
+      tree_items.push(...[source, readme]);
+      incMultiLoader(1);
+    }),
+  );
+  try {
+    if (tree_items.length !== 0) {
+      const treeSHA = await git.createTree(refSHA, tree_items);
+      const commitSHA = await git.createCommit('전체 코드 업로드', treeSHA, refSHA);
+      await git.updateHead(ref, commitSHA);
+      if (debug) console.log('전체 코드 업로드 완료');
+      incMultiLoader(1);
+
       tree_items.forEach((item) => {
         updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
       });
       await saveStats(stats);
-    })
-    .then((_) => git.createTree(refSHA, tree_items))
-    .then((treeSHA) => git.createCommit('전체 코드 업로드', treeSHA, refSHA))
-    .then((commitSHA) => git.updateHead(ref, commitSHA))
-    .then((_) => {
-      if (debug) console.log('전체 코드 업로드 완료');
-      incMultiLoader(1);
-    })
-    .catch((e) => {
-      if (debug) console.log('전체 코드 업로드 실패', e);
-    });
+    }
+  } catch (error) {
+    if (debug) console.log('전체 코드 업로드 실패', error);
+  }
 }
 
 /* 모든 코드를 zip 파일로 저장하는 함수 */

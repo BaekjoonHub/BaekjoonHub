@@ -16,6 +16,8 @@ else if (currentUrl.includes('.net/user')) {
     if (!isEmpty(stats.version) && !isNewVersion(stats.version, getVersion())) {
       insertUploadAllButton();
       insertDownloadAllButton();
+    } else {
+      versionUpdate();
     }
   });
 }
@@ -55,11 +57,7 @@ async function beginUpload(bojData) {
     const currentVersion = stats.version;
     /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
     if (isNull(currentVersion) || isNewVersion(currentVersion, getVersion()) || isNull(await getStatsSHAfromPath(hook))) {
-      const stats = await updateLocalStorageStats();
-      // update version.
-      stats.version = getVersion();
-      await saveStats(stats);
-      if (debug) console.log('stats updated.', stats);
+      versionUpdate();
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
@@ -72,4 +70,13 @@ async function beginUpload(bojData) {
     /* 신규 제출 번호라면 새롭게 커밋  */
     await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
   }
+}
+
+async function versionUpdate() {
+  if (debug) console.log('start versionUpdate');
+  const stats = await updateLocalStorageStats();
+  // update version.
+  stats.version = getVersion();
+  await saveStats(stats);
+  if (debug) console.log('stats updated.', stats);
 }
