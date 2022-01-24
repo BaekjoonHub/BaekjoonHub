@@ -85,7 +85,7 @@ async function uploadAllSolvedProblem() {
   try {
     if (tree_items.length !== 0) {
       const treeSHA = await git.createTree(refSHA, tree_items);
-      const commitSHA = await git.createCommit('전체 코드 업로드', treeSHA, refSHA);
+      const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeSHA, refSHA);
       await git.updateHead(ref, commitSHA);
       if (debug) console.log('전체 코드 업로드 완료');
       incMultiLoader(1);
