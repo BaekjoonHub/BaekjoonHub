@@ -204,7 +204,7 @@ function maxValuesGroupBykey(arr, key, compare) {
   return result;
 }
 
-/** 배열 내의 key:val 값을 가지고 있는 요소만을 반환합니다.
+/** 배열 내의 key에 val 값을 포함하고 있는 요소만을 반환합니다.
  * @param {array} arr - array to be filtered
  * @param {string} key - key to filter
  * @param {string} val - value to filter
@@ -214,4 +214,31 @@ function filter(arr, key, val) {
   return arr.filter(function (item) {
     return val.includes(item[key]);
   });
+}
+
+/** 더 새로운 버전이 존재하는지 확인합니다.
+ * @param {string} currentVersion - 현재 버전
+ * @param {string} latestVersion - 최신 버전
+ * @returns {boolean} - 새로운 버전이 나왔는지 여부
+ */
+function isNewVersion(currentVersion, latestVersion) {
+  const current = currentVersion.split('.').map(Number);
+  const latest = latestVersion.split('.').map(Number);
+  for (let i = 0; i < current.length; i++) {
+    if (current[i] > latest[i]) {
+      return false;
+    }
+    if (current[i] < latest[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** calculate github blob file SHA
+ * @param {string} content - file content
+ * @returns {string} - SHA hash
+ */
+function calculateBlobSHA(content) {
+  return sha1(`blob ${new Blob([content]).size}\0${content}`);
 }

@@ -16,41 +16,12 @@
 async function findData(data) {
   try {
     if (isNull(data)) {
-      const table = filter(findFromResultTable(), 'result', correctCase);
+      const table = filter(findFromResultTable(), 'resultCategory', RESULT_CATEGORY.RESULT_ACCEPTED);
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
     }
-    const {
-      title,
-      level,
-      code,
-      problemDescription,
-      directory,
-      message,
-      category,
-      fileName,
-      readme
-    } = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
-    return {
-      meta: {
-        title,
-        problemId: data.problemId,
-        level,
-        problemDescription,
-        language: data.language,
-        message,
-        fileName,
-        category,
-        readme,
-        directory,
-      },
-      submission: {
-        submissionId: data.submissionId,
-        code,
-        memory: data.memory,
-        runtime: data.runtime,
-      },
-    };
+    const details = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
+    return { ...data, ...details };
   } catch (error) {
     console.error(error);
   }
@@ -58,6 +29,7 @@ async function findData(data) {
 }
 
 async function makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime) {
+  // prettier-ignore
   const {
     title, 
     level, 
@@ -68,6 +40,7 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
     problem_output 
   } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
 
+  // prettier-ignore
   const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
                           + `### 입력 \n\n ${problem_input}\n\n`
                           + `### 출력 \n\n ${problem_output}\n\n`;
@@ -77,6 +50,7 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
   const category = tagl.join(', ');
   const fileName = convertSingleCharToDoubleChar(title) + languages[language];
+  // prettier-ignore
   const readme = `# [${level}] ${title} - ${problemId} \n\n` 
               + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
               + `### 성능 요약\n\n`
@@ -129,6 +103,8 @@ function parsingResultTableList(doc) {
     const row = table.rows[i];
     const cells = Array.from(row.cells, (x, index) => {
       switch (headers[index]) {
+        case 'result':
+          return { result: x.innerText.trim(), resultCategory: x.firstChild.getAttribute('data-color').replace('-eng', '').trim() };
         case 'language':
           return x.innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
         case 'submissionTime':
@@ -139,10 +115,12 @@ function parsingResultTableList(doc) {
           return x.innerText.trim();
       }
     });
-    const obj = {};
+    let obj = {};
+    obj.elementId = row.id;
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
+    obj = { ...obj, ...obj.result };
     list.push(obj);
   }
   if (debug) console.log('TableList', list);
@@ -194,9 +172,14 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
         /* Get Question Description */
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionText, 'text/html');
+
+        // prettier-ignore
         const problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
+        // prettier-ignore
         const problem_input       = `${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}`;
+        // prettier-ignore
         const problem_output      = `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
+
         /* Get Code */
         const code = codeText;
         /* Get Solved Response */
