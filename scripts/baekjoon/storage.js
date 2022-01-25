@@ -16,6 +16,17 @@ chrome.storage.local.get('isSync', (data) => {
   }
 });
 
+/* stats 초기값이 없는 경우, 기본값을 생성하고 stats를 업데이트한다.
+   만약 새로운 버전이 업데이트되었을 경우, 기존 submission은 업데이트를 위해 초기화 한다.
+   (확인하기 어려운 다양한 케이스가 발생하는 것을 확인하여서 if 조건문을 복잡하게 하였다.)
+*/
+getStats().then((stats) => {
+  if (isNull(stats)) stats = {};
+  if (isNull(stats.version)) stats.version = '0.0.0';
+  if (isNull(stats.submission) || isNewVersion(stats.version, getVersion())) stats.submission = {};
+  saveStats(stats);
+});
+
 /**
  * @author https://gist.github.com/sumitpore/47439fcd86696a71bf083ede8bbd5466
  * Chrome의 Local StorageArea에서 개체 가져오기
@@ -146,4 +157,70 @@ async function saveToken(token) {
 
 async function saveStats(stats) {
   return await saveObjectInLocalStorage({ stats });
+}
+
+/**
+ * update stats from path recursively
+ * ex) updateOptimizedStatsfromPath('_owner/_repo/백준/README.md', '1342259dssd') -> stats.submission.append({_owner: {_repo: {백준: {README.md: '1342259dssd'}}}})
+ * updateOptimizedStatsfromPath('_owner/_repo/백준/1000.테스트/테스트.cpp', 'sfgbdksalf144') -> stats.submission.append({_owner: {_repo: {백준: {'1000.테스트': {'테스트.cpp': 'sfgbdksalf144'}}}}}})
+ * updateOptimizedStatsfromPath('_owner/_repo/백준/1000.테스트/aaa/README.md', '123savvsvfffbb') -> stats.submission.append({_owner: {_repo: {백준: {'1000.테스트': {'aaa': {'README.md': '123savvsvfffbb'}}}}}})
+ * @param {string} path - path to file
+ * @param {string} sha - sha of file
+ * @returns {Promise<void>}
+ */
+async function updateStatsSHAfromPath(path, sha) {
+  const stats = await getStats();
+  updateObjectDatafromPath(stats.submission, path, sha);
+  await saveStats(stats);
+}
+
+function updateObjectDatafromPath(obj, path, data) {
+  let current = obj;
+  // split path into array and filter out empty strings
+  const pathArray = _baekjoonRankRemoverFilter(path)
+    .split('/')
+    .filter((p) => p !== '');
+  for (const path of pathArray.slice(0, -1)) {
+    if (isNull(current[path])) {
+      current[path] = {};
+    }
+    current = current[path];
+  }
+  current[pathArray.pop()] = data;
+}
+
+/**
+ * get stats from path recursively
+ * @param {string} path - path to file
+ * @returns {Promise<string>} - sha of file
+ */
+async function getStatsSHAfromPath(path) {
+  const stats = await getStats();
+  return getObjectDatafromPath(stats.submission, path);
+}
+
+function getObjectDatafromPath(obj, path) {
+  let current = obj;
+  const pathArray = _baekjoonRankRemoverFilter(path)
+    .split('/')
+    .filter((p) => p !== '');
+  for (const path of pathArray.slice(0, -1)) {
+    if (isNull(current[path])) {
+      return null;
+    }
+    current = current[path];
+  }
+  return current[pathArray.pop()];
+}
+
+/**
+ * @deprecated
+ * level과 관련된 경로를 지우는 임의의 함수 (문제 level이 변경되는 경우 중복된 업로드 파일이 생성됨을 방지하기 위한 목적)
+ * ex) _owner/_repo/백준/Gold/1000.테스트/테스트.cpp -> _owner/_repo/백준/1000.테스트/테스트.cpp
+ *     _owner/_repo/백준/Silver/1234.테스트/테스트.cpp -> _owner/_repo/백준/1234.테스트/테스트.cpp
+ * @param {string} path - 파일의 경로 문자열
+ * @returns {string} - 레벨과 관련된 경로를 제거한 문자열
+ */
+function _baekjoonRankRemoverFilter(path) {
+  return path.replace(/\/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)\//g, '/');
 }

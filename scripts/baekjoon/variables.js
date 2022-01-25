@@ -331,26 +331,50 @@ const categories = {
   'differential_cryptanalysis': '차분 공격',
 };
 
-const CommitType = {
-  readme: 'readmeSha',
-  code: 'codeSha',
+/* 채점 결과에 대한 각 구분 정보 */
+const RESULT_CATEGORY = {
+  RESULT_PENDING: 'wait',
+  RESULT_PENDING_REJUDGE: 'rejudge-wait',
+  RESULT_NO_JUDGE: 'no-judge',
+  RESULT_PREPARE_FOR_JUDGE: 'compile',
+  RESULT_JUDGING: 'judging',
+  RESULT_ACCEPTED: 'ac',
+  RESULT_PARTIALLY_ACCEPTED: 'pac',
+  RESULT_PRESENTATION_ERROR: 'pe',
+  RESULT_WRONG_ANSWER: 'wa',
+  RESULT_ACCEPTED_NOT_CORRECT: 'awa',
+  RESULT_TIME_LIMIT_EXCEEDED: 'tle',
+  RESULT_MEMORY_LIMIT_EXCEEDED: 'mle',
+  RESULT_OUTPUT_LIMIT_EXCEEDED: 'ole',
+  RESULT_RUNTIME_ERROR: 'rte',
+  RESULT_COMPILATION_ERROR: 'ce',
+  RESULT_UNVAILABLE: 'co',
+  RESULT_DELETED: 'del',
 };
 
-const titleRegex = new RegExp('[^a-zA-Z0-9가-힣 -]', 'i');
+/* 채점 결과에 대한 각 메시지 구분 맵핑 */
+const RESULT_MESSAGE = {
+  [RESULT_CATEGORY.RESULT_PENDING]: '기다리는 중',
+  [RESULT_CATEGORY.RESULT_PENDING_REJUDGE]: '재채점을 기다리는 중',
+  [RESULT_CATEGORY.RESULT_NO_JUDGE]: '채점하지 않음',
+  [RESULT_CATEGORY.RESULT_PREPARE_FOR_JUDGE]: '채점 준비 중',
+  [RESULT_CATEGORY.RESULT_JUDGING]: '채점 중',
+  [RESULT_CATEGORY.RESULT_ACCEPTED]: '맞았습니다!!',
+  [RESULT_CATEGORY.RESULT_PARTIALLY_ACCEPTED]: '맞았습니다!!',
+  [RESULT_CATEGORY.RESULT_PRESENTATION_ERROR]: '출력 형식이 잘못되었습니다',
+  [RESULT_CATEGORY.RESULT_WRONG_ANSWER]: '틀렸습니다',
+  [RESULT_CATEGORY.RESULT_ACCEPTED_NOT_CORRECT]: '!맞았습니다',
+  [RESULT_CATEGORY.RESULT_TIME_LIMIT_EXCEEDED]: '시간 초과',
+  [RESULT_CATEGORY.RESULT_MEMORY_LIMIT_EXCEEDED]: '메모리 초과',
+  [RESULT_CATEGORY.RESULT_OUTPUT_LIMIT_EXCEEDED]: '출력 초과',
+  [RESULT_CATEGORY.RESULT_RUNTIME_ERROR]: '런타임 에러',
+};
 
 /* state of upload for progress */
 const uploadState = { uploading: false };
-
-const currentUrl = window.location.href;
 
 const multiloader = {
   wrap: null,
   nom: null,
   denom: null,
 };
-
-const correctCase = ['맞았습니다!!', '100점'];
-
-const versionNeedsUpdate = ['1.0.0', '1.0.1'];
-
-const versionAutoUpdate = ['1.0.2'];
