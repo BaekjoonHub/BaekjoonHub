@@ -111,6 +111,10 @@ function parsingResultTableList(doc) {
           const el = x.querySelector('a.show-date');
           if (isNull(el)) return null;
           return el.getAttribute('data-original-title');
+        case 'problemId':
+          const el2 = x.querySelector('a.problem_title');
+          if (isNull(el2)) return null;
+          return el2.getAttribute('href').replace(/^.*\/([0-9]+)$/, '$1');
         default:
           return x.innerText.trim();
       }
