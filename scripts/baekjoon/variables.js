@@ -9,8 +9,6 @@
     bojData: 깃허브에 업로드되는 사용자의 코드와 문제 요약을 담고 있습니다.
 */
 
-/* Enum for languages supported by LeetCode. */
-
 // prettier-ignore
 // Languages supported by BOJ
 const languages = {
