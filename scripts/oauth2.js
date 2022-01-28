@@ -4,7 +4,7 @@ const oAuth2 = {
    * Initialize
    */
   init() {
-    this.KEY = 'leethub_token';
+    this.KEY = 'BaekjoonHub_token';
     this.ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token';
     this.AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
     this.CLIENT_ID = 'beb4f0aa19ab8faf5004';
@@ -25,7 +25,7 @@ const oAuth2 = {
       url += this.SCOPES[i];
     }
 
-    chrome.storage.local.set({ pipe_leethub: true }, () => {
+    chrome.storage.local.set({ pipe_baekjoonhub: true }, () => {
       // opening pipe temporarily
 
       chrome.tabs.create({ url, selected: true }, function () {

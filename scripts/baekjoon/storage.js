@@ -1,6 +1,6 @@
 /* Sync to local storage */
 chrome.storage.local.get('isSync', (data) => {
-  keys = ['BaekjoonHub_token', 'BaekjoonHub_username', 'pipe_BaekjoonHub', 'stats', 'BaekjoonHub_hook', 'mode_type'];
+  keys = ['BaekjoonHub_token', 'BaekjoonHub_username', 'pipe_baekjoonhub', 'stats', 'BaekjoonHub_hook', 'mode_type'];
   if (!data || !data.isSync) {
     keys.forEach((key) => {
       chrome.storage.sync.get(key, (data) => {
@@ -132,7 +132,7 @@ async function getToken() {
 }
 
 // async function getPipe() {
-//   return await getObjectFromLocalStorage('pipe_BaekjoonHub');
+//   return await getObjectFromLocalStorage('pipe_baekjoonhub');
 // }
 
 async function getGithubUsername() {
