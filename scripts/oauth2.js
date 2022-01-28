@@ -31,7 +31,7 @@ const oAuth2 = {
       chrome.tabs.create({ url, selected: true }, function () {
         window.close();
         chrome.tabs.getCurrent(function (tab) {
-          chrome.tabs.remove(tab.id, function () {});
+          // chrome.tabs.remove(tab.id, function () {});
         });
       });
     });

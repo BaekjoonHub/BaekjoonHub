@@ -1,11 +1,11 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
   "version": "1.0.4",
   "author": "flaxinger",
-  "browser_action": {
+  "action": {
     "default_icon": "assets/thumbnail.png",
     "default_popup": "popup.html"
   },
@@ -15,14 +15,28 @@
     "128": "assets/thumbnail.png"
   },
   "background": {
-    "scripts": [
-      "scripts/background.js"
-    ],
-    "persistent": false
+    "service_worker": "scripts/background.js"
   },
   "permissions": [
     "unlimitedStorage",
     "storage"
+  ],
+  "host_permissions": [
+    "https://www.acmicpc.net/",
+    "https://github.com/"
+  ],
+  "web_accessible_resources":[
+    {
+      "matches": ["<all_urls>"],
+      "resources": [
+        "library/jquery-3.3.1.min.js",
+        "library/semantic.min.js",
+        "popup.html",
+        "popup.js",
+        "welcome.html",
+        "welcome.js"
+      ]
+    }
   ],
   "content_scripts": [
     {
@@ -50,6 +64,5 @@
       ],
       "run_at": "document_idle"
     }
-  ],
-  "content_security_policy": "script-src 'self' https://code.jquery.com/jquery-3.3.1.min.js https://github.com/login/oauth/authorize https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js; object-src 'self'"
+  ]
 }
