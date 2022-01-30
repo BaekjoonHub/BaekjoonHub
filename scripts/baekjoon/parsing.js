@@ -16,7 +16,8 @@
 async function findData(data) {
   try {
     if (isNull(data)) {
-      const table = filter(findFromResultTable(), 'resultCategory', RESULT_CATEGORY.RESULT_ACCEPTED);
+      let table = filter(findFromResultTable(), 'resultCategory', RESULT_CATEGORY.RESULT_ACCEPTED);
+      table = filter(table, 'username', findUsername());
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
     }
@@ -80,7 +81,9 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
 function findUsername() {
   const el = document.querySelector('a.username');
   if (isNull(el)) return null;
-  return el.innerText;
+  const username = el.innerText;
+  if (isEmpty(username)) return null;
+  return username;
 }
 
 /*
