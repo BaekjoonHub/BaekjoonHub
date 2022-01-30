@@ -54,7 +54,12 @@ async function uploadAllSolvedProblem() {
   const git = new GitHub(hook, token);
   const { refSHA, ref } = await git.getReference();
   const stats = await updateLocalStorageStats(); // 업로드된 모든 파일에 대한 SHA 업데이트
-  const list = await findUniqueResultTableListByUsername(findUsername());
+  const username = findUsername();
+  if (isEmpty(username)) {
+    if (debug) console.log('로그인되어 있지 않아. 파싱을 진행할 수 없습니다.');
+    return;
+  }
+  const list = await findUniqueResultTableListByUsername(username);
   const { submission } = stats;
   const bojDatas = [];
   await Promise.all(
@@ -76,6 +81,7 @@ async function uploadAllSolvedProblem() {
   setMultiLoaderDenom(list.length);
   await Promise.all(
     list.map(async (bojData) => {
+      if (isEmpty(bojData.code) || isEmpty(bojData.readme)) return; // 데이터가 없는 경우 스킵
       const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
       const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
       tree_items.push(...[source, readme]);
