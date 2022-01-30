@@ -80,7 +80,7 @@ async function uploadAllSolvedProblem() {
   }
   setMultiLoaderDenom(list.length);
   await Promise.all(
-    list.map(async (bojData) => {
+    bojDatas.map(async (bojData) => {
       if (isEmpty(bojData.code) || isEmpty(bojData.readme)) return; // 데이터가 없는 경우 스킵
       const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
       const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
