@@ -78,13 +78,14 @@ async function uploadAllSolvedProblem() {
     if (debug) console.log('업로드 할 새로운 코드가 하나도 없습니다.');
     return null;
   }
-  setMultiLoaderDenom(list.length);
+  setMultiLoaderDenom(bojDatas.length);
   await Promise.all(
     bojDatas.map(async (bojData) => {
-      if (isEmpty(bojData.code) || isEmpty(bojData.readme)) return; // 데이터가 없는 경우 스킵
-      const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
-      const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
-      tree_items.push(...[source, readme]);
+      if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
+        const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
+        const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
+        tree_items.push(...[source, readme]);
+      }
       incMultiLoader(1);
     }),
   );
