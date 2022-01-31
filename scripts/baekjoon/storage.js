@@ -23,7 +23,8 @@ chrome.storage.local.get('isSync', (data) => {
 getStats().then((stats) => {
   if (isNull(stats)) stats = {};
   if (isNull(stats.version)) stats.version = '0.0.0';
-  if (isNull(stats.submission) || isNewVersion(stats.version, getVersion())) stats.submission = {};
+  if (isNull(stats.branches) || stats.version !== getVersion()) stats.branches = {};
+  if (isNull(stats.submission) || stats.version !== getVersion()) stats.submission = {};
   saveStats(stats);
 });
 
