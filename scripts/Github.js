@@ -9,28 +9,35 @@ class GitHub {
     this.token = token;
   }
 
-  async getReference() {
-    // username, hook, token
-    return getReference(this.hook, this.token);
+  async getReference(branch = 'main') {
+    // hook, token, branch
+    return getReference(this.hook, this.token, branch);
+  }
+
+  async getDefaultBranchOnRepo() {
+    return getDefaultBranchOnRepo(this.hook, this.token);
   }
 
   async createBlob(content, path) {
-    // username, hook, token, content, path
+    // hook, token, content, path
     return createBlob(this.hook, this.token, content, path);
   }
 
   async createTree(refSHA, tree_items) {
-    // username, hook, token, baseSHA, tree_items
+    // hook, token, baseSHA, tree_items
+    if (debug) console.log('GitHub createTree', 'refSHA:', refSHA, 'tree_items:', tree_items);
     return createTree(this.hook, this.token, refSHA, tree_items);
   }
 
   async createCommit(message, treeSHA, refSHA) {
-    // username, hook, token, message, tree, parent
+    // hook, token, message, tree, parent
+    if (debug) console.log('GitHub createCommit', 'message:', message, 'treeSHA:', treeSHA, 'refSHA:', refSHA);
     return createCommit(this.hook, this.token, message, treeSHA, refSHA);
   }
 
   async updateHead(ref, commitSHA) {
-    // username, hook, token, commitSHA, force = true)
+    // hook, token, commitSHA, force = true)
+    if (debug) console.log('GitHub updateHead', 'ref:', ref, 'commitSHA:', commitSHA);
     return updateHead(this.hook, this.token, ref, commitSHA, true);
   }
 
@@ -40,20 +47,40 @@ class GitHub {
   }
 }
 
-/** get a reference
- * @see https://docs.github.com/en/rest/reference/git#get-a-reference
- * @param {string} hook - github repository
- * @param {string} token - reference name
- * @return {Promise} - the promise for the reference sha
+/** get a repo default branch
+ * @see https://docs.github.com/en/rest/reference/repos
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @return {Promise} - the promise for the branch sha
  */
-async function getReference(hook, token) {
-  return fetch(`https://api.github.com/repos/${hook}/git/refs`, {
+async function getDefaultBranchOnRepo(hook, token) {
+  return fetch(`https://api.github.com/repos/${hook}`, {
     method: 'GET',
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   })
     .then((res) => res.json())
     .then((data) => {
-      return { refSHA: data[0].object.sha, ref: data[0].ref };
+      return data.default_branch;
+    });
+}
+
+/** get a reference
+ * @see https://docs.github.com/en/rest/reference/git#get-a-reference
+ * @param {string} hook - github repository
+ * @param {string} token - reference name
+ * @param {string} ref - reference name
+ * @return {Promise} - the promise for the reference sha
+ */
+async function getReference(hook, token, branch = 'main') {
+  // return fetch(`https://api.github.com/repos/${hook}/git/refs`, {
+  return fetch(`https://api.github.com/repos/${hook}/git/refs/heads/${branch}`, {
+    method: 'GET',
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      return { refSHA: data.object.sha, ref: data.ref };
+      // return { refSHA: data[0].object.sha, ref: data[0].ref };
     });
 }
 /** create a Blob
