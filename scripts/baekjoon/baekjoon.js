@@ -13,7 +13,7 @@ const currentUrl = window.location.href;
 if (currentUrl.includes('status?from_mine')) startLoader();
 else if (currentUrl.includes('.net/user')) {
   getStats().then((stats) => {
-    if (!isEmpty(stats.version) && stats.version !== getVersion()) {
+    if (!isEmpty(stats.version) && stats.version === getVersion()) {
       insertUploadAllButton();
       insertDownloadAllButton();
     } else {
