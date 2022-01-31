@@ -10,7 +10,7 @@ let loader;
 const currentUrl = window.location.href;
 
 // 문제 제출 사이트의 경우에는 로더를 실행하고, 유저 페이지의 경우에는 버튼을 생성한다.
-if (currentUrl.includes('problem_id')) startLoader();
+if (currentUrl.includes('status?from_mine')) startLoader();
 else if (currentUrl.includes('.net/user')) {
   getStats().then((stats) => {
     if (!isEmpty(stats.version) && stats.version !== getVersion()) {
