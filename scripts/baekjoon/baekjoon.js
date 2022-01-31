@@ -13,7 +13,7 @@ const currentUrl = window.location.href;
 if (currentUrl.includes('problem_id')) startLoader();
 else if (currentUrl.includes('.net/user')) {
   getStats().then((stats) => {
-    if (!isEmpty(stats.version) && !isNewVersion(stats.version, getVersion())) {
+    if (!isEmpty(stats.version) && stats.version !== getVersion()) {
       insertUploadAllButton();
       insertDownloadAllButton();
     } else {
@@ -56,7 +56,7 @@ async function beginUpload(bojData) {
 
     const currentVersion = stats.version;
     /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
-    if (isNull(currentVersion) || isNewVersion(currentVersion, getVersion()) || isNull(await getStatsSHAfromPath(hook))) {
+    if (isNull(currentVersion) || currentVersion !== getVersion() || isNull(await getStatsSHAfromPath(hook))) {
       versionUpdate();
     }
 
