@@ -32,7 +32,13 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
 async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
-  const { refSHA, ref } = await git.getReference();
+  const stats = await getStats();
+  let default_branch = stats.branches[hook];
+  if (isNull(default_branch)) {
+    default_branch = await git.getDefaultBranchOnRepo();
+    stats.branches[hook] = default_branch;
+  }
+  const { refSHA, ref } = await git.getReference(default_branch);
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
   const treeSHA = await git.createTree(refSHA, [source, readme]);
@@ -40,8 +46,9 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   await git.updateHead(ref, commitSHA);
 
   /* stats의 값을 갱신합니다. */
-  await updateStatsSHAfromPath(`${hook}/${source.path}`, source.sha);
-  await updateStatsSHAfromPath(`${hook}/${readme.path}`, readme.sha);
+  updateObjectDatafromPath(stats, `${hook}/${source.path}`, source.sha);
+  updateObjectDatafromPath(stats, `${hook}/${readme.path}`, readme.sha);
+  await saveStats(stats);
   // 콜백 함수 실행
   if (typeof cb === 'function') cb();
 }
@@ -49,11 +56,17 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
 /* 모든 코드를 github에 업로드하는 함수 */
 async function uploadAllSolvedProblem() {
   const tree_items = [];
+
+  // 업로드된 모든 파일에 대한 SHA 업데이트
+  const stats = await updateLocalStorageStats();
+
   const hook = await getHook();
   const token = await getToken();
   const git = new GitHub(hook, token);
-  const { refSHA, ref } = await git.getReference();
-  const stats = await updateLocalStorageStats(); // 업로드된 모든 파일에 대한 SHA 업데이트
+
+  const default_branch = stats.branches[hook];
+  const { refSHA, ref } = await git.getReference(default_branch);
+
   const username = findUsername();
   if (isEmpty(username)) {
     if (debug) console.log('로그인되어 있지 않아. 파싱을 진행할 수 없습니다.');
@@ -78,13 +91,14 @@ async function uploadAllSolvedProblem() {
     if (debug) console.log('업로드 할 새로운 코드가 하나도 없습니다.');
     return null;
   }
-  setMultiLoaderDenom(list.length);
+  setMultiLoaderDenom(bojDatas.length);
   await Promise.all(
-    list.map(async (bojData) => {
-      if (isEmpty(bojData.code) || isEmpty(bojData.readme)) return; // 데이터가 없는 경우 스킵
-      const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
-      const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
-      tree_items.push(...[source, readme]);
+    bojDatas.map(async (bojData) => {
+      if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
+        const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
+        const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
+        tree_items.push(...[source, readme]);
+      }
       incMultiLoader(1);
     }),
   );
@@ -155,6 +169,8 @@ async function updateLocalStorageStats() {
   tree_items.forEach((item) => {
     updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
   });
+  const default_branch = await git.getDefaultBranchOnRepo();
+  stats.branches[hook] = default_branch;
   await saveStats(stats);
   if (debug) console.log('update stats', stats);
   return stats;
