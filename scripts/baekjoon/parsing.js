@@ -191,12 +191,9 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionText, 'text/html');
 
-        // prettier-ignore
         const problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
-        // prettier-ignore
-        const problem_input       = `${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}`;
-        // prettier-ignore
-        const problem_output      = `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
+        const problem_input = isNull((problem_input_el = doc.getElementById('problem_input'))) ? 'Empty' : `${unescapeHtml(problem_input_el.innerHTML.trim())}`;
+        const problem_output = isNull((problem_output_el = doc.getElementById('problem_output'))) ? 'Empty' : `${unescapeHtml(problem_output_el.innerHTML.trim())}`;
 
         /* Get Code */
         const code = codeText;
