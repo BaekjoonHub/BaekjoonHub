@@ -50,7 +50,7 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   const tagl = [];
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
   const category = tagl.join(', ');
-  const fileName = convertSingleCharToDoubleChar(title) + languages[language];
+  const fileName = convertSingleCharToDoubleChar(title) + '.' + languages[language];
   // prettier-ignore
   const readme = `# [${level}] ${title} - ${problemId} \n\n` 
               + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
