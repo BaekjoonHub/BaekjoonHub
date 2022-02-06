@@ -110,28 +110,6 @@ function convertResultTableHeader(header) {
   }
 }
 
-/** github에 업로드한 파일의 sha 정보를 업데이트 합니다.
- * @param {object} bojData - 문제 정보
- * @param {string} sha - 업로드 파일 sha 정보
- * @param {enum<CommitType>} type - 업로드 파일의 타입
- * @param {function} cb - 저장을 완료한 후 호출할 콜백함수
- * @returns {void}
- */
-async function updateStatsPostUpload(bojData, sha, type, cb) {
-  const stats = await getStats();
-
-  const filePath = bojData.meta.problemId + bojData.meta.problemId + bojData.meta.language;
-
-  if (isNull(stats.submission[filePath])) {
-    stats.submission[filePath] = {};
-  }
-
-  stats.submission[filePath] = { ...stats.submission[filePath], ...{ submissionId: bojData.submission.submissionId, [type]: sha } };
-  await saveStats(stats);
-  if (debug) console.log(`Successfully committed ${bojData.meta.fileName} ${type} to github`);
-  if (typeof cb === 'function') cb();
-}
-
 function insertUploadAllButton() {
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
