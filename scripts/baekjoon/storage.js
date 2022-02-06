@@ -169,7 +169,7 @@ async function saveStats(stats) {
  * @param {string} sha - sha of file
  * @returns {Promise<void>}
  */
-async function updateStatsSHAfromPath(path, sha) {
+async function updateStatsSubmissionSHAfromPath(path, sha) {
   const stats = await getStats();
   updateObjectDatafromPath(stats.submission, path, sha);
   await saveStats(stats);
@@ -195,7 +195,7 @@ function updateObjectDatafromPath(obj, path, data) {
  * @param {string} path - path to file
  * @returns {Promise<string>} - sha of file
  */
-async function getStatsSHAfromPath(path) {
+async function getStatsSubmissionSHAfromPath(path) {
   const stats = await getStats();
   return getObjectDatafromPath(stats.submission, path);
 }
