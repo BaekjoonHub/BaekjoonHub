@@ -16,41 +16,13 @@
 async function findData(data) {
   try {
     if (isNull(data)) {
-      const table = filter(findFromResultTable(), 'result', '맞았습니다!!');
+      let table = filter(findFromResultTable(), 'resultCategory', RESULT_CATEGORY.RESULT_ACCEPTED);
+      table = filter(table, 'username', findUsername());
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
     }
-    const {
-      title,
-      level,
-      code,
-      problemDescription,
-      directory,
-      message,
-      category,
-      fileName,
-      readme
-    } = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
-    return {
-      meta: {
-        title,
-        problemId: data.problemId,
-        level,
-        problemDescription,
-        language: data.language,
-        message,
-        fileName,
-        category,
-        readme,
-        directory,
-      },
-      submission: {
-        submissionId: data.submissionId,
-        code,
-        memory: data.memory,
-        runtime: data.runtime,
-      },
-    };
+    const details = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
+    return { ...data, ...details };
   } catch (error) {
     console.error(error);
   }
@@ -58,6 +30,7 @@ async function findData(data) {
 }
 
 async function makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime) {
+  // prettier-ignore
   const {
     title, 
     level, 
@@ -68,6 +41,7 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
     problem_output 
   } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
 
+  // prettier-ignore
   const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
                           + `### 입력 \n\n ${problem_input}\n\n`
                           + `### 출력 \n\n ${problem_output}\n\n`;
@@ -76,7 +50,8 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   const tagl = [];
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
   const category = tagl.join(', ');
-  const fileName = convertSingleCharToDoubleChar(title) + languages[language];
+  const fileName = convertSingleCharToDoubleChar(title) + '.' + languages[language];
+  // prettier-ignore
   const readme = `# [${level}] ${title} - ${problemId} \n\n` 
               + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
               + `### 성능 요약\n\n`
@@ -106,7 +81,20 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
 function findUsername() {
   const el = document.querySelector('a.username');
   if (isNull(el)) return null;
-  return el.innerText;
+  const username = el.innerText;
+  if (isEmpty(username)) return null;
+  return username;
+}
+
+/*
+  유저 정보 페이지에서 유저 이름을 파싱합니다.
+*/
+function findUsernameOnUserInfoPage() {
+  const el = document.querySelector('div.page-header > h1');
+  if (isNull(el)) return null;
+  const username = el.textContent.trim();
+  if (isEmpty(username)) return null;
+  return username;
 }
 
 /*
@@ -129,20 +117,28 @@ function parsingResultTableList(doc) {
     const row = table.rows[i];
     const cells = Array.from(row.cells, (x, index) => {
       switch (headers[index]) {
+        case 'result':
+          return { result: x.innerText.trim(), resultCategory: x.firstChild.getAttribute('data-color').replace('-eng', '').trim() };
         case 'language':
           return x.innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
         case 'submissionTime':
           const el = x.querySelector('a.show-date');
           if (isNull(el)) return null;
           return el.getAttribute('data-original-title');
+        case 'problemId':
+          const el2 = x.querySelector('a.problem_title');
+          if (isNull(el2)) return null;
+          return el2.getAttribute('href').replace(/^.*\/([0-9]+)$/, '$1');
         default:
           return x.innerText.trim();
       }
     });
-    const obj = {};
+    let obj = {};
+    obj.elementId = row.id;
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
+    obj = { ...obj, ...obj.result };
     list.push(obj);
   }
   if (debug) console.log('TableList', list);
@@ -194,9 +190,11 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
         /* Get Question Description */
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionText, 'text/html');
+
         const problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
-        const problem_input       = `${unescapeHtml(doc.getElementById('problem_input').innerHTML.trim())}`;
-        const problem_output      = `${unescapeHtml(doc.getElementById('problem_output').innerHTML.trim())}`;
+        const problem_input = isNull((problem_input_el = doc.getElementById('problem_input'))) ? 'Empty' : `${unescapeHtml(problem_input_el.innerHTML.trim())}`;
+        const problem_output = isNull((problem_output_el = doc.getElementById('problem_output'))) ? 'Empty' : `${unescapeHtml(problem_output_el.innerHTML.trim())}`;
+
         /* Get Code */
         const code = codeText;
         /* Get Solved Response */
