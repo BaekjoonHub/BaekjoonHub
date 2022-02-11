@@ -46,8 +46,8 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   await git.updateHead(ref, commitSHA);
 
   /* stats의 값을 갱신합니다. */
-  updateObjectDatafromPath(stats, `${hook}/${source.path}`, source.sha);
-  updateObjectDatafromPath(stats, `${hook}/${readme.path}`, readme.sha);
+  updateObjectDatafromPath(stats.submission, `${hook}/${source.path}`, source.sha);
+  updateObjectDatafromPath(stats.submission, `${hook}/${readme.path}`, readme.sha);
   await saveStats(stats);
   // 콜백 함수 실행
   if (typeof cb === 'function') cb();
