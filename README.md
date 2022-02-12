@@ -7,9 +7,9 @@
 </h1>
 
 <p align="center">
-  <a href="https://github.com/BaekjoonHub/BaekjoonHub/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
-  <a href="https://chrome.google.com/webstore/detail/baekjoonhub/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/v/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="chrome-webstore"/></a>
-  <a href="https://chrome.google.com/webstore/detail/baekjoonhub/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/d/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="users"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
+  <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/v/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="chrome-webstore"/></a>
+  <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/d/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="users"></a>
   <a href="https://github.com/BaekjoonHub/BaekjoonHub/graphs/contributors" alt="Contributors">
     <img src="https://img.shields.io/github/contributors/BaekjoonHub/BaekjoonHub" />
     
@@ -21,8 +21,8 @@
 ## Contributors
 
 
-<a href = "https://github.com/flaxinger/baekjoonhub/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo=flaxinger/baekjoonhub"/>
+<a href = "https://github.com/BaekjoonHub/BaekjoonHub/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=BaekjoonHub/BaekjoonHub"/>
 </a>
 
 
@@ -46,15 +46,13 @@
 <!--- 마켓  --->
 ## 지금 크롬 마켓에서 확인하세요!
 
-<table style="border-collapse: separate;"><tr>
-  <td style="border-spacing:2em 0"> 
-      <a href="https://chrome.google.com/webstore/detail/BaekjoonHub/ccammcjdkpgjmcpijpahlehmapgmphmk">
-        <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fimg.talkandroid.com%2Fuploads%2F2014%2F10%2Fchrome_web_store_logo_new.png&f=1&nofb=1" alt="Chrome WebStore" height=100 width=200/>
-      </a>  
-  </td>
-</tr></table>
-<br />
+<a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk">
+  <img src="assets/extension/bookmark1.png"/>
+</a>
 
+<a href="https://chrome.google.com/webstore/detail/ebcggjojbiojfmiaammkfbdgmlpfflig">
+  <img src="assets/extension/bookmark2.png"/>
+</a>
 
 
 <!--- 소개 --->
@@ -111,7 +109,7 @@
 <!--- 개발 참여 --->
 ## 개발 참여 및 버그 신고
 버그 신고를 하고 싶다면: [버그 신고](https://github.com/BaekjoonHub/BaekjoonHub/issues)<br/>
-향후 과제를 확인하고 싶다면: [향후 과제](https://github.com/BaekjoonHub/BaekjoonHub/blob/main/TODO.md)<br/>
+향후 과제를 확인하고 싶다면: [향후 과제](TODO.md)<br/>
 협업을 위한 공식 문서: [작성중]()</br>
 협업 오픈 카톡방: [오픈 카톡방 링크](https://open.kakao.com/o/gOWn2ySd)
 <br />
@@ -119,6 +117,11 @@
 
 <!--- 패치 노트 --->
 ## 패치노트
-[1.0.1 패치노트](https://github.com/BaekjoonHub/BaekjoonHub/blob/main/Patch_Notes/1.0.1.md)</br>
-[1.0.2 패치노트](https://github.com/BaekjoonHub/BaekjoonHub/blob/main/Patch_Notes/1.0.2.md)
+[1.0.1 패치노트](Patch_Notes/1.0.1.md)</br>
+[1.0.2 패치노트](Patch_Notes/1.0.2.md)</br>
+[1.0.3 패치노트](Patch_Notes/1.0.3.md)</br>
+[1.0.4 패치노트](Patch_Notes/1.0.4.md)</br>
+[1.0.5 패치노트](Patch_Notes/1.0.5.md)</br>
+[1.0.6 패치노트](Patch_Notes/1.0.6.md)</br>
+[1.0.7 패치노트](Patch_Notes/1.0.7.md)
 
