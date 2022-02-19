@@ -81,7 +81,7 @@ const createRepo = (token, name) => {
   stats.version = chrome.runtime.getManifest().version;
   stats.submission = {};
   chrome.storage.local.set({ stats });
-  
+
   xhr.open('POST', AUTHENTICATION_URL, true);
   xhr.setRequestHeader('Authorization', `token ${token}`);
   xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
