@@ -178,7 +178,7 @@ async function updateStatsSHAfromPath(path, sha) {
 function updateObjectDatafromPath(obj, path, data) {
   let current = obj;
   // split path into array and filter out empty strings
-  const pathArray = _baekjoonRankRemoverFilter(path)
+  const pathArray = _baekjoonSpaceRemoverFilter(_baekjoonRankRemoverFilter(path))
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -202,7 +202,7 @@ async function getStatsSHAfromPath(path) {
 
 function getObjectDatafromPath(obj, path) {
   let current = obj;
-  const pathArray = _baekjoonRankRemoverFilter(path)
+  const pathArray = _baekjoonSpaceRemoverFilter(_baekjoonRankRemoverFilter(path))
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -224,4 +224,17 @@ function getObjectDatafromPath(obj, path) {
  */
 function _baekjoonRankRemoverFilter(path) {
   return path.replace(/\/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)\//g, '/');
+}
+
+/**
+ * @deprecated
+ * 경로에 존재하는 공백을 제거하는 임의의 함수 (기존의 업로드한 문제들이 이중으로 업로드 되는 오류를 방지)
+ * ex) _owner/_repo/백준/1000. 테스트/테스트.cpp -> _owner/_repo/백준/1000.테스트/테스트.cpp
+ *     _owner/_repo/백준/1234.%20테스트/테스트.cpp -> _owner/_repo/백준/1234.테스트/테스트.cpp
+ *     _owner/_repo/백준/1234.테스트/테%E2%80%85스%E2%80%85트.cpp -> _owner/_repo/백준/1234.테스트/테스트.cpp
+ * @param {string} path - 파일의 경로 문자열
+ * @returns {string} - 공백과 관련된 값을 제거한 문자열
+ */
+function _baekjoonSpaceRemoverFilter(path) {
+  return path.replace(/( | |&nbsp|&#160|&#8197|%E2%80%85|%20)/g, '');
 }
