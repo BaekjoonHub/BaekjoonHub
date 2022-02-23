@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "author": "flaxinger",
   "browser_action": {
     "default_icon": "assets/thumbnail.png",
@@ -27,12 +27,22 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.acmicpc.net/status*",
-        "https://www.acmicpc.net/user/*",
         "https://github.com/*"
       ],
+      "js": [
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js"
+      ],
+      "run_at": "document_idle"
+    },
+	    {
+      "matches": [
+        "https://www.acmicpc.net/status*",
+        "https://www.acmicpc.net/user/*"
+      ],
       "css": [
-        "css/inject.css"
+        "css/baekjoon/inject.css"
       ],
       "js": [
         "library/sha1.min.js",
@@ -47,6 +57,21 @@
         "scripts/baekjoon/util.js",
         "scripts/baekjoon/uploadfunctions.js",
         "scripts/baekjoon/baekjoon.js"
+      ],
+      "run_at": "document_idle"
+    },
+	{
+      "matches": [
+        "https://programmers.co.kr/*"
+      ],
+	  "css": [
+        "css/programmers/inject.css"
+      ],
+      "js": [
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js",
+        "scripts/programmers/programmers.js"
       ],
       "run_at": "document_idle"
     }
