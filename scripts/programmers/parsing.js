@@ -20,7 +20,7 @@ async function parseData() {
   const language_extension = document.querySelector("div.editor > ul > li.nav-item > a").getAttribute("data-language");
   const code = document.querySelector("textarea#code").value;
   const result_message = [...document.querySelectorAll("#output > pre.console-content > div.console-message")].map(x => x.innerText).filter(x => x.includes(": ")).reduce((x, y) => x + '<br/>' + y, '') || 'Empty';
-  const [runtime, memory] = [...document.querySelectorAll("td.result.passed")].map(x => x.innerText).map(x => x.replace(/[^\., 0-9a-zA-Z]/g, '').trim()).map(x => x.split(", ")).reduce((x, y) => Number(x[0]) > Number(y[0]) ? x : y).map(x => x.replace(/(?<=[0-9])(?=[A-Za-z])/, ' '));
+  const [runtime, memory] = [...document.querySelectorAll("td.result.passed")].map(x => x.innerText).map(x => x.replace(/[^\., 0-9a-zA-Z]/g, '').trim()).map(x => x.split(", ")).reduce((x, y) => Number(x[0]) > Number(y[0]) ? x : y, ["0.00ms", "0.0MB"]).map(x => x.replace(/(?<=[0-9])(?=[A-Za-z])/, ' '));
 
   return makeData({link, problemId, title, problem_description, division, language_extension, code, result_message, runtime, memory});
 }
