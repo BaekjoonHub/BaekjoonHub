@@ -18,8 +18,8 @@ if (!isNull(username)) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
         if (findUsernameOnUserInfoPage() === username) {
-          insertUploadAllButton();
-          insertDownloadAllButton();
+          // insertUploadAllButton();
+          // insertDownloadAllButton();
         }
       } else {
         versionUpdate();
