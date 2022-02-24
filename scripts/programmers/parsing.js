@@ -14,7 +14,7 @@
 async function parseData() {
   const link = document.querySelector("head > meta[name$=url]").content;
   const problemId = document.querySelector("div.main > div.lesson-content").getAttribute("data-lesson-id");
-  const division = [...document.querySelector("ol.breadcrumb").childNodes].filter(x => x.className !== "active").map(x => x.innerText).filter(x => !x.includes("코딩테스트")).reduce((a, b) => a + "/" + b);
+  const division = [...document.querySelector("ol.breadcrumb").childNodes].filter(x => x.className !== "active").map(x => x.innerText).filter(x => !x.includes("코딩테스트")).map(x => convertSingleCharToDoubleChar(x)).reduce((a, b) => a + "/" + b);
   const title = document.querySelector("#tab > li.algorithm-title").textContent.replace(/\\n/g, '').trim();
   const problem_description = document.querySelector("div.guide-section-description > div.markdown").innerHTML;
   const language_extension = document.querySelector("div.editor > ul > li.nav-item > a").getAttribute("data-language");
@@ -27,7 +27,7 @@ async function parseData() {
 
 async function makeData(origin) {
   let { problem_description, problemId, result_message, division, language_extension, title, runtime, memory, code } = origin;
-  const directory = `프로그래머스/${convertSingleCharToDoubleChar(division.replace("/", "∕")).replace("∕", "/")}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const directory = `프로그래머스/${division}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${division.replace("/", " > ")}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
   // prettier-ignore
