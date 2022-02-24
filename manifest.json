@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "flaxinger",
   "action": {
     "default_icon": "assets/thumbnail.png",
@@ -23,6 +23,7 @@
   ],
   "host_permissions": [
     "https://www.acmicpc.net/",
+	"https://programmers.co.kr/",
     "https://github.com/"
   ],
   "web_accessible_resources":[
@@ -41,12 +42,22 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.acmicpc.net/status*",
-        "https://www.acmicpc.net/user/*",
         "https://github.com/*"
       ],
+      "js": [
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js"
+      ],
+      "run_at": "document_idle"
+    },
+	    {
+      "matches": [
+        "https://www.acmicpc.net/status*",
+        "https://www.acmicpc.net/user/*"
+      ],
       "css": [
-        "css/inject.css"
+        "css/baekjoon/inject.css"
       ],
       "js": [
         "library/sha1.min.js",
@@ -55,12 +66,34 @@
         "scripts/util.js",
         "scripts/Github.js",
         "scripts/authorize.js",
+        "scripts/storage.js",
         "scripts/baekjoon/variables.js",
         "scripts/baekjoon/storage.js",
         "scripts/baekjoon/parsing.js",
         "scripts/baekjoon/util.js",
         "scripts/baekjoon/uploadfunctions.js",
         "scripts/baekjoon/baekjoon.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://programmers.co.kr/*"
+      ],
+	  "css": [
+        "css/programmers/inject.css"
+      ],
+      "js": [
+        "library/sha1.min.js",
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js",
+        "scripts/storage.js",
+        "scripts/programmers/variables.js",
+        "scripts/programmers/util.js",
+        "scripts/programmers/parsing.js",
+        "scripts/programmers/uploadfunctions.js",
+        "scripts/programmers/programmers.js"
       ],
       "run_at": "document_idle"
     }
