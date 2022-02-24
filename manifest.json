@@ -23,6 +23,7 @@
   ],
   "host_permissions": [
     "https://www.acmicpc.net/",
+	"https://programmers.co.kr/",
     "https://github.com/"
   ],
   "web_accessible_resources":[
