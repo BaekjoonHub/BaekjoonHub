@@ -51,6 +51,7 @@
         "scripts/util.js",
         "scripts/Github.js",
         "scripts/authorize.js",
+        "scripts/storage.js",
         "scripts/baekjoon/variables.js",
         "scripts/baekjoon/storage.js",
         "scripts/baekjoon/parsing.js",
@@ -68,9 +69,15 @@
         "css/programmers/inject.css"
       ],
       "js": [
+        "library/sha1.min.js",
         "scripts/util.js",
         "scripts/Github.js",
         "scripts/authorize.js",
+        "scripts/storage.js",
+        "scripts/programmers/variables.js",
+        "scripts/programmers/util.js",
+        "scripts/programmers/parsing.js",
+        "scripts/programmers/uploadfunctions.js",
         "scripts/programmers/programmers.js"
       ],
       "run_at": "document_idle"
