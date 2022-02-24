@@ -27,7 +27,7 @@ async function parseData() {
 
 async function makeData(origin) {
   let { problem_description, problemId, result_message, division, language_extension, title, runtime, memory, code } = origin;
-  const directory = `프로그래머스/${convertSingleCharToDoubleChar(division.replace("/","∕")).replace("∕", "/")}/${convertSingleCharToDoubleChar(`${problemId}. ${title}`)}`;
+  const directory = `프로그래머스/${convertSingleCharToDoubleChar(division.replace("/", "∕")).replace("∕", "/")}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${division.replace("/", " > ")}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
   // prettier-ignore
