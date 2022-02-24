@@ -45,7 +45,7 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
                           + `### 입력 \n\n ${problem_input}\n\n`
                           + `### 출력 \n\n ${problem_output}\n\n`;
-  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`}`;
+  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
   const tagl = [];
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
