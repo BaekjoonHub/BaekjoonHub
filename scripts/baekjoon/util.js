@@ -125,9 +125,8 @@ function insertUploadAllButton() {
 }
 
 function insertDownloadAllButton() {
-  
   // 2500 솔 이하일 때 표시하지 않음
-  if(+document.getElementById('u-solved').innerText <= 2500) return;
+  if (+document.getElementById('u-solved').innerText <= 2500) return;
 
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
@@ -172,6 +171,6 @@ function incMultiLoader(num) {
   multiloader.nom.innerText = +multiloader.nom.innerText + num;
 }
 
-function MultiloaderUpToDate(){
-  multiloader.wrap.innerHTML = "Up To Date";
+function MultiloaderUpToDate() {
+  multiloader.wrap.innerHTML = 'Up To Date';
 }
