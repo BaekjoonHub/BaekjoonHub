@@ -45,12 +45,12 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
                           + `### 입력 \n\n ${problem_input}\n\n`
                           + `### 출력 \n\n ${problem_output}\n\n`;
-  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}.${convertSingleCharToDoubleChar(title)}`;
+  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
   const tagl = [];
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
   const category = tagl.join(', ');
-  const fileName = convertSingleCharToDoubleChar(title) + '.' + languages[language];
+  const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
   // prettier-ignore
   const readme = `# [${level}] ${title} - ${problemId} \n\n` 
               + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
@@ -178,11 +178,45 @@ function findFromResultTable() {
     - 백준 문제 카테고리: category
 */
 
+class ReadableObject {
+  constructor(text) {
+    this.raw = text;
+  }
+
+  text() {
+    return this.raw;
+  }
+}
+
 async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   if (debug) console.log('in find with promise');
   if (elementExists(problemId) && elementExists(submissionId)) {
-    const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
-    const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
+    // const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
+    // const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
+
+    const iframe1 = document.createElement('iframe');
+    iframe1.src = `https://www.acmicpc.net/problem/${problemId}`;
+    iframe1.style.display = 'none';
+
+    const iframe2 = document.createElement('iframe');
+    iframe2.src = `https://www.acmicpc.net/source/${submissionId}`;
+    iframe2.style.display = 'none';
+
+    document.body.appendChild(iframe1);
+    document.body.appendChild(iframe2);
+
+    const DescriptionParse = new Promise((resolve) => {
+      iframe1.onload = () => {
+        resolve(new ReadableObject(iframe1.contentDocument.body.outerHTML));
+      };
+    });
+
+    const CodeParse = new Promise((resolve) => {
+      iframe2.onload = () => {
+        resolve(new ReadableObject(iframe2.contentDocument.querySelector('textarea.no-mathjax.codemirror-textarea').value));
+      };
+    });
+
     const SolvedAPI = fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' });
     return Promise.all([DescriptionParse, CodeParse, SolvedAPI])
       .then(([despResponse, codeResponse, solvedResponse]) => Promise.all([despResponse.text(), codeResponse.text(), solvedResponse.json()]))
