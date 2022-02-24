@@ -123,5 +123,7 @@
 [1.0.4 패치노트](Patch_Notes/1.0.4.md)</br>
 [1.0.5 패치노트](Patch_Notes/1.0.5.md)</br>
 [1.0.6 패치노트](Patch_Notes/1.0.6.md)</br>
-[1.0.7 패치노트](Patch_Notes/1.0.7.md)
+[1.0.7 패치노트](Patch_Notes/1.0.7.md)</br>
+[1.0.8 패치노트](Patch_Notes/1.0.8.md)</br>
+[1.0.9 패치노트](Patch_Notes/1.0.9.md)
 
