@@ -177,12 +177,43 @@ function findFromResultTable() {
     - 커밋 메시지: message 
     - 백준 문제 카테고리: category
 */
+class ReadableObject{
+  constructor(raw){
+    this.raw = raw;
+  }
+  text(){
+    return this.raw;
+  }
+}
 
 async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   if (debug) console.log('in find with promise');
   if (elementExists(problemId) && elementExists(submissionId)) {
-    const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
-    const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
+    // const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
+    // const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
+
+    const iframe1 = document.createElement('iframe');
+    iframe1.src = `https://www.acmicpc.net/problem/${problemId}`;
+    iframe1.style.display = 'none';
+
+    const iframe2 = document.createElement('iframe');
+    iframe2.src = `https://www.acmicpc.net/source/${submissionId}`;
+    iframe2.style.display = 'none';
+
+    document.body.appendChild(iframe1);
+    document.body.appendChild(iframe2);
+
+    const DescriptionParse = new Promise((resolve) => {
+      iframe1.onload = () => {
+        resolve(new ReadableObject(iframe1.contentDocument.body.outerHTML));
+      };
+    });
+
+    const CodeParse = new Promise((resolve) => {
+      iframe2.onload = () => {
+        resolve(new ReadableObject(iframe2.contentDocument.querySelector('textarea.no-mathjax.codemirror-textarea').value));
+      };
+    });
     const SolvedAPI = fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' });
     return Promise.all([DescriptionParse, CodeParse, SolvedAPI])
       .then(([despResponse, codeResponse, solvedResponse]) => Promise.all([despResponse.text(), codeResponse.text(), solvedResponse.json()]))
