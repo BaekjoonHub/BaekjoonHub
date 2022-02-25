@@ -1,0 +1,51 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "flaxinger",
+      "name": "flaxinger",
+      "avatar_url": "https://avatars.githubusercontent.com/u/70012548?v=4",
+      "profile": "https://github.com/flaxinger",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "mumwa",
+      "name": "mumwa",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13832137?v=4",
+      "profile": "https://github.com/mumwa",
+      "contributions": [
+        "tool"
+      ]
+    },
+    {
+      "login": "getCurrentThread",
+      "name": "getCurrentThread",
+      "avatar_url": "https://avatars.githubusercontent.com/u/31976959?v=4",
+      "profile": "https://github.com/getCurrentThread",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "Xvezda",
+      "name": "Xvezda",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9497404?v=4",
+      "profile": "https://xvezda.com",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "BaekjoonHub",
+  "projectOwner": "BaekjoonHub",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
