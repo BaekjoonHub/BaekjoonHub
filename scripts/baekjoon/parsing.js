@@ -22,7 +22,7 @@ async function findData(data) {
       data = selectBestSubmissionList(table)[0];
     }
     const details = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
-    return { ...data, ...details };
+    return details;
   } catch (error) {
     console.error(error);
   }
@@ -58,19 +58,19 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
               + `메모리: ${memory} KB, `
               + `시간: ${runtime} ms\n\n`
               + `### 분류\n\n`
-              + `${category}\n\n`
+              + `${category || "Empty"}\n\n`
               + `${problemDescription}\n\n`;
   return {
-    problemId,
-    submissionId,
-    title,
-    level,
-    code,
-    problemDescription,
+    // problemId,
+    // submissionId,
+    // title,
+    // level,
+    // problemDescription,
+    // category,
     directory,
-    message,
-    category,
     fileName,
+    message,
+    code,
     readme,
   };
 }
