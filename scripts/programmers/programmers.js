@@ -16,7 +16,7 @@ function startLoader() {
   loader = setInterval(async () => {
     // 제출 후 채점하기 결과가 성공적으로 나왔다면 코드를 파싱하고, 업로드를 시작한다
     if (getSolvedResult().includes('정답')) {
-      if (debug) console.log("정답이 나왔습니다. 업로드를 시작합니다.");
+      if (debug) console.log('정답이 나왔습니다. 업로드를 시작합니다.');
       stopLoader();
       try {
         const bojData = await parseData();
@@ -74,32 +74,9 @@ async function versionUpdate() {
   if (debug) console.log('stats updated.', stats);
 }
 
-
-// function get_csrf_token() {
-//   const csrfToken = document.querySelector('meta[name=csrf-token]').getAttribute('content');
-//   return csrfToken;
-// }
-// function get_all_problems() {
-//   /* TODO: 하나의 데이터만 가져오는 구조이므로 page를 계속적으로
+// /* TODO: 하나의 데이터만 가져오는 구조이므로 page를 계속적으로
 //   아래 있는 네이베이션바의 "다음"버튼이 비활성화 될때까지 반복으로 진행한다.
 //   진행하며 존재하는 알고리즘 카드인 div.col-item > div.card-algorithm > a 의 href 속성값을 가져와 리스트화하고,
 //   이를 차후 fetch GET를 진행하여 작성한 알고리즘을 가져와 github에 업로드를 진행한다.
 //   */
-//   const data = new URLSearchParams();
-//   data.set('challenge_statuses[]', 'solved');
-//   data.set('page', '1');
-//   fetch(`/learn/challenges/filter_lessons?${data.toString()}`, {
-//     method: 'GET',
-//     credentials: 'same-origin',
-//     headers: {
-//       'x-requested-with': 'XMLHttpRequest',
-//       'x-csrf-token': `${get_csrf_token()}`,
-//     },
-//   })
-//     .then((res) => res.text())
-//     .then((res) => {
-//       const html = /\$\('.algorithm-list'\).html\('(.*)'\);/.exec(res)[1];
-//       const doc = new DOMParser().parseFromString(html.replace(/\\"/g, '"').replace(/\\n/g, '').replace(/\\/g, ''), 'text/html');
-//       if (debug) console.log(doc);
-//     });
-// }
+// function get_all_problems() {}
