@@ -57,7 +57,7 @@ async function beginUpload(bojData) {
     if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
     if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
       markUploadedCSS();
-      console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.problemId}`);
+      console.log(`현재 제출번호를 업로드한 기록이 있습니다. problemIdID ${bojData.problemId}`);
       return;
     }
     /* 신규 제출 번호라면 새롭게 커밋  */

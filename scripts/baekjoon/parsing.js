@@ -207,13 +207,20 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
 
     const DescriptionParse = new Promise((resolve) => {
       iframe1.onload = () => {
-        resolve(new ReadableObject(iframe1.contentDocument.body.outerHTML));
+        const doc = iframe1.contentDocument;
+        // img tag replace Relative URL to Absolute URL.
+        Array.from(doc.getElementsByTagName('img'), (x) => {
+          x.setAttribute('src', x.currentSrc);
+          return x;
+        });
+        resolve(new ReadableObject(doc.body.outerHTML));
       };
     });
 
     const CodeParse = new Promise((resolve) => {
       iframe2.onload = () => {
-        resolve(new ReadableObject(iframe2.contentDocument.querySelector('textarea.no-mathjax.codemirror-textarea').value));
+        const doc = iframe2.contentDocument;
+        resolve(new ReadableObject(doc.querySelector('textarea.no-mathjax.codemirror-textarea').value));
       };
     });
 
