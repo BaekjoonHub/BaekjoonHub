@@ -178,7 +178,7 @@ async function updateStatsSHAfromPath(path, sha) {
 function updateObjectDatafromPath(obj, path, data) {
   let current = obj;
   // split path into array and filter out empty strings
-  const pathArray = _baekjoonSpaceRemoverFilter(_baekjoonRankRemoverFilter(path))
+  const pathArray = _baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path)))
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -202,7 +202,7 @@ async function getStatsSHAfromPath(path) {
 
 function getObjectDatafromPath(obj, path) {
   let current = obj;
-  const pathArray = _baekjoonSpaceRemoverFilter(_baekjoonRankRemoverFilter(path))
+  const pathArray = _baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path)))
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -239,7 +239,6 @@ async function updateLocalStorageStats() {
   return stats;
 }
 
-
 /**
  * @deprecated
  * level과 관련된 경로를 지우는 임의의 함수 (문제 level이 변경되는 경우 중복된 업로드 파일이 생성됨을 방지하기 위한 목적)
@@ -250,6 +249,16 @@ async function updateLocalStorageStats() {
  */
 function _baekjoonRankRemoverFilter(path) {
   return path.replace(/\/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)\//g, '/');
+}
+
+/**
+ * @deprecated
+ * level과 관련된 경로를 지우는 임의의 함수 (문제 level이 변경되는 경우 중복된 업로드 파일이 생성됨을 방지하기 위한 목적)
+ * @param {string} path - 파일의 경로 문자열
+ * @returns {string} - 레벨과 관련된 경로를 제거한 문자열
+ */
+function _programmersRankRemoverFilter(path) {
+  return path.replace(/\/(lv[0-9]|unrated)\//g, '/');
 }
 
 /**
