@@ -10,7 +10,7 @@ function startUpload() {
     elem.style = 'margin-left: 10px;padding-top: 0px;';
   }
   elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
-  const target = document.querySelector("#modal-dialog > div.modal-dialog > div.modal-content > div.modal-footer");
+  const target = document.querySelector('#modal-dialog > div.modal-dialog > div.modal-content > div.modal-footer');
   if (!isNull(target)) {
     target.prepend(elem);
   }
