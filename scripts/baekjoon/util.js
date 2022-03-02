@@ -10,12 +10,12 @@ function startUpload() {
     elem.style = 'margin-left: 10px;padding-top: 0px;';
   }
   elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
-  const target = document.querySelector('div.table-responsive > table > tbody > tr > td:nth-child(5)');
-  target.append(elem);
-  // const target = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[3];
-  // if (target.childNodes.length > 0) {
-  //   target.childNodes[0].append(elem);
-  // }
+  // const target = document.querySelector('div.table-responsive > table > tbody > tr > td:nth-child(5)');
+  // target.append(elem);
+  const target = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[3];
+  if (target.childNodes.length > 0) {
+    target.childNodes[0].append(elem);
+  }
   // start the countdown
   startUploadCountDown();
 }
