@@ -20,8 +20,10 @@ async function findData(data) {
       table = filter(table, 'username', findUsername());
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
+      // 임의 페이지 이동
+      window.location.href = `https://www.acmicpc.net/source/${data.submissionId}?extension=BaekjoonHub`;
     }
-    const details = await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime);
+    const details = {}; /* await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime) */
     return details;
   } catch (error) {
     console.error(error);
@@ -29,22 +31,39 @@ async function findData(data) {
   return null;
 }
 
+async function parseData() {
+  const table = document.querySelector('div.table-responsive > table');
+  const tbody = table.querySelector('tbody');
+  const tr = tbody.querySelector('tr');
+  const problemId = tr
+    .querySelector('td:nth-child(3) > a')
+    .getAttribute('href')
+    .replace(/^.*\/([0-9]+)$/, '$1');
+  const code = document.querySelector('textarea.no-mathjax.codemirror-textarea').value;
+  const submissionId = tr.querySelector('td:nth-child(1)').innerText;
+  const language = tr.querySelector('td:nth-child(8)').innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
+  const memory = tr.querySelector('td:nth-child(6)').innerText;
+  const runtime = tr.querySelector('td:nth-child(7)').innerText;
+  const details = await makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime);
+  return { ...details, code };
+}
+
 async function makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime) {
   // prettier-ignore
   const {
     title, 
     level, 
-    code,
+    // code,
     tags,
-    problem_description, 
+    /* problem_description, 
     problem_input, 
-    problem_output 
+    problem_output */
   } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
 
   // prettier-ignore
-  const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
+  /* const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
                           + `### 입력 \n\n ${problem_input}\n\n`
-                          + `### 출력 \n\n ${problem_output}\n\n`;
+                          + `### 출력 \n\n ${problem_output}\n\n`; */
   const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
   const tagl = [];
@@ -58,8 +77,8 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
               + `메모리: ${memory} KB, `
               + `시간: ${runtime} ms\n\n`
               + `### 분류\n\n`
-              + `${category || "Empty"}\n\n`
-              + `${problemDescription}\n\n`;
+              + `${category || "Empty"}\n\n`;
+  /* + `${problemDescription}\n\n`; */
   return {
     // problemId,
     // submissionId,
@@ -70,7 +89,7 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
     directory,
     fileName,
     message,
-    code,
+    // code,
     readme,
   };
 }
@@ -193,7 +212,7 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   if (elementExists(problemId) && elementExists(submissionId)) {
     // const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
     // const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
-
+    /*
     const iframe1 = document.createElement('iframe');
     iframe1.src = `https://www.acmicpc.net/problem/${problemId}`;
     iframe1.style.display = 'none';
@@ -223,26 +242,28 @@ async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
         resolve(new ReadableObject(doc.querySelector('textarea.no-mathjax.codemirror-textarea').value));
       };
     });
+    */
 
     const SolvedAPI = fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' });
-    return Promise.all([DescriptionParse, CodeParse, SolvedAPI])
-      .then(([despResponse, codeResponse, solvedResponse]) => Promise.all([despResponse.text(), codeResponse.text(), solvedResponse.json()]))
-      .then(([descriptionText, codeText, solvedJson]) => {
+    return Promise.all([/* DescriptionParse, CodeParse, */ SolvedAPI])
+      .then(([/* espResponse, codeResponse, */ solvedResponse]) => Promise.all([/* despResponse.text(), codeResponse.text(), */ solvedResponse.json()]))
+      .then(([/* descriptionText, codeText, */ solvedJson]) => {
         /* Get Question Description */
+        /*
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionText, 'text/html');
 
         const problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
         const problem_input = isNull((problem_input_el = doc.getElementById('problem_input'))) ? 'Empty' : `${unescapeHtml(problem_input_el.innerHTML.trim())}`;
         const problem_output = isNull((problem_output_el = doc.getElementById('problem_output'))) ? 'Empty' : `${unescapeHtml(problem_output_el.innerHTML.trim())}`;
-
+        */
         /* Get Code */
-        const code = codeText;
+        // const code = codeText;
         /* Get Solved Response */
         const { tags } = solvedJson;
         const title = solvedJson.titleKo;
         const level = bj_level[solvedJson.level];
-        return { problemId, submissionId, title, level, tags, code, problem_description, problem_input, problem_output };
+        return { problemId, submissionId, title, level, tags /* code, problem_description, problem_input, problem_output */ };
       });
     // .catch((err) => {
     //   console.log('error ocurred: ', err);

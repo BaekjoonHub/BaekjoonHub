@@ -53,8 +53,7 @@
     },
 	    {
       "matches": [
-        "https://www.acmicpc.net/status*",
-        "https://www.acmicpc.net/user/*"
+        "https://www.acmicpc.net/*"
       ],
       "css": [
         "css/baekjoon/inject.css"
