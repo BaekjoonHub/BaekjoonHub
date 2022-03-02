@@ -8,11 +8,14 @@ chrome.storage.local.get('isSync', (data) => {
       });
     });
     chrome.storage.local.set({ isSync: true }, (data) => {
-      if (debug) console.log('BaekjoonHub Synced to local values');
+      // if (debug) 
+      console.log('BaekjoonHub Synced to local values');
     });
   } else {
-    if (debug) console.log('Upload Completed. Local Storage status:', data);
-    if (debug) console.log('BaekjoonHub Local storage already synced!');
+    // if (debug) 
+    // console.log('Upload Completed. Local Storage status:', data);
+    // if (debug) 
+    console.log('BaekjoonHub Local storage already synced!');
   }
 });
 

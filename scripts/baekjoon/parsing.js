@@ -21,7 +21,23 @@ async function findData(data) {
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
       // 임의 페이지 이동
-      window.location.href = `https://www.acmicpc.net/source/${data.submissionId}?extension=BaekjoonHub`;
+      // window.location.href = `https://www.acmicpc.net/source/${data.submissionId}?extension=BaekjoonHub`;
+
+      // if ((await getStatsSHAfromPath(`${await getHook()}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
+      //   markUploadedCSS();
+      //   console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submissionId}`);
+      //   return null;
+      // }
+
+      childWindow = window.open(`https://www.acmicpc.net/source/${data.submissionId}?extension=BaekjoonHub`);
+      childWindow.onload = ()=>{
+        if(debug){
+          console.log('child document', childWindow.document);
+          console.log('current document', document);
+        }
+        parseLoader(childWindow.document);
+        childWindow.close();
+      };
     }
     const details = {}; /* await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime) */
     return details;
@@ -31,15 +47,15 @@ async function findData(data) {
   return null;
 }
 
-async function parseData() {
-  const table = document.querySelector('div.table-responsive > table');
+async function parseData(doc = document) {
+  const table = doc.querySelector('div.table-responsive > table');
   const tbody = table.querySelector('tbody');
   const tr = tbody.querySelector('tr');
   const problemId = tr
     .querySelector('td:nth-child(3) > a')
     .getAttribute('href')
     .replace(/^.*\/([0-9]+)$/, '$1');
-  const code = document.querySelector('textarea.no-mathjax.codemirror-textarea').value;
+  const code = doc.querySelector('textarea.no-mathjax.codemirror-textarea').value;
   const submissionId = tr.querySelector('td:nth-child(1)').innerText;
   const language = tr.querySelector('td:nth-child(8)').innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
   const memory = tr.querySelector('td:nth-child(6)').innerText;

@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "author": "flaxinger",
   "browser_action": {
     "default_icon": "assets/thumbnail.png",

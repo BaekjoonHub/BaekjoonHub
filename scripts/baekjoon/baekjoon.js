@@ -1,6 +1,6 @@
 // Set to true to enable console log
 const debug = false;
-
+let childWindow = null;
 /* 
   문제 제출 맞음 여부를 확인하는 함수
   2초마다 문제를 파싱하여 확인
@@ -15,7 +15,7 @@ console.log(currentUrl);
 const username = findUsername();
 if (!isNull(username)) {
   if (currentUrl.includes('status?') && currentUrl.includes(`user_id=${username}`)) startLoader();
-  else if (currentUrl.includes('/source/') && currentUrl.includes('extension=BaekjoonHub')) parseLoader();
+  // else if (currentUrl.includes('/source/') && currentUrl.includes('extension=BaekjoonHub')) parseLoader();
   else if (currentUrl.includes('.net/user')) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
@@ -53,10 +53,15 @@ function stopLoader() {
   clearInterval(loader);
 }
 
-function parseLoader() {
+/**
+ * document 파싱 함수 - 파싱 후 업로드를 진행한다
+ * @param: 파싱할 문서 - default는 현재 제출 페이지
+*/
+function parseLoader(doc = document) {
+
   loader = setInterval(async () => {
     console.log('파싱 중...');
-    const bojData = await parseData();
+    const bojData = await parseData(doc);
     console.log('bojData', bojData);
     if (isNotEmpty(bojData)) {
       stopLoader();
@@ -83,11 +88,11 @@ async function beginUpload(bojData) {
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
     if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
-    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
-      markUploadedCSS();
-      console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submissionId}`);
-      return;
-    }
+    // if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
+    //   markUploadedCSS();
+    //   console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submissionId}`);
+    //   return;
+    // }
     /* 신규 제출 번호라면 새롭게 커밋  */
     await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
   }
