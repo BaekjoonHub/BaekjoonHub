@@ -8,12 +8,14 @@ const debug = false;
 let loader;
 
 const currentUrl = window.location.href;
+console.log(currentUrl);
 
 // 문제 제출 사이트의 경우에는 로더를 실행하고, 유저 페이지의 경우에는 버튼을 생성한다.
 // 백준 사이트 로그인 상태이면 username이 있으며, 아니면 없다.
 const username = findUsername();
 if (!isNull(username)) {
   if (currentUrl.includes('status?') && currentUrl.includes(`user_id=${username}`)) startLoader();
+  else if (currentUrl.includes('/source/') && currentUrl.includes('extension=BaekjoonHub')) parseLoader();
   else if (currentUrl.includes('.net/user')) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
@@ -40,7 +42,7 @@ function startLoader() {
           stopLoader();
           console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
           const bojData = await findData();
-          await beginUpload(bojData);
+          /* await beginUpload(bojData); */
         }
       }
     }
@@ -49,6 +51,19 @@ function startLoader() {
 
 function stopLoader() {
   clearInterval(loader);
+}
+
+function parseLoader() {
+  loader = setInterval(async () => {
+    console.log('파싱 중...');
+    const bojData = await parseData();
+    console.log('bojData', bojData);
+    if (isNotEmpty(bojData)) {
+      stopLoader();
+      console.log('백준 업로드 시작합니다.');
+      await beginUpload(bojData);
+    }
+  }, 2000);
 }
 
 /* 파싱 직후 실행되는 함수 */
