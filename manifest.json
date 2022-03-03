@@ -62,6 +62,7 @@
         "library/sha1.min.js",
         "library/jszip.min.js",
         "library/FileSaver.min.js",
+        "library/sweetalert2.all.min.js",
         "scripts/util.js",
         "scripts/Github.js",
         "scripts/authorize.js",
