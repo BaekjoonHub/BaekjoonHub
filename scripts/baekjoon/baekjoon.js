@@ -1,6 +1,5 @@
 // Set to true to enable console log
 const debug = false;
-let childWindow = null;
 /* 
   문제 제출 맞음 여부를 확인하는 함수
   2초마다 문제를 파싱하여 확인
@@ -15,7 +14,7 @@ console.log(currentUrl);
 const username = findUsername();
 if (!isNull(username)) {
   if (currentUrl.includes('status?') && currentUrl.includes(`user_id=${username}`)) startLoader();
-  // else if (currentUrl.includes('/source/') && currentUrl.includes('extension=BaekjoonHub')) parseLoader();
+  else if (currentUrl.includes('/source/') && currentUrl.includes('extension=BaekjoonHub')) parseLoader();
   else if (currentUrl.includes('.net/user')) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
@@ -51,22 +50,28 @@ function startLoader() {
 
 function stopLoader() {
   clearInterval(loader);
+  loader = null;
 }
 
 /**
  * document 파싱 함수 - 파싱 후 업로드를 진행한다
  * @param: 파싱할 문서 - default는 현재 제출 페이지
-*/
+ */
 function parseLoader(doc = document) {
-
   loader = setInterval(async () => {
-    console.log('파싱 중...');
-    const bojData = await parseData(doc);
-    console.log('bojData', bojData);
-    if (isNotEmpty(bojData)) {
+    try {
+      console.log('파싱 중...');
+      const bojData = await parseData(doc);
+      console.log('bojData', bojData);
+      if (isNotEmpty(bojData)) {
+        stopLoader();
+        console.log('백준 업로드 시작합니다.');
+        await beginUpload(bojData);
+      }
+    } catch (e) {
       stopLoader();
-      console.log('백준 업로드 시작합니다.');
-      await beginUpload(bojData);
+      console.error('parseLoader error', e);
+      alert(`파싱 중 에러가 발생하였습니다.\n개발자에게 문의 바랍니다.\n${e}`);
     }
   }, 2000);
 }
