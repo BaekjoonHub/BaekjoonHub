@@ -58,6 +58,16 @@ function stopLoader() {
  * @param: 파싱할 문서 - default는 현재 제출 페이지
  */
 function parseLoader(doc = document) {
+  Swal.fire({
+    title: '🛠️ 업로드 진행중',
+    html: '<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>이 창은 자동으로 닫힙니다',
+    didOpen: () => {
+      Swal.showLoading();
+    },
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    allowEnterKey: false,
+  });
   loader = setInterval(async () => {
     try {
       console.log('파싱 중...');
@@ -65,13 +75,18 @@ function parseLoader(doc = document) {
       console.log('bojData', bojData);
       if (isNotEmpty(bojData)) {
         stopLoader();
+        Swal.close();
         console.log('백준 업로드 시작합니다.');
         await beginUpload(bojData);
       }
     } catch (e) {
       stopLoader();
-      console.error('parseLoader error', e);
-      alert(`파싱 중 에러가 발생하였습니다.\n개발자에게 문의 바랍니다.\n${e}`);
+      Swal.fire({
+        icon: 'error',
+        title: '에러 발생',
+        html: `<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>에러가 발생했습니다. 개발자에게 문의해주세요.<br/><br/>${e}`,
+        footer: '<a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">개발자에게 문의하기</a>',
+      });
     }
   }, 2000);
 }
@@ -93,11 +108,11 @@ async function beginUpload(bojData) {
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
     if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
-    // if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
-    //   markUploadedCSS();
-    //   console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submissionId}`);
-    //   return;
-    // }
+    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
+      markUploadedCSS();
+      console.log(`현재 제출번호를 업로드한 기록이 있습니다.` /* submissionID ${bojData.submissionId}` */);
+      return;
+    }
     /* 신규 제출 번호라면 새롭게 커밋  */
     await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
   }

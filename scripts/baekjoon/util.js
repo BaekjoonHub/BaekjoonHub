@@ -2,20 +2,30 @@
  * 로딩 버튼 추가
  */
 function startUpload() {
-  let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  if (elem !== undefined) {
-    elem = document.createElement('span');
-    elem.id = 'BaekjoonHub_progress_anchor_element';
-    elem.className = 'runcode-wrapper__8rXm';
-    elem.style = 'margin-left: 10px;padding-top: 0px;';
-  }
-  elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
+  // let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
+  // if (elem !== undefined) {
+  //   elem = document.createElement('span');
+  //   elem.id = 'BaekjoonHub_progress_anchor_element';
+  //   elem.className = 'runcode-wrapper__8rXm';
+  //   elem.style = 'margin-left: 10px;padding-top: 0px;';
+  // }
+  // elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
   // const target = document.querySelector('div.table-responsive > table > tbody > tr > td:nth-child(5)');
   // target.append(elem);
-  const target = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[3];
-  if (target.childNodes.length > 0) {
-    target.childNodes[0].append(elem);
-  }
+  // const target = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[3];
+  // if (target.childNodes.length > 0) {
+  //   target.childNodes[0].append(elem);
+  // }
+  // Swal.fire({
+  //   title: '🛠️ 업로드 진행중',
+  //   html: '<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>이 창은 자동으로 닫힙니다',
+  //   didOpen: () => {
+  //     Swal.showLoading();
+  //   },
+  //   allowOutsideClick: false,
+  //   allowEscapeKey: false,
+  //   allowEnterKey: false,
+  // });
   // start the countdown
   startUploadCountDown();
 }
@@ -25,8 +35,17 @@ function startUpload() {
  */
 function markUploadedCSS() {
   uploadState.uploading = false;
-  const elem = document.getElementById('BaekjoonHub_progress_elem');
-  elem.className = 'markuploaded';
+  // const elem = document.getElementById('BaekjoonHub_progress_elem');
+  // elem.className = 'markuploaded';
+  Swal.fire({
+    title: '작업 완료',
+    icon: 'success',
+    html: '<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>이 창은 자동으로 닫힙니다',
+  });
+  // 1초후 창 닫기
+  setTimeout(() => {
+    window.close();
+  }, 1000);
 }
 
 /**
@@ -34,8 +53,14 @@ function markUploadedCSS() {
  */
 function markUploadFailedCSS() {
   uploadState.uploading = false;
-  const elem = document.getElementById('BaekjoonHub_progress_elem');
-  elem.className = 'markuploadfailed';
+  // const elem = document.getElementById('BaekjoonHub_progress_elem');
+  // elem.className = 'markuploadfailed';
+  Swal.fire({
+    icon: 'error',
+    title: '업로드 실패',
+    text: '업로드에 실패하였습니다.',
+    footer: '<a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">개발자에게 문의하기</a>',
+  });
 }
 
 /**
@@ -127,9 +152,8 @@ function insertUploadAllButton() {
 }
 
 function insertDownloadAllButton() {
-  
   // 2500 솔 이하일 때 표시하지 않음
-  if(+document.getElementById('u-solved').innerText <= 2500) return;
+  if (+document.getElementById('u-solved').innerText <= 2500) return;
 
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
@@ -174,6 +198,6 @@ function incMultiLoader(num) {
   multiloader.nom.innerText = +multiloader.nom.innerText + num;
 }
 
-function MultiloaderUpToDate(){
-  multiloader.wrap.innerHTML = "Up To Date";
+function MultiloaderUpToDate() {
+  multiloader.wrap.innerHTML = 'Up To Date';
 }
