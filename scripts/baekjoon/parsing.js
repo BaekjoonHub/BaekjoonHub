@@ -21,26 +21,8 @@ async function findData(data) {
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
       // 임의 페이지 이동
-      // window.location.href = `https://www.acmicpc.net/source/${data.submissionId}?extension=BaekjoonHub`;
-
-      // if ((await getStatsSHAfromPath(`${await getHook()}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
-      //   markUploadedCSS();
-      //   console.log(`현재 제출번호를 업로드한 기록이 있습니다. submissionID ${bojData.submissionId}`);
-      //   return null;
-      // }
-
-      childWindow = window.open(`https://www.acmicpc.net/source/${data.submissionId}?extension=BaekjoonHub`);
-      childWindow.onload = ()=>{
-        if(debug){
-          console.log('child document', childWindow.document);
-          console.log('current document', document);
-        }
-        parseLoader(childWindow.document);
-        childWindow.close();
-      };
+      window.open(`https://www.acmicpc.net/source/${data.submissionId}?extension=BaekjoonHub`);
     }
-    const details = {}; /* await makeDetailMessageAndReadme(data.problemId, data.submissionId, data.language, data.memory, data.runtime) */
-    return details;
   } catch (error) {
     console.error(error);
   }
