@@ -7,7 +7,7 @@ assignees: flaxinger
 
 ---
 
-## Please review previous closed issues before filling out a new one! Duplicate issues will be closed without comment.
+<!-- 작성 전에 중복 이슈인지 확인 한번만 부탁드립니다! -->
 
 **버그를 설명해주세요**</br>
 <!-- 어떤 버그인지 설명해주세요 -->
