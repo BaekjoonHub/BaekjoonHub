@@ -29,7 +29,7 @@ const localAuth = {
       });
     } else {
       // eslint-disable-next-line
-      const accessCode = url.match(/\?code=(.+)/);
+      const accessCode = url.match(/\?code=([\w\/\-]+)/);
       if (accessCode) {
         this.requestToken(accessCode[1]);
       }
