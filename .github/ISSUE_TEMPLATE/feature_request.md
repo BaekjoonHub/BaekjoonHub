@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-## Please review previous closed issues before filling out a new one! Duplicate issues will be closed without comment.
+<!-- 작성 전에 중복 이슈인지 확인 한번만 부탁드립니다! -->
 
 **해당 기능이 어떤 문제를 개선하나요?**</br>
 <!-- 구체적으로 적어주신다면 검토에 많은 도움이 됩니다 -->
