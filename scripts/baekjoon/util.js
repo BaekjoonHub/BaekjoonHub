@@ -86,6 +86,8 @@ function startUploadCountDown() {
  * 4. 위의 요소가 모두 같은 경우 제출한 요소(submissionId)의 그 차이 값의 역을 반환합니다.
  * */
 function compareSubmission(a, b) {
+  // prettier-ignore-start
+  /* eslint-disable */
   return a.runtime === b.runtime
           ? a.memory === b.memory
             ? a.codeLength === b.codeLength
@@ -94,6 +96,8 @@ function compareSubmission(a, b) {
             : a.memory - b.memory
           : a.runtime - b.runtime
   ;
+  /* eslint-enable */
+  // prettier-ignore-end
 }
 
 /**
@@ -200,4 +204,12 @@ function incMultiLoader(num) {
 
 function MultiloaderUpToDate() {
   multiloader.wrap.innerHTML = 'Up To Date';
+}
+
+function convertImageTagAbsoluteURL(doc = document) {
+  // img tag replace Relative URL to Absolute URL.
+  Array.from(doc.getElementsByTagName('img'), (x) => {
+    x.setAttribute('src', x.currentSrc);
+    return x;
+  });
 }

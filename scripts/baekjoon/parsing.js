@@ -51,43 +51,34 @@ async function makeDetailMessageAndReadme(problemId, submissionId, language, mem
   const {
     title, 
     level, 
-    // code,
     tags,
-    /* problem_description, 
+    problem_description, 
     problem_input, 
-    problem_output */
+    problem_output
   } = await findProblemDetailsAndSubmissionCode(problemId, submissionId);
 
-  // prettier-ignore
-  /* const problemDescription = `### 문제 설명\n\n${problem_description}\n\n`
-                          + `### 입력 \n\n ${problem_input}\n\n`
-                          + `### 출력 \n\n ${problem_output}\n\n`; */
   const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
   const tagl = [];
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
   const category = tagl.join(', ');
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
-  // prettier-ignore
+  // prettier-ignore-start
   const readme = `# [${level}] ${title} - ${problemId} \n\n` 
               + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
               + `### 성능 요약\n\n`
               + `메모리: ${memory} KB, `
               + `시간: ${runtime} ms\n\n`
               + `### 분류\n\n`
-              + `${category || "Empty"}\n\n`;
-  /* + `${problemDescription}\n\n`; */
+              + `${category || "Empty"}\n\n` + (!!problem_description ? '' 
+              + `### 문제 설명\n\n${problem_description}\n\n` 
+              + `### 입력 \n\n ${problem_input}\n\n` 
+              + `### 출력 \n\n ${problem_output}\n\n` : '');
+  // prettier-ignore-end
   return {
-    // problemId,
-    // submissionId,
-    // title,
-    // level,
-    // problemDescription,
-    // category,
     directory,
     fileName,
     message,
-    // code,
     readme,
   };
 }
@@ -205,63 +196,31 @@ class ReadableObject {
   }
 }
 
+function parseProblemDescription() {
+  convertImageTagAbsoluteURL(document.getElementById('problem_description')); //이미지에 상대 경로가 있을 수 있으므로 이미지 경로를 절대 경로로 전환 합니다.
+  const problemId = currentUrl.match(/\/problem\/(\d+)/)[1];
+  const problem_description = unescapeHtml(document.getElementById('problem_description').innerHTML.trim());
+  const problem_input = document.getElementById('problem_input')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty';
+  const problem_output = document.getElementById('problem_output')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty';
+  if (problemId && problem_description) {
+    if (debug) console.log(`문제번호 ${problemId}의 내용을 저장합니다.`);
+    updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output });
+  }
+}
+
 async function findProblemDetailsAndSubmissionCode(problemId, submissionId) {
   if (debug) console.log('in find with promise');
   if (elementExists(problemId) && elementExists(submissionId)) {
-    // const DescriptionParse = fetch(`https://www.acmicpc.net/problem/${problemId}`, { method: 'GET' });
-    // const CodeParse = fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' });
-    /*
-    const iframe1 = document.createElement('iframe');
-    iframe1.src = `https://www.acmicpc.net/problem/${problemId}`;
-    iframe1.style.display = 'none';
-
-    const iframe2 = document.createElement('iframe');
-    iframe2.src = `https://www.acmicpc.net/source/${submissionId}`;
-    iframe2.style.display = 'none';
-
-    document.body.appendChild(iframe1);
-    document.body.appendChild(iframe2);
-
-    const DescriptionParse = new Promise((resolve) => {
-      iframe1.onload = () => {
-        const doc = iframe1.contentDocument;
-        // img tag replace Relative URL to Absolute URL.
-        Array.from(doc.getElementsByTagName('img'), (x) => {
-          x.setAttribute('src', x.currentSrc);
-          return x;
-        });
-        resolve(new ReadableObject(doc.body.outerHTML));
-      };
-    });
-
-    const CodeParse = new Promise((resolve) => {
-      iframe2.onload = () => {
-        const doc = iframe2.contentDocument;
-        resolve(new ReadableObject(doc.querySelector('textarea.no-mathjax.codemirror-textarea').value));
-      };
-    });
-    */
-
     const SolvedAPI = fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' });
-    return Promise.all([/* DescriptionParse, CodeParse, */ SolvedAPI])
-      .then(([/* espResponse, codeResponse, */ solvedResponse]) => Promise.all([/* despResponse.text(), codeResponse.text(), */ solvedResponse.json()]))
-      .then(([/* descriptionText, codeText, */ solvedJson]) => {
-        /* Get Question Description */
-        /*
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(descriptionText, 'text/html');
-
-        const problem_description = `${unescapeHtml(doc.getElementById('problem_description').innerHTML.trim())}`;
-        const problem_input = isNull((problem_input_el = doc.getElementById('problem_input'))) ? 'Empty' : `${unescapeHtml(problem_input_el.innerHTML.trim())}`;
-        const problem_output = isNull((problem_output_el = doc.getElementById('problem_output'))) ? 'Empty' : `${unescapeHtml(problem_output_el.innerHTML.trim())}`;
-        */
-        /* Get Code */
-        // const code = codeText;
-        /* Get Solved Response */
+    return Promise.all([SolvedAPI])
+      .then(([solvedResponse]) => Promise.all([getProblemsfromStats(problemId), solvedResponse.json()]))
+      .then(([description, solvedJson]) => {
+        const { problem_description, problem_input, problem_output } = description;
+        console.log('description', description);
         const { tags } = solvedJson;
         const title = solvedJson.titleKo;
         const level = bj_level[solvedJson.level];
-        return { problemId, submissionId, title, level, tags /* code, problem_description, problem_input, problem_output */ };
+        return { problemId, submissionId, title, level, tags, problem_description, problem_input, problem_output };
       });
     // .catch((err) => {
     //   console.log('error ocurred: ', err);
