@@ -38,7 +38,7 @@ async function deleteOldProblemDescriptions(){
   // 1 주가 지난 문제 내용은 삭제
   let date_week_ago = new Date()- 7* 86400000;
   if(debug) console.log('stats before deletion', stats);
-  console.log('date a week ago', date_week_ago);
+  if(debug) console.log('date a week ago', date_week_ago);
   for(const [key, value] of Object.entries(stats.problems)){
     // 무한 방치를 막기 위해 저장일자가 null이면 삭제
     if(!value || !value.save_date){
