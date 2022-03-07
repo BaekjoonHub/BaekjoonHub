@@ -86,7 +86,7 @@ function parseLoader(doc = document) {
       Swal.fire({
         icon: 'error',
         title: '에러 발생',
-        html: `<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>에러가 발생했습니다. 개발자에게 문의해주세요.<br/><br/>${e}`,
+        html: `<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>에러가 발생했습니다. 개발자에게 문의해주세요.<br/><br/>${e?.stack ?? e}`,
         footer: '<a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">개발자에게 문의하기</a>',
       });
     }
