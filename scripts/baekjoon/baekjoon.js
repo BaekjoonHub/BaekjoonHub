@@ -1,5 +1,6 @@
 // Set to true to enable console log
 const debug = false;
+
 /* 
   문제 제출 맞음 여부를 확인하는 함수
   2초마다 문제를 파싱하여 확인
@@ -15,6 +16,7 @@ const username = findUsername();
 if (!isNull(username)) {
   if (currentUrl.includes('status?') && currentUrl.includes(`user_id=${username}`)) startLoader();
   else if (currentUrl.includes('/source/') && currentUrl.includes('extension=BaekjoonHub')) parseLoader();
+  else if (currentUrl.match(/\/problem\/\d+/) !== null) parseProblemDescription();
   else if (currentUrl.includes('.net/user')) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
@@ -84,7 +86,7 @@ function parseLoader(doc = document) {
       Swal.fire({
         icon: 'error',
         title: '에러 발생',
-        html: `<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>에러가 발생했습니다. 개발자에게 문의해주세요.<br/><br/>${e}`,
+        html: `<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>에러가 발생했습니다. 개발자에게 문의해주세요.<br/><br/>${e?.stack ?? e}`,
         footer: '<a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">개발자에게 문의하기</a>',
       });
     }

@@ -8,13 +8,13 @@ chrome.storage.local.get('isSync', (data) => {
       });
     });
     chrome.storage.local.set({ isSync: true }, (data) => {
-      // if (debug) 
+      // if (debug)
       console.log('BaekjoonHub Synced to local values');
     });
   } else {
-    // if (debug) 
+    // if (debug)
     // console.log('Upload Completed. Local Storage status:', data);
-    // if (debug) 
+    // if (debug)
     console.log('BaekjoonHub Local storage already synced!');
   }
 });
@@ -28,6 +28,7 @@ getStats().then((stats) => {
   if (isNull(stats.version)) stats.version = '0.0.0';
   if (isNull(stats.branches) || stats.version !== getVersion()) stats.branches = {};
   if (isNull(stats.submission) || stats.version !== getVersion()) stats.submission = {};
+  if (isNull(stats.problems) || stats.version !== getVersion()) stats.problems = {};
   saveStats(stats);
 });
 
