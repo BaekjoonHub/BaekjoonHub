@@ -32,13 +32,6 @@ chrome.storage.local.get('BaekjoonHub_token', (data) => {
               $('#commit_mode').show();
               /* Get problem stats and repo link */
               chrome.storage.local.get(['stats', 'BaekjoonHub_hook'], (data3) => {
-                const { stats } = data3;
-                if (stats && stats.solved) {
-                  $('#p_solved').text(stats.solved);
-                  $('#p_solved_easy').text(stats.easy);
-                  $('#p_solved_medium').text(stats.medium);
-                  $('#p_solved_hard').text(stats.hard);
-                }
                 const BaekjoonHubHook = data3.BaekjoonHub_hook;
                 if (BaekjoonHubHook) {
                   $('#repo_url').html(`Your Repo: <a target="blank" style="color: cadetblue !important;" href="https://github.com/${BaekjoonHubHook}">${BaekjoonHubHook}</a>`);
