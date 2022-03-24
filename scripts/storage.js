@@ -226,12 +226,15 @@ async function updateLocalStorageStats() {
   const stats = await getStats();
   const tree_items = [];
   await git.getTree().then((tree) => {
-    tree.forEach((item) => {
-      if (item.type === 'blob') {
-        tree_items.push(item);
-      }
-    });
+    if (tree) {
+      tree.forEach((item) => {
+        if (item.type === 'blob') {
+          tree_items.push(item);
+        }
+      });
+    }
   });
+  if (tree_items.length === 0) return;
   const { submission } = stats;
   tree_items.forEach((item) => {
     updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);

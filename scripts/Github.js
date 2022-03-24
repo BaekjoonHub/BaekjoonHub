@@ -1,6 +1,7 @@
 class GitHub {
   constructor(hook, token) {
     if (debug) console.log('GitHub constructor', hook, token);
+    if (!hook || !token) throw new Error('GitHub constructor: hook or token is null. Please check your Authentication or Repository.');
     this.update(hook, token);
   }
 
