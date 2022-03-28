@@ -158,13 +158,13 @@
 ## 개발 참여 및 버그 신고
 <div>
   <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">
-    <img src="./assets/readme icons/bug.png" width=100 height=100>
+    <img src="./assets/readme icons/bug.png" title="버그 신고" width=100 height=100>
   </a>
   <a href="https://hyeon-jinhyeok.tistory.com/5">
-    <img src="./assets/readme icons/tstory.png" width=100 height=100>
+    <img src="./assets/readme icons/tstory.png" title="GetCurrentThread의 백준허브 개발기"width=100 height=100>
   </a>
   <a href="https://open.kakao.com/o/gOWn2ySd">
-    <img src="./assets/readme icons/kakao.png" width=100 height=100>
+    <img src="./assets/readme icons/kakao.png" title="협업 오픈카톡방"width=100 height=100>
   </a>
 </div>
 
