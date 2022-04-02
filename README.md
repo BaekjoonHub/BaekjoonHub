@@ -10,8 +10,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/v/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="chrome-webstore"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/d/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="users"></a>
-  <a href="https://github.com/BaekjoonHub/BaekjoonHub/graphs/contributors" alt="Contributors">
-    <img src="https://img.shields.io/github/contributors/BaekjoonHub/BaekjoonHub" />
     
 </a>
 </p>
@@ -158,13 +156,13 @@
 ## 개발 참여 및 버그 신고
 <div>
   <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">
-    <img src="./assets/readme icons/bug.png" title="버그 신고" width=100 height=100>
-  </a>
-  <a href="https://hyeon-jinhyeok.tistory.com/5">
-    <img src="./assets/readme icons/tstory.png" title="GetCurrentThread의 백준허브 개발기"width=100 height=100>
+    <img src="./assets/readme icons/bug.png" title="버그 신고" width="75" height="75">
   </a>
   <a href="https://open.kakao.com/o/gOWn2ySd">
-    <img src="./assets/readme icons/kakao.png" title="협업 오픈카톡방"width=100 height=100>
+    <img src="./assets/readme icons/kakao.png" title="협업 오픈카톡방" width="75" height="75">
+  </a>
+  <a href="https://velog.io/@flaxinger/백준허브-사용-방법">
+    <img src="./assets/readme icons/tstory.png" title="백준허브 사용 방법 소개" width="75" height="75">
   </a>
 </div>
 
@@ -175,14 +173,4 @@
 
 ## 패치노트
 
-[1.0.1 패치노트](Patch_Notes/1.0.1.md)</br>
-[1.0.2 패치노트](Patch_Notes/1.0.2.md)</br>
-[1.0.3 패치노트](Patch_Notes/1.0.3.md)</br>
-[1.0.4 패치노트](Patch_Notes/1.0.4.md)</br>
-[1.0.5 패치노트](Patch_Notes/1.0.5.md)</br>
-[1.0.6 패치노트](Patch_Notes/1.0.6.md)</br>
-[1.0.7 패치노트](Patch_Notes/1.0.7.md)</br>
-[1.0.8 패치노트](Patch_Notes/1.0.8.md)</br>
-[1.0.9 패치노트](Patch_Notes/1.0.9.md)</br>
-[1.1.0 패치노트](Patch_Notes/1.1.0.md)
-
+[패치노트](Patch_Notes/)</br>
