@@ -21,6 +21,7 @@ if (!isNull(username)) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
         if (findUsernameOnUserInfoPage() === username) {
+          // 과도한 트래픽 유발로 잠정 지원 중단
           // insertUploadAllButton();
           // insertDownloadAllButton();
         }
