@@ -10,8 +10,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/v/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="chrome-webstore"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/d/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="users"></a>
-  <a href="https://github.com/BaekjoonHub/BaekjoonHub/graphs/contributors" alt="Contributors">
-    <img src="https://img.shields.io/github/contributors/BaekjoonHub/BaekjoonHub" />
     
 </a>
 </p>
@@ -161,8 +159,7 @@
 <br />
 <br />
 
-<!--- 개발 참여 --->
-
+<!--- 링크 및 문서 --->
 ## 링크 및 문서
 <table>
   <tr>
