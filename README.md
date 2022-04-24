@@ -45,9 +45,10 @@
 2. [백준허브란?](#백준허브란what-is-baekjoonhub)
 3. [설치 및 연동](#설치-및-연동how-to-set-it-up)
 4. [작동 원리](#작동원리how-it-works)
-   1. [업로드 시점](#1-업로드-시점)
-   2. [저장되는 정보](#2-저장되는-정보)
-5. [개발 참여 및 버그 신고](#개발-참여-및-버그-신고)
+   1. [동작 화면](#1-동작-화면)
+   2. [업로드 시점](#2-업로드-시점)
+   3. [저장되는 정보](#3-저장되는-정보)
+5. [링크 및 문서](#링크-및-문서)
    <br />
    <br />
 
@@ -89,7 +90,7 @@
     (기본값은 private으로 되어있습니다).</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
-👉 보다 구체적인 사용 방법을 알고 싶다면 다음 <a href="https://velog.io/@flaxinger/백준허브-사용-방법">링크</a>를 확인해주세요.
+👉 보다 구체적인 사용 방법을 알고 싶다면 다음 <a href="https://velog.io/@flaxinger/백준허브-사용-방법">사용자 매뉴얼</a>를 확인해주세요.
 <br />
 <br />
 
@@ -97,15 +98,22 @@
 
 ## 작동원리(How it works)
 
-![](assets/extension/output.gif)
+### 1. 동작 화면
+![](assets/extension/Baekjoon.gif)
+<div style="text-align:center;">백준 동작 화면</div>
+<br/>
 
-### 1. 업로드 시점
+![](assets/extension/Programmers.gif)
+<div style="text-align:center;">프로그래머스 동작 화면</div>
 
-<p> 백준허브는 제출 페이지가 감지되면 작동합니다. 제출이 정답임이 확인되었다면 '맞았습니다!!'라는 문구 옆에 로딩 아이콘이 뜨게 되며 Github에 업로드가 완료되면 초록색 완료표시가 뜹니다(반면 문제가 있었다면 빨간색으로 표시됩니다).</p>
 
-### 2. 저장되는 정보
+### 2. 업로드 시점
 
-플랫폼 별로 문제 해결 시 저장되는 정보는 다음과 같습니다. 
+<p> 백준허브는 풀이 제출 직후에 작동합니다. 백준은 신규 탭이 일시적으로 사용되고 업로드 후 자동 종료되며 프로그래머스는 제출 화면에서 바로 업로드가 진행됩니다.</p>
+
+### 3. 저장되는 정보
+
+<p>플랫폼 별로 문제 해결 시 파싱 후 저장되는 정보는 다음과 같습니다.</p>
 
 <table>
   <tbody>
@@ -155,34 +163,50 @@
 
 <!--- 개발 참여 --->
 
-## 개발 참여 및 버그 신고
+## 링크 및 문서
+<br/>
 <div>
-  <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">
-    <img src="./assets/readme icons/bug.png" width=100 height=100>
+  <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues" title="버그신고">
+    <img src="./assets/readme_icons/bug.png" width=100 height=100 
+    style="
+      background-color: white;
+      border-radius: 10px; 
+      border-style: solid;
+      border-color: black;
+      padding: 15px;
+      margin-right:5px">
   </a>
-  <a href="https://hyeon-jinhyeok.tistory.com/5">
-    <img src="./assets/readme icons/tstory.png" width=100 height=100>
+  <a href="https://hyeon-jinhyeok.tistory.com/5" title="GetCurrentThread의 개발블로그">
+    <img src="./assets/readme_icons/tstory.png" width=100 height=100
+    style="
+      background-color: white;
+      border-radius: 10px; 
+      border-style: solid;
+      border-color: black;
+      padding: 15px;
+      margin-right:5px">
   </a>
-  <a href="https://open.kakao.com/o/gOWn2ySd">
-    <img src="./assets/readme icons/kakao.png" width=100 height=100>
+  <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
+    <img src="./assets/readme_icons/kakao.png" width=100 height=100
+    style="
+      background-color: white;
+      border-radius: 10px; 
+      border-style: solid;
+      border-color: black;
+      padding: 15px;
+      margin-right:5px">
+  </a>
+  <a href="./Patch_Notes/" title="패치 노트">
+    <img src="./assets/readme_icons/patchnotes.png" width=100 height=100
+    style="
+      background-color: white;
+      border-radius: 10px; 
+      border-style: solid;
+      border-color: black;
+      padding: 15px;
+      margin-right:5px">
   </a>
 </div>
 
 <br />
 <br />
-
-<!--- 패치 노트 --->
-
-## 패치노트
-
-[1.0.1 패치노트](Patch_Notes/1.0.1.md)</br>
-[1.0.2 패치노트](Patch_Notes/1.0.2.md)</br>
-[1.0.3 패치노트](Patch_Notes/1.0.3.md)</br>
-[1.0.4 패치노트](Patch_Notes/1.0.4.md)</br>
-[1.0.5 패치노트](Patch_Notes/1.0.5.md)</br>
-[1.0.6 패치노트](Patch_Notes/1.0.6.md)</br>
-[1.0.7 패치노트](Patch_Notes/1.0.7.md)</br>
-[1.0.8 패치노트](Patch_Notes/1.0.8.md)</br>
-[1.0.9 패치노트](Patch_Notes/1.0.9.md)</br>
-[1.1.0 패치노트](Patch_Notes/1.1.0.md)
-
