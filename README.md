@@ -10,8 +10,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/v/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="chrome-webstore"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/d/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="users"></a>
-  <a href="https://github.com/BaekjoonHub/BaekjoonHub/graphs/contributors" alt="Contributors">
-    <img src="https://img.shields.io/github/contributors/BaekjoonHub/BaekjoonHub" />
     
 </a>
 </p>
@@ -161,31 +159,29 @@
 <br />
 <br />
 
-<!--- 개발 참여 --->
-
+<!--- 링크 및 문서 --->
 ## 링크 및 문서
-<br/>
 <table>
   <tr>
-    <td>
+    <td align="center">
       <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues" title="버그신고">
           <img src="./assets/readme_icons/bug.png" width="100" height="100">
-      </a>
+      </a><br/><sub><b>버그 신고</b></sub>
     </td>
-    <td>
+    <td align="center">
       <a href="https://hyeon-jinhyeok.tistory.com/5" title="GetCurrentThread의 개발블로그">
         <img src="./assets/readme_icons/tstory.png" width="100" height="100">
-      </a>
+      </a><br/><sub><b>개발 블로그</b></sub>
     </td>
-    <td>
+    <td align="center">
       <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
         <img src="./assets/readme_icons/kakao.png" width="100" height="100">
-      </a>
+      </a><br/><sub><b>카카오톡 협업방</b></sub>
     </td>
-    <td>
+    <td align="center">
       <a href="./Patch_Notes/" title="패치 노트">
         <img src="./assets/readme_icons/patchnotes.png" width="100" height="100">
-      </a>
+      </a><br/><sub><b>패치 노트</b></sub>
     </td>
   </tr>
 </table>
