@@ -100,11 +100,11 @@
 
 ### 1. 동작 화면
 ![](assets/extension/Baekjoon.gif)
-<div style="text-align:center;">백준 동작 화면</div>
+<div align="center">백준 동작 화면</div>
 <br/>
 
 ![](assets/extension/Programmers.gif)
-<div style="text-align:center;">프로그래머스 동작 화면</div>
+<div align="center">프로그래머스 동작 화면</div>
 
 
 ### 2. 업로드 시점
@@ -133,7 +133,7 @@
         <li>사용 언어</li>
         <li>문제 분류</li>
       </td>
-      <td align="left" style="vertical-align:top">
+      <td align="left">
         <li>코드</li>
         <li>사용한 메모리</li>
         <li>실행 시간</li>
@@ -149,7 +149,7 @@
         <li>문제 설명</li>
         <li>사용 언어</li>
       </td>
-      <td align="left" style="vertical-align:top">
+      <td align="left">
         <li>코드</li>
         <li>사용한 메모리</li>
         <li>실행 시간</li>
@@ -165,48 +165,31 @@
 
 ## 링크 및 문서
 <br/>
-<div>
-  <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues" title="버그신고">
-    <img src="./assets/readme_icons/bug.png" width=100 height=100 
-    style="
-      background-color: white;
-      border-radius: 10px; 
-      border-style: solid;
-      border-color: black;
-      padding: 15px;
-      margin-right:5px">
-  </a>
-  <a href="https://hyeon-jinhyeok.tistory.com/5" title="GetCurrentThread의 개발블로그">
-    <img src="./assets/readme_icons/tstory.png" width=100 height=100
-    style="
-      background-color: white;
-      border-radius: 10px; 
-      border-style: solid;
-      border-color: black;
-      padding: 15px;
-      margin-right:5px">
-  </a>
-  <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
-    <img src="./assets/readme_icons/kakao.png" width=100 height=100
-    style="
-      background-color: white;
-      border-radius: 10px; 
-      border-style: solid;
-      border-color: black;
-      padding: 15px;
-      margin-right:5px">
-  </a>
-  <a href="./Patch_Notes/" title="패치 노트">
-    <img src="./assets/readme_icons/patchnotes.png" width=100 height=100
-    style="
-      background-color: white;
-      border-radius: 10px; 
-      border-style: solid;
-      border-color: black;
-      padding: 15px;
-      margin-right:5px">
-  </a>
-</div>
-
-<br />
-<br />
+<svg fill="none" width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <style>
+            img {
+              background-color: white;
+              border-radius: 10px; 
+              border-style: solid;
+              border-color: black;
+              padding: 15px;
+              margin-right: 5px;
+            }
+            </style>
+            <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues" title="버그신고">
+              <img src="./assets/readme_icons/bug.png" width=100 height=100>
+            </a>
+            <a href="https://hyeon-jinhyeok.tistory.com/5" title="GetCurrentThread의 개발블로그">
+              <img src="./assets/readme_icons/tstory.png" width=100 height=100>
+            </a>
+            <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
+              <img src="./assets/readme_icons/kakao.png" width=100 height=100>
+            </a>
+            <a href="./Patch_Notes/" title="패치 노트">
+              <img src="./assets/readme_icons/patchnotes.png" width=100 height=100>
+            </a>
+        </div>
+    </foreignObject>
+</svg>
