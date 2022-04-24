@@ -42,6 +42,7 @@ async function parseData(doc = document) {
   const language = tr.querySelector('td:nth-child(8)').innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
   const memory = tr.querySelector('td:nth-child(6)').innerText;
   const runtime = tr.querySelector('td:nth-child(7)').innerText;
+  if(problemId<1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${problemId}`);
   const details = await makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime);
   return { ...details, code };
 }
