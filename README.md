@@ -165,31 +165,30 @@
 
 ## 링크 및 문서
 <br/>
-<svg fill="none" width="800" height="400" xmlns="http://www.w3.org/2000/svg">
-    <foreignObject width="100%" height="100%">
-        <div xmlns="http://www.w3.org/1999/xhtml">
-            <style>
-            img {
-              background-color: white;
-              border-radius: 10px; 
-              border-style: solid;
-              border-color: black;
-              padding: 15px;
-              margin-right: 5px;
-            }
-            </style>
-            <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues" title="버그신고">
-              <img src="./assets/readme_icons/bug.png" width=100 height=100>
-            </a>
-            <a href="https://hyeon-jinhyeok.tistory.com/5" title="GetCurrentThread의 개발블로그">
-              <img src="./assets/readme_icons/tstory.png" width=100 height=100>
-            </a>
-            <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
-              <img src="./assets/readme_icons/kakao.png" width=100 height=100>
-            </a>
-            <a href="./Patch_Notes/" title="패치 노트">
-              <img src="./assets/readme_icons/patchnotes.png" width=100 height=100>
-            </a>
-        </div>
-    </foreignObject>
-</svg>
+<table>
+  <tr>
+    <td>
+      <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues" title="버그신고">
+          <img src="./assets/readme_icons/bug.png" width="100" height="100">
+      </a>
+    </td>
+    <td>
+      <a href="https://hyeon-jinhyeok.tistory.com/5" title="GetCurrentThread의 개발블로그">
+        <img src="./assets/readme_icons/tstory.png" width="100" height="100">
+      </a>
+    </td>
+    <td>
+      <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
+        <img src="./assets/readme_icons/kakao.png" width="100" height="100">
+      </a>
+    </td>
+    <td>
+      <a href="./Patch_Notes/" title="패치 노트">
+        <img src="./assets/readme_icons/patchnotes.png" width="100" height="100">
+      </a>
+    </td>
+  </tr>
+</table>
+
+<br />
+<br />
