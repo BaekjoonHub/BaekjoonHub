@@ -73,7 +73,7 @@
     "Java 8": "java",
     "Java 8 (OpenJDK)": "java",
     "Kotlin": "kt",
-    "Kotlin (JVM)": "jar",
+    "Kotlin (JVM)": "kt",
     "Kotlin (Native)": "kt",
     "LOLCODE": "lol",
     "Lua": "lua",
@@ -125,7 +125,7 @@
 //   .map((x) => [x.querySelector('header > h3'), x.querySelector('ul > li:nth-child(2) > code')])
 //   .filter((x) => !!x[0] && !!x[1])
 //   .map((x) => x.map((el) => el.innerText))
-//   .map((x) => [x[0].trim(), x[1].match(/Main\.(?!exe)([a-zA-Z]+)/)])
+//   .map((x) => [x[0].trim(), x[1].match(/Main\.(?!exe)(?!([a-zA-Z]+)/)])
 //   .filter((x) => !!x[0] && !!x[1])
 //   .sort((a, b) => a[0].localeCompare(b[0]))
 //   .forEach((x) => (languages[x[0]] = x[1][1]));
