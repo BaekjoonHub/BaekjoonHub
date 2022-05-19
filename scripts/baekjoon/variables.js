@@ -396,6 +396,27 @@ const bj_level = {
 // console.log('categories length: ', Object.keys(categories).length);
 // console.log('categories: ', categories);
 
+/* 채점 결과에 대한 각 구분 정보 */
+const RESULT_CATEGORY = {
+  RESULT_PENDING: 'wait',
+  RESULT_PENDING_REJUDGE: 'rejudge-wait',
+  RESULT_NO_JUDGE: 'no-judge',
+  RESULT_PREPARE_FOR_JUDGE: 'compile',
+  RESULT_JUDGING: 'judging',
+  RESULT_ACCEPTED: 'ac',
+  RESULT_PARTIALLY_ACCEPTED: 'pac',
+  RESULT_PRESENTATION_ERROR: 'pe',
+  RESULT_WRONG_ANSWER: 'wa',
+  RESULT_ACCEPTED_NOT_CORRECT: 'awa',
+  RESULT_TIME_LIMIT_EXCEEDED: 'tle',
+  RESULT_MEMORY_LIMIT_EXCEEDED: 'mle',
+  RESULT_OUTPUT_LIMIT_EXCEEDED: 'ole',
+  RESULT_RUNTIME_ERROR: 'rte',
+  RESULT_COMPILATION_ERROR: 'ce',
+  RESULT_UNVAILABLE: 'co',
+  RESULT_DELETED: 'del',
+};
+
 /* 채점 결과에 대한 각 메시지 구분 맵핑 */
 const RESULT_MESSAGE = {
   [RESULT_CATEGORY.RESULT_PENDING]: '기다리는 중',
