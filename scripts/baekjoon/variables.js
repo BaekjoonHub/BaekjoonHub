@@ -207,6 +207,7 @@ const bj_level = {
     "case_work": "많은 조건 분기",
     "centroid": "centroid",
     "centroid_decomposition": "센트로이드 분할",
+    "chordal_graph": "chordal graph",
     "cht": "볼록 껍질을 이용한 최적화",
     "circulation": "서큘레이션",
     "combinatorics": "조합론",
@@ -216,6 +217,7 @@ const bj_level = {
     "crt": "중국인의 나머지 정리",
     "dancing_links": "춤추는 링크",
     "data_structures": "자료 구조",
+    "degree_sequence": "차수열",
     "delaunay": "델로네 삼각분할",
     "deque": "덱",
     "dfs": "깊이 우선 탐색",
@@ -364,11 +366,9 @@ const bj_level = {
     "trie": "트라이",
     "tsp": "외판원 순회 문제",
     "two_pointer": "두 포인터",
-    "voronoi": "보로노이 다이어그램",
-    "z": "z",
     "utf8": "utf-8 입력 처리",
-    "chordal_graph": "chordal graph",
-    "degree_sequence": "차수열"
+    "voronoi": "보로노이 다이어그램",
+    "z": "z"
 };
 
 // // request "https://solved.ac/api/v3/tag/list"
