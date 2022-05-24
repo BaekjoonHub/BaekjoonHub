@@ -36,6 +36,11 @@ async function updateProblemData(problemId, obj) {
   });
 }
 
+/**
+ * 문제 내 데이터를 가져옵니다.
+ * @param {string} problemId 문제 번호
+ * @returns {object} 문제 내 데이터
+ */
 async function getProblemData(problemId) {
   return getObjectFromLocalStorage('swea')[problemId];
 }

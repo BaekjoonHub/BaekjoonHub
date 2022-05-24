@@ -10,24 +10,40 @@ let loader;
 const currentUrl = window.location.href;
 
 // SWEA 연습 문제 주소임을 확인하고, 맞다면 레벨 파서를 실행
-if (currentUrl.includes('/main/code/problem/problemDetail.do')) parseLevel();
-else if (currentUrl.includes('/main/code/problem/problemSolver.do')) parseSolver();
-else if (currentUrl.includes('/main/solvingProblem/solvingProblem.do') && document.querySelector('header > h1 > span').textContent === '모의 테스트') startLoader();
+if (currentUrl.includes('/main/solvingProblem/solvingProblem.do') && document.querySelector('header > h1 > span').textContent === '모의 테스트') startLoader();
+else if (currentUrl.includes('/main/code/problem/problemSolver.do') && currentUrl.includes('extension=BaekjoonHub')) parseAndUpload();
 
+function parseAndUpload() {
+  //async wrapper
+  (async () => {
+    const bojData = await parseData();
+    await beginUpload(bojData);
+  })();
+}
 function startLoader() {
   loader = setInterval(async () => {
-    // 제출 후 채점하기 결과가 성공적으로 나왔다면 코드를 파싱하고, 업로드를 시작한다
-    if (getSolvedResult().includes('정답')) {
-      if (debug) console.log('정답이 나왔습니다. 업로드를 시작합니다.');
+    // 제출 후 채점하기 결과가 성공적으로 나왔다면 코드를 파싱하고,
+    // 결과 페이지로 안내한다.
+    if (getSolvedResult().includes('pass입니다')) {
+      if (debug) console.log('정답이 나왔습니다. 코드를 파싱합니다');
       stopLoader();
       try {
-        const bojData = await parseData();
-        await beginUpload(bojData);
+        const { contestProbId } = await parseCode();
+        // prettier-ignore
+        await makeSubmitButton(`${window.location.origin}`
+          + `/main/code/problem/problemSolver.do?`
+          + `contestProbId=${contestProbId}&`
+          + `nickName=${getNickName()}&`
+          + `extension=BaekjoonHub`);
       } catch (error) {
         if (debug) console.log(error);
       }
     }
   }, 2000);
+}
+
+function getSolvedResult() {
+  return document.querySelector('div.popup_layer.show > div > p.txt')?.innerText.trim().toLowerCase();
 }
 
 function stopLoader() {
