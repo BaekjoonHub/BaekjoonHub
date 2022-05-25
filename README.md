@@ -17,6 +17,7 @@
 </br>
 
 ## Contributors
+
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
@@ -97,13 +98,20 @@
 ## 작동원리(How it works)
 
 ### 1. 동작 화면
+
 ![](assets/extension/Baekjoon.gif)
+
 <div align="center">백준 동작 화면</div>
 <br/>
 
 ![](assets/extension/Programmers.gif)
-<div align="center">프로그래머스 동작 화면</div>
 
+<div align="center">프로그래머스 동작 화면</div>
+<br/>
+
+![](assets/extension/SWExpertAcademy.gif)
+
+<div align="center">SW Expert Academy 동작 화면</div>
 
 ### 2. 업로드 시점
 
@@ -153,6 +161,22 @@
         <li>실행 시간</li>
       </td>
     </tr>
+    <tr>
+      <td>SW Expert Academy</td>
+      <td align="left">
+        <li>문제 제목</li>
+        <li>문제 아이디</li>
+        <li>문제 링크</li>
+        <li>문제 등급</li>
+        <li>사용 언어</li>
+      </td>
+      <td align="left">
+        <li>코드</li>
+        <li>사용한 메모리</li>
+        <li>실행 시간</li>
+        <li>코드 길이</li>
+      </td>
+    </tr>
   </tbody>
 </table>
 
@@ -160,7 +184,9 @@
 <br />
 
 <!--- 링크 및 문서 --->
+
 ## 링크 및 문서
+
 <table>
   <tr>
     <td align="center">
