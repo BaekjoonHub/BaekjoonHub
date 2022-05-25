@@ -100,7 +100,7 @@
     },
         {
       "matches": [
-        "https://swexpertacademy.co.kr/*"
+        "https://swexpertacademy.com/*"
       ],
 	    "css": [
         "css/swexpertacademy/inject.css"
