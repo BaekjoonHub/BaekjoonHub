@@ -9,7 +9,7 @@ let loader;
 
 const currentUrl = window.location.href;
 
-// SWEA 연습 문제 주소임을 확인하고, 맞다면 레벨 파서를 실행
+// SWEA 연습 문제 주소임을 확인하고, 맞는 파서를 실행
 if (currentUrl.includes('/main/solvingProblem/solvingProblem.do') && document.querySelector('header > h1 > span').textContent === '모의 테스트') startLoader();
 else if (currentUrl.includes('/main/code/problem/problemSolver.do') && currentUrl.includes('extension=BaekjoonHub')) parseAndUpload();
 
@@ -33,7 +33,7 @@ function startLoader() {
         await makeSubmitButton(`${window.location.origin}`
           + `/main/code/problem/problemSolver.do?`
           + `contestProbId=${contestProbId}&`
-          + `nickName=${getNickName()}&`
+          + `nickName=${getNickname()}&`
           + `extension=BaekjoonHub`);
       } catch (error) {
         if (debug) console.log(error);
@@ -43,7 +43,7 @@ function startLoader() {
 }
 
 function getSolvedResult() {
-  return document.querySelector('div.popup_layer.show > div > p.txt')?.innerText.trim().toLowerCase();
+  return document.querySelector('div.popup_layer.show > div > p.txt')?.innerText.trim().toLowerCase() || '';
 }
 
 function stopLoader() {
@@ -53,9 +53,8 @@ function stopLoader() {
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
   if (debug) console.log('bojData', bojData);
+  startUpload();
   if (isNotEmpty(bojData)) {
-    startUpload();
-
     const stats = await getStats();
     const hook = await getHook();
 

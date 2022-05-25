@@ -14,6 +14,9 @@ getObjectFromLocalStorage('swea').then((data) => {
  */
 async function updateProblemData(problemId, obj) {
   return getObjectFromLocalStorage('swea').then((data) => {
+    if (debug) console.log('updateProblemData', data);
+    if (debug) console.log('obj', obj);
+    if (isNull(data[problemId])) data[problemId] = {};
     data[problemId] = { ...data[problemId], ...obj, save_date: Date.now() };
 
     // 기존에 저장한 문제 중 일주일이 경과한 문제 내용들은 모두 삭제합니다.
@@ -42,5 +45,5 @@ async function updateProblemData(problemId, obj) {
  * @returns {object} 문제 내 데이터
  */
 async function getProblemData(problemId) {
-  return getObjectFromLocalStorage('swea')[problemId];
+  return getObjectFromLocalStorage('swea').then((data) => data[problemId]);
 }

@@ -5,8 +5,8 @@
 .BaekjoonHub_progress {
   display: inline-block;
   pointer-events: none;
-  width: 2.3em;
-  height: 2.3em;
+  width: 1.7em;
+  height: 1.7em;
   border: 0.4em solid transparent;
   border-color: #eee;
   border-top-color: #3e67ec;
@@ -23,7 +23,7 @@
   display: inline-block;
   transform: rotate(45deg);
   width: 0.9em;
-  height: 2.3em;
+  height: 1.7em;
   border-bottom: 3px solid red;
   border-right: 3px solid red;
 }
@@ -32,7 +32,7 @@
   display: inline-block;
   transform: rotate(45deg);
   width: 0.9em;
-  height: 2.3em;
+  height: 1.7em;
   border-bottom: 3px solid #78b13f;
   border-right: 3px solid #78b13f;
 }

@@ -6,11 +6,11 @@ function startUpload() {
   if (elem !== undefined) {
     elem = document.createElement('span');
     elem.id = 'BaekjoonHub_progress_anchor_element';
-    elem.className = 'runcode-wrapper__8rXm';
-    elem.style = 'margin-left: 10px;padding-top: 0px;';
+    // elem.className = 'runcode-wrapper__8rXm';
+    // elem.style = 'margin-left: 10px;padding-top: 0px;';
   }
   elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
-  const target = document.querySelector('#modal-dialog > div.modal-dialog > div.modal-content > div.modal-footer');
+  const target = document.querySelector('div.box-list > div.box-list-inner > div.right_answer > span.btn_right');
   if (!isNull(target)) {
     target.prepend(elem);
   }
@@ -68,5 +68,5 @@ function startUploadCountDown() {
  * @returns {string} 유저 닉네임이며 없을 시에 null을 반환
  */
 function getNickname() {
-  return document.querySelector('#Beginner')?.innerText;
+  return document.querySelector('#Beginner')?.innerText || document.querySelector('header > div > span.name')?.innerText || '';
 }
