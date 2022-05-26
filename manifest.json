@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "author": "flaxinger",
   "action": {
     "default_icon": "assets/thumbnail.png",
@@ -24,7 +24,8 @@
   "host_permissions": [
     "https://www.acmicpc.net/",
 	  "https://programmers.co.kr/",
-    "https://github.com/"
+    "https://github.com/",
+    "https://swexpertacademy.com/"
   ],
   "web_accessible_resources":[
     {
@@ -80,7 +81,7 @@
       "matches": [
         "https://programmers.co.kr/*"
       ],
-	  "css": [
+	    "css": [
         "css/programmers/inject.css"
       ],
       "js": [
@@ -94,6 +95,28 @@
         "scripts/programmers/parsing.js",
         "scripts/programmers/uploadfunctions.js",
         "scripts/programmers/programmers.js"
+      ],
+      "run_at": "document_idle"
+    },
+        {
+      "matches": [
+        "https://swexpertacademy.com/*"
+      ],
+	    "css": [
+        "css/swexpertacademy/inject.css"
+      ],
+      "js": [
+        "library/sha1.min.js",
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js",
+        "scripts/storage.js",
+        "scripts/swexpertacademy/storage.js",
+        "scripts/swexpertacademy/variables.js",
+        "scripts/swexpertacademy/util.js",
+        "scripts/swexpertacademy/parsing.js",
+        "scripts/swexpertacademy/uploadfunctions.js",
+        "scripts/swexpertacademy/swexpertacademy.js"
       ],
       "run_at": "document_idle"
     }
