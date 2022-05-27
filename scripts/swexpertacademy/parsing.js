@@ -35,7 +35,7 @@ async function parseData() {
     .substr(1)
     .trim();
   // 레벨
-  const level = document.querySelector('div.problem_box > p.problem_title > span.badge').textContent;
+  const level = document.querySelector('div.problem_box > p.problem_title > span.badge')?.textContent || 'Unrated';
   // 문제번호
   const problemId = document.querySelector('body > div.container > div.container.sub > div > div.problem_box > p').innerText.split('.')[0].trim();
   // 문제 콘테스트 인덱스
