@@ -49,6 +49,15 @@
       "contributions": [
         "talk"
       ]
+    },
+    {
+      "login": "cokemania2",
+      "name": "cokemania2",
+      "avatar_url": "https://avatars.githubusercontent.com/u/38974863?v=4",
+      "profile": "https://github.com/cokemania2",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
