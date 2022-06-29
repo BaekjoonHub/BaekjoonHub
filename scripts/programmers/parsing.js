@@ -12,7 +12,7 @@
   - code : 소스코드 내용
 */
 async function parseData() {
-  const link = document.querySelector('head > meta[name$=url]').content;
+  const link = document.querySelector('head > meta[name$=url]').content.replace(/\?.*/g, '').trim();
   const problemId = document.querySelector('div.main > div.lesson-content').getAttribute('data-lesson-id');
   const level = levels[problemId] || 'unrated';
   const division = [...document.querySelector('ol.breadcrumb').childNodes]
