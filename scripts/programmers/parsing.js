@@ -12,7 +12,7 @@
   - code : 소스코드 내용
 */
 async function parseData() {
-  const link = document.querySelector('head > meta[name$=url]').content;
+  const link = document.querySelector('head > meta[name$=url]').content.replace(/\?.*/g, '').trim();
   const problemId = document.querySelector('div.main > div.lesson-content').getAttribute('data-lesson-id');
   const level = levels[problemId] || 'unrated';
   const division = [...document.querySelector('ol.breadcrumb').childNodes]
@@ -23,7 +23,7 @@ async function parseData() {
     .reduce((a, b) => `${a}/${b}`);
   const title = document.querySelector('#tab > li.algorithm-title').textContent.replace(/\\n/g, '').trim();
   const problem_description = document.querySelector('div.guide-section-description > div.markdown').innerHTML;
-  const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').getAttribute('data-language');
+  const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').innerText.split('.')[1]
   const code = document.querySelector('textarea#code').value;
   const result_message =
     [...document.querySelectorAll('#output > pre.console-content > div.console-message')]
