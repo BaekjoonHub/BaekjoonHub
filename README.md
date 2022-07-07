@@ -29,6 +29,7 @@
     <td align="center"><a href="https://xvezda.com"><img src="https://avatars.githubusercontent.com/u/9497404?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Xvezda</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=Xvezda" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/doxxx93"><img src="https://avatars.githubusercontent.com/u/51396905?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Doxxx93</b></sub></a><br /><a href="#talk-doxxx93" title="Talks">📢</a></td>
     <td align="center"><a href="https://github.com/cokemania2"><img src="https://avatars.githubusercontent.com/u/38974863?v=4?s=100" width="100px;" alt=""/><br /><sub><b>cokemania2</b></sub></a><br /><a href="#maintenance-cokemania2" title="Maintenance">🚧</a></td>
+    <td align="center"><a href="https://github.com/keinetwork"><img src="https://avatars.githubusercontent.com/u/102347379?v=4?s=100" width="100px;" alt=""/><br /><sub><b>김영석</b></sub></a><br /><a href="#question-keinetwork" title="Answering Questions">💬</a></td>
   </tr>
 </table>
 
