@@ -58,6 +58,15 @@
       "contributions": [
         "maintenance"
       ]
+    },
+    {
+      "login": "keinetwork",
+      "name": "김영석",
+      "avatar_url": "https://avatars.githubusercontent.com/u/102347379?v=4",
+      "profile": "https://github.com/keinetwork",
+      "contributions": [
+        "question"
+      ]
     }
   ],
   "contributorsPerLine": 7,
