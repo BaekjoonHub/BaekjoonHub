@@ -15,30 +15,12 @@
       ]
     },
     {
-      "login": "mumwa",
-      "name": "mumwa",
-      "avatar_url": "https://avatars.githubusercontent.com/u/13832137?v=4",
-      "profile": "https://github.com/mumwa",
-      "contributions": [
-        "tool"
-      ]
-    },
-    {
       "login": "getCurrentThread",
       "name": "getCurrentThread",
       "avatar_url": "https://avatars.githubusercontent.com/u/31976959?v=4",
       "profile": "https://github.com/getCurrentThread",
       "contributions": [
         "maintenance"
-      ]
-    },
-    {
-      "login": "Xvezda",
-      "name": "Xvezda",
-      "avatar_url": "https://avatars.githubusercontent.com/u/9497404?v=4",
-      "profile": "https://xvezda.com",
-      "contributions": [
-        "doc"
       ]
     },
     {
@@ -51,12 +33,39 @@
       ]
     },
     {
+      "login": "Xvezda",
+      "name": "Xvezda",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9497404?v=4",
+      "profile": "https://xvezda.com",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "mumwa",
+      "name": "mumwa",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13832137?v=4",
+      "profile": "https://github.com/mumwa",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
       "login": "cokemania2",
       "name": "cokemania2",
       "avatar_url": "https://avatars.githubusercontent.com/u/38974863?v=4",
       "profile": "https://github.com/cokemania2",
       "contributions": [
-        "maintenance"
+        "code"
+      ]
+    },
+    {
+      "login": "keinetwork",
+      "name": "keinetwork",
+      "avatar_url": "https://avatars.githubusercontent.com/u/102347379?v=4",
+      "profile": "https://github.com/keinetwork",
+      "contributions": [
+        "question"
       ]
     }
   ],
