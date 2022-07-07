@@ -24,12 +24,12 @@
 <table>
   <tr>
     <td align="center"><a href="https://github.com/flaxinger"><img src="https://avatars.githubusercontent.com/u/70012548?v=4?s=100" width="100px;" alt=""/><br /><sub><b>flaxinger</b></sub></a><br /><a href="#maintenance-flaxinger" title="Maintenance">🚧</a></td>
-    <td align="center"><a href="https://github.com/mumwa"><img src="https://avatars.githubusercontent.com/u/13832137?v=4?s=100" width="100px;" alt=""/><br /><sub><b>mumwa</b></sub></a><br /><a href="#tool-mumwa" title="Tools">🔧</a></td>
     <td align="center"><a href="https://github.com/getCurrentThread"><img src="https://avatars.githubusercontent.com/u/31976959?v=4?s=100" width="100px;" alt=""/><br /><sub><b>getCurrentThread</b></sub></a><br /><a href="#maintenance-getCurrentThread" title="Maintenance">🚧</a></td>
-    <td align="center"><a href="https://xvezda.com"><img src="https://avatars.githubusercontent.com/u/9497404?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Xvezda</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=Xvezda" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/doxxx93"><img src="https://avatars.githubusercontent.com/u/51396905?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Doxxx93</b></sub></a><br /><a href="#talk-doxxx93" title="Talks">📢</a></td>
-    <td align="center"><a href="https://github.com/cokemania2"><img src="https://avatars.githubusercontent.com/u/38974863?v=4?s=100" width="100px;" alt=""/><br /><sub><b>cokemania2</b></sub></a><br /><a href="#maintenance-cokemania2" title="Maintenance">🚧</a></td>
-    <td align="center"><a href="https://github.com/keinetwork"><img src="https://avatars.githubusercontent.com/u/102347379?v=4?s=100" width="100px;" alt=""/><br /><sub><b>김영석</b></sub></a><br /><a href="#question-keinetwork" title="Answering Questions">💬</a></td>
+    <td align="center"><a href="https://xvezda.com"><img src="https://avatars.githubusercontent.com/u/9497404?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Xvezda</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=Xvezda" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/mumwa"><img src="https://avatars.githubusercontent.com/u/13832137?v=4?s=100" width="100px;" alt=""/><br /><sub><b>mumwa</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=mumwa" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/cokemania2"><img src="https://avatars.githubusercontent.com/u/38974863?v=4?s=100" width="100px;" alt=""/><br /><sub><b>cokemania2</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=cokemania2" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/keinetwork"><img src="https://avatars.githubusercontent.com/u/102347379?v=4?s=100" width="100px;" alt=""/><br /><sub><b>keinetwork</b></sub></a><br /><a href="#question-keinetwork" title="Answering Questions">💬</a></td>
   </tr>
 </table>
 
