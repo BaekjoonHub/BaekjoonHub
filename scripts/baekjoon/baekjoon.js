@@ -78,7 +78,7 @@ function parseLoader(doc = document) {
       console.log('bojData', bojData);
       if (isNotEmpty(bojData)) {
         stopLoader();
-        Swal.close();
+        // Swal.close();
         console.log('백준 업로드 시작합니다.');
         await beginUpload(bojData);
       }
