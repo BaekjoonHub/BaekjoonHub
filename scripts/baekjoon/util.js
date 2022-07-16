@@ -207,6 +207,7 @@ function MultiloaderUpToDate() {
 }
 
 function convertImageTagAbsoluteURL(doc = document) {
+  if(isNull(doc)) return;
   // img tag replace Relative URL to Absolute URL.
   Array.from(doc.getElementsByTagName('img'), (x) => {
     x.setAttribute('src', x.currentSrc);
