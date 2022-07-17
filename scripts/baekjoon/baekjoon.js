@@ -30,6 +30,52 @@ if (!isNull(username)) {
       }
     });
   }
+  else if (currentUrl.includes('/submit/')) {
+    // 실험적 기능. 백준 사이트로 자바 언어를 제출 시에 편의 기능을 제공합니다.
+    
+    // "form#submit_form" add submit event.
+    const submitForm = document.querySelector('form#submit_form');
+    if (!isNull(submitForm)) {
+      submitForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // select option content
+        const language = submitForm.querySelector('select[name="language"]')?.querySelector('option:checked')?.text?.toLowerCase() | 'Empty';
+        if (language.includes('java')) {
+          const codeArea = submitForm.querySelector('textarea[name="code"]');
+          if (!isNull(codeArea)) {
+            let code = codeArea.value;
+            // 코드 내의 패키지 명이 있다면 이를 주석처리 합니다.
+            if (code.includes('package')) {
+              code = code.replace(/^package\s+[\w\.]+;/gm, '/* $& */');
+            }
+
+            // 코드 내의 잘못된 import 문이 있다면 이를 주석처리 합니다.
+            if (code.includes('com.sun.org')) {
+              code = code.replace(/^import[\w\s]+com.sun.org[\w\.]+;/gm, '/* $& */');
+            }
+            if (code.includes('org.junit')) {
+              code = code.replace(/^import[\w\s]+org.junit[\w\.]+;/gm, '/* $& */');
+            }
+            
+            // 코드 내의 main 메소드가 있는 클래스를 찾아 클래스 이름을 Main으로 정정합니다.
+            if (!code.includes('class Main')) {
+              code = code.replace(/(?<=class )([^ ]*)(?=[ \r\n\t]*{.*public static void main)/s, 'Main /* $1 */');
+            }
+
+            
+      
+          }
+          *TODO: 여기 아래 코드를 더 작성해야합니다.
+          // const codeArea = document.createElement('textarea');
+          // codeArea.value = code;
+          // submitForm.appendChild(codeArea);
+          // submitForm.submit();
+        }
+      });
+    }
+
+    
+  }
 }
 
 function startLoader() {
