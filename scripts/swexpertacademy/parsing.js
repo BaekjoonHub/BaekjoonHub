@@ -4,9 +4,19 @@
 async function parseCode() {
   const problemId = document.querySelector('div.problem_box > h3').innerText.replace(/\..*$/, '').trim();
   const contestProbId = [...document.querySelectorAll('#contestProbId')].slice(-1)[0].value;
+  updateTextSourceEvent();
   const code = document.querySelector('#textSource').value;
   await updateProblemData(problemId, { code, contestProbId });
   return { problemId, contestProbId };
+}
+
+/*
+  cEditor 소스코드의 정보를 textSource에 저장하도록 하는 함수 입니다. 
+*/
+function updateTextSourceEvent() {
+  document.documentElement.setAttribute('onreset', 'cEditor.save();');
+  document.documentElement.dispatchEvent(new CustomEvent('reset'));
+  document.documentElement.removeAttribute('onreset');
 }
 
 /*
