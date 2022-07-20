@@ -31,6 +31,9 @@
     <td align="center"><a href="https://github.com/cokemania2"><img src="https://avatars.githubusercontent.com/u/38974863?v=4?s=100" width="100px;" alt=""/><br /><sub><b>cokemania2</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=cokemania2" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/keinetwork"><img src="https://avatars.githubusercontent.com/u/102347379?v=4?s=100" width="100px;" alt=""/><br /><sub><b>keinetwork</b></sub></a><br /><a href="#question-keinetwork" title="Answering Questions">💬</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/LimSB-dev"><img src="https://avatars.githubusercontent.com/u/95527804?v=4?s=100" width="100px;" alt=""/><br /><sub><b>임성빈</b></sub></a><br /><a href="#question-LimSB-dev" title="Answering Questions">💬</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-restore -->
