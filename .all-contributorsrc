@@ -67,6 +67,15 @@
       "contributions": [
         "question"
       ]
+    },
+    {
+      "login": "LimSB-dev",
+      "name": "임성빈",
+      "avatar_url": "https://avatars.githubusercontent.com/u/95527804?v=4",
+      "profile": "https://github.com/LimSB-dev",
+      "contributions": [
+        "question"
+      ]
     }
   ],
   "contributorsPerLine": 7,
