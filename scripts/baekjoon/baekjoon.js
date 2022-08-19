@@ -8,13 +8,13 @@ const debug = false;
 let loader;
 
 const currentUrl = window.location.href;
-if(debug) console.log(currentUrl);
+if (debug) console.log(currentUrl);
 
 // 문제 제출 사이트의 경우에는 로더를 실행하고, 유저 페이지의 경우에는 버튼을 생성한다.
 // 백준 사이트 로그인 상태이면 username이 있으며, 아니면 없다.
 const username = findUsername();
 if (!isNull(username)) {
-  if (['status', `user_id=${username}`, 'problem_id', 'from_mine=1'].every(key => currentUrl.includes(key))) startLoader();
+  if (['status', `user_id=${username}`, 'problem_id', 'from_mine=1'].every((key) => currentUrl.includes(key))) startLoader();
   else if (currentUrl.match(/\/problem\/\d+/) !== null) parseProblemDescription();
   else if (currentUrl.includes('.net/user')) {
     getStats().then((stats) => {
@@ -41,6 +41,7 @@ function startLoader() {
         if (username === findUsername() && resultCategory.includes(RESULT_CATEGORY.RESULT_ACCEPTED)) {
           stopLoader();
           console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+          startUpload();
           const bojData = await findData();
           await beginUpload(bojData);
         }
@@ -58,8 +59,6 @@ function stopLoader() {
 async function beginUpload(bojData) {
   if (debug) console.log('bojData', bojData);
   if (isNotEmpty(bojData)) {
-    startUpload();
-
     const stats = await getStats();
     const hook = await getHook();
 
