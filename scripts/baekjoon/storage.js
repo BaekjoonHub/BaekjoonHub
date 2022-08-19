@@ -3,6 +3,7 @@ class TTLCacheStats {
   constructor(name) {
     this.name = name;
     this.stats = null;
+    this.saveTimer = null;
   }
 
   async forceLoad() {
@@ -16,7 +17,18 @@ class TTLCacheStats {
   }
 
   async save() {
-    await saveStats(this.stats);
+    // 부하가 많이 일어나는 것을 막기 위해 1초에 한번만 저장
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+    this.saveTimer = setTimeout(async () => {
+      const clone = this.stats[this.name]; // 얇은 복사
+      console.log('Saving stats...', clone);
+      await this.forceLoad(); // 최신화
+      this.stats[this.name] = clone; // 업데이트
+      await saveStats(this.stats);
+      this.saveTimer = null;
+    }, 1000);
   }
 
   async expired() {
@@ -57,6 +69,9 @@ class TTLCacheStats {
   async update(data) {
     await this.expired();
     await this.load();
+    if (isNull(this.stats[this.name])) {
+      this.stats[this.name] = {};
+    }
     this.stats[this.name][data.id] = {
       ...data,
       save_date: Date.now(),
@@ -68,7 +83,9 @@ class TTLCacheStats {
 
   async get(id) {
     await this.load();
-    return this.stats[this.name][id];
+    const cur = this.stats[this.name];
+    if (isNull(cur)) return null;
+    return cur[id];
   }
 }
 
@@ -86,7 +103,7 @@ async function updateProblemsFromStats(problem) {
   await problemCache.update(data);
 }
 
-async function getProblemsfromStats(problemId) {
+async function getProblemFromStats(problemId) {
   return problemCache.get(problemId);
 }
 
@@ -99,7 +116,7 @@ async function updateSubmitCodeFromStats(obj) {
 }
 
 async function getSubmitCodeFromStats(submissionId) {
-  return submitCodeCache.get(submissionId).data;
+  return submitCodeCache.get(submissionId).then((x) => x?.data);
 }
 
 async function updateSolvedACFromStats(obj) {
@@ -111,5 +128,5 @@ async function updateSolvedACFromStats(obj) {
 }
 
 async function getSolvedACFromStats(problemId) {
-  return SolvedACCache.get(problemId).data;
+  return SolvedACCache.get(problemId).then((x) => x?.data);
 }

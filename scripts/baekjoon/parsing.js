@@ -207,7 +207,7 @@ function findFromResultTable() {
 */
 function parseProblemDescription(doc = document) {
   convertImageTagAbsoluteURL(doc.getElementById('problem_description')); //이미지에 상대 경로가 있을 수 있으므로 이미지 경로를 절대 경로로 전환 합니다.
-  const problemId = currentUrl.match(/\/problem\/(\d+)/)[1];
+  const problemId = doc.getElementsByTagName('title')[0].textContent.split(':')[0].replace(/[^0-9]/, '');
   const problem_description = unescapeHtml(doc.getElementById('problem_description').innerHTML.trim());
   const problem_input = doc.getElementById('problem_input')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
   const problem_output = doc.getElementById('problem_output')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
@@ -220,7 +220,6 @@ function parseProblemDescription(doc = document) {
 }
 
 async function fetchProblemDescriptionById(problemId) {
-  if (debug) console.log(`문제번호 ${problemId}의 내용을 저장합니다.`);
   return fetch(`https://www.acmicpc.net/problem/${problemId}`)
       .then((res) => res.text())
       .then((html) => {

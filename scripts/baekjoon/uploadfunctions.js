@@ -75,8 +75,9 @@ async function uploadAllSolvedProblem() {
   const list = await findUniqueResultTableListByUsername(username);
   const { submission } = stats;
   const bojDatas = [];
+  const datas = await findDatas(list);
   await Promise.all(
-    findDatas(list).map(async (bojData) => {
+    datas.map(async (bojData) => {
       const sha = getObjectDatafromPath(submission, `${hook}/${bojData.directory}/${bojData.fileName}`);
       if (debug) console.log('sha', sha, 'calcSHA:', calculateBlobSHA(bojData.code));
       if (isNull(sha) || sha !== calculateBlobSHA(bojData.code)) {
@@ -91,16 +92,15 @@ async function uploadAllSolvedProblem() {
     return null;
   }
   setMultiLoaderDenom(bojDatas.length);
-  await Promise.all(
-    bojDatas.map(async (bojData) => {
-      if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
-        const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
-        const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
-        tree_items.push(...[source, readme]);
-      }
-      incMultiLoader(1);
-    }),
-  );
+  await asyncPool(2, bojDatas, async (bojData) => {
+    if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
+      const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
+      const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
+      tree_items.push(...[source, readme]);
+    }
+    incMultiLoader(1);
+  });
+
   try {
     if (tree_items.length !== 0) {
       const treeSHA = await git.createTree(refSHA, tree_items);
@@ -125,15 +125,17 @@ async function downloadAllSolvedProblem() {
   await findUniqueResultTableListByUsername(findUsername())
     .then((list) => {
       setMultiLoaderDenom(list.length);
-      return Promise.all(
-        findDatas(list).map(async (bojData) => {
-          if (isNull(bojData)) return;
-          const folder = zip.folder(bojData.directory);
-          folder.file(`${bojData.fileName}`, bojData.code);
-          folder.file('README.md', bojData.readme);
-          incMultiLoader(1);
-        }),
-      );
+      return findDatas(list).then((datas) => {
+        return Promise.all(
+          datas.map(async (bojData) => {
+            if (isNull(bojData)) return;
+            const folder = zip.folder(bojData.directory);
+            folder.file(`${bojData.fileName}`, bojData.code);
+            folder.file('README.md', bojData.readme);
+            incMultiLoader(1);
+          }),
+        );
+      });
     })
     .then((_) =>
       zip.generateAsync({ type: 'blob' }).then((content) => {
