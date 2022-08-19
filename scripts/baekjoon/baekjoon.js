@@ -8,22 +8,20 @@ const debug = false;
 let loader;
 
 const currentUrl = window.location.href;
-if(debug) console.log(currentUrl);
+if (debug) console.log(currentUrl);
 
 // 문제 제출 사이트의 경우에는 로더를 실행하고, 유저 페이지의 경우에는 버튼을 생성한다.
 // 백준 사이트 로그인 상태이면 username이 있으며, 아니면 없다.
 const username = findUsername();
 if (!isNull(username)) {
-  if (['status', `user_id=${username}`, 'problem_id', 'from_mine=1'].every(key => currentUrl.includes(key))) startLoader();
-  else if (currentUrl.includes('/source/') && currentUrl.includes('extension=BaekjoonHub')) parseLoader();
-  else if (currentUrl.match(/\/problem\/\d+/) !== null) parseProblemDescription();
+  if (['status', `user_id=${username}`, 'problem_id', 'from_mine=1'].every((key) => currentUrl.includes(key))) startLoader();
+  else if (currentUrl.match(/\.net\/problem\/\d+/) !== null) parseProblemDescription();
   else if (currentUrl.includes('.net/user')) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
         if (findUsernameOnUserInfoPage() === username) {
-          // 과도한 트래픽 유발로 잠정 지원 중단
-          // insertUploadAllButton();
-          // insertDownloadAllButton();
+          insertUploadAllButton();
+          insertDownloadAllButton();
         }
       } else {
         versionUpdate();
@@ -43,8 +41,9 @@ function startLoader() {
         if (username === findUsername() && resultCategory.includes(RESULT_CATEGORY.RESULT_ACCEPTED)) {
           stopLoader();
           console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+          startUpload();
           const bojData = await findData();
-          /* await beginUpload(bojData); */
+          await beginUpload(bojData);
         }
       }
     }
@@ -56,50 +55,10 @@ function stopLoader() {
   loader = null;
 }
 
-/**
- * document 파싱 함수 - 파싱 후 업로드를 진행한다
- * @param: 파싱할 문서 - default는 현재 제출 페이지
- */
-function parseLoader(doc = document) {
-  Swal.fire({
-    title: '🛠️ 업로드 진행중',
-    html: '<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>이 창은 자동으로 닫힙니다',
-    didOpen: () => {
-      Swal.showLoading();
-    },
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    allowEnterKey: false,
-  });
-  loader = setInterval(async () => {
-    try {
-      console.log('파싱 중...');
-      const bojData = await parseData(doc);
-      console.log('bojData', bojData);
-      if (isNotEmpty(bojData)) {
-        stopLoader();
-        // Swal.close();
-        console.log('백준 업로드 시작합니다.');
-        await beginUpload(bojData);
-      }
-    } catch (e) {
-      stopLoader();
-      Swal.fire({
-        icon: 'error',
-        title: '에러 발생',
-        html: `<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>에러가 발생했습니다. 개발자에게 문의해주세요.<br/><br/>${e?.stack ?? e}`,
-        footer: '<a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">개발자에게 문의하기</a>',
-      });
-    }
-  }, 2000);
-}
-
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
   if (debug) console.log('bojData', bojData);
   if (isNotEmpty(bojData)) {
-    startUpload();
-
     const stats = await getStats();
     const hook = await getHook();
 

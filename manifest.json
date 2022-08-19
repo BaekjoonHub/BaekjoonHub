@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "author": "flaxinger",
   "action": {
     "default_icon": "assets/thumbnail.png",
@@ -17,9 +17,18 @@
   "background": {
     "service_worker": "scripts/background.js"
   },
+  "declarative_net_request" : {
+    "rule_resources" : [{
+      "id": "ruleset",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  },
   "permissions": [
     "unlimitedStorage",
-    "storage"
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "https://www.acmicpc.net/",
@@ -63,7 +72,6 @@
         "library/sha1.min.js",
         "library/jszip.min.js",
         "library/FileSaver.min.js",
-        "library/sweetalert2.all.min.js",
         "scripts/util.js",
         "scripts/Github.js",
         "scripts/authorize.js",

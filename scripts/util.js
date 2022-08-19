@@ -223,3 +223,39 @@ function filter(arr, key, val) {
 function calculateBlobSHA(content) {
   return sha1(`blob ${new Blob([content]).size}\0${content}`);
 }
+
+/**
+ * asyncPool https://github.com/rxaviers/async-pool/blob/master/lib/es7.js 
+ * @param {number} poolLimit - pool limit
+ * @param {array} array - array to be processed
+ * @param {function} iteratorFn - iterator function
+ * @returns {array} - processed array
+*/
+async function asyncPool(poolLimit, array, iteratorFn) {
+  const ret = [];
+  const executing = [];
+  for (const item of array) {
+    const p = Promise.resolve().then(() => iteratorFn(item, array));
+    ret.push(p);
+
+    if (poolLimit <= array.length) {
+      const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+      executing.push(e);
+      if (executing.length >= poolLimit) {
+        await Promise.race(executing);
+      }
+    }
+  }
+  return Promise.all(ret);
+}
+
+
+/** 
+ * combine two array<Object> same index.
+ * @param {array<Object>} a 
+ * @param {array<Object>} b
+ * @return {array<Object>}
+*/
+function combine(a, b) {
+  return a.map((x, i) => Object.assign({}, x, b[i]));
+}
