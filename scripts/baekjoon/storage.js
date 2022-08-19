@@ -8,6 +8,9 @@ class TTLCacheStats {
 
   async forceLoad() {
     this.stats = await getStats();
+    if (isNull(this.stats[this.name])) {
+      this.stats[this.name] = {};
+    }
   }
 
   async load() {
@@ -33,16 +36,16 @@ class TTLCacheStats {
 
   async expired() {
     await this.load();
-    if (!this.stats.last_check_date) {
-      this.stats.last_check_date = Date.now();
+    if (!this.stats[this.name].last_check_date) {
+      this.stats[this.name].last_check_date = Date.now();
       this.save(this.stats);
-      if (debug) console.log('Initialized stats date', this.stats.last_check_date);
+      if (debug) console.log('Initialized stats date', this.stats[this.name].last_check_date);
       return;
     }
 
     const date_yesterday = Date.now() - 86400000; // 1day
     if (debug) console.log('금일 로컬스토리지 정리를 완료하였습니다.');
-    if (date_yesterday < this.stats.last_check_date) return;
+    if (date_yesterday < this.stats[this.name].last_check_date) return;
 
     // 1 주가 지난 문제 내용은 삭제
     const date_week_ago = Date.now() - 7 * 86400000;
@@ -61,7 +64,7 @@ class TTLCacheStats {
         }
       }
     }
-    this.stats.last_check_date = Date.now();
+    this.stats[this.name].last_check_date = Date.now();
     if (debug) console.log('stats after deletion', this.stats);
     await this.save();
   }
@@ -69,9 +72,6 @@ class TTLCacheStats {
   async update(data) {
     await this.expired();
     await this.load();
-    if (isNull(this.stats[this.name])) {
-      this.stats[this.name] = {};
-    }
     this.stats[this.name][data.id] = {
       ...data,
       save_date: Date.now(),
