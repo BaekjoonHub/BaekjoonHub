@@ -338,6 +338,11 @@ const levels = {
   92343: 'lv3',
   92344: 'lv3',
   92345: 'lv3',
+  118666: 'lv1',
+  118667: 'lv2',
+  118668: 'lv3',
+  118669: 'lv3',
+  118670: 'lv4',
 };
 
 /* state of upload for progress */
