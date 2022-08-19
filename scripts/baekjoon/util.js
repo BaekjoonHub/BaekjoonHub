@@ -2,31 +2,19 @@
  * 로딩 버튼 추가
  */
 function startUpload() {
-  // let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  // if (elem !== undefined) {
-  //   elem = document.createElement('span');
-  //   elem.id = 'BaekjoonHub_progress_anchor_element';
-  //   elem.className = 'runcode-wrapper__8rXm';
-  //   elem.style = 'margin-left: 10px;padding-top: 0px;';
-  // }
-  // elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
-  // const target = document.querySelector('div.table-responsive > table > tbody > tr > td:nth-child(5)');
-  // target.append(elem);
-  // const target = document.getElementById('status-table').childNodes[1].childNodes[0].childNodes[3];
-  // if (target.childNodes.length > 0) {
-  //   target.childNodes[0].append(elem);
-  // }
-  // Swal.fire({
-  //   title: '🛠️ 업로드 진행중',
-  //   html: '<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>이 창은 자동으로 닫힙니다',
-  //   didOpen: () => {
-  //     Swal.showLoading();
-  //   },
-  //   allowOutsideClick: false,
-  //   allowEscapeKey: false,
-  //   allowEnterKey: false,
-  // });
-  // start the countdown
+  let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
+  if (elem !== undefined) {
+    elem = document.createElement('span');
+    elem.id = 'BaekjoonHub_progress_anchor_element';
+    elem.className = 'runcode-wrapper__8rXm';
+    elem.style = 'margin-left: 10px;padding-top: 0px;';
+  }
+  elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
+  const target = document.getElementById('status-table')?.childNodes[1].childNodes[0].childNodes[3] || document.querySelector('div.table-responsive > table > tbody > tr > td:nth-child(5)');
+  target.append(elem);
+  if (target.childNodes.length > 0) {
+    target.childNodes[0].append(elem);
+  }
   startUploadCountDown();
 }
 
@@ -35,17 +23,12 @@ function startUpload() {
  */
 function markUploadedCSS() {
   uploadState.uploading = false;
-  // const elem = document.getElementById('BaekjoonHub_progress_elem');
-  // elem.className = 'markuploaded';
-  Swal.fire({
-    title: '작업 완료',
-    icon: 'success',
-    html: '<b>BaekjoonHub</b> 익스텐션이 실행하였습니다<br/>이 창은 자동으로 닫힙니다',
-  });
+  const elem = document.getElementById('BaekjoonHub_progress_elem');
+  elem.className = 'markuploaded';
   // 1초후 창 닫기
-  setTimeout(() => {
-    window.close();
-  }, 1000);
+  // setTimeout(() => {
+  //   window.close();
+  // }, 1000);
 }
 
 /**
@@ -53,14 +36,8 @@ function markUploadedCSS() {
  */
 function markUploadFailedCSS() {
   uploadState.uploading = false;
-  // const elem = document.getElementById('BaekjoonHub_progress_elem');
-  // elem.className = 'markuploadfailed';
-  Swal.fire({
-    icon: 'error',
-    title: '업로드 실패',
-    text: '업로드에 실패하였습니다.',
-    footer: '<a href="https://github.com/BaekjoonHub/BaekjoonHub/issues">개발자에게 문의하기</a>',
-  });
+  const elem = document.getElementById('BaekjoonHub_progress_elem');
+  elem.className = 'markuploadfailed';
 }
 
 /**
@@ -145,7 +122,7 @@ function insertUploadAllButton() {
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
   const uploadButton = document.createElement('li');
-  uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">전체제출 업로드</a>';
+  uploadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;"  title="지금까지 백준에 제출한 문제와 코드를 깃허브에 업로드할 수 있습니다.">전체제출 업로드</a>';
   profileNav.append(uploadButton);
   uploadButton.onclick = () => {
     if (confirm('현재까지 해결한 모든 문제가 업로드됩니다.\n실행 전에 사용 설명서를 참고하시는 것을 추천드립니다.\n\n진행하시겠습니까?')) {
@@ -157,12 +134,12 @@ function insertUploadAllButton() {
 
 function insertDownloadAllButton() {
   // 2500 솔 이하일 때 표시하지 않음
-  if (+document.getElementById('u-solved').innerText <= 2500) return;
+  // if (+document.getElementById('u-solved').innerText <= 2500) return;
 
   const profileNav = document.getElementsByClassName('nav-tabs')[0];
   if (debug) console.log('profileNav', profileNav);
   const downloadButton = document.createElement('li');
-  downloadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;">전체제출 다운로드</a>';
+  downloadButton.innerHTML = '<a class="BJH_button" style="display:inline-table;" title="지금까지 백준에 제출한 문제와 코드를 압축하여 다운로드 받을 수 있습니다.">전체압축 다운로드</a>';
   profileNav.append(downloadButton);
   downloadButton.onclick = () => {
     if (confirm('현재까지 해결한 모든 문제가 다운로드 됩니다.\n\n진행하시겠습니까?')) {

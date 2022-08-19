@@ -1,0 +1,14 @@
+[
+    {
+        "id": 1,
+        "priority": 1,
+        "action": {
+          "type": "modifyHeaders",
+          "requestHeaders": [
+            { "header": "sec-fetch-dest", "operation": "set", "value": "document" },
+            { "header": "sec-fetch-mode", "operation": "set", "value": "navigate" }
+          ]
+        },
+        "condition": { "domains":["acmicpc.net"], "resourceTypes": ["xmlhttprequest"] }
+    }
+]

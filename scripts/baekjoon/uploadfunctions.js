@@ -76,8 +76,7 @@ async function uploadAllSolvedProblem() {
   const { submission } = stats;
   const bojDatas = [];
   await Promise.all(
-    list.map(async (problem) => {
-      const bojData = await findData(problem);
+    findDatas(list).map(async (bojData) => {
       const sha = getObjectDatafromPath(submission, `${hook}/${bojData.directory}/${bojData.fileName}`);
       if (debug) console.log('sha', sha, 'calcSHA:', calculateBlobSHA(bojData.code));
       if (isNull(sha) || sha !== calculateBlobSHA(bojData.code)) {
@@ -127,8 +126,7 @@ async function downloadAllSolvedProblem() {
     .then((list) => {
       setMultiLoaderDenom(list.length);
       return Promise.all(
-        list.map(async (problem) => {
-          const bojData = await findData(problem);
+        findDatas(list).map(async (bojData) => {
           if (isNull(bojData)) return;
           const folder = zip.folder(bojData.directory);
           folder.file(`${bojData.fileName}`, bojData.code);
