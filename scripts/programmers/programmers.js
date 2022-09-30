@@ -18,6 +18,7 @@ function startLoader() {
     if (getSolvedResult().includes('정답')) {
       if (debug) console.log('정답이 나왔습니다. 업로드를 시작합니다.');
       stopLoader();
+      /* 기능 Off시 작동하지 않도록 함 / 실패 아이콘도 추가 */
       if (!await checkEnable()) {
         writeEnableMsgOnLog();
         startUpload();

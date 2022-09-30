@@ -59,7 +59,7 @@ chrome.storage.local.get('BaekjoonHub_token', (data) => {
 });
 
 /*
-  활성화 버튼 클릭 시 storage에 활성 여부 데이터를 저장.
+  초기에 활성화 데이터가 존재하는지 확인, 없으면 새로 생성, 있으면 있는 데이터에 맞게 버튼 조정
  */
 chrome.storage.local.get('bjhEnable', (data4) => {
   if (data4.bjhEnable === undefined) {
@@ -71,6 +71,9 @@ chrome.storage.local.get('bjhEnable', (data4) => {
     chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
   }
 })
+/*
+  활성화 버튼 클릭 시 storage에 활성 여부 데이터를 저장.
+ */
 $('#onffbox').on('click', () => {
   chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
 });

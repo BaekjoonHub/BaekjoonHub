@@ -32,6 +32,7 @@ if (!isNull(username)) {
 
 function startLoader() {
   loader = setInterval(async () => {
+    /* 기능 Off시 작동하지 않도록 함 / 실패 아이콘도 추가 */
     if (!await checkEnable()) {
       stopLoader();
       writeEnableMsgOnLog();
