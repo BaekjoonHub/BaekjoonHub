@@ -57,3 +57,20 @@ chrome.storage.local.get('BaekjoonHub_token', (data) => {
     xhr.send();
   }
 });
+
+/*
+  활성화 버튼 클릭 시 storage에 활성 여부 데이터를 저장.
+ */
+chrome.storage.local.get('bjhEnable', (data4) => {
+  if (data4.bjhEnable === undefined) {
+    $('#onffbox').prop('checked', true);
+    chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
+  }
+  else {
+    $('#onffbox').prop('checked', data4.bjhEnable);
+    chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
+  }
+})
+$('#onffbox').on('click', () => {
+  chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
+});

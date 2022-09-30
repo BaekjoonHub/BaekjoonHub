@@ -32,7 +32,13 @@ if (!isNull(username)) {
 
 function startLoader() {
   loader = setInterval(async () => {
-    if (isExistResultTable()) {
+    if (!await checkEnable()) {
+      stopLoader();
+      writeEnableMsgOnLog();
+      startUpload();
+      markUploadFailedCSS();
+    }
+    else if (isExistResultTable()) {
       const table = findFromResultTable();
       if (isEmpty(table)) return;
       const data = table[0];

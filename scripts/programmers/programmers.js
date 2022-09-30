@@ -18,6 +18,12 @@ function startLoader() {
     if (getSolvedResult().includes('정답')) {
       if (debug) console.log('정답이 나왔습니다. 업로드를 시작합니다.');
       stopLoader();
+      if (!await checkEnable()) {
+        writeEnableMsgOnLog();
+        startUpload();
+        markUploadFailedCSS();
+        return;
+      }
       try {
         const bojData = await parseData();
         await beginUpload(bojData);

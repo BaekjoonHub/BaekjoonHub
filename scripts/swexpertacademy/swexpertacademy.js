@@ -27,6 +27,12 @@ function startLoader() {
     if (getSolvedResult().includes('pass입니다')) {
       if (debug) console.log('정답이 나왔습니다. 코드를 파싱합니다');
       stopLoader();
+      if (!await checkEnable()) {
+        writeEnableMsgOnLog();
+        startUpload();
+        markUploadFailedCSS();
+        return;
+      }
       try {
         const { contestProbId } = await parseCode();
         // prettier-ignore
