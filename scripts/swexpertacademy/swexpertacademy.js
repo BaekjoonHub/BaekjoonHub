@@ -27,13 +27,9 @@ function startLoader() {
     if (getSolvedResult().includes('pass입니다')) {
       if (debug) console.log('정답이 나왔습니다. 코드를 파싱합니다');
       stopLoader();
-      /* 기능 Off시 작동하지 않도록 함 / 실패 아이콘도 추가 */
-      if (!await checkEnable()) {
-        writeEnableMsgOnLog();
-        startUpload();
-        markUploadFailedCSS();
-        return;
-      }
+      /* 기능 Off시 작동하지 않도록 함 */
+      const enable = await checkEnable();
+      if (!enable) return;
       try {
         const { contestProbId } = await parseCode();
         // prettier-ignore
