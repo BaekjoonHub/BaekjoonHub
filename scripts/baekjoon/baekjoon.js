@@ -32,7 +32,7 @@ if (!isNull(username)) {
 
 function startLoader() {
   loader = setInterval(async () => {
-    /* 기능 Off시 작동하지 않도록 함*/
+    // 기능 Off시 작동하지 않도록 함
     const enable = await checkEnable();
     if (!enable) stopLoader();
     else if (isExistResultTable()) {

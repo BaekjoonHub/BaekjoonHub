@@ -22,14 +22,14 @@ function parseAndUpload() {
 }
 function startLoader() {
   loader = setInterval(async () => {
+    // 기능 Off시 작동하지 않도록 함
+    const enable = await checkEnable();
+    if (!enable) stopLoader();
     // 제출 후 채점하기 결과가 성공적으로 나왔다면 코드를 파싱하고,
     // 결과 페이지로 안내한다.
-    if (getSolvedResult().includes('pass입니다')) {
+    else if (getSolvedResult().includes('pass입니다')) {
       if (debug) console.log('정답이 나왔습니다. 코드를 파싱합니다');
       stopLoader();
-      /* 기능 Off시 작동하지 않도록 함 */
-      const enable = await checkEnable();
-      if (!enable) return;
       try {
         const { contestProbId } = await parseCode();
         // prettier-ignore
