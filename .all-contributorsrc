@@ -76,6 +76,15 @@
       "contributions": [
         "question"
       ]
+    },
+    {
+      "login": "fhdufhdu",
+      "name": "fhdufhdu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32770312?v=4",
+      "profile": "https://github.com/fhdufhdu",
+      "contributions": [
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
