@@ -21,7 +21,7 @@ async function findData(data) {
       if (isEmpty(table)) return null;
       data = selectBestSubmissionList(table)[0];
     }
-    if(isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
+    if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
     data = { ...data, ...await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId) };
     const detail = makeDetailMessageAndReadme(data);
     return { ...data, ...detail }; // detail 만 반환해도 되나, 확장성을 위해 모든 데이터를 반환합니다.
@@ -44,7 +44,7 @@ async function parseData(doc = document) {
   const language = tr.querySelector('td:nth-child(8)').innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
   const memory = tr.querySelector('td:nth-child(6)').innerText;
   const runtime = tr.querySelector('td:nth-child(7)').innerText;
-  if(isNaN(Number(problemId)) || Number(problemId) < 1000) {
+  if (isNaN(Number(problemId)) || Number(problemId) < 1000) {
     throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${problemId}`)
   };
   const details = await makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime);
@@ -83,16 +83,16 @@ function makeDetailMessageAndReadme(data) {
   const category = tagl.join(', ');
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
   // prettier-ignore-start
-  const readme = `# [${level}] ${title} - ${problemId} \n\n` 
-              + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
-              + `### 성능 요약\n\n`
-              + `메모리: ${memory} KB, `
-              + `시간: ${runtime} ms\n\n`
-              + `### 분류\n\n`
-              + `${category || "Empty"}\n\n` + (!!problem_description ? '' 
-              + `### 문제 설명\n\n${problem_description}\n\n` 
-              + `### 입력 \n\n ${problem_input}\n\n` 
-              + `### 출력 \n\n ${problem_output}\n\n` : '');
+  const readme = `# [${level}] ${title} - ${problemId} \n\n`
+    + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
+    + `### 성능 요약\n\n`
+    + `메모리: ${memory} KB, `
+    + `시간: ${runtime} ms\n\n`
+    + `### 분류\n\n`
+    + `${category || "Empty"}\n\n` + (!!problem_description ? ''
+      + `### 문제 설명\n\n${problem_description}\n\n`
+      + `### 입력 \n\n ${problem_input}\n\n`
+      + `### 출력 \n\n ${problem_output}\n\n` : '');
   // prettier-ignore-end
   return {
     directory,
@@ -221,21 +221,21 @@ function parseProblemDescription(doc = document) {
 
 async function fetchProblemDescriptionById(problemId) {
   return fetch(`https://www.acmicpc.net/problem/${problemId}`)
-      .then((res) => res.text())
-      .then((html) => {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return parseProblemDescription(doc);
-      });
+    .then((res) => res.text())
+    .then((html) => {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      return parseProblemDescription(doc);
+    });
 }
 
 async function fetchSubmitCodeById(submissionId) {
   return fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' })
-      .then((res) => res.text())
+    .then((res) => res.text())
 }
 
 async function fetchSolvedACById(problemId) {
   return fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
-      .then((res) => res.json())
+    .then((res) => res.json())
 }
 
 async function getProblemDescriptionById(problemId) {
@@ -308,7 +308,7 @@ async function fetchProblemInfoByIds(problemIds) {
  * @param {Array} problemIds
  * @returns {Promise<Array>}
  */
-async function fetchProblemDescriptionsByIds(problemIds){
+async function fetchProblemDescriptionsByIds(problemIds) {
   return asyncPool(2, problemIds, async (problemId) => {
     return getProblemDescriptionById(problemId);
   })
@@ -319,7 +319,7 @@ async function fetchProblemDescriptionsByIds(problemIds){
  * @param {Array} submissionIds
  * @returns {Promise<Array>} 
  */
-async function fetchSubmissionCodeByIds(submissionIds){
+async function fetchSubmissionCodeByIds(submissionIds) {
   return asyncPool(2, submissionIds, async (submissionId) => {
     return getSubmitCodeById(submissionId);
   });

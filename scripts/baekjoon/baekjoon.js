@@ -32,7 +32,10 @@ if (!isNull(username)) {
 
 function startLoader() {
   loader = setInterval(async () => {
-    if (isExistResultTable()) {
+    // 기능 Off시 작동하지 않도록 함
+    const enable = await checkEnable();
+    if (!enable) stopLoader();
+    else if (isExistResultTable()) {
       const table = findFromResultTable();
       if (isEmpty(table)) return;
       const data = table[0];
