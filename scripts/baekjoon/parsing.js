@@ -109,7 +109,7 @@ function makeDetailMessageAndReadme(data) {
 function findUsername() {
   const el = document.querySelector('a.username');
   if (isNull(el)) return null;
-  const username = el.innerText;
+  const username = el?.innerText?.trim();
   if (isEmpty(username)) return null;
   return username;
 }
