@@ -259,3 +259,26 @@ async function asyncPool(poolLimit, array, iteratorFn) {
 function combine(a, b) {
   return a.map((x, i) => Object.assign({}, x, b[i]));
 }
+
+//블로그모드
+//날짜 형식 호출
+function getyymmdd(separator) {
+  const nD= new Date();
+  const year = nD.getFullYear();
+  const month = nD.getMonth() + 1;
+  const date = nD.getDate();
+return `${year}${separator}${month >= 10 ? month : '0' + month}${separator}${date >= 10 ? date : '0' + date}`;
+}
+function parseDate(submissonTime) {
+  return submissonTime.replace("년 ","-").replace("월 ","-").replace("일 ","-");
+}
+function getyyMMddhhmmss(separator) {
+  const nD= new Date();
+  const year = nD.getFullYear();
+  const month = nD.getMonth() + 1;
+  const date = nD.getDate();
+  const hour = nD.getHours();
+  const minute = nD.getMinutes();
+  const second = nD.getSeconds();
+return `${year}${separator}${month >= 10 ? month : '0' + month}${separator}${date >= 10 ? date : '0' + date}${separator}${hour >= 10 ? hour : '0' + hour}:${minute >= 10 ? minute : '0' + minute}:${second >= 10 ? second : '0' + second}`;
+}

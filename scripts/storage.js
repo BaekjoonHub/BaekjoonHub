@@ -227,8 +227,15 @@ async function updateLocalStorageStats() {
   const tree_items = [];
   await git.getTree().then((tree) => {
     tree.forEach((item) => {
-      if (item.type === 'blob') {
-        tree_items.push(item);
+      //블로그모드일경우 불필요한 blob이 많아서 특정위치 blob만 가져옴.
+      if(isBlogMode) {
+        if ( (/^_posts\/백준|프로그래머스|SWEA/).test(item.path) && item.type === 'blob') {
+          tree_items.push(item);
+        }
+      }else {
+        if (item.type === 'blob') {
+          tree_items.push(item);
+        }
       }
     });
   });
