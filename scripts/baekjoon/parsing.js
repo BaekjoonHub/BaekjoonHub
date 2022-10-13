@@ -72,18 +72,61 @@ async function findDatas(datas) {
  * @returns {Object} { directory, fileName, message, readme, code }
  */
 function makeDetailMessageAndReadme(data) {
-  const { problemId, submissionId, title, level, tags,
+  const { problemId, title, level, code, language, memory, runtime } = data;
+  
+  const rootDir = isBlogMode ? "_posts/" : "";
+  const directory = `${rootDir}${thisSite}/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
+  //기존 filenName => codeFileName
+  const codeFileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
+  //md파일 제목 추가
+  const readmeFileName = isBlogMode ? `${getyymmdd('-')}-${thisSite}.${problemId}.md` : "README.md";
+  // prettier-ignore-start
+  // 블로그모드에서 새로만드는 md파일도 readme라는 이름으로 사용
+  const readme = makeReadme(data);
+  // prettier-ignore-end
+  return {
+    directory,
+    codeFileName,
+    message,
+    readmeFileName,
+    readme,
+    code
+  };
+}
+
+function makeReadme(data) {
+  const { problemId, submissionTime , title, level, tags,
     problem_description, problem_input, problem_output,
     code, language, memory, runtime } = data;
-
-  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
-  const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
   const tagl = [];
-  tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
+  tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));  
   const category = tagl.join(', ');
-  const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
-  // prettier-ignore-start
-  const readme = `# [${level}] ${title} - ${problemId} \n\n`
+  console.log(problem_description)
+  if(isBlogMode){
+    return `---\n`
+    + `title: '[${thisSite}] ${problemId}번: ${title}(${language}/${languages[language]})' \n`
+    + `date: ${parseDate(submissionTime)}\n`
+    + `categories: [${thisSite}, ${level}] \n`
+    + `tags: [${category || ""}] \n`
+    + `---\n\n`
+    + `# [${level}] ${title} - ${problemId} \n\n`
+    + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
+    + `### 성능 요약\n\n`
+    + `메모리: ${memory} KB, `
+    + `시간: ${runtime} ms\n\n`
+    + `### 분류\n\n`
+    + `${category || "Empty"}\n\n` + (!!problem_description ? ''
+      + `### 문제 설명\n\n${problem_description}\n\n`
+      + `### 입력 \n\n ${problem_input}\n\n`
+      + `### 출력 \n\n ${problem_output}\n\n` : `\n\n`)
+    + `### 정답 코드 \n\n`
+    + '```'+`${languages[language]}\n`
+    + `${code}\n`
+    + '```';
+  }
+  else{
+   return `# [${level}] ${title} - ${problemId} \n\n`
     + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
     + `### 성능 요약\n\n`
     + `메모리: ${memory} KB, `
@@ -93,14 +136,7 @@ function makeDetailMessageAndReadme(data) {
       + `### 문제 설명\n\n${problem_description}\n\n`
       + `### 입력 \n\n ${problem_input}\n\n`
       + `### 출력 \n\n ${problem_output}\n\n` : '');
-  // prettier-ignore-end
-  return {
-    directory,
-    fileName,
-    message,
-    readme,
-    code
-  };
+  }
 }
 
 /*
@@ -152,7 +188,8 @@ function parsingResultTableList(doc) {
         case 'submissionTime':
           const el = x.querySelector('a.show-date');
           if (isNull(el)) return null;
-          return el.getAttribute('data-original-title');
+          // 전체업로드시 'data-original-title'대신 'title'로 나옴
+          return el.getAttribute('data-original-title') || el.getAttribute('title');
         case 'problemId':
           const el2 = x.querySelector('a.problem_title');
           if (isNull(el2)) return null;

@@ -15,7 +15,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     console.error('token or hook is null', token, hook);
     return;
   }
-  return upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb);
+  return upload(token, hook, bojData.code, bojData.codeFileName, bojData.readme, bojData.readmeFileName, bojData.directory,  bojData.message, cb);
 }
 
 /** Github api를 사용하여 업로드를 합니다.
@@ -29,7 +29,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
  * @param {string} commitMessage - 커밋 메시지
  * @param {function} cb - 콜백 함수 (ex. 업로드 후 로딩 아이콘 처리 등)
  */
-async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
+async function upload(token, hook, sourceText, codeFilename, readmeText, readmeFileName, directory,  commitMessage, cb) {
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
   const stats = await getStats();
@@ -39,8 +39,9 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
     stats.branches[hook] = default_branch;
   }
   const { refSHA, ref } = await git.getReference(default_branch);
-  const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
-  const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
+  const source = await git.createBlob(sourceText, `${directory}/${codeFilename}`); // 소스코드 파일
+  const readme = await git.createBlob(readmeText, `${directory}/${readmeFileName}`); // readme 파일
+  console.log(readme)
   const treeSHA = await git.createTree(refSHA, [source, readme]);
   const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
   await git.updateHead(ref, commitSHA);
@@ -78,7 +79,7 @@ async function uploadAllSolvedProblem() {
   const datas = await findDatas(list);
   await Promise.all(
     datas.map(async (bojData) => {
-      const sha = getObjectDatafromPath(submission, `${hook}/${bojData.directory}/${bojData.fileName}`);
+      const sha = getObjectDatafromPath(submission, `${hook}/${bojData.directory}/${bojData.codeFileName}`);
       if (debug) console.log('sha', sha, 'calcSHA:', calculateBlobSHA(bojData.code));
       if (isNull(sha) || sha !== calculateBlobSHA(bojData.code)) {
         bojDatas.push(bojData);
@@ -94,8 +95,8 @@ async function uploadAllSolvedProblem() {
   setMultiLoaderDenom(bojDatas.length);
   await asyncPool(2, bojDatas, async (bojData) => {
     if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
-      const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`); // 소스코드 파일
-      const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`); // readme 파일
+      const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.codeFileName}`); // 소스코드 파일
+      const readme = await git.createBlob(bojData.readme, `${bojData.directory}/${bojData.readmeFileName}`); // readme 파일
       tree_items.push(...[source, readme]);
     }
     incMultiLoader(1);
