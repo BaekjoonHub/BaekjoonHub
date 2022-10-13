@@ -187,7 +187,8 @@ function convertImageTagAbsoluteURL(doc = document) {
   if(isNull(doc)) return;
   // img tag replace Relative URL to Absolute URL.
   Array.from(doc.getElementsByTagName('img'), (x) => {
-    x.setAttribute('src', x.currentSrc);
+    // x.currentSrc가 공백으로 나와서 x.src 추가
+    x.setAttribute('src', x.currentSrc || x.src);
     return x;
   });
 }
