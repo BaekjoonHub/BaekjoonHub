@@ -71,3 +71,16 @@ body {
   border: 0px solid #2f5496;
   background: #2f5496;
 }
+#blog_onoff {
+  appearance: none;
+}
+#blog_onoff:checked+#onffmain {
+  border: 0px solid #8faadc;
+  background: #8faadc;
+}
+
+#blog_onoff:checked+#onffmain #onffball {
+  left: 30px;
+  border: 0px solid #2f5496;
+  background: #2f5496;
+}

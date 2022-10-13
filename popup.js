@@ -31,10 +31,26 @@ chrome.storage.local.get('BaekjoonHub_token', (data) => {
             if (data2 && data2.mode_type === 'commit') {
               $('#commit_mode').show();
               /* Get problem stats and repo link */
-              chrome.storage.local.get(['stats', 'BaekjoonHub_hook'], (data3) => {
+              chrome.storage.local.get(['stats', 'BaekjoonHub_hook','blog_mode'], (data3) => {
                 const BaekjoonHubHook = data3.BaekjoonHub_hook;
+                const blogMode = data3.blog_mode;
                 if (BaekjoonHubHook) {
                   $('#repo_url').html(`Your Repo: <a target="blank" style="color: cadetblue !important;" href="https://github.com/${BaekjoonHubHook}">${BaekjoonHubHook}</a>`);
+
+                  //블로그모드 추가
+                  $('#blog_mode').html(`<span style=    "vertical-align: super">Blog Mode(for JeKyll) : </span><input type="checkbox" id="blog_onoff">
+                  <label for="blog_onoff" id="onffmain">
+                    <span id="onffball"></span>
+                  </label>`)
+
+                  //블로그모드 onoff 이벤트
+                  $('#blog_onoff').on('click', () => {
+                    const blogToggle = $('#blog_onoff').is(':checked');
+                    chrome.storage.local.set({ 'blog_mode': blogToggle }, () => { });
+                    //블로그모드 on/off 마다 stats 초기화
+                    chrome.storage.local.set({'stats':{}}, ()=>{});
+                  });
+                  $('#blog_onoff').prop('checked', blogMode);
                 }
               });
             } else {
