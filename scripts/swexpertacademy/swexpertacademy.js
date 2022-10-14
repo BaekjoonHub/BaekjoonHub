@@ -9,6 +9,14 @@ let loader;
 
 const currentUrl = window.location.href;
 
+// 사이트 식별
+const thisSite = "SWEA";
+// 블로그모드 식별
+let isBlogMode = false;
+(async function() {
+  isBlogMode = await getObjectFromLocalStorage('blog_mode');
+})(); 
+
 // SWEA 연습 문제 주소임을 확인하고, 맞는 파서를 실행
 if (currentUrl.includes('/main/solvingProblem/solvingProblem.do') && document.querySelector('header > h1 > span').textContent === '모의 테스트') startLoader();
 else if (currentUrl.includes('/main/code/problem/problemSolver.do') && currentUrl.includes('extension=BaekjoonHub')) parseAndUpload();
@@ -68,8 +76,8 @@ async function beginUpload(bojData) {
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
-    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
+    if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.codeFileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
+    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.codeFileName}`)) === calculateBlobSHA(bojData.code)) {
       markUploadedCSS();
       console.log(`현재 제출번호를 업로드한 기록이 있습니다. problemIdID ${bojData.problemId}`);
       return;

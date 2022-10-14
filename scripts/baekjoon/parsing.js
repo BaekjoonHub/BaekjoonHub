@@ -81,10 +81,10 @@ function makeDetailMessageAndReadme(data) {
   const codeFileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
   //md파일 제목 추가
   const readmeFileName = isBlogMode ? `${getyymmdd('-')}-${thisSite}.${problemId}.md` : "README.md";
-  // prettier-ignore-start
+  
   // 블로그모드에서 새로만드는 md파일도 readme라는 이름으로 사용
   const readme = makeReadme(data);
-  // prettier-ignore-end
+
   return {
     directory,
     codeFileName,

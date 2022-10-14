@@ -80,19 +80,57 @@ async function parseData() {
 }
 
 async function makeData(origin) {
-  const { link, problemId, level, extension, title, runtime, memory, code, length } = origin;
-  const directory = `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const { problemId, level, extension, title, runtime, memory, code,} = origin;
+
+  const rootDir = isBlogMode ? "_posts/" : "";
+  const directory = `${rootDir}${thisSite}/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
-  const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
-  // prettier-ignore
-  const readme =
-    `# [${level}] ${title} - ${problemId} \n\n`
+  const codeFileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
+  //md파일 제목 추가
+  const readmeFileName = isBlogMode ? `${getyymmdd('-')}-${thisSite}.${problemId}.md` : "README.md";
+  const readme = makeReadme(origin);
+    
+  return {
+    directory,
+    codeFileName,
+    message,
+    readmeFileName,
+    readme,
+    code
+  };
+}
+
+//readme 생성함수
+function makeReadme(origin) {
+  const { problemId, title, level, link, length,
+    code, extension, memory, runtime } = origin;
+  if(isBlogMode){
+    return `---\n`
+    + `title: '[${thisSite}] ${problemId}번: ${title}(${extension})' \n`
+    + `date: ${getyyMMddhhmmss('-')}\n`
+    + `categories: [${thisSite},${level}] \n`
+    + `---\n\n`
+    +`# [${level}] ${title} - ${problemId} \n\n`
     + `[문제 링크](${link}) \n\n`
     + `### 성능 요약\n\n`
     + `메모리: ${memory}, `
     + `시간: ${runtime}, `
     + `코드길이: ${length} Bytes\n\n`
     + `\n\n`
+    + `### 정답 코드 \n\n`
+    + '```'+`${extension}\n`
+    + `${code}\n`
+    + '```\n'
     + `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
-  return { problemId, directory, message, fileName, readme, code };
+  }
+  else{
+   return `# [${level}] ${title} - ${problemId} \n\n`
+   + `[문제 링크](${link}) \n\n`
+   + `### 성능 요약\n\n`
+   + `메모리: ${memory}, `
+   + `시간: ${runtime}, `
+   + `코드길이: ${length} Bytes\n\n`
+   + `\n\n`
+   + `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
+  }
 }

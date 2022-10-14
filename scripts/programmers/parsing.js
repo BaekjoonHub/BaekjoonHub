@@ -44,7 +44,7 @@ async function makeData(origin) {
   const { problemId, level, language_extension, title, runtime, memory, code } = origin;
 
   const rootDir = isBlogMode ? "_posts/" : "";
-  const directory = `${rootDir}프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const directory = `${rootDir}${thisSite}/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level.replace('lv', 'level ')}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
    //기존 filenName => codeFileName
    const codeFileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
