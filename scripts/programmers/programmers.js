@@ -1,5 +1,5 @@
 // Set to true to enable console log
-const debug = false;
+const debug = true;
 
 /* 
   문제 제출 맞음 여부를 확인하는 함수
@@ -8,6 +8,15 @@ const debug = false;
 let loader;
 
 const currentUrl = window.location.href;
+
+// 사이트 식별
+const thisSite = "프로그래머스";
+// 블로그모드 식별
+let isBlogMode = false;
+(async function() {
+  isBlogMode = await getObjectFromLocalStorage('blog_mode');
+  console.log(isBlogMode)
+})(); 
 
 // 프로그래머스 연습 문제 주소임을 확인하고, 맞다면 로더를 실행
 if (currentUrl.includes('/learn/courses/30') && currentUrl.includes('lessons')) startLoader();
@@ -57,8 +66,8 @@ async function beginUpload(bojData) {
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
-    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
+    if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.codeFileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
+    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.codeFileName}`)) === calculateBlobSHA(bojData.code)) {
       markUploadedCSS();
       console.log(`현재 제출번호를 업로드한 기록이 있습니다. problemIdID ${bojData.problemId}`);
       return;

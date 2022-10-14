@@ -95,6 +95,7 @@ function makeDetailMessageAndReadme(data) {
   };
 }
 
+//readme 생성함수
 function makeReadme(data) {
   const { problemId, submissionTime , title, level, tags,
     problem_description, problem_input, problem_output,
@@ -102,7 +103,6 @@ function makeReadme(data) {
   const tagl = [];
   tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));  
   const category = tagl.join(', ');
-  console.log(problem_description)
   if(isBlogMode){
     return `---\n`
     + `title: '[${thisSite}] ${problemId}번: ${title}(${language}/${languages[language]})' \n`

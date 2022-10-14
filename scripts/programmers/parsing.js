@@ -41,14 +41,40 @@ async function parseData() {
 }
 
 async function makeData(origin) {
-  const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code } = origin;
-  const directory = `프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const { problemId, level, language_extension, title, runtime, memory, code } = origin;
+
+  const rootDir = isBlogMode ? "_posts/" : "";
+  const directory = `${rootDir}프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level.replace('lv', 'level ')}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
-  const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
-  // prettier-ignore
-  const readme =
-    `# [${level.replace('lv', 'level ')}] ${title} - ${problemId} \n\n`
-    + `[문제 링크](${link}) \n\n`
+   //기존 filenName => codeFileName
+   const codeFileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
+   //md파일 제목 추가
+   const readmeFileName = isBlogMode ? `${getyymmdd('-')}-${thisSite}.${problemId}.md` : "README.md";
+  const readme = makeReadme(origin);
+    
+  return {
+    directory,
+    codeFileName,
+    message,
+    readmeFileName,
+    readme,
+    code
+  };
+}
+
+//readme 생성함수
+function makeReadme(origin) {
+  const { problemId, title, level, division, problem_description,
+    code, language_extension, memory, runtime, result_message } = origin;
+  if(isBlogMode){
+    return `---\n`
+    + `title: '[${thisSite}] ${problemId}번: ${title}(${language_extension})' \n`
+    + `date: ${getyyMMddhhmmss('-')}\n`
+    + `categories: [${thisSite},${level}] \n`
+    + `tags: [${division.split('/')}] \n`
+    + `---\n\n`
+    + `# [${level}] ${title} - ${problemId} \n\n`
+    + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
     + `### 성능 요약\n\n`
     + `메모리: ${memory}, `
     + `시간: ${runtime}\n\n`
@@ -58,6 +84,24 @@ async function makeData(origin) {
     + `${result_message}\n\n`
     + `### 문제 설명\n\n`
     + `${problem_description}\n\n`
+    + `### 정답 코드 \n\n`
+    + '```'+`${language_extension}\n`
+    + `${code}\n`
+    + '```\n'
     + `> 출처: 프로그래머스 코딩 테스트 연습, https://programmers.co.kr/learn/challenges`;
-  return { problemId, directory, message, fileName, readme, code };
+  }
+  else{
+   return `# [${level.replace('lv', 'level ')}] ${title} - ${problemId} \n\n`
+   + `[문제 링크](${link}) \n\n`
+   + `### 성능 요약\n\n`
+   + `메모리: ${memory}, `
+   + `시간: ${runtime}\n\n`
+   + `### 구분\n\n`
+   + `${division.replace('/', ' > ')}\n\n`
+   + `### 채점결과\n\n`
+   + `${result_message}\n\n`
+   + `### 문제 설명\n\n`
+   + `${problem_description}\n\n`
+   + `> 출처: 프로그래머스 코딩 테스트 연습, https://programmers.co.kr/learn/challenges`;
+  }
 }
