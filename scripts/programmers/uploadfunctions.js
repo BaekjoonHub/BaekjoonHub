@@ -23,9 +23,10 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
  * @param {string} token - github api 토큰
  * @param {string} hook - github api hook
  * @param {string} sourceText - 업로드할 소스코드
+ * @param {string} codeFilename - 업로드할 소스파일 이름
  * @param {string} readmeText - 업로드할 readme
+ * @param {string} readmeFilename - 업로드할 md파일 이름
  * @param {string} directory - 업로드할 파일의 경로
- * @param {string} filename - 업로드할 파일명
  * @param {string} commitMessage - 커밋 메시지
  * @param {function} cb - 콜백 함수 (ex. 업로드 후 로딩 아이콘 처리 등)
  */
