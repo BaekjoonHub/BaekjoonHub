@@ -34,7 +34,7 @@
     </tr>
     <tr>
       <td align="center"><a href="https://github.com/LimSB-dev"><img src="https://avatars.githubusercontent.com/u/95527804?v=4?s=100" width="100px;" alt="임성빈"/><br /><sub><b>임성빈</b></sub></a><br /><a href="#question-LimSB-dev" title="Answering Questions">💬</a></td>
-      <td align="center"><a href="https://github.com/fhdufhdu"><img src="https://avatars.githubusercontent.com/u/32770312?v=4?s=100" width="100px;" alt="fhdufhdu"/><br /><sub><b>fhdufhdu</b></sub></a><br /><a href="#maintenance-fhdufhdu" title="Maintenance">🚧</a> <a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=fhdufhdu" title="Code">💻</a></td>
+      <td align="center"><a href="https://github.com/fhdufhdu"><img src="https://avatars.githubusercontent.com/u/32770312?v=4?s=100" width="100px;" alt="fhdufhdu"/><br /><sub><b>fhdufhdu</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=fhdufhdu" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
