@@ -30,5 +30,8 @@
     "globals": {
       "__DEV__": true
     }
+  },
+  "babel": {
+    "presets": ["@babel/preset-env"]
   }
 }
