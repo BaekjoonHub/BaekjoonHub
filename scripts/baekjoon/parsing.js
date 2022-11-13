@@ -16,9 +16,13 @@
 async function findData(data) {
   try {
     if (isNull(data)) {
-      let table = filter(findFromResultTable(), 'resultCategory', RESULT_CATEGORY.RESULT_ACCEPTED);
-      table = filter(table, 'username', findUsername());
+      let table = findFromResultTable();
       if (isEmpty(table)) return null;
+      table = filter(table, {
+        'resultCategory': RESULT_CATEGORY.RESULT_ACCEPTED,
+        'username': findUsername(),
+        'language': table[0]["language"]
+      })
       data = selectBestSubmissionList(table)[0];
     }
     if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);

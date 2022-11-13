@@ -206,13 +206,13 @@ function maxValuesGroupBykey(arr, key, compare) {
 
 /** 배열 내의 key에 val 값을 포함하고 있는 요소만을 반환합니다.
  * @param {array} arr - array to be filtered
- * @param {string} key - key to filter
- * @param {string} val - value to filter
+ * @param {object} conditions - object of key, values to be used in filter
  * @returns {array} - filtered array
  */
-function filter(arr, key, val) {
-  return arr.filter(function (item) {
-    return val.includes(item[key]);
+function filter(arr, conditions) {
+  return arr.filter((item) => {
+    for (const [key, value] of Object.entries(conditions)) if (!item[key].includes(value)) return false;
+    return true;
   });
 }
 
@@ -225,12 +225,12 @@ function calculateBlobSHA(content) {
 }
 
 /**
- * asyncPool https://github.com/rxaviers/async-pool/blob/master/lib/es7.js 
+ * asyncPool https://github.com/rxaviers/async-pool/blob/master/lib/es7.js
  * @param {number} poolLimit - pool limit
  * @param {array} array - array to be processed
  * @param {function} iteratorFn - iterator function
  * @returns {array} - processed array
-*/
+ */
 async function asyncPool(poolLimit, array, iteratorFn) {
   const ret = [];
   const executing = [];
@@ -249,13 +249,17 @@ async function asyncPool(poolLimit, array, iteratorFn) {
   return Promise.all(ret);
 }
 
-
-/** 
+/**
  * combine two array<Object> same index.
- * @param {array<Object>} a 
+ * @param {array<Object>} a
  * @param {array<Object>} b
  * @return {array<Object>}
-*/
+ */
 function combine(a, b) {
-  return a.map((x, i) => Object.assign({}, x, b[i]));
+  return a.map((x, i) => ({ ...x, ...b[i] }));
+}
+
+if (typeof __DEV__ !== "undefined") {
+  var exports = (module.exports = {});
+  exports.filter = filter;
 }
