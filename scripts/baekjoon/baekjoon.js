@@ -16,18 +16,6 @@ const username = findUsername();
 if (!isNull(username)) {
   if (['status', `user_id=${username}`, 'problem_id', 'from_mine=1'].every((key) => currentUrl.includes(key))) startLoader();
   else if (currentUrl.match(/\.net\/problem\/\d+/) !== null) parseProblemDescription();
-  else if (currentUrl.includes('.net/user')) {
-    getStats().then((stats) => {
-      if (!isEmpty(stats.version) && stats.version === getVersion()) {
-        if (findUsernameOnUserInfoPage() === username) {
-          insertUploadAllButton();
-          insertDownloadAllButton();
-        }
-      } else {
-        versionUpdate();
-      }
-    });
-  }
 }
 
 function startLoader() {
