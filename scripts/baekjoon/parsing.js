@@ -132,7 +132,7 @@ function parsingResultTableList(doc) {
           const a = x.querySelector('a.problem_title');
           if (isNull(a)) return null;
           if (isNull(img)){
-            window.alert("백준허브 연동 에러\n현재 백준 업로드는 Solved.ac 연동이 필수입니다.\n만약 백준허브 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요.")
+            window.alert("백준허브 연동 에러\n현재 백준 업로드는 Solved.ac 연동이 필수입니다.\n만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요.")
             clearInterval(loader)
             throw new Error("SolvedAC is not integrated with this BOJ account")
           }else{
@@ -148,7 +148,6 @@ function parsingResultTableList(doc) {
           return x.innerText.trim();
       }
     });
-    log('Parsed Cells: ', cells)
     let obj = {};
     obj.elementId = row.id;
     for (let j = 0; j < headers.length; j++) {
