@@ -49,7 +49,6 @@ function makeDetailMessageAndReadme(data) {
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
   const tagl = [];
   problem_tags.forEach((tag) => {
-    log(tag)
     if (tag in categories)
       tagl.push(`${tag}(${categories[tag]})`)
     else 
@@ -115,7 +114,6 @@ function parsingResultTableList(doc) {
   if (table === null || table === undefined || table.length === 0) return [];
   const headers = Array.from(table.rows[0].cells, (x) => convertResultTableHeader(x.innerText.trim()));
 
-  log('Table', table)
   const list = [];
   for (let i = 1; i < table.rows.length; i++) {
     const row = table.rows[i];
@@ -134,9 +132,9 @@ function parsingResultTableList(doc) {
           const a = x.querySelector('a.problem_title');
           if (isNull(a)) return null;
           if (isNull(img)){
-            window.alert(`백준허브 연동 에러\n
-                        현재 백준 업로드는 Solved.ac 연동이 필수입니다.\n
-                        만약 백준허브 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요.`)
+            window.alert("백준허브 연동 에러\n현재 백준 업로드는 Solved.ac 연동이 필수입니다.\n만약 백준허브 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요.")
+            clearInterval(loader)
+            throw new Error("SolvedAC is not integrated with this BOJ account")
           }else{
             idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
             level = bj_level[idx]
@@ -204,7 +202,6 @@ function parseProblemDescription(doc = document) {
   const problem_tags = Array.from(doc.getElementById('problem_tags').querySelectorAll('a.spoiler-link'), x => x.innerText)
   if (problemId && problem_description) {
     log(`문제번호 ${problemId}의 내용을 저장합니다.`);
-    log('ProblemTag', problem_tags);
     updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output, problem_tags});
     return { problemId, problem_description, problem_input, problem_output, problem_tags};
   }
@@ -260,7 +257,7 @@ async function getSolvedACById(problemId) {
 async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
   log('in find with promise');
   if (!isNull(problemId) && !isNull(submissionId)) {
-    return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId)]) //, getSolvedACById(problemId)])
+    return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId)])
       .then(([description, code, solvedJson]) => {
         const { problem_description, problem_input, problem_output, problem_tags } = description;
         return { problemId, submissionId, code, problem_description, problem_input, problem_output, problem_tags };

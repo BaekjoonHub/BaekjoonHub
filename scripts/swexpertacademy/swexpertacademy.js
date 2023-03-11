@@ -68,8 +68,10 @@ async function beginUpload(bojData) {
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
-    if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
+    cachedSHA = await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)
+    calcSHA = calculateBlobSHA(bojData.code)
+    log('cachedSHA', cachedSHA, 'calcSHA', calcSHA)
+    if (cachedSHA == calcSHA) {
       markUploadedCSS();
       console.log(`현재 제출번호를 업로드한 기록이 있습니다. problemIdID ${bojData.problemId}`);
       return;
