@@ -8,7 +8,7 @@ const debug = false;
 let loader;
 
 const currentUrl = window.location.href;
-if (debug) console.log(currentUrl);
+log(currentUrl);
 
 // 문제 제출 사이트의 경우에는 로더를 실행하고, 유저 페이지의 경우에는 버튼을 생성한다.
 // 백준 사이트 로그인 상태이면 username이 있으며, 아니면 없다.
@@ -48,7 +48,7 @@ function stopLoader() {
 
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
-  if (debug) console.log('bojData', bojData);
+  log('bojData', bojData);
   if (isNotEmpty(bojData)) {
     const stats = await getStats();
     const hook = await getHook();
@@ -60,7 +60,7 @@ async function beginUpload(bojData) {
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    if (debug) console.log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
+    log('local:', await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`), 'calcSHA:', calculateBlobSHA(bojData.code));
     if ((await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)) === calculateBlobSHA(bojData.code)) {
       markUploadedCSS();
       console.log(`현재 제출번호를 업로드한 기록이 있습니다.` /* submissionID ${bojData.submissionId}` */);
@@ -72,10 +72,10 @@ async function beginUpload(bojData) {
 }
 
 async function versionUpdate() {
-  if (debug) console.log('start versionUpdate');
+  log('start versionUpdate');
   const stats = await updateLocalStorageStats();
   // update version.
   stats.version = getVersion();
   await saveStats(stats);
-  if (debug) console.log('stats updated.', stats);
+  log('stats updated.', stats);
 }
