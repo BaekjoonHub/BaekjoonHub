@@ -39,18 +39,18 @@ class TTLCacheStats {
     if (!this.stats[this.name].last_check_date) {
       this.stats[this.name].last_check_date = Date.now();
       this.save(this.stats);
-      if (debug) console.log('Initialized stats date', this.stats[this.name].last_check_date);
+      log('Initialized stats date', this.stats[this.name].last_check_date);
       return;
     }
 
     const date_yesterday = Date.now() - 86400000; // 1day
-    if (debug) console.log('금일 로컬스토리지 정리를 완료하였습니다.');
+    log('금일 로컬스토리지 정리를 완료하였습니다.');
     if (date_yesterday < this.stats[this.name].last_check_date) return;
 
     // 1 주가 지난 문제 내용은 삭제
     const date_week_ago = Date.now() - 7 * 86400000;
-    if (debug) console.log('stats before deletion', this.stats);
-    if (debug) console.log('date a week ago', date_week_ago);
+    log('stats before deletion', this.stats);
+    log('date a week ago', date_week_ago);
     // eslint-disable-next-line no-restricted-syntax
     for (const [key, value] of Object.entries(this.stats[this.name])) {
       // 무한 방치를 막기 위해 저장일자가 null이면 삭제
@@ -65,7 +65,7 @@ class TTLCacheStats {
       }
     }
     this.stats[this.name].last_check_date = Date.now();
-    if (debug) console.log('stats after deletion', this.stats);
+    log('stats after deletion', this.stats);
     await this.save();
   }
 
@@ -76,8 +76,8 @@ class TTLCacheStats {
       ...data,
       save_date: Date.now(),
     };
-    if (debug) console.log('date', this.stats[this.name][data.id].save_date);
-    if (debug) console.log('stats', this.stats);
+    log('date', this.stats[this.name][data.id].save_date);
+    log('stats', this.stats);
     await this.save();
   }
 
@@ -99,6 +99,7 @@ async function updateProblemsFromStats(problem) {
     problem_description: problem.problem_description,
     problem_input: problem.problem_input,
     problem_output: problem.problem_output,
+    problem_tags: problem.problem_tags
   };
   await problemCache.update(data);
 }
