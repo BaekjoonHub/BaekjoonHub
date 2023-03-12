@@ -50,4 +50,8 @@ class Toast {
         })
         log('Closed')
     }
+
+    static raiseToast(message, duration = 5000) {
+        return new Toast(message, ToastType.Danger, duration)
+    }
 }

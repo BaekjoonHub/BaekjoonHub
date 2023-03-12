@@ -47,7 +47,7 @@ function stopLoader() {
 }
 
 function toastThenStopLoader(toastMessage, errorMessage){
-  new Toast(toastMessage, ToastType.Danger, 5000)
+  Toast.raiseToast(toastMessage)
   stopLoader()
   throw new Error(errorMessage)
 }
