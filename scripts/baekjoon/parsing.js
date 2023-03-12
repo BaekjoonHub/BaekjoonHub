@@ -125,12 +125,12 @@ function parsingResultTableList(doc) {
           const a = x.querySelector('a.problem_title');
           if (isNull(a)) return null;
           if (isNull(img)){
-            msg = "[백준허브 연동 에러] 현재 백준 업로드는 Solved.ac 연동이 필수입니다. 만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요."
-            err = "SolvedAC is not integrated with this BOJ account"
+            const msg = "[백준허브 연동 에러] 현재 백준 업로드는 Solved.ac 연동이 필수입니다. 만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요."
+            const err = "SolvedAC is not integrated with this BOJ account"
             toastThenStopLoader(msg, err)
           }else{
-            var idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
-            level = bj_level[idx]
+            const idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
+            const level = bj_level[idx]
           }
           return {
             problemId: a.getAttribute('href').replace(/^.*\/([0-9]+)$/, '$1'),
