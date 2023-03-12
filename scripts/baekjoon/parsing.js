@@ -35,56 +35,19 @@ async function findData(data) {
   return null;
 }
 
-async function parseData(doc = document) {
-  const table = doc.querySelector('div.table-responsive > table');
-  const tbody = table.querySelector('tbody');
-  const tr = tbody.querySelector('tr');
-  const problemId = tr
-    .querySelector('td:nth-child(3) > a')
-    .getAttribute('href')
-    .replace(/^.*\/([0-9]+)$/, '$1');
-  const code = doc.querySelector('textarea.no-mathjax.codemirror-textarea').value;
-  const submissionId = tr.querySelector('td:nth-child(1)').innerText;
-  const language = tr.querySelector('td:nth-child(8)').innerText.unescapeHtml().replace(/\/.*$/g, '').trim();
-  const memory = tr.querySelector('td:nth-child(6)').innerText;
-  const runtime = tr.querySelector('td:nth-child(7)').innerText;
-  if (isNaN(Number(problemId)) || Number(problemId) < 1000) {
-    throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${problemId}`)
-  };
-  const details = await makeDetailMessageAndReadme(problemId, submissionId, language, memory, runtime);
-  return { ...details, code };
-}
-
-/**
- * 파싱한 문제번호와 제출번호 목록을 가지고 업로드 가능한 배열로 가공하여 반환합니다.
- * @param {Array<Object>} datas
- * @returns {Array<Object>} 
- */
-async function findDatas(datas) {
-  datas = datas.filter((data) => !isNaN(Number(data.problemId)) && Number(data.problemId) > 1000); // 대회 문제 제외
-  details = await findProblemsInfoAndSubmissionCode(datas.map(x => x.problemId), datas.map(x => x.submissionId));
-  datas = combine(datas, details);
-  return datas.map((data) => {
-    const detail = makeDetailMessageAndReadme(data);
-    return { ...data, ...detail };
-  });
-}
-
 /**
  * 문제의 상세 정보를 가지고, 문제의 업로드할 디렉토리, 파일명, 커밋 메시지, 문제 설명을 파싱하여 반환합니다.
  * @param {Object} data
  * @returns {Object} { directory, fileName, message, readme, code }
  */
 function makeDetailMessageAndReadme(data) {
-  const { problemId, submissionId, title, level, tags,
+  const { problemId, submissionId, title, level, problem_tags,
     problem_description, problem_input, problem_output,
     code, language, memory, runtime } = data;
 
   const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
-  const tagl = [];
-  tags.forEach((tag) => tagl.push(`${categories[tag.key]}(${tag.key})`));
-  const category = tagl.join(', ');
+  const category = problem_tags.join(', ');
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
   // prettier-ignore-start
   const readme = `# [${level}] ${title} - ${problemId} \n\n`
@@ -158,9 +121,22 @@ function parsingResultTableList(doc) {
           if (isNull(el)) return null;
           return el.getAttribute('data-original-title');
         case 'problemId':
-          const el2 = x.querySelector('a.problem_title');
-          if (isNull(el2)) return null;
-          return el2.getAttribute('href').replace(/^.*\/([0-9]+)$/, '$1');
+          const img = x.querySelector('img.solvedac-tier');
+          const a = x.querySelector('a.problem_title');
+          if (isNull(a)) return null;
+          if (isNull(img)){
+            msg = "[백준허브 연동 에러] 현재 백준 업로드는 Solved.ac 연동이 필수입니다. 만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요."
+            err = "SolvedAC is not integrated with this BOJ account"
+            toastThenStopLoader(msg, err)
+          }else{
+            idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
+            level = bj_level[idx]
+          }
+          return {
+            problemId: a.getAttribute('href').replace(/^.*\/([0-9]+)$/, '$1'),
+            title: a.getAttribute('data-original-title'),
+            level: level
+          };
         default:
           return x.innerText.trim();
       }
@@ -170,10 +146,10 @@ function parsingResultTableList(doc) {
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = cells[j];
     }
-    obj = { ...obj, ...obj.result };
+    obj = { ...obj, ...obj.result, ...obj.problemId};
     list.push(obj);
   }
-  if (debug) console.log('TableList', list);
+  log('TableList', list);
   return list;
 }
 
@@ -191,7 +167,7 @@ function parsingResultTableList(doc) {
 */
 function findFromResultTable() {
   if (!isExistResultTable()) {
-    if (debug) console.log('Result table not found');
+    log('Result table not found');
   }
   return parsingResultTableList(document);
 }
@@ -215,10 +191,11 @@ function parseProblemDescription(doc = document) {
   const problem_description = unescapeHtml(doc.getElementById('problem_description').innerHTML.trim());
   const problem_input = doc.getElementById('problem_input')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
   const problem_output = doc.getElementById('problem_output')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
+  const problem_tags = Array.from(doc.getElementById('problem_tags').querySelectorAll('a.spoiler-link'), x => x.innerText)
   if (problemId && problem_description) {
-    if (debug) console.log(`문제번호 ${problemId}의 내용을 저장합니다.`);
-    updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output });
-    return { problemId, problem_description, problem_input, problem_output };
+    log(`문제번호 ${problemId}의 내용을 저장합니다.`);
+    updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output, problem_tags});
+    return { problemId, problem_description, problem_input, problem_output, problem_tags};
   }
   return {};
 }
@@ -270,15 +247,12 @@ async function getSolvedACById(problemId) {
 }
 
 async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
-  if (debug) console.log('in find with promise');
+  log('in find with promise');
   if (!isNull(problemId) && !isNull(submissionId)) {
-    return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId), getSolvedACById(problemId)])
+    return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId)])
       .then(([description, code, solvedJson]) => {
-        const { problem_description, problem_input, problem_output } = description;
-        const { tags } = solvedJson;
-        const title = solvedJson.titleKo;
-        const level = bj_level[solvedJson.level];
-        return { problemId, submissionId, title, level, tags, code, problem_description, problem_input, problem_output };
+        const { problem_description, problem_input, problem_output, problem_tags } = description;
+        return { problemId, submissionId, code, problem_description, problem_input, problem_output, problem_tags };
       })
       .catch((err) => {
         console.log('error ocurred: ', err);
@@ -329,43 +303,7 @@ async function fetchSubmissionCodeByIds(submissionIds) {
   });
 }
 
-/**
- * 문제의 상세 정보 목록을 문제 번호 목록으로 한꺼번에 반환합니다.
- * @param {Array} problemIds 
- * @param {Array} submissionIds
- * @returns {Promise<Array>} 
- */
-async function findProblemsInfoAndSubmissionCode(problemIds, submissionIds) {
-  if (debug) console.log('in find with promise');
-  const problemDescriptions = fetchProblemDescriptionsByIds(problemIds);
-  const Codes = fetchSubmissionCodeByIds(submissionIds);
-  const SolvedAPI = fetchProblemInfoByIds(problemIds);
-  return Promise.all([problemDescriptions, Codes, SolvedAPI])
-    .then(([problemDescriptions, codeTexts, solvedJsons]) => {
-      return problemDescriptions.map((description, index) => {
-        const { problem_description, problem_input, problem_output } = description;
-        const { tags } = solvedJsons[index];
-        const title = solvedJsons[index].titleKo;
-        const level = bj_level[solvedJsons[index].level];
-        const code = codeTexts[index];
-        const problemId = problemIds[index];
-        const submissionId = submissionIds[index];
-        return { problemId, submissionId, title, level, tags, code, problem_description, problem_input, problem_output };
-      });
-    });
-}
 
-/**
- * user가 푼 백준의 문제번호 리스트를 가져오는 함수
- * @param username: 백준 아이디
- * @return Promise<Array<String>>
- */
-async function findSolvedProblemsList(username) {
-  return fetch(`https://www.acmicpc.net/user/${username}`, { method: 'GET' })
-    .then((html) => html.getElementsByClassName('result-ac'))
-    .then((collections) => Array.from(collections))
-    .then((arr) => arr.map((name) => name.textContent));
-}
 
 /**
  * user가 problemId 에 제출한 리스트를 가져오는 함수
