@@ -76,6 +76,7 @@
         "library/sha1.min.js",
         "library/jszip.min.js",
         "library/FileSaver.min.js",
+        "scripts/toast.js",
         "scripts/util.js",
         "scripts/Github.js",
         "scripts/authorize.js",

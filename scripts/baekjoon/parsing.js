@@ -47,14 +47,7 @@ function makeDetailMessageAndReadme(data) {
 
   const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
-  const tagl = [];
-  problem_tags.forEach((tag) => {
-    if (tag in categories)
-      tagl.push(`${tag}(${categories[tag]})`)
-    else 
-      tagl.push(tag)
-  });
-  const category = tagl.join(', ');
+  const category = problem_tags.join(', ');
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
   // prettier-ignore-start
   const readme = `# [${level}] ${title} - ${problemId} \n\n`
@@ -132,9 +125,9 @@ function parsingResultTableList(doc) {
           const a = x.querySelector('a.problem_title');
           if (isNull(a)) return null;
           if (isNull(img)){
-            window.alert("백준허브 연동 에러\n현재 백준 업로드는 Solved.ac 연동이 필수입니다.\n만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요.")
-            clearInterval(loader)
-            throw new Error("SolvedAC is not integrated with this BOJ account")
+            msg = "[백준허브 연동 에러] 현재 백준 업로드는 Solved.ac 연동이 필수입니다. 만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요."
+            err = "SolvedAC is not integrated with this BOJ account"
+            toastThenStopLoader(msg, err)
           }else{
             idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
             level = bj_level[idx]

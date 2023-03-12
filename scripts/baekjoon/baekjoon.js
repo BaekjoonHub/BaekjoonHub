@@ -46,6 +46,12 @@ function stopLoader() {
   loader = null;
 }
 
+function toastThenStopLoader(toastMessage, errorMessage){
+  new Toast(toastMessage, ToastType.Danger, 5000)
+  stopLoader()
+  throw new Error(errorMessage)
+}
+
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
   log('bojData', bojData);
