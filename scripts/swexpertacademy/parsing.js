@@ -30,13 +30,13 @@ function updateTextSourceEvent() {
 async function parseData() {
   const nickname = document.querySelector('#searchinput').value;
 
-  if (debug) console.log('사용자 로그인 정보 및 유무 체크', nickname, document.querySelector('#problemForm div.info'));
+  log('사용자 로그인 정보 및 유무 체크', nickname, document.querySelector('#problemForm div.info'));
   // 검색하는 유저 정보와 로그인한 유저의 닉네임이 같은지 체크
   // PASS를 맞은 기록 유무 체크
   if (getNickname() !== nickname) return;
   if (isNull(document.querySelector('#problemForm div.info'))) return;
 
-  if (debug) console.log('결과 데이터 파싱 시작');
+  log('결과 데이터 파싱 시작');
 
   const title = document
     .querySelector('div.problem_box > p.problem_title')
@@ -64,7 +64,7 @@ async function parseData() {
 
   // 로컬스토리지에서 기존 코드에 대한 정보를 불러올 수 없다면 코드 디테일 창으로 이동 후 제출하도록 이동
   const data = await getProblemData(problemId);
-  if (debug) console.log('data', data);
+  log('data', data);
   if (isNull(data?.code)) {
     // 기존 문제 데이터를 로컬스토리지에 저장하고 코드 보기 페이지로 이동
     // await updateProblemData(problemId, { level, contestProbId, link, language, memory, runtime, length, extension });
@@ -74,7 +74,7 @@ async function parseData() {
     return;
   }
   const code = data.code;
-  if (debug) console.log('파싱 완료');
+  log('파싱 완료');
   // eslint-disable-next-line consistent-return
   return makeData({ link, problemId, level, title, extension, code, runtime, memory, length });
 }

@@ -263,3 +263,8 @@ if (typeof __DEV__ !== "undefined") {
   var exports = (module.exports = {});
   exports.filter = filter;
 }
+
+
+function log(...args) {
+  if (debug) console.log(args)
+}

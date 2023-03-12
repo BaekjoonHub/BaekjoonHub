@@ -26,7 +26,7 @@ function get_levels() {
       const html = /\$\('.algorithm-list'\).html\('(.*)'\);/.exec(res)[1];
       const doc = new DOMParser().parseFromString(html.replace(/\\"/g, '"').replace(/\\n/g, '').replace(/\\/g, ''), 'text/html');
       const last_page = [...doc.querySelectorAll('li.page-item:not(.next_page, .previous_page, .disabled)')].at(-1).innerText;
-      // if (debug) console.log(doc);
+      // log(doc);
       return Number(last_page) || 1;
     })
     .then((last_page) => {
@@ -50,7 +50,7 @@ function get_levels() {
               const html = /\$\('.algorithm-list'\).html\('(.*)'\);/.exec(res)[1];
               const doc = new DOMParser().parseFromString(html.replace(/\\"/g, '"').replace(/\\n/g, '').replace(/\\/g, ''), 'text/html');
               // const isEnd = [...document.querySelector("li.next_page").classList].includes("disabled");
-              // if (debug) console.log(doc);
+              // log(doc);
               const cards = [...doc.querySelectorAll('div.card-algorithm')];
               console.log(cards);
               for (const card of cards) {

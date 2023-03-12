@@ -239,7 +239,7 @@ async function updateLocalStorageStats() {
   const default_branch = await git.getDefaultBranchOnRepo();
   stats.branches[hook] = default_branch;
   await saveStats(stats);
-  if (debug) console.log('update stats', stats);
+  log('update stats', stats);
   return stats;
 }
 

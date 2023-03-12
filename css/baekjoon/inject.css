@@ -98,3 +98,34 @@
 .BJH_loading_number {
   display: inline-block;
 }
+
+*{
+  margin:0;
+  padding:0;
+}
+
+.toast-notification{
+  min-width: 150px;
+  height:auto;
+  background-color:white;
+  border-radius: 10px !important;
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  bottom:50px;
+  margin:50px;
+  padding: 10px;
+  right: 20px;
+  position:fixed;
+  z-index:1;
+  display:flex;
+  flex-direction:row;
+}
+
+.toast-notification:hover{
+  cursor: pointer;
+}
+
+.message-container{
+  width:100%;
+  font-family:'Roboto';
+  color:white;
+}

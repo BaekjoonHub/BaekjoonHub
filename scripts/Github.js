@@ -1,6 +1,6 @@
 class GitHub {
   constructor(hook, token) {
-    if (debug) console.log('GitHub constructor', hook, token);
+    log('GitHub constructor', hook, token);
     this.update(hook, token);
   }
 
@@ -25,19 +25,19 @@ class GitHub {
 
   async createTree(refSHA, tree_items) {
     // hook, token, baseSHA, tree_items
-    if (debug) console.log('GitHub createTree', 'refSHA:', refSHA, 'tree_items:', tree_items);
+    log('GitHub createTree', 'refSHA:', refSHA, 'tree_items:', tree_items);
     return createTree(this.hook, this.token, refSHA, tree_items);
   }
 
   async createCommit(message, treeSHA, refSHA) {
     // hook, token, message, tree, parent
-    if (debug) console.log('GitHub createCommit', 'message:', message, 'treeSHA:', treeSHA, 'refSHA:', refSHA);
+    log('GitHub createCommit', 'message:', message, 'treeSHA:', treeSHA, 'refSHA:', refSHA);
     return createCommit(this.hook, this.token, message, treeSHA, refSHA);
   }
 
   async updateHead(ref, commitSHA) {
     // hook, token, commitSHA, force = true)
-    if (debug) console.log('GitHub updateHead', 'ref:', ref, 'commitSHA:', commitSHA);
+    log('GitHub updateHead', 'ref:', ref, 'commitSHA:', commitSHA);
     return updateHead(this.hook, this.token, ref, commitSHA, true);
   }
 
