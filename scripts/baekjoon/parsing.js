@@ -129,7 +129,7 @@ function parsingResultTableList(doc) {
             err = "SolvedAC is not integrated with this BOJ account"
             toastThenStopLoader(msg, err)
           }else{
-            idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
+            var idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
             level = bj_level[idx]
           }
           return {
