@@ -43,7 +43,7 @@ function isNotEmpty(obj) {
   if (obj.length === 0) return false;
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
-      if (!isNotEmpty(obj[key])) return false;
+      if (!isNotEmpty(obj[key])) return false; // 여기서 무한재귀에 빠진걸로 추정됨 -> 맞는듯
     }
   }
   return true;
@@ -266,5 +266,5 @@ if (typeof __DEV__ !== "undefined") {
 
 
 function log(...args) {
-  if (debug) console.log(args)
+  if (debug) console.log(...args)
 }

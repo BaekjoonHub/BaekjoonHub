@@ -1,4 +1,11 @@
-function handleMessage(request) {
+async function SolvedApiParse(problemId){
+  let query = await fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
+  query = query.json();
+  //console.log(query);
+  return query;
+}
+
+function handleMessage(request,sender,sendResponse) {
   if (request && request.closeWebPage === true && request.isSuccess === true) {
     /* Set username */
     chrome.storage.local.set(
@@ -31,7 +38,10 @@ function handleMessage(request) {
     chrome.tabs.getSelected(null, function (tab) {
       chrome.tabs.remove(tab.id);
     });
+  } else if (request && request.task == "SolvedApiCall"){
+    SolvedApiParse(request.problemId).then((res) => sendResponse(res));
   }
+  return true;
 }
 
 chrome.runtime.onMessage.addListener(handleMessage);
