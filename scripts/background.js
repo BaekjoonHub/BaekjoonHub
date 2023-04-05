@@ -1,11 +1,13 @@
-async function SolvedApiParse(problemId){
-  let query = await fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
-  query = query.json();
-  //console.log(query);
-  return query;
+/**
+ * solvedac 문제 데이터를 파싱해오는 함수.
+ * @param {int} problemId
+ */
+async function SolvedApiCall(problemId) {
+  return fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
+    .then((query) => query.json());
 }
 
-function handleMessage(request,sender,sendResponse) {
+function handleMessage(request, sender, sendResponse) {
   if (request && request.closeWebPage === true && request.isSuccess === true) {
     /* Set username */
     chrome.storage.local.set(
@@ -38,8 +40,9 @@ function handleMessage(request,sender,sendResponse) {
     chrome.tabs.getSelected(null, function (tab) {
       chrome.tabs.remove(tab.id);
     });
-  } else if (request && request.task == "SolvedApiCall"){
-    SolvedApiParse(request.problemId).then((res) => sendResponse(res));
+  } else if (request && request.sender == "baekjoon" && request.task == "SolvedApiCall") {
+    SolvedApiCall(request.problemId).then((res) => sendResponse(res));
+    //sendResponse(SolvedApiCall(request.problemId))
   }
   return true;
 }

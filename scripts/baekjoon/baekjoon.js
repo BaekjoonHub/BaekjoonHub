@@ -55,7 +55,7 @@ function toastThenStopLoader(toastMessage, errorMessage){
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
   log('bojData', bojData);
-  if (isNotEmpty(bojData)) { // 무한재귀 임시해결
+  if (isNotEmpty(bojData)) {
     const stats = await getStats();
     const hook = await getHook();
 

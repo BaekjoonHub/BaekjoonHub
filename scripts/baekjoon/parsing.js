@@ -121,20 +121,10 @@ function parsingResultTableList(doc) {
           if (isNull(el)) return null;
           return el.getAttribute('data-original-title');
         case 'problemId':
-          //const img = x.querySelector('img.solvedac-tier');
           const a = x.querySelector('a.problem_title');
           if (isNull(a)) return null;
-          //if (isNull(img)){
-            //const msg = "[백준허브 연동 에러] 현재 백준 업로드는 Solved.ac 연동이 필수입니다. 만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요."
-            //const err = "SolvedAC is not integrated with this BOJ account"
-            //toastThenStopLoader(msg, err)
-          //}
-          //const idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
-          //const level = bj_level[idx]
           return {
             problemId: a.getAttribute('href').replace(/^.*\/([0-9]+)$/, '$1'),
-            //title: a.getAttribute('data-original-title'),
-            //level: level
           };
         default:
           return x.innerText.trim();
@@ -190,7 +180,6 @@ function parseProblemDescription(doc = document) {
   const problem_description = unescapeHtml(doc.getElementById('problem_description').innerHTML.trim());
   const problem_input = doc.getElementById('problem_input')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
   const problem_output = doc.getElementById('problem_output')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
-  //const problem_tags = Array.from(doc.getElementById('problem_tags').querySelectorAll('a.spoiler-link'), x => x.innerText)
   if (problemId && problem_description) {
     log(`문제번호 ${problemId}의 내용을 저장합니다.`);
     updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output});
@@ -214,8 +203,7 @@ async function fetchSubmitCodeById(submissionId) {
 }
 
 async function fetchSolvedACById(problemId) {
-  let res = await chrome.runtime.sendMessage({task : "SolvedApiCall", problemId : problemId});
-  return res;
+  return chrome.runtime.sendMessage({sender: "baekjoon", task : "SolvedApiCall", problemId : problemId});
 }
 
 async function getProblemDescriptionById(problemId) {
@@ -256,16 +244,7 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
   if (!isNull(problemId) && !isNull(submissionId)) {
     return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId), getSolvedACById(problemId)])
       .then(([description, code, solvedJson]) => {
-        let tmp = [];
-        solvedJson.tags.forEach((it) => {
-          it.displayNames.forEach((tag) => {
-            if(tag.language == 'ko'){
-              tmp.push(tag.name);
-            }
-          })
-        })
-
-        const problem_tags = tmp;
+        const problem_tags = solvedJson.tags.flatMap((tag) => tag.displayNames).filter((tag) => tag.language === 'ko').map((tag) => tag.name);
         const title = solvedJson.titleKo;
         const level = bj_level[solvedJson.level];
 
