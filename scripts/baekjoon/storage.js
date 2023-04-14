@@ -99,8 +99,7 @@ async function updateProblemsFromStats(problem) {
     problem_description: problem.problem_description,
     problem_input: problem.problem_input,
     problem_output: problem.problem_output,
-    problem_tags: problem.problem_tags
-  };
+  }; 
   await problemCache.update(data);
 }
 
