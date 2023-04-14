@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "author": "flaxinger",
   "action": {
     "default_icon": "assets/thumbnail.png",
@@ -36,7 +36,8 @@
     "https://www.acmicpc.net/",
     "https://school.programmers.co.kr/",
     "https://github.com/",
-    "https://swexpertacademy.com/"
+    "https://swexpertacademy.com/",
+    "https://solved.ac/api/v3/*"
   ],
   "web_accessible_resources": [
     {

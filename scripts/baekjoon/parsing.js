@@ -34,7 +34,7 @@ async function findData(data) {
   }
   return null;
 }
-
+ 
 /**
  * 문제의 상세 정보를 가지고, 문제의 업로드할 디렉토리, 파일명, 커밋 메시지, 문제 설명을 파싱하여 반환합니다.
  * @param {Object} data
@@ -121,20 +121,10 @@ function parsingResultTableList(doc) {
           if (isNull(el)) return null;
           return el.getAttribute('data-original-title');
         case 'problemId':
-          const img = x.querySelector('img.solvedac-tier');
           const a = x.querySelector('a.problem_title');
           if (isNull(a)) return null;
-          if (isNull(img)){
-            const msg = "[백준허브 연동 에러] 현재 백준 업로드는 Solved.ac 연동이 필수입니다. 만약 Solved.ac 연동 후에도 이 창이 보인다면 개발자에게 리포팅해주세요."
-            const err = "SolvedAC is not integrated with this BOJ account"
-            toastThenStopLoader(msg, err)
-          }
-          const idx = img.getAttribute('src').match('[0-9]+\\.svg')[0].replace('.svg', '')
-          const level = bj_level[idx]
           return {
             problemId: a.getAttribute('href').replace(/^.*\/([0-9]+)$/, '$1'),
-            title: a.getAttribute('data-original-title'),
-            level: level
           };
         default:
           return x.innerText.trim();
@@ -190,11 +180,10 @@ function parseProblemDescription(doc = document) {
   const problem_description = unescapeHtml(doc.getElementById('problem_description').innerHTML.trim());
   const problem_input = doc.getElementById('problem_input')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
   const problem_output = doc.getElementById('problem_output')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
-  const problem_tags = Array.from(doc.getElementById('problem_tags').querySelectorAll('a.spoiler-link'), x => x.innerText)
   if (problemId && problem_description) {
     log(`문제번호 ${problemId}의 내용을 저장합니다.`);
-    updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output, problem_tags});
-    return { problemId, problem_description, problem_input, problem_output, problem_tags};
+    updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output});
+    return { problemId, problem_description, problem_input, problem_output};
   }
   return {};
 }
@@ -214,8 +203,7 @@ async function fetchSubmitCodeById(submissionId) {
 }
 
 async function fetchSolvedACById(problemId) {
-  return fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
-    .then((res) => res.json())
+  return chrome.runtime.sendMessage({sender: "baekjoon", task : "SolvedApiCall", problemId : problemId});
 }
 
 async function getProblemDescriptionById(problemId) {
@@ -245,13 +233,23 @@ async function getSolvedACById(problemId) {
   return jsonData;
 }
 
+/**
+ * 제출 소스코드, 문제 설명, 예시 입력, 예시 출력, 문제 태그를 반환합니다.
+ * @param {Object} problemId
+ * @param {Object} submissionId
+ * @returns {Object} { problemId, submissionId, code, problem_description, problem_input, problem_output, problem_tags }
+ */
 async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
   log('in find with promise');
   if (!isNull(problemId) && !isNull(submissionId)) {
-    return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId)])
+    return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId), getSolvedACById(problemId)])
       .then(([description, code, solvedJson]) => {
-        const { problem_description, problem_input, problem_output, problem_tags } = description;
-        return { problemId, submissionId, code, problem_description, problem_input, problem_output, problem_tags };
+        const problem_tags = solvedJson.tags.flatMap((tag) => tag.displayNames).filter((tag) => tag.language === 'ko').map((tag) => tag.name);
+        const title = solvedJson.titleKo;
+        const level = bj_level[solvedJson.level];
+
+        const { problem_description, problem_input, problem_output } = description;
+        return { problemId, submissionId, title, level, code, problem_description, problem_input, problem_output, problem_tags };
       })
       .catch((err) => {
         console.log('error ocurred: ', err);

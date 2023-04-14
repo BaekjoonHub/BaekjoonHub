@@ -266,5 +266,5 @@ if (typeof __DEV__ !== "undefined") {
 
 
 function log(...args) {
-  if (debug) console.log(args)
+  if (debug) console.log(...args)
 }
