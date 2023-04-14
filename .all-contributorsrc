@@ -85,6 +85,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Koderpark",
+      "name": "박성훈 / Koder",
+      "avatar_url": "https://avatars.githubusercontent.com/u/43494256?v=4",
+      "profile": "https://koderpark.dev",
+      "contributions": [
+        "business"
+      ]
     }
   ],
   "contributorsPerLine": 7,
