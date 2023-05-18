@@ -66,8 +66,6 @@ function startUploadCountDown() {
 function compareSubmission(a, b) {
   // prettier-ignore-start
   /* eslint-disable */
-  console.log(a);
-  console.log(b);
   return hasNotSubtask(a.result, b.result)
           ? a.runtime === b.runtime
             ? a.memory === b.memory
