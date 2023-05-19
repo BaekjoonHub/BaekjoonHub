@@ -173,6 +173,14 @@ function b64DecodeUnicode(b64str) {
   );
 }
 
+function parseNumberFromString(str) {
+  const numbers = str.match(/\d+/g);
+  if (isNotEmpty(numbers) && numbers.length > 0) {
+    return Number(numbers[0]);
+  }
+  return NaN;
+}
+
 /** key 값을 기준으로 array를 그룹핑하여 map으로 반환합니다.
  * @param {object} array - array to be sorted
  * @param {string} key - key to sort

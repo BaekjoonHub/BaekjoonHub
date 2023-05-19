@@ -57,24 +57,57 @@ function startUploadCountDown() {
  * @param {object} a - 제출 요소 피연산자 a
  * @param {object} b - 제출 요소 피연산자 b
  * @returns {number} - a와 b 아래의 우선순위로 값을 비교하여 정수값을 반환합니다.
- * 1. 실행시간(runtime)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 2. 사용메모리(memory)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 3. 코드길이(codeLength)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 4. 위의 요소가 모두 같은 경우 제출한 요소(submissionId)의 그 차이 값의 역을 반환합니다.
+ * 1. 서브태스크가 있는 문제이고, 점수(result)의 차이가 있을 경우 a > b 이면 음수, a < b 이면 양수를 반환합니다.
+ * 2. 실행시간(runtime)의 차이가 있을 경우 그 차이 값을 반환합니다.
+ * 3. 사용메모리(memory)의 차이가 있을 경우 그 차이 값을 반환합니다.
+ * 4. 코드길이(codeLength)의 차이가 있을 경우 그 차이 값을 반환합니다.
+ * 5. 위의 요소가 모두 같은 경우 제출한 요소(submissionId)의 그 차이 값의 역을 반환합니다.
  * */
 function compareSubmission(a, b) {
   // prettier-ignore-start
   /* eslint-disable */
-  return a.runtime === b.runtime
-          ? a.memory === b.memory
-            ? a.codeLength === b.codeLength
-              ? -(a.submissionId - b.submissionId)
-              : a.codeLength - b.codeLength
-            : a.memory - b.memory
-          : a.runtime - b.runtime
+  return hasNotSubtask(a.result, b.result)
+          ? a.runtime === b.runtime
+            ? a.memory === b.memory
+              ? a.codeLength === b.codeLength
+                ? -(a.submissionId - b.submissionId)
+                : a.codeLength - b.codeLength
+              : a.memory - b.memory
+            : a.runtime - b.runtime
+          : compareResult(a.result, b.result)
   ;
   /* eslint-enable */
   // prettier-ignore-end
+}
+
+/**
+ * 서브태스크가 있는 문제의 경우도 고려해 제출 결과를 비교하는 함수입니다.
+ * @param {string} a 제출 결과 피연산자 a
+ * @param {string} b 제출 결과 피연산자 b
+ * @returns {boolean} 서브 태스크가 없는 경우 true, 서브 태스크가 있는 경우 false를 반환합니다.
+ */
+function hasNotSubtask(a, b) {
+  a = parseNumberFromString(a);
+  b = parseNumberFromString(b);
+
+  if (a === NaN && b === NaN) return true;
+
+  return false;
+}
+
+/**
+ * 서브태스크가 있는 문제의 경우 점수가 높은 순서로 정렬되도록 값을 반환합니다.
+ * @param {string} a 제출 결과 피연산자 a
+ * @param {string} b 제출 결과 피연산자 b
+ * @returns {number} a의 점수가 높은 경우 음수, b의 점수가 높은 경우 양수
+ */
+function compareResult(a, b) {
+  a = parseNumberFromString(a);
+  b = parseNumberFromString(b);
+
+  if (typeof a === 'number' && typeof b === 'number') return -(a - b);
+  if (b === NaN) return -1;
+  if (a === NaN) return 1;
 }
 
 /**
