@@ -41,12 +41,14 @@ async function findData(data) {
  * @returns {Object} { directory, fileName, message, readme, code }
  */
 function makeDetailMessageAndReadme(data) {
-  const { problemId, submissionId, title, level, problem_tags,
+  const { problemId, submissionId, result, title, level, problem_tags,
     problem_description, problem_input, problem_output,
     code, language, memory, runtime } = data;
-
+  const score = parseNumberFromString(result);
   const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
-  const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB -BaekjoonHub`;
+  const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`
+    + ((isNaN(score)) ? ' ' : `, Score: ${score} point `) // 서브 태스크가 있는 문제로, 점수가 있는 경우 점수까지 커밋 메시지에 표기
+    + `-BaekjoonHub`;
   const category = problem_tags.join(', ');
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
   // prettier-ignore-start
