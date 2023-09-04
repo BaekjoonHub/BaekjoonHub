@@ -103,6 +103,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "junhochoi-dev",
+      "name": "Choi Jun Ho",
+      "avatar_url": "https://avatars.githubusercontent.com/u/39554558?v=4",
+      "profile": "https://cjh970422.tistory.com/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -111,5 +120,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "skipCi": true,
-  "commitConvention": "angular"
+  "commitConvention": "angular",
+  "commitType": "docs"
 }
