@@ -105,10 +105,20 @@
       ]
     },
     {
+
       "login": "junhochoi-dev",
       "name": "Choi Jun Ho",
       "avatar_url": "https://avatars.githubusercontent.com/u/39554558?v=4",
       "profile": "https://cjh970422.tistory.com/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ahn0min",
+      "name": "YeongMin Ahn",
+      "avatar_url": "https://avatars.githubusercontent.com/u/89904226?v=4",
+      "profile": "https://github.com/ahn0min",
       "contributions": [
         "code"
       ]
