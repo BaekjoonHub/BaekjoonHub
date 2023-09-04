@@ -25,11 +25,11 @@ async function parseData() {
   const problem_description = document.querySelector('div.guide-section-description > div.markdown').innerHTML;
   const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').innerText.split('.')[1]
   const code = document.querySelector('textarea#code').value;
-  const result_message =
-    [...document.querySelectorAll('#output > pre.console-content > div.console-message')]
-      .map((x) => x.innerText)
-      .filter((x) => x.includes(': '))
-      .reduce((x, y) => `${x}<br/>${y}`, '') || 'Empty';
+  const result_message = 
+      [...document.querySelectorAll('#output .console-message')]
+        .map((node) => node.textContent)
+        .filter((text) => text.includes(":"))
+        .reduce((cur, next) => cur ? `${cur}<br/>${next}` : next, '') || 'Empty';
   const [runtime, memory] = [...document.querySelectorAll('td.result.passed')]
     .map((x) => x.innerText)
     .map((x) => x.replace(/[^., 0-9a-zA-Z]/g, '').trim())
