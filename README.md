@@ -216,19 +216,9 @@ $ npm test # jest test 실행
       </a><br/><sub><b>버그 신고</b></sub>
     </td>
     <td align="center">
-      <a href="https://hyeon-jinhyeok.tistory.com/5" title="GetCurrentThread의 개발블로그">
-        <img src="./assets/readme_icons/tstory.png" width="100" height="100">
-      </a><br/><sub><b>개발 블로그</b></sub>
-    </td>
-    <td align="center">
       <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
         <img src="./assets/readme_icons/kakao.png" width="100" height="100">
       </a><br/><sub><b>카카오톡 협업방</b></sub>
-    </td>
-    <td align="center">
-      <a href="./Patch_Notes/" title="패치 노트">
-        <img src="./assets/readme_icons/patchnotes.png" width="100" height="100">
-      </a><br/><sub><b>패치 노트</b></sub>
     </td>
   </tr>
 </table>
