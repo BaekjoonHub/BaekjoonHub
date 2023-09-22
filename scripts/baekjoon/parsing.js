@@ -51,7 +51,6 @@ function makeDetailMessageAndReadme(data) {
     + `-BaekjoonHub`;
   const category = problem_tags.join(', ');
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
-  const nowDate = new Date(Date.now());
   // prettier-ignore-start
   const readme = `# [${level}] ${title} - ${problemId} \n\n`
     + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
