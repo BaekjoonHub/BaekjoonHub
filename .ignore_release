@@ -1,0 +1,12 @@
+*.md
+.ignore_release
+.all-contributorsrc
+.eslintrc
+.prettierrc
+package.json
+LICENSE
+test
+Patch_Notes
+.github
+assets/readme_icons
+assets/extension
