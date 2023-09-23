@@ -3,15 +3,9 @@
     가독성을 위해 따로 파일 분리함
 */
 async function checkEnable() {
-  try{
-    const enable = await getObjectFromLocalStorage('bjhEnable');
-    if (!enable) writeEnableMsgOnLog();
-    return enable;
-  }
-  catch{
-    writeEnableMsgOnLog();
-    return false;
-  }
+  const enable = await getObjectFromLocalStorage('bjhEnable');
+  if (!enable) writeEnableMsgOnLog();
+  return enable;
 }
 
 function writeEnableMsgOnLog() {
