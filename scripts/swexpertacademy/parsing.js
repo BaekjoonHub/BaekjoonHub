@@ -62,6 +62,8 @@ async function parseData() {
   // 확장자명
   const extension = languages[language.toLowerCase()];
 
+  // 제출날짜
+  const submissionTime = document.querySelector('.smt_txt > dd').textContent.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/g)[0];
   // 로컬스토리지에서 기존 코드에 대한 정보를 불러올 수 없다면 코드 디테일 창으로 이동 후 제출하도록 이동
   const data = await getProblemData(problemId);
   log('data', data);
@@ -76,14 +78,15 @@ async function parseData() {
   const code = data.code;
   log('파싱 완료');
   // eslint-disable-next-line consistent-return
-  return makeData({ link, problemId, level, title, extension, code, runtime, memory, length });
+  return makeData({ link, problemId, level, title, extension, code, runtime, memory, length,submissionTime });
 }
 
 async function makeData(origin) {
-  const { link, problemId, level, extension, title, runtime, memory, code, length } = origin;
+  const { link, problemId, level, extension, title, runtime, memory, code, length,submissionTime } = origin;
   const directory = `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
   const message = `[${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
+  const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
   // prettier-ignore
   const readme =
     `# [${level}] ${title} - ${problemId} \n\n`
@@ -92,6 +95,8 @@ async function makeData(origin) {
     + `메모리: ${memory}, `
     + `시간: ${runtime}, `
     + `코드길이: ${length} Bytes\n\n`
+    + `### 제출 일자\n\n`
+    + `${dateInfo}\n\n`
     + `\n\n`
     + `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
   return { problemId, directory, message, fileName, readme, code };
