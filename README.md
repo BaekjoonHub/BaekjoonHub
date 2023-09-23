@@ -39,6 +39,7 @@
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Kyu0"><img src="https://avatars.githubusercontent.com/u/56034014?v=4?s=100" width="100px;" alt="Kyu0"/><br /><sub><b>Kyu0</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=Kyu0" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://cjh970422.tistory.com/"><img src="https://avatars.githubusercontent.com/u/39554558?v=4?s=100" width="100px;" alt="Choi Jun Ho"/><br /><sub><b>Choi Jun Ho</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=junhochoi-dev" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ahn0min"><img src="https://avatars.githubusercontent.com/u/89904226?v=4?s=100" width="100px;" alt="YeongMin Ahn"/><br /><sub><b>YeongMin Ahn</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=ahn0min" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://velog.io/@bluejoyq"><img src="https://avatars.githubusercontent.com/u/42014299?v=4?s=100" width="100px;" alt="bluejoyq"/><br /><sub><b>bluejoyq</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=bluejoyq" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
