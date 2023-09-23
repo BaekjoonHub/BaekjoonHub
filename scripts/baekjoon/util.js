@@ -90,7 +90,7 @@ function hasNotSubtask(a, b) {
   a = parseNumberFromString(a);
   b = parseNumberFromString(b);
 
-  if (a === NaN && b === NaN) return true;
+  if (isNaN(a) && isNaN(b)) return true;
 
   return false;
 }
@@ -106,8 +106,8 @@ function compareResult(a, b) {
   b = parseNumberFromString(b);
 
   if (typeof a === 'number' && typeof b === 'number') return -(a - b);
-  if (b === NaN) return -1;
-  if (a === NaN) return 1;
+  if (isNaN(b)) return -1;
+  if (isNaN(a)) return 1;
 }
 
 /**
