@@ -70,3 +70,13 @@ function startUploadCountDown() {
 function getNickname() {
   return document.querySelector('#Beginner')?.innerText || document.querySelector('header > div > span.name')?.innerText || '';
 }
+
+/**
+ * 백준의 날짜 형식과 같게 포맷된 스트링을 반환하는 함수
+ * @example 2023년 9월 23일 16:26:26
+ * @param {Date} date
+ * @return {string} 포맷된 스트링
+ */
+function getDateString(date){
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDay()}일 ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+}

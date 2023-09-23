@@ -42,7 +42,7 @@ async function findData(data) {
  */
 function makeDetailMessageAndReadme(data) {
   const { problemId, submissionId, result, title, level, problem_tags,
-    problem_description, problem_input, problem_output,
+    problem_description, problem_input, problem_output, submissionTime,
     code, language, memory, runtime } = data;
   const score = parseNumberFromString(result);
   const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
@@ -51,6 +51,7 @@ function makeDetailMessageAndReadme(data) {
     + `-BaekjoonHub`;
   const category = problem_tags.join(', ');
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language]}`;
+  const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
   // prettier-ignore-start
   const readme = `# [${level}] ${title} - ${problemId} \n\n`
     + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
@@ -59,6 +60,8 @@ function makeDetailMessageAndReadme(data) {
     + `시간: ${runtime} ms\n\n`
     + `### 분류\n\n`
     + `${category || "Empty"}\n\n` + (!!problem_description ? ''
+    + `### 제출 일자\n\n`
+    + `${dateInfo}\n\n`
       + `### 문제 설명\n\n${problem_description}\n\n`
       + `### 입력 \n\n ${problem_input}\n\n`
       + `### 출력 \n\n ${problem_output}\n\n` : '');
