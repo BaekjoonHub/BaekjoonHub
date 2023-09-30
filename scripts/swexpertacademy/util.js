@@ -45,7 +45,7 @@ function markUploadedCSS(branches, directory) {
   const elem = document.getElementById('BaekjoonHub_progress_elem');
   elem.className = 'markuploaded';
   uploadedUrl = "https://github.com/" +
-              Object.keys(branches)[0] + "/blob/" + 
+              Object.keys(branches)[0] + "/tree/" + 
               branches[Object.keys(branches)[0]] + "/" + directory;
   elem.addEventListener("click", function() {
     window.location.href = uploadedUrl;
