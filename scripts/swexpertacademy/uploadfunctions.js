@@ -50,7 +50,7 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   updateObjectDatafromPath(stats.submission, `${hook}/${readme.path}`, readme.sha);
   await saveStats(stats);
   // 콜백 함수 실행
-  if (typeof cb === 'function' && cb instanceof markUploadedCSS) {
+  if (typeof cb === 'function' && cb === markUploadedCSS) {
     cb(stats.branches, directory);
   }
 }
