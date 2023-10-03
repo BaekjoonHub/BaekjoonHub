@@ -42,7 +42,7 @@
       <td align="center" valign="top" width="14.28%"><a href="https://velog.io/@bluejoyq"><img src="https://avatars.githubusercontent.com/u/42014299?v=4?s=100" width="100px;" alt="bluejoyq"/><br /><sub><b>bluejoyq</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=bluejoyq" title="Code">💻</a></td>
     </tr>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/zosungwoo"><img src="https://avatars.githubusercontent.com/u/30895117?v=4?s=100" width="100px;" alt="Sungwoo Cho"/><br /><sub><b>Sungwoo Cho</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/issues?q=author%3Azosungwoo" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/zosungwoo"><img src="https://avatars.githubusercontent.com/u/30895117?v=4?s=100" width="100px;" alt="Sungwoo Cho"/><br /><sub><b>Sungwoo Cho</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/issues?q=author%3Azosungwoo" title="Bug reports">🐛</a> <a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=zosungwoo" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
