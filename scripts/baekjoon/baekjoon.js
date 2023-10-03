@@ -73,7 +73,7 @@ async function beginUpload(bojData) {
     log('cachedSHA', cachedSHA, 'calcSHA', calcSHA)
 
     if (cachedSHA == calcSHA) {
-      markUploadedCSS();
+      markUploadedCSS(stats.branches, bojData.directory);
       console.log(`현재 제출번호를 업로드한 기록이 있습니다.` /* submissionID ${bojData.submissionId}` */);
       return;
     }
