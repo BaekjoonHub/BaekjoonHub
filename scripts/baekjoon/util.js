@@ -19,16 +19,23 @@ function startUpload() {
 }
 
 /**
- * 업로드 완료 아이콘 표시
+ * 업로드 완료 아이콘 표시 및 링크 생성
+ * @param {object} branches - 브랜치 정보 ('userName/repositoryName': 'branchName')
+ * @param {string} directory - 디렉토리 정보 ('백준/Gold/1. 문제이름')
+ * 1. 업로드 완료 아이콘을 표시합니다.
+ * 2. 아이콘 클릭 시 업로드된 GitHub 링크로 이동하는 이벤트 리스너를 등록합니다.
  */
-function markUploadedCSS() {
+function markUploadedCSS(branches, directory) {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
   elem.className = 'markuploaded';
-  // 1초후 창 닫기
-  // setTimeout(() => {
-  //   window.close();
-  // }, 1000);
+  const uploadedUrl = "https://github.com/" +
+              Object.keys(branches)[0] + "/tree/" + 
+              branches[Object.keys(branches)[0]] + "/" + directory;
+  elem.addEventListener("click", function() {
+    window.location.href = uploadedUrl;
+  });
+  elem.style.cursor = "pointer";
 }
 
 /**
