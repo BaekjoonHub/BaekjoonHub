@@ -14,7 +14,7 @@
 async function parseData() {
   const link = document.querySelector('head > meta[name$=url]').content.replace(/\?.*/g, '').trim();
   const problemId = document.querySelector('div.main > div.lesson-content').getAttribute('data-lesson-id');
-  const level = levels[problemId] !== undefined ? 'Lv.' + levels[problemId] : 'unrated';
+  const level = document.querySelector('body > div.main > div.lesson-content').getAttribute("data-challenge-level")
   const division = [...document.querySelector('ol.breadcrumb').childNodes]
     .filter((x) => x.className !== 'active')
     .map((x) => x.innerText)
