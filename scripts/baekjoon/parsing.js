@@ -27,25 +27,28 @@ async function findData(data) {
     }
     if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
     data = { ...data, ...await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId) };
-    const detail = makeDetailMessageAndReadme(data);
+    const detail = await makeDetailMessageAndReadme(data);
     return { ...data, ...detail }; // detail 만 반환해도 되나, 확장성을 위해 모든 데이터를 반환합니다.
   } catch (error) {
     console.error(error);
   }
   return null;
 }
- 
+
 /**
  * 문제의 상세 정보를 가지고, 문제의 업로드할 디렉토리, 파일명, 커밋 메시지, 문제 설명을 파싱하여 반환합니다.
  * @param {Object} data
  * @returns {Object} { directory, fileName, message, readme, code }
  */
-function makeDetailMessageAndReadme(data) {
+async function makeDetailMessageAndReadme(data) {
   const { problemId, submissionId, result, title, level, problem_tags,
     problem_description, problem_input, problem_output, submissionTime,
     code, language, memory, runtime } = data;
   const score = parseNumberFromString(result);
-  const directory = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const directory = await getDirNameByDisOption(
+    `백준/${level.replace(/ .*!/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+    langVersionRemove(language, null)
+  );
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`
     + ((isNaN(score)) ? ' ' : `, Score: ${score} point `) // 서브 태스크가 있는 문제로, 점수가 있는 경우 점수까지 커밋 메시지에 표기
     + `-BaekjoonHub`;
@@ -267,8 +270,8 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
 /**
  * 문제의 목록을 문제 번호로 한꺼번에 반환합니다.
  * (한번 조회 시 100개씩 나눠서 진행)
- * @param {Array} problemIds 
- * @returns {Promise<Array>} 
+ * @param {Array} problemIds
+ * @returns {Promise<Array>}
  */
 
 async function fetchProblemInfoByIds(problemIds) {
@@ -297,7 +300,7 @@ async function fetchProblemDescriptionsByIds(problemIds) {
 /**
  * submissionId들을 통해 코드들을 가져옵니다. (부하를 줄이기 위해 한번에 2개씩 가져옵니다.)
  * @param {Array} submissionIds
- * @returns {Promise<Array>} 
+ * @returns {Promise<Array>}
  */
 async function fetchSubmissionCodeByIds(submissionIds) {
   return asyncPool(2, submissionIds, async (submissionId) => {
@@ -362,4 +365,25 @@ async function findHtmlDocumentByUrl(url) {
       const parser = new DOMParser();
       return parser.parseFromString(text, 'text/html');
     });
+}
+
+/**
+ * 백준에서 표기된 프로그래밍 언어의 버전을 없애고 업로드 하기 위함입니다.
+ * 버전에 차이가 중요하게 여겨진다면, 'ignore'에 예외 케이스를 추가하세요.
+ * 해당 코드는 'lang'이 "PyPy3" 같이 주어진다면은 버전을 제거하지 않습니다.
+ * 예외에 추가 되어있거나, "Python 3.8" 혹은 "Java 11" 같이 주어진다면 버전이 제거될것입니다.
+ * @param {string} lang - 처리 하고자 하는 언어입니다.
+ * @param {Set} ignores - 예외 처리 하고자 하는 언어를 추가 해주세요.
+ * @return {string} - 분기 처리에 따른 lang
+ *  */
+function langVersionRemove(lang, ignores) {
+  if (ignores === null || !ignores.has(lang)) {
+    let parts = lang.split(' ');
+    if (/^\d/.test(parts[parts.length - 1])) {
+      parts.pop();
+    }
+    lang = parts.join(' ');
+  }
+
+  return lang;
 }

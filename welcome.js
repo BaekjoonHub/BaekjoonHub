@@ -195,6 +195,11 @@ const unlinkRepo = () => {
     console.log('Defaulted repo hook to NONE');
   });
 
+  /*프로그래밍 언어별 폴더 정리 옵션 세션 저장 초기화*/
+  chrome.storage.local.set({ BaekjoonHub_disOption: false}, () => {
+    console.log('DisOption Reset');
+  })
+
   /* Hide accordingly */
   document.getElementById('hook_mode').style.display = 'inherit';
   document.getElementById('commit_mode').style.display = 'none';
@@ -256,6 +261,13 @@ $('#hook_button').on('click', () => {
       }
     });
   }
+
+  /*프로그래밍 언어별 폴더 정리 옵션 세션 저장*/
+  let disOption = $('#dis_option').val();
+  const booleanParse = Boolean((disOption === 'true' || disOption === 'True'));
+  chrome.storage.local.set({ BaekjoonHub_disOption: booleanParse}, () => {
+    console.log(`dis Option is ${booleanParse}`);
+  })
 });
 
 $('#unlink a').on('click', () => {

@@ -37,12 +37,15 @@ async function parseData() {
     .reduce((x, y) => (Number(x[0]) > Number(y[0]) ? x : y), ['0.00ms', '0.0MB'])
     .map((x) => x.replace(/(?<=[0-9])(?=[A-Za-z])/, ' '));
 
-  return makeData({ link, problemId, level, title, problem_description, division, language_extension, code, result_message, runtime, memory });
+  /*프로그래밍 언어별 폴더 정리 옵션을 위한 언어 값 가져오기*/
+  const language = document.querySelector('div#tour7 > button').textContent.trim();
+
+  return makeData({ link, problemId, level, title, problem_description, division, language_extension, code, result_message, runtime, memory, language });
 }
 
 async function makeData(origin) {
-  const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code } = origin;
-  const directory = `프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code, language } = origin;
+  const directory = await getDirNameByDisOption(`프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, language);
   const levelWithLv = `${level}`.includes('lv') ? level : `lv${level}`.replace('lv', 'level ');
   const message = `[${levelWithLv}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
