@@ -14,14 +14,14 @@
 async function parseData() {
   const link = document.querySelector('head > meta[name$=url]').content.replace(/\?.*/g, '').trim();
   const problemId = document.querySelector('div.main > div.lesson-content').getAttribute('data-lesson-id');
-  const level = document.querySelector('body > div.main > div.lesson-content').getAttribute("data-challenge-level")
+  const level = document.querySelector('body > div.main > div.lesson-content').getAttribute('data-challenge-level');
   const division = [...document.querySelector('ol.breadcrumb').childNodes]
     .filter((x) => x.className !== 'active')
     .map((x) => x.innerText)
     // .filter((x) => !x.includes('코딩테스트'))
     .map((x) => convertSingleCharToDoubleChar(x))
     .reduce((a, b) => `${a}/${b}`);
-  const title = document.querySelector('#tab > li.algorithm-title').textContent.replace(/\\n/g, '').trim();
+  const title = document.querySelector('.algorithm-title .challenge-title').textContent.trim();
   const problem_description = document.querySelector('div.guide-section-description > div.markdown').innerHTML;
   const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').innerText.split('.')[1];
   const code = document.querySelector('textarea#code').value;
