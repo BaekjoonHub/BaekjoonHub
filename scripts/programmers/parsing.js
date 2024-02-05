@@ -21,7 +21,7 @@ async function parseData() {
     // .filter((x) => !x.includes('코딩테스트'))
     .map((x) => convertSingleCharToDoubleChar(x))
     .reduce((a, b) => `${a}/${b}`);
-  const title = document.querySelector('#tab > li.algorithm-title').textContent.replace(/\\n/g, '').trim();
+  const title = document.querySelector('#tab > div > div.algorithm-title').textContent.replace(/\\n/g, '').trim();
   const problem_description = document.querySelector('div.guide-section-description > div.markdown').innerHTML;
   const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').innerText.split('.')[1];
   const code = document.querySelector('textarea#code').value;
