@@ -45,6 +45,7 @@
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/zosungwoo"><img src="https://avatars.githubusercontent.com/u/30895117?v=4?s=100" width="100px;" alt="Sungwoo Cho"/><br /><sub><b>Sungwoo Cho</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/issues?q=author%3Azosungwoo" title="Bug reports">🐛</a> <a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=zosungwoo" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://dev.seejnn.com"><img src="https://avatars.githubusercontent.com/u/44645578?v=4?s=100" width="100px;" alt="seejnn"/><br /><sub><b>seejnn</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=seejnn" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://whatasame.tistory.com"><img src="https://avatars.githubusercontent.com/u/97666463?v=4?s=100" width="100px;" alt="Jeonggyu Choi"/><br /><sub><b>Jeonggyu Choi</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=whatasame" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kickbelldev"><img src="https://avatars.githubusercontent.com/u/31813451?v=4?s=100" width="100px;" alt="Jongchan"/><br /><sub><b>Jongchan</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=kickbelldev" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
