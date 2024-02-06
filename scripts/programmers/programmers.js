@@ -12,6 +12,11 @@ const currentUrl = window.location.href;
 // 프로그래머스 연습 문제 주소임을 확인하고, 맞다면 로더를 실행
 if (currentUrl.includes('/learn/courses/30') && currentUrl.includes('lessons')) startLoader();
 
+// 프로그래머스 PCCP 모의고사(1,2회) 및 기출문제
+if (currentUrl.includes('/learn/courses/20847') && currentUrl.includes('lessons')) startLoader();
+if (currentUrl.includes('/learn/courses/20848') && currentUrl.includes('lessons')) startLoader();
+if (currentUrl.includes('/learn/courses/19344') && currentUrl.includes('lessons')) startLoader();
+
 function startLoader() {
   loader = setInterval(async () => {
     // 기능 Off시 작동하지 않도록 함
