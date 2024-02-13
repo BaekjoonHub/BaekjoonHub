@@ -78,12 +78,18 @@ async function parseData() {
   const code = data.code;
   log('파싱 완료');
   // eslint-disable-next-line consistent-return
-  return makeData({ link, problemId, level, title, extension, code, runtime, memory, length,submissionTime });
+  return makeData({ link, problemId, level, title, extension, code, runtime, memory, length, submissionTime, language});
 }
 
 async function makeData(origin) {
-  const { link, problemId, level, extension, title, runtime, memory, code, length,submissionTime } = origin;
-  const directory = `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  const { link, problemId, level, extension, title, runtime, memory, code, length, submissionTime, language } = origin;
+  /*
+  * SWEA의 경우에는 JAVA 같이 모두 대문자인 경우가 존재합니다. 하지만 타 플랫폼들(백준, 프로그래머스)는 첫문자가 모두 대문자로 시작합니다.
+  * 그래서 이와 같은 케이스를 처리를 위해 첫문자만 대문자를 유지하고 나머지 문자는 소문자로 변환합니다.
+  * C++ 같은 경우에는 문자가 그대로 유지됩니다.
+  * */
+  const lang = (language === language.toUpperCase()) ? language.substring(0, 1) + language.substring(1).toLowerCase() : language
+  const directory = await getDirNameByOrgOption(`SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, lang);
   const message = `[${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
   const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
