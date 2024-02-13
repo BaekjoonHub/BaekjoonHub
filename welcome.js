@@ -71,7 +71,7 @@ const createRepo = (token, name) => {
   data = JSON.stringify(data);
 
   const xhr = new XMLHttpRequest();
-  xhr.addEventListener('readystatechange', function () {
+  xhr.addEventListener('readystatechange', function() {
     if (xhr.readyState === 4) {
       statusCode(JSON.parse(xhr.responseText), xhr.status, name);
     }
@@ -128,7 +128,7 @@ const linkRepo = (token, name) => {
   const AUTHENTICATION_URL = `https://api.github.com/repos/${name}`;
 
   const xhr = new XMLHttpRequest();
-  xhr.addEventListener('readystatechange', function () {
+  xhr.addEventListener('readystatechange', function() {
     if (xhr.readyState === 4) {
       const res = JSON.parse(xhr.responseText);
       const bool = linkStatusCode(xhr.status, name);
@@ -195,6 +195,11 @@ const unlinkRepo = () => {
     console.log('Defaulted repo hook to NONE');
   });
 
+  /*프로그래밍 언어별 폴더 정리 옵션 세션 저장 초기화*/
+  chrome.storage.local.set({ BaekjoonHub_disOption: "platform" }, () => {
+    console.log('DisOption Reset');
+  });
+
   /* Hide accordingly */
   document.getElementById('hook_mode').style.display = 'inherit';
   document.getElementById('commit_mode').style.display = 'none';
@@ -202,7 +207,7 @@ const unlinkRepo = () => {
 
 /* Check for value of select tag, Get Started disabled by default */
 
-$('#type').on('change', function () {
+$('#type').on('change', function() {
   const valueSelected = this.value;
   if (valueSelected) {
     $('#hook_button').attr('disabled', false);
@@ -256,6 +261,12 @@ $('#hook_button').on('click', () => {
       }
     });
   }
+
+  /*프로그래밍 언어별 폴더 정리 옵션 세션 저장*/
+  let org_option = $('#org_option').val();
+  chrome.storage.local.set({ BaekjoonHub_OrgOption: org_option }, () => {
+    console.log(`Set Organize by ${org_option}`);
+  });
 });
 
 $('#unlink a').on('click', () => {
