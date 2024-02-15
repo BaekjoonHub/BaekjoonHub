@@ -46,7 +46,7 @@ async function makeDetailMessageAndReadme(data) {
     code, language, memory, runtime } = data;
   const score = parseNumberFromString(result);
   const directory = await getDirNameByOrgOption(
-    `백준/${level.replace(/ .*!/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+    `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
     langVersionRemove(language, null)
   );
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`
