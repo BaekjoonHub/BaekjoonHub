@@ -47,6 +47,7 @@
       <td align="center" valign="top" width="14.28%"><a href="http://whatasame.tistory.com"><img src="https://avatars.githubusercontent.com/u/97666463?v=4?s=100" width="100px;" alt="Jeonggyu Choi"/><br /><sub><b>Jeonggyu Choi</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=whatasame" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/kickbelldev"><img src="https://avatars.githubusercontent.com/u/31813451?v=4?s=100" width="100px;" alt="Jongchan"/><br /><sub><b>Jongchan</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=kickbelldev" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/terrinens"><img src="https://avatars.githubusercontent.com/u/132042125?v=4?s=100" width="100px;" alt="terrinens"/><br /><sub><b>terrinens</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=terrinens" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/thwang26"><img src="https://avatars.githubusercontent.com/u/102675847?v=4?s=100" width="100px;" alt="Taewon Hwang"/><br /><sub><b>Taewon Hwang</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=thwang26" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
