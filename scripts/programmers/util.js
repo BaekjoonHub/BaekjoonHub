@@ -65,7 +65,6 @@ function startUploadCountDown() {
  * @param {Date} date
  * @return {string} 포맷된 스트링
  */
-fix: 백준 문제 제출 시 시간 포멧팅이 잘못 나오는 오류 수정
 
 function getDateString(date){
   const year = date.getFullYear();
