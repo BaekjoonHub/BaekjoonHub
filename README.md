@@ -50,6 +50,9 @@
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/thwang26"><img src="https://avatars.githubusercontent.com/u/102675847?v=4?s=100" width="100px;" alt="Taewon Hwang"/><br /><sub><b>Taewon Hwang</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=thwang26" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/tkdcks7"><img src="https://avatars.githubusercontent.com/u/141592320?v=4?s=100" width="100px;" alt="GSC"/><br /><sub><b>GSC</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=tkdcks7" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/yunnn426"><img src="https://avatars.githubusercontent.com/u/95147113?v=4?s=100" width="100px;" alt="yunnn426"/><br /><sub><b>yunnn426</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=yunnn426" title="Code">💻</a></td>
+    </tr>
   </tbody>
 </table>
 
