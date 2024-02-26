@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.1.28",
+  "version": "1.2.0",
   "author": "flaxinger",
   "action": {
     "default_icon": "assets/thumbnail.png",
@@ -37,7 +37,8 @@
     "https://school.programmers.co.kr/",
     "https://github.com/",
     "https://swexpertacademy.com/",
-    "https://solved.ac/api/v3/*"
+    "https://solved.ac/api/v3/*",
+    "https://level.goorm.io/"
   ],
   "web_accessible_resources": [
     {
@@ -134,6 +135,28 @@
         "scripts/swexpertacademy/parsing.js",
         "scripts/swexpertacademy/uploadfunctions.js",
         "scripts/swexpertacademy/swexpertacademy.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://level.goorm.io/*"
+      ],
+      "css": [
+        "css/goormlevel/inject.css"
+      ],
+      "js": [
+        "library/sha1.min.js",
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js",
+        "scripts/storage.js",
+        "scripts/enable.js",
+        "scripts/goormlevel/variables.js",
+        "scripts/goormlevel/util.js",
+        "scripts/goormlevel/parsing.js",
+        "scripts/goormlevel/uploadfunctions.js",
+        "scripts/goormlevel/goormlevel.js"
       ],
       "run_at": "document_idle"
     }
