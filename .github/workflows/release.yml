@@ -36,22 +36,6 @@ jobs:
         # 현재 폴더의 모든 파일을 압축합니다.
         zip -r v${{ steps.extract_version.outputs.version }}.zip . -x ".git/*"
 
-    - name: 나이트 압축 파일 생성
-      run: |
-        # 압축된 파일을 복사하여 수정합니다.
-        cp v${{ steps.extract_version.outputs.version }}.zip v${{ steps.extract_version.outputs.version }}-nightly.zip
-
-        # manifest.json 파일에서 "name"을 수정합니다.
-        jq '.name = "백준허브 Nightly(BaekjoonHub Nightly)"' manifest.json > manifest.tmp.json
-        mv manifest.tmp.json manifest.json
-
-        # assets/thumbnail.png 파일을 색상을 반전시켜 수정합니다.
-        convert assets/thumbnail.png -negate assets/thumbnail-night.png
-        mv assets/thumbnail-night.png assets/thumbnail.png
-
-        # 압축 파일에 변경된 파일을 추가합니다.
-        zip -u v${{ steps.extract_version.outputs.version }}-nightly.zip manifest.json assets/thumbnail.png
-
     - name: 릴리즈 생성
       id: create_release
       uses: softprops/action-gh-release@v1
