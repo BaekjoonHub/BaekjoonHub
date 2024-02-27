@@ -45,5 +45,5 @@ const languages = /** @type {const} */ ({
     "c#": "cs",
     "cobol": "cob",
     "d": "d",
-    "erlang": "erl",
+    "erlang": "erl"
 });
