@@ -32,6 +32,31 @@ function isEmpty(value) {
   return isNull(value) || (value.hasOwnProperty('length') && value.length === 0);
 }
 
+/**
+ * 'codeLength' 값이 비어있다면 'code'의 길이로 계산해서 채웁니다.
+ * @param {Object} obj - 체크하여 길이를 계산할 객체
+ * @returns {Object} - 반환할 객체
+ */
+function calCodeLength(obj) {
+  if (isEmpty(obj['codeLength']) && !isEmpty(obj['code'])) {
+    let str = obj['code'];
+    let size = 0;
+    for (let i = 0; i < str.length; i++) {
+      let charCode = str.charCodeAt(i);
+      if (charCode <= 0x00007F) {
+        size += 1;
+      } else if (charCode <= 0x0007FF) {
+        size += 2;
+      } else if (charCode <= 0x00FFFF) {
+        size += 3;
+      } else {
+        size += 4;
+      }
+    }
+    obj['codeLength'] = size;
+  }
+  return obj;
+}
 /** 객체 또는 배열의 모든 요소를 재귀적으로 순회하여 값이 비어있지 않은지 체크합니다.
  * 자기 자신의 null값이거나 빈 문자열, 빈 배열, 빈 객체인 경우이거나, 요소 중 하나라도 값이 비어있으면 false를 반환합니다.
  * @param {any} obj - 체크할 객체 또는 배열
