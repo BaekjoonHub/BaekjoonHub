@@ -62,7 +62,7 @@ async function makeDetailMessageAndReadme(data) {
     + `메모리: ${memory} KB, `
     + `시간: ${runtime} ms\n\n`
     + `### 분류\n\n`
-    + `${category || "Empty"}\n\n` + (!!problem_description ? ''
+    + `${category || "분류 없음"}\n\n` + (!!problem_description ? ''
     + `### 제출 일자\n\n`
     + `${dateInfo}\n\n`
       + `### 문제 설명\n\n${problem_description}\n\n`

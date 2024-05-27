@@ -34,10 +34,11 @@ function isEmpty(value) {
 
 /**
  * 'codeLength' 값이 비어있다면 'code'의 길이로 계산해서 채웁니다.
+ * 'problem_tags' 값이 비어있다면 '분류 없음'으로 채웁니다.
  * @param {Object} obj - 체크하여 길이를 계산할 객체
  * @returns {Object} - 반환할 객체
  */
-function calCodeLength(obj) {
+function preProcessEmptyObj(obj) {
   if (isEmpty(obj['codeLength']) && !isEmpty(obj['code'])) {
     let str = obj['code'];
     let size = 0;
@@ -54,6 +55,9 @@ function calCodeLength(obj) {
       }
     }
     obj['codeLength'] = size;
+  }
+  if (isEmpty(obj['problem_tags']) && !isEmpty(obj['code'])) {
+    obj['problem_tags'] = ['분류 없음'];
   }
   return obj;
 }
