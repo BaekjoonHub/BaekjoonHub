@@ -33,6 +33,17 @@ function isEmpty(value) {
 }
 
 /**
+ * UTF-8문자열의 길이를 한글을 3byte로 계산하며 반환합니다.
+ * \r\n escape문자는 \n으로 변환됩니다.
+ * @param {string} str - 계산할 문자열
+ * @returns {number} - 계산된 길이
+ */
+function utf8Length(str) {
+  const normalizedStr = str.replace(/\r\n/g, '\n');
+  return (new TextEncoder().encode(normalizedStr)).length;
+}
+
+/**
  * 'codeLength' 값이 비어있다면 'code'의 길이로 계산해서 채웁니다.
  * 'problem_tags' 값이 비어있다면 '분류 없음'으로 채웁니다.
  * @param {Object} obj - 체크하여 길이를 계산할 객체
@@ -40,21 +51,8 @@ function isEmpty(value) {
  */
 function preProcessEmptyObj(obj) {
   if (isEmpty(obj['codeLength']) && !isEmpty(obj['code'])) {
-    let str = obj['code'];
-    let size = 0;
-    for (let i = 0; i < str.length; i++) {
-      let charCode = str.charCodeAt(i);
-      if (charCode <= 0x00007F) {
-        size += 1;
-      } else if (charCode <= 0x0007FF) {
-        size += 2;
-      } else if (charCode <= 0x00FFFF) {
-        size += 3;
-      } else {
-        size += 4;
-      }
-    }
-    obj['codeLength'] = size;
+    const code = obj['code'];
+    obj['codeLength'] = utf8Length(code);
   }
   if (isEmpty(obj['problem_tags']) && !isEmpty(obj['code'])) {
     obj['problem_tags'] = ['분류 없음'];

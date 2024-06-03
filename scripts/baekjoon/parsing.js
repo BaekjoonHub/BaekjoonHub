@@ -27,7 +27,7 @@ async function findData(data) {
     }
     if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
     data = { ...data, ...await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId) };
-    const detail = await makeDetailMessageAndReadme(data);
+    const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
     return { ...data, ...detail }; // detail 만 반환해도 되나, 확장성을 위해 모든 데이터를 반환합니다.
   } catch (error) {
     console.error(error);
@@ -62,7 +62,7 @@ async function makeDetailMessageAndReadme(data) {
     + `메모리: ${memory} KB, `
     + `시간: ${runtime} ms\n\n`
     + `### 분류\n\n`
-    + `${category || "분류 없음"}\n\n` + (!!problem_description ? ''
+    + `${category || "Empty"}\n\n` + (!!problem_description ? ''
     + `### 제출 일자\n\n`
     + `${dateInfo}\n\n`
       + `### 문제 설명\n\n${problem_description}\n\n`
