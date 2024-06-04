@@ -32,6 +32,33 @@ function isEmpty(value) {
   return isNull(value) || (value.hasOwnProperty('length') && value.length === 0);
 }
 
+/**
+ * UTF-8문자열의 길이를 한글을 3byte로 계산하며 반환합니다.
+ * \r\n escape문자는 \n으로 변환됩니다.
+ * @param {string} str - 계산할 문자열
+ * @returns {number} - 계산된 길이
+ */
+function utf8Length(str) {
+  const normalizedStr = str.replace(/\r\n/g, '\n');
+  return (new TextEncoder().encode(normalizedStr)).length;
+}
+
+/**
+ * 'codeLength' 값이 비어있다면 'code'의 길이로 계산해서 채웁니다.
+ * 'problem_tags' 값이 비어있다면 '분류 없음'으로 채웁니다.
+ * @param {Object} obj - 체크하여 길이를 계산할 객체
+ * @returns {Object} - 반환할 객체
+ */
+function preProcessEmptyObj(obj) {
+  if (isEmpty(obj['codeLength']) && !isEmpty(obj['code'])) {
+    const code = obj['code'];
+    obj['codeLength'] = utf8Length(code);
+  }
+  if (isEmpty(obj['problem_tags']) && !isEmpty(obj['code'])) {
+    obj['problem_tags'] = ['분류 없음'];
+  }
+  return obj;
+}
 /** 객체 또는 배열의 모든 요소를 재귀적으로 순회하여 값이 비어있지 않은지 체크합니다.
  * 자기 자신의 null값이거나 빈 문자열, 빈 배열, 빈 객체인 경우이거나, 요소 중 하나라도 값이 비어있으면 false를 반환합니다.
  * @param {any} obj - 체크할 객체 또는 배열

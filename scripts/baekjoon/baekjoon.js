@@ -56,6 +56,7 @@ function toastThenStopLoader(toastMessage, errorMessage){
 
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
+  bojData = preProcessEmptyObj(bojData);
   log('bojData', bojData);
   if (isNotEmpty(bojData)) {
     const stats = await getStats();
