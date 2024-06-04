@@ -212,6 +212,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "medAndro",
+      "name": "Meda",
+      "avatar_url": "https://avatars.githubusercontent.com/u/88672474?v=4",
+      "profile": "https://github.com/medAndro",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
