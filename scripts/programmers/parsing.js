@@ -34,7 +34,7 @@ async function parseData() {
     .map((x) => x.innerText)
     .map((x) => x.replace(/[^., 0-9a-zA-Z]/g, '').trim())
     .map((x) => x.split(', '))
-    .reduce((x, y) => (Number(x[0]) > Number(y[0]) ? x : y), ['0.00ms', '0.0MB'])
+    .reduce((x, y) => (Number(x[0].slice(0, -2)) > Number(y[0].slice(0, -2)) ? x : y), ['0.00ms', '0.0MB'])
     .map((x) => x.replace(/(?<=[0-9])(?=[A-Za-z])/, ' '));
 
   /*프로그래밍 언어별 폴더 정리 옵션을 위한 언어 값 가져오기*/
