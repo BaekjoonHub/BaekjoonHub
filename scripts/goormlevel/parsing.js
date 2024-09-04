@@ -109,7 +109,7 @@ async function makeData({
 }) {
   const languageExtension = languages[language.toLowerCase()];
   const directory = await getDirNameByOrgOption(`goormlevel/${examSequence}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`, language);
-  const message = `[난이도 ${difficulty}] Title: ${title}, Time: ${runtime}, Memory: ${memory}, Difficulty: ${difficulty} -BaekjoonHub`;
+  const message = `[난이도 ${difficulty}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = getDateString(new Date(Date.now()));
   // prettier-ignore
