@@ -55,6 +55,7 @@
       <td align="center" valign="top" width="14.28%"><a href="https://velog.io/@sonwj0915"><img src="https://avatars.githubusercontent.com/u/87295692?v=4?s=100" width="100px;" alt="sonwonjae"/><br /><sub><b>sonwonjae</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=sonwonjae" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/medAndro"><img src="https://avatars.githubusercontent.com/u/88672474?v=4?s=100" width="100px;" alt="Meda"/><br /><sub><b>Meda</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=medAndro" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/line1029"><img src="https://avatars.githubusercontent.com/u/95160680?v=4?s=100" width="100px;" alt="Minsoo Jun"/><br /><sub><b>Minsoo Jun</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=line1029" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rninzi"><img src="https://avatars.githubusercontent.com/u/90755664?v=4?s=100" width="100px;" alt="minzzzi"/><br /><sub><b>minzzzi</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=rninzi" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
