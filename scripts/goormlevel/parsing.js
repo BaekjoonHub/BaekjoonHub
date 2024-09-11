@@ -14,7 +14,8 @@ async function parseData() {
 
   const examSequence = Number(pathnameList[2]) || 0;
   const quizNumber = Number(pathnameList[5]) || 0;
-  const difficulty = document.querySelectorAll('#ratingTooltipTarget > div > label').length;
+  const difficultyLabel = document.querySelector('span[role=text] > span').innerHTML;
+  const difficulty = difficultyLabels[difficultyLabel];
 
   const titlePrefix = 'title-';
   const title = document.querySelector(`div[aria-label^="${titlePrefix}"]`).ariaLabel.replace(titlePrefix, '');
@@ -108,7 +109,7 @@ async function makeData({
 }) {
   const languageExtension = languages[language.toLowerCase()];
   const directory = await getDirNameByOrgOption(`goormlevel/${examSequence}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`, language);
-  const message = `[goormlevel] Title: ${title}, Time: ${runtime}, Memory: ${memory}, Difficulty: ${difficulty} -BaekjoonHub`;
+  const message = `[난이도 ${difficulty}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = getDateString(new Date(Date.now()));
   // prettier-ignore
