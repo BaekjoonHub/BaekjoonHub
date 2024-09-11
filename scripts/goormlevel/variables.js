@@ -3,6 +3,7 @@
 /* 포함된 변수는 다음과 같습니다. 
     languages: goormlevel에서 제공하는 프로그래밍 언어에 맞는 file extension
     uploadState: 현재 업로드 중인지를 저장하는 boolean입니다.
+    difficultyLabels: 문제의 난이도를 숫자로 매핑하는 상수입니다.
 */
 
 /* state of upload for progress */
@@ -46,4 +47,12 @@ const languages = /** @type {const} */ ({
     "cobol": "cob",
     "d": "d",
     "erlang": "erl"
+});
+
+const difficultyLabels = /** @type {const} */ ({
+  '매우 쉬움': 1,
+  쉬움: 2,
+  보통: 3,
+  어려움: 4,
+  '매우 어려움': 5,
 });
