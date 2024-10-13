@@ -31,7 +31,9 @@ function startLoader() {
         const { username, resultCategory } = data;
 
         const userLanguage = document.documentElement.lang || navigator.language;
-        const acceptedCategory = userLanguage.startsWith('en') ? RESULT_CATEGORY.RESULT_ENG_ACCEPTED : RESULT_CATEGORY.RESULT_ACCEPTED;
+        const acceptedCategory = userLanguage.startsWith('en') 
+          ? RESULT_CATEGORY.RESULT_ENG_ACCEPTED 
+          : RESULT_CATEGORY.RESULT_ACCEPTED;
 
         if (username === findUsername() 
             && resultCategory.includes(acceptedCategory)) {
