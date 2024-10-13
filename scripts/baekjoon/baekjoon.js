@@ -29,9 +29,12 @@ function startLoader() {
       const data = table[0];
       if (data.hasOwnProperty('username') && data.hasOwnProperty('resultCategory')) {
         const { username, resultCategory } = data;
-        if (username === findUsername() &&
-          (resultCategory.includes(RESULT_CATEGORY.RESULT_ACCEPTED) ||
-            resultCategory.includes(RESULT_CATEGORY.RESULT_ENG_ACCEPTED))) {
+
+        const userLanguage = document.documentElement.lang || navigator.language;
+        const acceptedCategory = userLanguage.startsWith('en') ? RESULT_CATEGORY.RESULT_ENG_ACCEPTED : RESULT_CATEGORY.RESULT_ACCEPTED;
+
+        if (username === findUsername() 
+            && resultCategory.includes(acceptedCategory)) {
           stopLoader();
           console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
           startUpload();

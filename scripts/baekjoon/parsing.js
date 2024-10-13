@@ -18,8 +18,14 @@ async function findData(data) {
     if (isNull(data)) {
       let table = findFromResultTable();
       if (isEmpty(table)) return null;
+
+      const userLanguage = document.documentElement.lang || navigator.language;
+      const resultCategory = userLanguage.startsWith('en') 
+        ? RESULT_CATEGORY.RESULT_ENG_ACCEPTED 
+        : RESULT_CATEGORY.RESULT_ACCEPTED;
+
       table = filter(table, {
-        'resultCategory': RESULT_CATEGORY.RESULT_ACCEPTED,
+        'resultCategory': resultCategory,
         'username': findUsername(),
         'language': table[0]["language"]
       })
