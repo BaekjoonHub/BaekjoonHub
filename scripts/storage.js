@@ -163,6 +163,28 @@ async function getOrgOption() {
   }
 }
 
+/** Returns the value set in push_dir_option in welcome.html. */
+async function getPushDirOption() {
+  try {
+    return await getObjectFromLocalStorage('BaekjoonHub_PushDirOption');
+  } catch (ex) {
+    console.log('The way it works has changed with updates. Update your storage. ');
+    chrome.storage.local.set({ BaekjoonHub_PushDirOption: 'root' }, () => {});
+    return 'root';
+  }
+}
+
+/** Returns the value of the custom push_dir_path. */
+async function getPushDirPath() {
+  try {
+    return await getObjectFromLocalStorage('BaekjoonHub_PushDirPath');
+  } catch (ex) {
+    console.log('The way it works has changed with updates. Update your storage. ');
+    chrome.storage.local.set({ BaekjoonHub_PushDirPath: null }, () => {});
+    return null;
+  }
+}
+
 async function getModeType() {
   return await getObjectFromLocalStorage('mode_type');
 }
@@ -266,6 +288,16 @@ async function getDirNameByOrgOption(dirName, language) {
   return dirName;
 }
 
+/**
+ * 해당 메서드는 푸시 디렉토리 커스텀 옵션을 사용할 경우 푸시할 디렉토리를 지정하기 위함입니다.
+ * 스토리지에 저장된 {@link getPushDirOption}값에 따라 분기 처리됩니다.
+ * */
+async function getDirNameByPushDirOption(dirName, language) {
+  dirName = await getDirNameByOrgOption(dirName, language);
+  const pushDirPath = await getPushDirPath();
+  if ((await getPushDirOption()) === 'custom' && pushDirPath) dirName = `${pushDirPath}/${dirName}`;
+  return dirName;
+}
 
 /**
  * @deprecated
