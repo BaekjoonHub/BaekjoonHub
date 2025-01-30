@@ -38,7 +38,7 @@ function stopLoader() {
 }
 
 function getSolvedResult() {
-  const activeSubmitTab = [...document.querySelectorAll('#FrameBody li.nav-item > a.nav-link.active')].find(($element) => $element.textContent === '제출결과');
+  const activeSubmitTab = [...document.querySelectorAll('#FrameBody li.nav-item > a.nav-link.active')].find(($element) => $element.textContent === '제출 결과');
 
   if (!!activeSubmitTab) {
     const result = [...document.querySelectorAll('#FrameBody div > p[class] > span')].find(($element) => $element.textContent === '정답입니다.');
