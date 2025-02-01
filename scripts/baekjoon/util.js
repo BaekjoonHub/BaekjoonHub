@@ -131,27 +131,36 @@ function convertResultTableHeader(header) {
   switch (header) {
     case '문제번호':
     case '문제':
+    case 'Problem':
       return 'problemId';
     case '난이도':
       return 'level';
     case '결과':
+    case 'Result':
       return 'result';
     case '문제내용':
       return 'problemDescription';
     case '언어':
+    case 'Language':
       return 'language';
     case '제출 번호':
+    case 'Solution':
       return 'submissionId';
     case '아이디':
+    case 'User':
       return 'username';
     case '제출시간':
     case '제출한 시간':
+    case 'Submission Time':
       return 'submissionTime';
     case '시간':
+    case 'Time':
       return 'runtime';
     case '메모리':
+    case 'Memory':
       return 'memory';
     case '코드 길이':
+    case 'Length':
       return 'codeLength';
     default:
       return 'unknown';
