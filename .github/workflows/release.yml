@@ -1,6 +1,7 @@
 name: Auto Release and Publish Chrome Extension
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
