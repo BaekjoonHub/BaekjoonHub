@@ -16,58 +16,6 @@
 
 </br>
 
-## Contributors
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/flaxinger"><img src="https://avatars.githubusercontent.com/u/70012548?v=4?s=100" width="100px;" alt="flaxinger"/><br /><sub><b>flaxinger</b></sub></a><br /><a href="#maintenance-flaxinger" title="Maintenance">🚧</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/getCurrentThread"><img src="https://avatars.githubusercontent.com/u/31976959?v=4?s=100" width="100px;" alt="getCurrentThread"/><br /><sub><b>getCurrentThread</b></sub></a><br /><a href="#maintenance-getCurrentThread" title="Maintenance">🚧</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/doxxx93"><img src="https://avatars.githubusercontent.com/u/51396905?v=4?s=100" width="100px;" alt="Doxxx93"/><br /><sub><b>Doxxx93</b></sub></a><br /><a href="#talk-doxxx93" title="Talks">📢</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://xvezda.com"><img src="https://avatars.githubusercontent.com/u/9497404?v=4?s=100" width="100px;" alt="Xvezda"/><br /><sub><b>Xvezda</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=Xvezda" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mumwa"><img src="https://avatars.githubusercontent.com/u/13832137?v=4?s=100" width="100px;" alt="mumwa"/><br /><sub><b>mumwa</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=mumwa" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cokemania2"><img src="https://avatars.githubusercontent.com/u/38974863?v=4?s=100" width="100px;" alt="cokemania2"/><br /><sub><b>cokemania2</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=cokemania2" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/keinetwork"><img src="https://avatars.githubusercontent.com/u/102347379?v=4?s=100" width="100px;" alt="keinetwork"/><br /><sub><b>keinetwork</b></sub></a><br /><a href="#question-keinetwork" title="Answering Questions">💬</a></td>
-    </tr>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LimSB-dev"><img src="https://avatars.githubusercontent.com/u/95527804?v=4?s=100" width="100px;" alt="임성빈"/><br /><sub><b>임성빈</b></sub></a><br /><a href="#question-LimSB-dev" title="Answering Questions">💬</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/fhdufhdu"><img src="https://avatars.githubusercontent.com/u/32770312?v=4?s=100" width="100px;" alt="fhdufhdu"/><br /><sub><b>fhdufhdu</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=fhdufhdu" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://koderpark.dev"><img src="https://avatars.githubusercontent.com/u/43494256?v=4?s=100" width="100px;" alt="박성훈 / Koder"/><br /><sub><b>박성훈 / Koder</b></sub></a><br /><a href="#business-Koderpark" title="Business development">💼</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Kyu0"><img src="https://avatars.githubusercontent.com/u/56034014?v=4?s=100" width="100px;" alt="Kyu0"/><br /><sub><b>Kyu0</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=Kyu0" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://cjh970422.tistory.com/"><img src="https://avatars.githubusercontent.com/u/39554558?v=4?s=100" width="100px;" alt="Choi Jun Ho"/><br /><sub><b>Choi Jun Ho</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=junhochoi-dev" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ahn0min"><img src="https://avatars.githubusercontent.com/u/89904226?v=4?s=100" width="100px;" alt="YeongMin Ahn"/><br /><sub><b>YeongMin Ahn</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=ahn0min" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://velog.io/@bluejoyq"><img src="https://avatars.githubusercontent.com/u/42014299?v=4?s=100" width="100px;" alt="bluejoyq"/><br /><sub><b>bluejoyq</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=bluejoyq" title="Code">💻</a></td>
-    </tr>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/zosungwoo"><img src="https://avatars.githubusercontent.com/u/30895117?v=4?s=100" width="100px;" alt="Sungwoo Cho"/><br /><sub><b>Sungwoo Cho</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/issues?q=author%3Azosungwoo" title="Bug reports">🐛</a> <a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=zosungwoo" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="http://dev.seejnn.com"><img src="https://avatars.githubusercontent.com/u/44645578?v=4?s=100" width="100px;" alt="seejnn"/><br /><sub><b>seejnn</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=seejnn" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="http://whatasame.tistory.com"><img src="https://avatars.githubusercontent.com/u/97666463?v=4?s=100" width="100px;" alt="Jeonggyu Choi"/><br /><sub><b>Jeonggyu Choi</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=whatasame" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kickbelldev"><img src="https://avatars.githubusercontent.com/u/31813451?v=4?s=100" width="100px;" alt="Jongchan"/><br /><sub><b>Jongchan</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=kickbelldev" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/terrinens"><img src="https://avatars.githubusercontent.com/u/132042125?v=4?s=100" width="100px;" alt="terrinens"/><br /><sub><b>terrinens</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=terrinens" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/thwang26"><img src="https://avatars.githubusercontent.com/u/102675847?v=4?s=100" width="100px;" alt="Taewon Hwang"/><br /><sub><b>Taewon Hwang</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=thwang26" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/tkdcks7"><img src="https://avatars.githubusercontent.com/u/141592320?v=4?s=100" width="100px;" alt="GSC"/><br /><sub><b>GSC</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=tkdcks7" title="Code">💻</a></td>
-    </tr>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/yunnn426"><img src="https://avatars.githubusercontent.com/u/95147113?v=4?s=100" width="100px;" alt="yunnn426"/><br /><sub><b>yunnn426</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=yunnn426" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://velog.io/@sonwj0915"><img src="https://avatars.githubusercontent.com/u/87295692?v=4?s=100" width="100px;" alt="sonwonjae"/><br /><sub><b>sonwonjae</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=sonwonjae" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/medAndro"><img src="https://avatars.githubusercontent.com/u/88672474?v=4?s=100" width="100px;" alt="Meda"/><br /><sub><b>Meda</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=medAndro" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/line1029"><img src="https://avatars.githubusercontent.com/u/95160680?v=4?s=100" width="100px;" alt="Minsoo Jun"/><br /><sub><b>Minsoo Jun</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=line1029" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rninzi"><img src="https://avatars.githubusercontent.com/u/90755664?v=4?s=100" width="100px;" alt="minzzzi"/><br /><sub><b>minzzzi</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=rninzi" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/seungwone"><img src="https://avatars.githubusercontent.com/u/109544413?v=4?s=100" width="100px;" alt="Seungwon Lee"/><br /><sub><b>Seungwon Lee</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=seungwone" title="Code">💻</a></td>
-    </tr>
-  </tbody>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-<br/>
-
 ## 목차
 
 1. [크롬 마켓](#지금-크롬-마켓에서-확인하세요)
@@ -120,7 +68,6 @@
     (기본값은 private으로 되어있습니다).</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다</li>
 </ol>
-👉 보다 구체적인 사용 방법을 알고 싶다면 다음 <a href="https://velog.io/@flaxinger/백준허브-사용-방법">사용자 매뉴얼</a>을 확인해주세요.
 <br />
 <br />
 

@@ -1,0 +1,131 @@
+// Import all dependencies directly
+// Common utilities
+import * as GlobalUtil from "../util.js";
+import * as Github from "../Github.js";
+import * as GlobalStorage from "../storage.js";
+import { Toast } from "../toast.js";
+import * as Enable from "../enable.js";
+
+// Platform-specific utilities
+import { languages, bj_level, RESULT_CATEGORY, RESULT_MESSAGE, uploadState, multiloader } from "./variables.js";
+import * as Parsing from "./parsing.js";
+import * as Storage from "./storage.js";
+import * as UploadFunctions from "./uploadfunctions.js";
+import * as Util from "./util.js";
+
+// Import third-party libraries from NPM packages
+import sha1 from "js-sha1";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+
+// Set to true to enable console log
+const debug = true;
+
+/* 
+  문제 제출 맞음 여부를 확인하는 함수
+  2초마다 문제를 파싱하여 확인
+*/
+let loader;
+
+const currentUrl = window.location.href;
+log(currentUrl);
+
+// 문제 제출 사이트의 경우에는 로더를 실행하고, 유저 페이지의 경우에는 버튼을 생성한다.
+// 백준 사이트 로그인 상태이면 username이 있으며, 아니면 없다.
+const username = findUsername();
+if (!isNull(username)) {
+  if (["status", `user_id=${username}`, "problem_id", "from_mine=1"].every((key) => currentUrl.includes(key))) startLoader();
+  else if (currentUrl.match(/\.net\/problem\/\d+/) !== null) parseProblemDescription();
+}
+
+function startLoader() {
+  loader = setInterval(async () => {
+    // 기능 Off시 작동하지 않도록 함
+    const enable = await checkEnable();
+    if (!enable) stopLoader();
+    else if (isExistResultTable()) {
+      const table = findFromResultTable();
+      if (isEmpty(table)) return;
+      const data = table[0];
+      if (data.hasOwnProperty("username") && data.hasOwnProperty("resultCategory")) {
+        const { username, resultCategory } = data;
+        if (username === findUsername() && (resultCategory.includes(RESULT_CATEGORY.RESULT_ACCEPTED) || resultCategory.includes(RESULT_CATEGORY.RESULT_ENG_ACCEPTED))) {
+          stopLoader();
+          console.log("풀이가 맞았습니다. 업로드를 시작합니다.");
+          startUpload();
+          const bojData = await findData();
+          await beginUpload(bojData);
+        }
+      }
+    }
+  }, 2000);
+}
+
+function stopLoader() {
+  clearInterval(loader);
+  loader = null;
+}
+
+function toastThenStopLoader(toastMessage, errorMessage) {
+  Toast.raiseToast(toastMessage);
+  stopLoader();
+  throw new Error(errorMessage);
+}
+
+/* 파싱 직후 실행되는 함수 */
+async function beginUpload(bojData) {
+  bojData = preProcessEmptyObj(bojData);
+  log("bojData", bojData);
+  if (isNotEmpty(bojData)) {
+    const stats = await getStats();
+    const hook = await getHook();
+
+    const currentVersion = stats.version;
+    /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
+    if (isNull(currentVersion) || currentVersion !== getVersion() || isNull(await getStatsSHAfromPath(hook))) {
+      await versionUpdate();
+    }
+
+    /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
+    cachedSHA = await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`);
+    calcSHA = calculateBlobSHA(bojData.code);
+    log("cachedSHA", cachedSHA, "calcSHA", calcSHA);
+
+    if (cachedSHA == calcSHA) {
+      markUploadedCSS(stats.branches, bojData.directory);
+      console.log(`현재 제출번호를 업로드한 기록이 있습니다.` /* submissionID ${bojData.submissionId}` */);
+      return;
+    }
+    /* 신규 제출 번호라면 새롭게 커밋  */
+    await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
+  }
+}
+
+async function versionUpdate() {
+  log("start versionUpdate");
+  const stats = await updateLocalStorageStats();
+  // update version.
+  stats.version = getVersion();
+  await saveStats(stats);
+  log("stats updated.", stats);
+}
+
+// Map functions from dependencies to global namespace
+const { log, isNull, isEmpty, isNotEmpty, preProcessEmptyObj, calculateBlobSHA, getStats, getHook, getVersion, getStatsSHAfromPath, saveStats, updateLocalStorageStats } = GlobalUtil;
+
+const { findUsername, startUpload, markUploadedCSS, findFromResultTable, isExistResultTable, parseProblemDescription } = Util;
+
+const { findData } = Parsing;
+
+const { uploadOneSolveProblemOnGit } = UploadFunctions;
+
+// Import storage functions and make them available in global scope
+const { getObjectFromLocalStorage, getObjectFromSyncStorage, saveObjectInLocalStorage, saveObjectInSyncStorage } = GlobalStorage;
+
+// Explicitly attach to window to make them available in global scope
+window.getObjectFromLocalStorage = getObjectFromLocalStorage;
+window.getObjectFromSyncStorage = getObjectFromSyncStorage;
+window.saveObjectInLocalStorage = saveObjectInLocalStorage;
+window.saveObjectInSyncStorage = saveObjectInSyncStorage;
+
+const { checkEnable } = Enable;

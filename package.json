@@ -1,0 +1,40 @@
+{
+  "name": "baekjoonhub",
+  "version": "1.2.3",
+  "description": "Chrome extension that automatically pushes your code to GitHub from competitive programming platforms",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --config webpack.config.js",
+    "watch": "webpack --watch --config webpack.config.js",
+    "package": "cd dist && zip -r ../packages/baekjoonhub-v$(node -p \"require('../package.json').version\").zip *",
+    "clean": "rm -rf dist packages node_modules",
+    "lint": "eslint src/**/*.js",
+    "test": "echo \"No tests implemented yet\""
+  },
+  "keywords": [
+    "chrome-extension",
+    "baekjoonhub",
+    "competitive-programming",
+    "github-integration"
+  ],
+  "author": "flaxinger",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BaekjoonHub/BaekjoonHub.git"
+  },
+  "devDependencies": {
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^13.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "file-saver": "^2.0.5",
+    "js-sha1": "^0.6.0",
+    "jszip": "^3.7.1"
+  }
+}
