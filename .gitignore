@@ -1,6 +1,24 @@
-.env
-.vscode
-node_modules
-package-lock.json
-_metadata
-.idea
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+packages/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+.tmp/
+tmp/
