@@ -290,17 +290,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Tab switching logic
-  $$('.tab-button').forEach(button => {
-    button.addEventListener('click', function() {
-      // Remove active class from all buttons and content
-      $$('.tab-button').forEach(btn => btn.classList.remove('active'));
-      $$('.tab-content').forEach(content => content.classList.remove('active'));
+  // $$('.tab-button').forEach(button => {
+  //   button.addEventListener('click', function() {
+  //     // Remove active class from all buttons and content
+  //     $$('.tab-button').forEach(btn => btn.classList.remove('active'));
+  //     $$('.tab-content').forEach(content => content.classList.remove('active'));
       
-      // Add active class to clicked button and corresponding content
-      this.classList.add('active');
-      $(`#${this.dataset.tab}`).classList.add('active');
-    });
-  });
+  //     // Add active class to clicked button and corresponding content
+  //     this.classList.add('active');
+  //     $(`#${this.dataset.tab}`).classList.add('active');
+  //   });
+  // });
 
   // Advanced tab unlink button
   $("#unlink_button")?.addEventListener("click", () => {

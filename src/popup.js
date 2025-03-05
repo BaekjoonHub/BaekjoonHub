@@ -6,7 +6,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
 
 // Replace jQuery functions with native DOM equivalents
-const showElement = (selector) => { $(selector).style.display = 'block'; };
+const showElement = (selector) => { $(selector).style.display = 'block'; $(selector).hidden = false; };
 const setHTML = (selector, html) => { $(selector).innerHTML = html; };
 const getChecked = (selector) => $(selector).checked;
 const setChecked = (selector, checked) => { $(selector).checked = checked; };
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Get URL for settings page */
   setAttr("#settings_URL", "href", `chrome-extension://${chrome.runtime.id}/settings.html`);
-  setAttr("#hook_URL", "href", `chrome-extension://${chrome.runtime.id}/welcome.html`);
+  setAttr("#hook_URL", "href", `chrome-extension://${chrome.runtime.id}/settings.html`);
 
   chrome.storage.local.get("BaekjoonHub_token", (data) => {
     const token = data.BaekjoonHub_token;

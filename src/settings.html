@@ -1,93 +1,94 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="css/settings.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- NPM packages will be bundled by webpack -->
-  </head>
 
-  <body>
-    <div class="grid container">
-      <div class="sixteen wide center aligned column">
-        <h1 id="title">
-          Baekjoon
-          <span style="color: #0078c3">Hub</span>
-          Settings
-        </h1>
-        <p class="caption">Configure your coding experience</p>
-        <p hidden id="error"></p>
-        <p hidden id="success"></p>
-        <p hidden id="unlink">
-          Linked the wrong repo?
-          <a>Unlink</a>
-          .
-        </p>
+<head>
+  <link rel="stylesheet" href="css/settings.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- NPM packages will be bundled by webpack -->
+</head>
+
+<body>
+  <div class="grid container">
+    <div class="sixteen wide center aligned column">
+      <h1 id="title">
+        Baekjoon
+        <span style="color: #0078c3">Hub</span>
+        Settings
+      </h1>
+      <p class="caption">Configure your coding experience</p>
+      <p hidden id="error"></p>
+      <p hidden id="success"></p>
+      <p hidden id="unlink">
+        Linked the wrong repo?
+        <a>Unlink</a>
+        .
+      </p>
+    </div>
+
+    <!-- Create Hook -->
+    <div style="display: none" id="hook_mode" class="grid container">
+      <div class="sixteen wide column">
+        <h2 class="large header center aligned">GitHub Repository Setup</h2>
       </div>
 
-      <!-- Create Hook -->
-      <div style="display: none" id="hook_mode" class="grid container">
-        <div class="sixteen wide column">
-          <h2 class="large header center aligned">GitHub Repository Setup</h2>
-        </div>
+      <div class="sixteen wide column">
+        <div class="form-card">
+          <div class="form">
+            <div class="field">
+              <label for="type">Repository Option</label>
+              <select id="type">
+                <option value="">Pick an Option</option>
+                <option value="new">Create a new Private Repository</option>
+                <option value="link">Link an Existing Repository</option>
+              </select>
+            </div>
 
-        <div class="sixteen wide column">
-          <div class="form-card">
-            <div class="form">
-              <div class="field">
-                <label for="type">Repository Option</label>
-                <select id="type">
-                  <option value="">Pick an Option</option>
-                  <option value="new">Create a new Private Repository</option>
-                  <option value="link">Link an Existing Repository</option>
-                </select>
-              </div>
+            <!-- Organization options -->
+            <div class="field">
+              <label for="org_option">Organization Method</label>
+              <select id="org_option">
+                <!-- Platform organization -->
+                <option value="platform">Organize by Platform</option>
+                <!-- Language organization -->
+                <option value="language">Organize by Language</option>
+              </select>
+            </div>
 
-              <!-- Organization options -->
-              <div class="field">
-                <label for="org_option">Organization Method</label>
-                <select id="org_option">
-                  <!-- Platform organization -->
-                  <option value="platform">Organize by Platform</option>
-                  <!-- Language organization -->
-                  <option value="language">Organize by Language</option>
-                </select>
-              </div>
+            <div class="field">
+              <label for="name">Repository Name</label>
+              <input autocomplete="off" id="name" placeholder="Repository Name" type="text" />
+            </div>
 
-              <div class="field">
-                <label for="name">Repository Name</label>
-                <input autocomplete="off" id="name" placeholder="Repository Name" type="text" />
-              </div>
-
-              <div class="field">
-                <button id="hook_button" disabled class="positive button">Get Started</button>
-              </div>
+            <div class="field">
+              <button id="hook_button" disabled class="positive button">Get Started</button>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Show stats and settings when connected -->
-      <div style="display: none" id="commit_mode" class="grid container">
-        <div class="sixteen wide column">
-          <h2 class="large header center aligned">Repository Connected</h2>
+    <!-- Show stats and settings when connected -->
+    <div style="display: none" id="commit_mode" class="grid container">
+      <div class="sixteen wide column">
+        <h2 class="large header center aligned">Repository Connected</h2>
 
-          <div class="form-card">
-            <div class="field">
-              <label>Current Repository</label>
-              <p id="current_repo" class="setting-value">Loading...</p>
-            </div>
+        <div class="form-card">
+          <div class="field">
+            <label>Current Repository</label>
+            <p id="current_repo" class="setting-value">Loading...</p>
+          </div>
 
-            <div class="field">
-              <label>Organization Method</label>
-              <p id="current_org" class="setting-value">Loading...</p>
-            </div>
+          <div class="field">
+            <label>Organization Method</label>
+            <p id="current_org" class="setting-value">Loading...</p>
+          </div>
 
-            <div class="tabs">
-              <button class="tab-button active" data-tab="general">General</button>
-              <button class="tab-button" data-tab="advanced">Advanced</button>
-            </div>
+          <!-- <div class="tabs">
+            <button class="tab-button active" data-tab="general">General</button>
+            <button class="tab-button" data-tab="advanced">Advanced</button>
+          </div> -->
 
-            <div id="general" class="tab-content active">
+          <!-- <div id="general" class="tab-content active">
               <div class="field">
                 <label>Default File Format</label>
                 <select id="default_format">
@@ -95,41 +96,43 @@
                   <option value="txt">Plain Text (.txt)</option>
                   <option value="source">Source Code (e.g., .py, .cpp)</option>
                 </select>
-              </div>
+              </div> -->
 
-              <div class="field">
-                <label>Automatic Commits</label>
-                <div class="toggle-switch">
-                  <input type="checkbox" id="auto_commit" checked />
-                  <label for="auto_commit"></label>
-                </div>
-              </div>
-            </div>
-
-            <div id="advanced" class="tab-content">
-              <div class="field">
-                <label>Reset Repository Connection</label>
-                <button id="unlink_button" class="danger button">Unlink Repository</button>
-              </div>
+          <div class="field">
+            <label>Automatic Commits</label>
+            <div class="toggle-switch">
+              <input type="checkbox" id="auto_commit" checked />
+              <label for="auto_commit"></label>
             </div>
           </div>
+          <!-- <div id="advanced" class="tab-content"> -->
+          <div class="field">
+            <label>Reset Repository Connection</label>
+            <button id="unlink_button" class="danger button">Unlink Repository</button>
+          </div>
+          <!-- </div> -->
         </div>
-      </div>
 
-      <!-- GitHub Link -->
-      <div class="sixteen wide center aligned column">
-        <div class="small header">
-          <a target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub">
-            Star
-            <span>Baekjoon</span>
-            <span style="color: #0078c3">Hub</span>
-            on GitHub
-          </a>
-        </div>
+
       </div>
     </div>
+  </div>
 
-    <script src="vendors.js"></script>
-    <script src="settings.js"></script>
-  </body>
+  <!-- GitHub Link -->
+  <div class="sixteen wide center aligned column">
+    <div class="small header">
+      <a target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub">
+        Star
+        <span>Baekjoon</span>
+        <span style="color: #0078c3">Hub</span>
+        on GitHub
+      </a>
+    </div>
+  </div>
+  </div>
+
+  <script src="vendors.js"></script>
+  <script src="settings.js"></script>
+</body>
+
 </html>
