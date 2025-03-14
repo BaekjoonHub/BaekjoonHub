@@ -36,6 +36,16 @@
           </select>
         </div>
 
+        <!-- Directory setting options for push -->
+        <div class="field">
+          <select id="push_dir_option">
+            <!-- Root Directory -->
+            <option value="root">Push to Root Directory</option>
+            <!-- Custom Directory -->
+            <option value="custom">Push to Custom Directory</option>
+          </select>
+        </div>
+
         <!-- 프로그래밍 언어별 폴더 정리 옵션 -->
         <div class="field">
           <select id="org_option">
@@ -52,6 +62,10 @@
       <div class="ui form">
         <div class="field">
           <input autocomplete="off" id="name" placeholder="Repository Name" type="text" />
+        </div>
+        <!-- Custom Directory Path Input Field -->
+        <div style="display: none" class="field" id="custom_dir_input">
+          <input autocomplete="off" id="push_dir_path" placeholder="Directory Path" type="text" />
         </div>
       </div>
     </div>

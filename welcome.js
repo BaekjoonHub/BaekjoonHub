@@ -6,6 +6,26 @@ const repositoryName = () => {
   return $('#name').val().trim();
 };
 
+/* Get the value of the input field for the directory path */
+const pushDirPath = () => {
+  return $('#push_dir_path').val().trim();
+};
+
+/* Check if the input is a valid directory path */
+const isValidDirPath = (dirPath) => {
+  /* 정규 표현식 설명:
+    1. ^ : 문자열의 시작
+    2. (?!.*\/\/) : 연속된 슬래시가 없는지 확인
+    3. (?!.*\/$) : 문자열의 끝에 슬래시가 없는지 확인
+    4. [^/]+ : 하나 이상의 슬래시가 아닌 문자
+    5. (\/[^/]+)* : 슬래시 뒤에 하나 이상의 슬래시가 아닌 문자가 오는 패턴이 0번 이상 반복
+    6. $ : 문자열의 끝
+  */
+  const regex = /^(?!.*\/\/)(?!.*\/$)[^/]+(\/[^/]+)*$/;
+
+  return regex.test(dirPath);
+};
+
 /* Status codes for creating of repo */
 
 const statusCode = (res, status, name) => {
@@ -200,6 +220,16 @@ const unlinkRepo = () => {
     console.log('DisOption Reset');
   });
 
+  /* Reset PushDirOption */
+  chrome.storage.local.set({ BaekjoonHub_PushDirOption: 'root' }, () => {
+    console.log('PushDirOption Reset');
+  });
+
+  /* Reset PushDirPath */
+  chrome.storage.local.set({ BaekjoonHub_PushDirPath: null }, () => {
+    console.log('PushDirPath Reset');
+  });
+
   /* Hide accordingly */
   document.getElementById('hook_mode').style.display = 'inherit';
   document.getElementById('commit_mode').style.display = 'none';
@@ -216,6 +246,15 @@ $('#type').on('change', function() {
   }
 });
 
+$('#push_dir_option').on('change', function () {
+  const valueSelected = this.value;
+  if (valueSelected === 'custom') {
+    $('#custom_dir_input').show(); // Show the custom directory input field
+  } else {
+    $('#custom_dir_input').hide(); // Hide the custom directory input field
+  }
+});
+
 $('#hook_button').on('click', () => {
   /* on click should generate: 1) option 2) repository name */
   if (!option()) {
@@ -225,10 +264,40 @@ $('#hook_button').on('click', () => {
     $('#error').text('No repository name added - Enter the name of your repository!');
     $('#name').focus();
     $('#error').show();
+  } else if ($('#push_dir_option').val() === 'custom' && !pushDirPath()) {
+    $('#error').text('No directory path added - Enter the path of your directory!');
+    $('#push_dir_path').focus();
+    $('#error').show();
+  } else if ($('#push_dir_option').val() === 'custom' && !isValidDirPath(pushDirPath())) {
+    let errorMessage = 'Invalid directory path - Make sure the directory path is valid!';
+    const dirPath = pushDirPath();
+    if (dirPath.startsWith('/')) {
+      errorMessage = 'The directory path cannot start with a slash.';
+    } else if (dirPath.endsWith('/')) {
+      errorMessage = 'The directory path cannot end with a slash.';
+    } else if (dirPath.includes('//')) {
+      errorMessage = 'The directory path cannot contain consecutive slashes.';
+    }
+
+    $('#error').text(errorMessage);
+    $('#push_dir_path').focus();
+    $('#error').show();
   } else {
     $('#error').hide();
     $('#success').text('Attempting to create Hook... Please wait.');
     $('#success').show();
+
+    /* Save PushDirOption and PushDirPath */
+    const push_dir_option = $('#push_dir_option').val();
+    chrome.storage.local.set({ BaekjoonHub_PushDirOption: push_dir_option }, () => {
+      console.log(`Set PushDirOption by ${push_dir_option}`);
+    });
+    if (push_dir_option === 'custom') {
+      const push_dir_path = pushDirPath();
+      chrome.storage.local.set({ BaekjoonHub_PushDirPath: push_dir_path }, () => {
+        console.log(`Set PushDirPath by ${push_dir_path}`);
+      });
+    }
 
     /* 
       Perform processing
