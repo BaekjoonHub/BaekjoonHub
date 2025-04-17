@@ -2,6 +2,7 @@ const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const webpack = require("webpack");
+const fs = require("fs");
 
 // 모든 스크립트를 일반 JavaScript로 빌드 (ES 모듈 사용하지 않음)
 module.exports = {
@@ -40,6 +41,30 @@ module.exports = {
       ],
     }),
     // No global jQuery needed anymore
+    // src/manifest.json의 version을 package.json의 version으로 덮어씌우는 플러그인
+    new webpack.DefinePlugin({
+      'process.env.VERSION': JSON.stringify((() => {
+        // package.json에서 버전 읽기
+        const manifestPath = path.resolve(__dirname, "src/manifest.json");
+        const packagePath = path.resolve(__dirname, "package.json");
+        
+        try {
+          const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+          const packageVersion = packageData.version;
+          
+          // manifest.json에 버전 업데이트
+          const manifestData = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          manifestData.version = packageVersion;
+          fs.writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2));
+          
+          console.log(`\n[VERSION SYNC] src/manifest.json 버전이 package.json의 ${packageVersion} 버전으로 업데이트되었습니다.\n`);
+          return packageVersion;
+        } catch (error) {
+          console.error('버전 동기화 중 오류 발생:', error);
+          throw error;
+        }
+      })())
+    }),
   ],
   optimization: {
     // Disable code splitting for content scripts, but keep it for popup and settings
