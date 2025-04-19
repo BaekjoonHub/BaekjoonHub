@@ -1,7 +1,7 @@
 // Import all dependencies directly
 // Common utilities
 import * as GlobalUtil from "../util.js";
-import * as Github from "../Github.js";
+import * as Github from "../github.js";
 import * as GlobalStorage from "../storage.js";
 import { Toast } from "../toast.js";
 import * as Enable from "../enable.js";

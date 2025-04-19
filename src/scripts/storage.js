@@ -1,5 +1,5 @@
 import { log, isNull } from './util.js';
-import { GitHub } from './Github.js';
+import { GitHub } from './github.js';
 
 
 
