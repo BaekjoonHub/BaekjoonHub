@@ -306,7 +306,7 @@ input[type="text"]::placeholder {
 .toggle-switch {
   position: relative;
   width: 50px;
-  height: 24px;
+  height: 32px;
   display: inline-block;
 }
 

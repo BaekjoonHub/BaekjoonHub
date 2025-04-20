@@ -23,35 +23,39 @@ const repositoryName = () => {
 };
 
 /* Status codes for creating of repo */
-const statusCode = (res, status, name) => {
+const statusCode = (res, status, fullName) => {
+  const parts = fullName.split('/');
+  const ownerName = parts[0];
+  const repoName = parts[1];
+
   switch (status) {
     case 304:
       hideElement("#success");
-      setText("#error", `Error creating ${name} - Unable to modify repository. Try again later!`);
+      setText("#error", `Error creating ${fullName} - Unable to modify repository. Try again later!`);
       showElement("#error");
       break;
 
     case 400:
       hideElement("#success");
-      setText("#error", `Error creating ${name} - Bad POST request, make sure you're not overriding any existing scripts`);
+      setText("#error", `Error creating ${fullName} - Bad POST request, make sure you're not overriding any existing scripts`);
       showElement("#error");
       break;
 
     case 401:
       hideElement("#success");
-      setText("#error", `Error creating ${name} - Unauthorized access to repo. Try again later!`);
+      setText("#error", `Error creating ${fullName} - Unauthorized access to repo. Try again later!`);
       showElement("#error");
       break;
 
     case 403:
       hideElement("#success");
-      setText("#error", `Error creating ${name} - Forbidden access to repository. Try again later!`);
+      setText("#error", `Error creating ${fullName} - Forbidden access to repository. Try again later!`);
       showElement("#error");
       break;
 
     case 422:
       hideElement("#success");
-      setText("#error", `Error creating ${name} - Unprocessable Entity. Repository may have already been created. Try Linking instead (select 2nd option).`);
+      setText("#error", `Error creating ${fullName} - Unprocessable Entity. Repository may have already been created. Try Linking instead (select 2nd option).`);
       showElement("#error");
       break;
 
@@ -59,7 +63,7 @@ const statusCode = (res, status, name) => {
       /* Change mode type to commit */
       chrome.storage.local.set({ mode_type: "commit" }, () => {
         hideElement("#error");
-        setHTML("#success", `Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="https://www.acmicpc.net/">BOJ</a>!`);
+        setHTML("#success", `Successfully created <a target="blank" href="${res.html_url}">${fullName}</a>. Start <a href="https://www.acmicpc.net/">BOJ</a>!`);
         showElement("#success");
         showElement("#unlink");
         /* Show new layout */
@@ -75,7 +79,10 @@ const statusCode = (res, status, name) => {
   }
 };
 
-const createRepo = (token, name) => {
+const createRepo = (token, fullName) => {
+  // 사용자명/레포지토리명 형식에서 레포지토리 이름만 추출
+  const name = fullName.split('/')[1];
+  
   const AUTHENTICATION_URL = "https://api.github.com/user/repos";
   let data = {
     name,
@@ -88,7 +95,7 @@ const createRepo = (token, name) => {
   const xhr = new XMLHttpRequest();
   xhr.addEventListener("readystatechange", function () {
     if (xhr.readyState === 4) {
-      statusCode(JSON.parse(xhr.responseText), xhr.status, name);
+      statusCode(JSON.parse(xhr.responseText), xhr.status, fullName);
     }
   });
 
@@ -222,10 +229,110 @@ const unlinkRepo = () => {
 
 // Add event listeners after the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
+  // Function to fetch user repositories
+  const fetchUserRepositories = (token, username) => {
+    // /user/repos를 사용하여 private 레포지토리를 포함한 모든 레포지토리 가져오기
+    const REPOS_URL = `https://api.github.com/user/repos?per_page=100`;
+    
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.addEventListener("readystatechange", function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            const repos = JSON.parse(xhr.responseText);
+            
+            // 레포지토리 이름으로 사전순 정렬
+            repos.sort((a, b) => a.name.localeCompare(b.name));
+            
+            resolve(repos);
+          } else {
+            reject(new Error(`Failed to fetch repositories: ${xhr.status}`));
+          }
+        }
+      });
+      
+      xhr.open("GET", REPOS_URL, true);
+      xhr.setRequestHeader("Authorization", `token ${token}`);
+      xhr.setRequestHeader("Accept", "application/vnd.github.v3+json");
+      xhr.send();
+    });
+  };
+  
+  // Function to create repository dropdown
+  const createRepoDropdown = (repositories) => {
+    // Create the select element
+    const select = document.createElement('select');
+    select.id = 'name';
+    
+    // Add a default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Select a Repository';
+    select.appendChild(defaultOption);
+    
+    // Add repositories to dropdown with owner and private/public indicator
+    repositories.forEach(repo => {
+      const option = document.createElement('option');
+      // value에 사용자명/레포지토리명 형식으로 저장
+      option.value = `${repo.owner.login}/${repo.name}`;
+      // 사용자명/레포지토리명 형식으로 표시하고, private/public 여부도 함께 표시
+      option.textContent = `${repo.owner.login}/${repo.name} ${repo.private ? '(Private)' : '(Public)'}`;  
+      select.appendChild(option);
+    });
+    
+    // Replace the input field with the select dropdown
+    const repoNameField = $('#repo_name_field');
+    repoNameField.innerHTML = '<label for="name">Full Repository Name</label>';
+    repoNameField.appendChild(select);
+  };
+  
+  // Function to pre-fill text input with username
+  const prefillTextInput = (username) => {
+    const repoNameField = $('#repo_name_field');
+    repoNameField.innerHTML = `<label for="name">Full Repository Name</label><input autocomplete="off" id="name" placeholder="${username}/repository-name" value="${username}/" type="text" />`;
+  };
+
   // Type change handler
   $("#type").addEventListener("change", function() {
     const valueSelected = this.value;
     setDisabled("#hook_button", !valueSelected);
+    
+    // If "Link an Existing Repository" is selected, fetch repositories
+    if (valueSelected === 'link') {
+      chrome.storage.local.get(["BaekjoonHub_token", "BaekjoonHub_username"], (data) => {
+        const token = data.BaekjoonHub_token;
+        const username = data.BaekjoonHub_username;
+        
+        if (token && username) {
+          setText("#success", "Fetching your repositories... Please wait.");
+          showElement("#success");
+          hideElement("#error");
+          
+          fetchUserRepositories(token, username)
+            .then(repos => {
+              hideElement("#success");
+              createRepoDropdown(repos);
+            })
+            .catch(error => {
+              hideElement("#success");
+              setText("#error", `Error fetching repositories: ${error.message}`);
+              showElement("#error");
+            });
+        }
+      });
+    } else if (valueSelected === 'new') {
+      // 새 레포지토리 생성 시 사용자 이름 미리 채우기
+      chrome.storage.local.get(["BaekjoonHub_username"], (data) => {
+        const username = data.BaekjoonHub_username;
+        if (username) {
+          prefillTextInput(username);
+        } else {
+          // 사용자 이름이 없는 경우
+          const repoNameField = $('#repo_name_field');
+          repoNameField.innerHTML = '<label for="name">Full Repository Name</label><input autocomplete="off" id="name" placeholder="username/repository-name" type="text" />';
+        }
+      });
+    }
   });
 
   // Hook button click handler
@@ -235,7 +342,11 @@ document.addEventListener('DOMContentLoaded', () => {
       setText("#error", "No option selected - Pick an option from dropdown menu below that best suits you!");
       showElement("#error");
     } else if (!repositoryName()) {
-      setText("#error", "No repository name added - Enter the name of your repository!");
+      setText("#error", "No repository entered - Please enter a repository in 'username/repository-name' format!");
+      focus("#name");
+      showElement("#error");
+    } else if (option() === "new" && !repositoryName().includes('/')) {
+      setText("#error", "Invalid repository format - Please use 'username/repository-name' format!");
       focus("#name");
       showElement("#error");
     } else {
@@ -258,7 +369,15 @@ document.addEventListener('DOMContentLoaded', () => {
           showElement("#error");
           hideElement("#success");
         } else if (option() === "new") {
-          createRepo(token, repositoryName());
+          // 사용자명/레포지토리명 형식 확인
+          const fullName = repositoryName();
+          if (!fullName.includes('/')) {
+            setText("#error", "Invalid format - Please use 'username/repository-name' format!");
+            showElement("#error");
+            hideElement("#success");
+            return;
+          }
+          createRepo(token, fullName);
         } else {
           chrome.storage.local.get("BaekjoonHub_username", (data2) => {
             const username = data2.BaekjoonHub_username;
@@ -268,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
               showElement("#error");
               hideElement("#success");
             } else {
-              linkRepo(token, `${username}/${repositoryName()}`);
+              linkRepo(token, repositoryName());
             }
           });
         }
@@ -290,17 +409,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Tab switching logic
-  $$('.tab-button').forEach(button => {
-    button.addEventListener('click', function() {
-      // Remove active class from all buttons and content
-      $$('.tab-button').forEach(btn => btn.classList.remove('active'));
-      $$('.tab-content').forEach(content => content.classList.remove('active'));
+  // $$('.tab-button').forEach(button => {
+  //   button.addEventListener('click', function() {
+  //     // Remove active class from all buttons and content
+  //     $$('.tab-button').forEach(btn => btn.classList.remove('active'));
+  //     $$('.tab-content').forEach(content => content.classList.remove('active'));
       
-      // Add active class to clicked button and corresponding content
-      this.classList.add('active');
-      $(`#${this.dataset.tab}`).classList.add('active');
-    });
-  });
+  //     // Add active class to clicked button and corresponding content
+  //     this.classList.add('active');
+  //     $(`#${this.dataset.tab}`).classList.add('active');
+  //   });
+  // });
 
   // Advanced tab unlink button
   $("#unlink_button")?.addEventListener("click", () => {
