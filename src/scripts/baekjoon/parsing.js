@@ -45,10 +45,17 @@ async function makeDetailMessageAndReadme(data) {
     problem_description, problem_input, problem_output, submissionTime,
     code, language, memory, runtime } = data;
   const score = parseNumberFromString(result);
+  
+  // 데이터 객체에 언어 정보 전달
+  const processedLanguage = langVersionRemove(language, null);
+  
+  // 커스텀 템플릿을 지원하기 위해 문제 관련 데이터 전체 전달
   const directory = await getDirNameByOrgOption(
-    `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-    langVersionRemove(language, null)
+    `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+    processedLanguage,
+    { problemId, title, level, problem_tags, memory, runtime, submissionTime, language: processedLanguage }
   );
+  
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`
     + ((isNaN(score)) ? ' ' : `, Score: ${score} point `) // 서브 태스크가 있는 문제로, 점수가 있는 경우 점수까지 커밋 메시지에 표기
     + `-BaekjoonHub`;

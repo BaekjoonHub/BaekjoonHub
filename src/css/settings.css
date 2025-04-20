@@ -448,6 +448,23 @@ input[type="text"]::placeholder {
   display: none !important;
 }
 
+.help-text {
+  font-size: 0.85em;
+  color: #5a6a7e;
+  margin-top: 8px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+code {
+  background-color: #f5f7fa;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #e74c3c;
+}
+
 /* Animation Keyframes */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }

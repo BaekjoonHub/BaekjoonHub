@@ -1,5 +1,6 @@
 import { log, isNull } from './util.js';
 import { GitHub } from './Github.js';
+import { getDirNameByTemplate } from './template/template.js';
 
 
 
@@ -464,25 +465,37 @@ export async function updateLocalStorageStats() {
 
 
 /**
-
- * 해당 메서드는 프로그래밍 언어별 정리 옵션을 사용할 경우 언어별로 분류 하기 위함입니다.
-
- * 스토리지에 저장된 {@link getOrgOption}값에 따라 분기 처리됩니다.
-
+ * 해당 메서드는 문제 디렉토리 구조를 결정합니다.
+ * 1. 커스텀 템플릿이 설정된 경우: 템플릿을 사용하여 디렉토리 구조 생성
+ * 2. 언어별 정리 옵션이 설정된 경우: 언어별로 분류
+ * 3. 기본 방식: 기존 디렉토리 구조 사용
  *
-
  * @param {string} dirName - 기존에 사용되던 분류 방식의 디렉토리 이름입니다.
-
- * @param {string} language - 'BaekjoonHub_disOption'이 True일 경우에 분리에 사용될 언어 입니다.
-
- * */
-
-export async function getDirNameByOrgOption(dirName, language) {
-
-  if (await getOrgOption() === "language") dirName = `${language}/${dirName}`;
-
-  return dirName;
-
+ * @param {string} language - 프로그래밍 언어입니다.
+ * @param {Object} data - 문제 데이터 (선택적)
+ * @returns {string} - 최종 디렉토리 경로
+ */
+export async function getDirNameByOrgOption(dirName, language, data = null) {
+  try {
+    // 1. 커스텀 템플릿 사용 여부 확인
+    const useCustomTemplate = await getObjectFromLocalStorage('BaekjoonHub_UseCustomTemplate');
+    
+    if (useCustomTemplate === true && data) {
+      // 커스텀 템플릿 사용
+      return await getDirNameByTemplate(dirName, language, data);
+    }
+    
+    // 2. 언어별 정리 옵션 확인
+    if (await getOrgOption() === "language") {
+      dirName = `${language}/${dirName}`;
+    }
+    
+    // 3. 기본 디렉토리 반환
+    return dirName;
+  } catch (error) {
+    console.error('디렉토리 구조 생성 중 오류가 발생했습니다:', error);
+    return dirName; // 오류 발생 시 기본 디렉토리 반환
+  }
 }
 
 
