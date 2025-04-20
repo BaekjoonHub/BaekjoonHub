@@ -1,102 +1,24 @@
+/* 공통 스타일을 import */
+@import url('../common.css');
+
+/* 구름레벨 플랫폼 특화 스타일 */
 #BaekjoonHub_progress_anchor_element {
-    vertical-align: middle;
-    margin-right: 20px !important;
-  }
-  
-  .BaekjoonHub_progress {
-    display: inline-block;
-    pointer-events: none;
-    width: 0.8rem;
-    height: 0.8rem;
-    border: 0.2rem solid transparent;
-    border-color: #eee;
-    border-top-color: #3e67ec;
-    border-radius: 50%;
-    animation: loadingspin 1s linear infinite;
-  }
-  @keyframes loadingspin {
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  
-  #BaekjoonHub_progress_elem.markuploadfailed {
-    display: inline-block;
-    transform: rotate(45deg);
-    width: 0.5rem;
-    height: 1rem;
-    border-bottom: 3px solid red;
-    border-right: 3px solid red;
-  }
-  
-  #BaekjoonHub_progress_elem.markuploaded {
-    display: inline-block;
-    transform: rotate(45deg);
-    width: 0.5rem;
-    height: 1rem;
-    border-bottom: 3px solid #78b13f;
-    border-right: 3px solid #78b13f;
-  }
-  
-  .BJH_button_wrap {
-    display: inline-block;
-  }
-  .BJH_update {
-    display: inline-block;
-    margin-right: 20px;
-    padding-top: 0%;
-    width: fit-content !important;
-    color: #0078c3 !important;
-  
-    position: relative !important;
-  }
-  
-  .BJH_deletion_board {
-    display: 'block';
-    position: fixed;
-    z-index: 1;
-    padding-top: 100px;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: scroll;
-    background-color: rgb(0, 0, 0);
-    background-color: rgba(0, 0, 0, 0.4);
-  }
-  
-  /* The Close Button */
-  .BJH_deletion_board_close {
-    color: #aaaaaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-  }
-  
-  .BJH_deletion_list {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    height: 60%;
-    overflow: scroll;
-  }
-  
-  .BJH_button:hover,
-  .BJH_button:focus {
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-  }
-  
-  .BJH_loading_wrap {
-    display: inline-block;
-    margin-left: 4px;
-    margin-right: 4px;
-  }
-  
-  .BJH_loading_number {
-    display: inline-block;
-  }
-  
+  vertical-align: middle;
+  margin-right: 20px !important;
+}
+
+.BaekjoonHub_progress {
+  width: 0.8rem !important;
+  height: 0.8rem !important;
+  border: 0.2rem solid transparent !important;
+}
+
+#BaekjoonHub_progress_elem.markuploadfailed {
+  width: 0.5rem !important;
+  height: 1rem !important;
+}
+
+#BaekjoonHub_progress_elem.markuploaded {
+  width: 0.5rem !important;
+  height: 1rem !important;
+}
