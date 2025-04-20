@@ -83,6 +83,23 @@
             <p id="current_org" class="setting-value">Loading...</p>
           </div>
 
+          <div class="field">
+            <label>Custom Template</label>
+            <div class="toggle-switch">
+              <input type="checkbox" id="use_custom_template" />
+              <label for="use_custom_template"></label>
+            </div>
+          </div>
+
+          <div class="field" id="custom_template_field" style="display: none;">
+            <label for="custom_template">Custom Directory Template</label>
+            <input type="text" id="custom_template" placeholder="{{language}}/백준/{{level.replace(/ .*/, '')}}/{{problemId}}. {{title}}" />
+            <p class="help-text">
+              Available variables: problemId, title, level, language, problem_tags, memory, runtime, submissionTime<br>
+              Example: <code>{{language}}/백준/{{level.replace(/ .*/, '')}}/{{problemId}}. {{title}}</code>
+            </p>
+          </div>
+
           <!-- <div class="tabs">
             <button class="tab-button active" data-tab="general">General</button>
             <button class="tab-button" data-tab="advanced">Advanced</button>

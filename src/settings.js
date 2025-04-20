@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // If "Link an Existing Repository" is selected, fetch repositories
     if (valueSelected === 'link') {
-      chrome.storage.local.get(["BaekjoonHub_token", "BaekjoonHub_username"], (data) => {
+      chrome.storage.local.get(["BaekjoonHub_token", "BaekjoonHub_username", "BaekjoonHub_UseCustomTemplate", "BaekjoonHub_DirTemplate"], (data) => {
         const token = data.BaekjoonHub_token;
         const username = data.BaekjoonHub_username;
         
@@ -427,6 +427,33 @@ document.addEventListener('DOMContentLoaded', () => {
     hideElement("#unlink");
     setText("#success", "Successfully unlinked your current git repo. Please create/link a new hook.");
     showElement("#success");
+  });
+
+  // Custom template toggle and field handler
+  $("#use_custom_template").addEventListener("change", function() {
+    if (this.checked) {
+      $("#custom_template_field").style.display = "block";
+      chrome.storage.local.set({ BaekjoonHub_UseCustomTemplate: true });
+    } else {
+      $("#custom_template_field").style.display = "none";
+      chrome.storage.local.set({ BaekjoonHub_UseCustomTemplate: false });
+    }
+  });
+
+  $("#custom_template").addEventListener("input", function() {
+    chrome.storage.local.set({ BaekjoonHub_DirTemplate: this.value });
+  });
+
+  // Load custom template settings if they exist
+  chrome.storage.local.get(["BaekjoonHub_UseCustomTemplate", "BaekjoonHub_DirTemplate"], (data) => {
+    if (data.BaekjoonHub_UseCustomTemplate) {
+      $("#use_custom_template").checked = true;
+      $("#custom_template_field").style.display = "block";
+      
+      if (data.BaekjoonHub_DirTemplate) {
+        $("#custom_template").value = data.BaekjoonHub_DirTemplate;
+      }
+    }
   });
 
   /* Detect mode type */
