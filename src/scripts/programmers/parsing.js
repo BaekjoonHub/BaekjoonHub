@@ -44,12 +44,35 @@ async function parseData() {
 }
 
 async function makeData(origin) {
-  const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code, language } = origin;
-  const directory = await getDirNameByOrgOption(`프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, language);
+  const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code, language, link } = origin;
+  
+  // 기본 디렉토리 경로 생성
+  const baseDirPath = `프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  
+  // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
+  const directory = await getDirNameByOrgOption(
+    baseDirPath,
+    language,
+    {
+      problemId,
+      title,
+      level,
+      division,
+      memory,
+      runtime,
+      submissionTime: getDateString(new Date(Date.now())),
+      language,
+      problem_description,
+      result_message,
+      link
+    }
+  );
+  
   const levelWithLv = `${level}`.includes('lv') ? level : `lv${level}`.replace('lv', 'level ');
   const message = `[${levelWithLv}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
   const dateInfo = getDateString(new Date(Date.now()));
+  
   // prettier-ignore
   const readme =
     `# [${levelWithLv}] ${title} - ${problemId} \n\n`
@@ -66,5 +89,6 @@ async function makeData(origin) {
     + `### 문제 설명\n\n`
     + `${problem_description}\n\n`
     + `> 출처: 프로그래머스 코딩 테스트 연습, https://school.programmers.co.kr/learn/challenges`;
+  
   return { problemId, directory, message, fileName, readme, code };
 }
