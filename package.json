@@ -1,11 +1,11 @@
 {
   "name": "baekjoonhub",
-  "version": "1.2.3",
+  "version": "2.0.0",
   "description": "Chrome extension that automatically pushes your code to GitHub from competitive programming platforms",
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "watch": "webpack --watch --config webpack.config.js",
+    "dev": "webpack --watch --config webpack.config.js",
     "package": "cd dist && zip -r ../packages/baekjoonhub-v$(node -p \"require('../package.json').version\").zip *",
     "clean": "rm -rf dist packages node_modules",
     "lint": "eslint src/**/*.js",
@@ -26,9 +26,11 @@
   "devDependencies": {
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^13.0.0",
-    "eslint": "^8.57.0",
+    "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.29.1",
+    "globals": "^16.0.0",
+    "rimraf": "^6.0.1",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"
   },

@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your competitive programming submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.2.3",
+  "version": "2.0.0",
   "author": "flaxinger",
   "action": {
     "default_icon": "assets/thumbnail.png",
@@ -26,42 +26,89 @@
       }
     ]
   },
-  "permissions": ["unlimitedStorage", "storage", "declarativeNetRequest", "declarativeNetRequestWithHostAccess"],
-  "host_permissions": ["https://www.acmicpc.net/", "https://school.programmers.co.kr/", "https://github.com/", "https://swexpertacademy.com/", "https://solved.ac/api/v3/*", "https://level.goorm.io/"],
+  "permissions": [
+    "unlimitedStorage",
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "https://www.acmicpc.net/",
+    "https://school.programmers.co.kr/",
+    "https://github.com/",
+    "https://swexpertacademy.com/",
+    "https://solved.ac/api/v3/*",
+    "https://level.goorm.io/"
+  ],
   "web_accessible_resources": [
     {
-      "matches": ["<all_urls>"],
-      "resources": ["popup.html", "popup.js", "settings.html", "settings.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "resources": [
+        "popup.html",
+        "popup.js",
+        "settings.html",
+        "settings.js"
+      ]
     }
   ],
   "content_scripts": [
     {
-      "matches": ["https://github.com/*"],
-      "js": ["authorize.js"],
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
+        "authorize.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://www.acmicpc.net/*"],
-      "css": ["css/baekjoon/inject.css"],
-      "js": ["baekjoon.js"],
+      "matches": [
+        "https://www.acmicpc.net/*"
+      ],
+      "css": [
+        "css/baekjoon/inject.css"
+      ],
+      "js": [
+        "baekjoon.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://school.programmers.co.kr/*"],
-      "css": ["css/programmers/inject.css"],
-      "js": ["programmers.js"],
+      "matches": [
+        "https://school.programmers.co.kr/*"
+      ],
+      "css": [
+        "css/programmers/inject.css"
+      ],
+      "js": [
+        "programmers.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://swexpertacademy.com/*"],
-      "css": ["css/swexpertacademy/inject.css"],
-      "js": ["swexpertacademy.js"],
+      "matches": [
+        "https://swexpertacademy.com/*"
+      ],
+      "css": [
+        "css/swexpertacademy/inject.css"
+      ],
+      "js": [
+        "swexpertacademy.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://level.goorm.io/*"],
-      "css": ["css/goormlevel/inject.css"],
-      "js": ["goormlevel.js"],
+      "matches": [
+        "https://level.goorm.io/*"
+      ],
+      "css": [
+        "css/goormlevel/inject.css"
+      ],
+      "js": [
+        "goormlevel.js"
+      ],
       "run_at": "document_idle"
     }
   ]
