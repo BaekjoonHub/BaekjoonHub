@@ -49,11 +49,26 @@ async function makeDetailMessageAndReadme(data) {
   // 데이터 객체에 언어 정보 전달
   const processedLanguage = langVersionRemove(language, null);
   
-  // 커스텀 템플릿을 지원하기 위해 문제 관련 데이터 전체 전달
+  // 기본 디렉토리 경로 생성
+  const baseDirPath = `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  
+  // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
   const directory = await getDirNameByOrgOption(
-    `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+    baseDirPath,
     processedLanguage,
-    { problemId, title, level, problem_tags, memory, runtime, submissionTime, language: processedLanguage }
+    { 
+      problemId, 
+      title, 
+      level, 
+      problem_tags, 
+      memory, 
+      runtime, 
+      submissionTime, 
+      language: processedLanguage,
+      problem_description,
+      problem_input,
+      problem_output
+    }
   );
   
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`

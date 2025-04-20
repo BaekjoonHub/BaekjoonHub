@@ -68,10 +68,6 @@ async function parseData() {
   const data = await getProblemData(problemId);
   log('data', data);
   if (isNull(data?.code)) {
-    // 기존 문제 데이터를 로컬스토리지에 저장하고 코드 보기 페이지로 이동
-    // await updateProblemData(problemId, { level, contestProbId, link, language, memory, runtime, length, extension });
-    // const contestHistoryId = document.querySelector('div.box-list > div > div > span > a').href.replace(/^.*'(.*)'.*$/, '$1');
-    // window.location.href = `${window.location.origin}/main/solvingProblem/solvingProblem.do?contestProbId=${contestProbId}`;
     console.error('소스코드 데이터가 없습니다.');
     return;
   }
@@ -88,8 +84,28 @@ async function makeData(origin) {
   * 그래서 이와 같은 케이스를 처리를 위해 첫문자만 대문자를 유지하고 나머지 문자는 소문자로 변환합니다.
   * C++ 같은 경우에는 문자가 그대로 유지됩니다.
   * */
-  const lang = (language === language.toUpperCase()) ? language.substring(0, 1) + language.substring(1).toLowerCase() : language
-  const directory = await getDirNameByOrgOption(`SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, lang);
+  const lang = (language === language.toUpperCase()) ? language.substring(0, 1) + language.substring(1).toLowerCase() : language;
+  
+  // 기본 디렉토리 경로 생성
+  const baseDirPath = `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
+  
+  // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
+  const directory = await getDirNameByOrgOption(
+    baseDirPath,
+    lang,
+    {
+      problemId,
+      title,
+      level,
+      memory,
+      runtime,
+      submissionTime,
+      language: lang,
+      length,
+      link
+    }
+  );
+  
   const message = `[${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
   const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));

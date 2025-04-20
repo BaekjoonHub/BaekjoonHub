@@ -108,7 +108,28 @@ async function makeData({
   runtime,
 }) {
   const languageExtension = languages[language.toLowerCase()];
-  const directory = await getDirNameByOrgOption(`goormlevel/${examSequence}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`, language);
+  
+  // 기본 디렉토리 경로 생성
+  const baseDirPath = `goormlevel/${examSequence}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`;
+  
+  // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
+  const directory = await getDirNameByOrgOption(
+    baseDirPath,
+    language,
+    {
+      problemId: quizNumber,
+      title,
+      level: `난이도 ${difficulty}`,
+      memory,
+      runtime,
+      submissionTime: getDateString(new Date(Date.now())),
+      language,
+      examSequence,
+      difficulty,
+      link
+    }
+  );
+  
   const message = `[난이도 ${difficulty}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = getDateString(new Date(Date.now()));
@@ -120,7 +141,7 @@ async function makeData({
     + `메모리: ${memory}, `
     + `시간: ${runtime}\n\n`
     + `### 제출 일자\n\n`
-    + `${dateInfo}\n\n`
+    + `${dateInfo}\n\n`;
 
   return { examSequence, quizNumber, directory, message, fileName, readme, code };
 }
