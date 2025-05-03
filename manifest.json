@@ -5,6 +5,12 @@
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
   "version": "1.2.3",
   "author": "flaxinger",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "BaekjoonHub@bojhub.com",
+      "strict_min_version": "109.0"
+    }
+  },
   "action": {
     "default_icon": "assets/thumbnail.png",
     "default_popup": "popup.html"
@@ -15,7 +21,8 @@
     "128": "assets/thumbnail.png"
   },
   "background": {
-    "service_worker": "scripts/background.js"
+    "service_worker": "scripts/browserAPI.js",
+    "scripts": [ "scripts/browserAPI.js", "scripts/background.js" ]
   },
   "declarative_net_request": {
     "rule_resources": [
@@ -61,6 +68,7 @@
         "https://github.com/*"
       ],
       "js": [
+        "scripts/browserAPI.js",
         "scripts/util.js",
         "scripts/Github.js",
         "scripts/authorize.js"
@@ -75,6 +83,7 @@
         "css/baekjoon/inject.css"
       ],
       "js": [
+        "scripts/browserAPI.js",
         "library/sha1.min.js",
         "library/jszip.min.js",
         "library/FileSaver.min.js",
@@ -101,6 +110,7 @@
         "css/programmers/inject.css"
       ],
       "js": [
+        "scripts/browserAPI.js",
         "library/sha1.min.js",
         "scripts/util.js",
         "scripts/Github.js",
@@ -123,6 +133,7 @@
         "css/swexpertacademy/inject.css"
       ],
       "js": [
+        "scripts/browserAPI.js",
         "library/sha1.min.js",
         "scripts/util.js",
         "scripts/Github.js",
@@ -146,6 +157,7 @@
         "css/goormlevel/inject.css"
       ],
       "js": [
+        "scripts/browserAPI.js",
         "library/sha1.min.js",
         "scripts/util.js",
         "scripts/Github.js",
