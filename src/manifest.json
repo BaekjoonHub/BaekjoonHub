@@ -15,7 +15,7 @@
     "128": "assets/thumbnail.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "scripts/background.js"
   },
   "declarative_net_request": {
     "rule_resources": [
@@ -59,7 +59,7 @@
         "https://github.com/*"
       ],
       "js": [
-        "authorize.js"
+        "scripts/authorize.js"
       ],
       "run_at": "document_idle"
     },
@@ -71,7 +71,7 @@
         "css/baekjoon/inject.css"
       ],
       "js": [
-        "baekjoon.js"
+        "scripts/baekjoon/baekjoon.js"
       ],
       "run_at": "document_idle"
     },
@@ -83,7 +83,7 @@
         "css/programmers/inject.css"
       ],
       "js": [
-        "programmers.js"
+        "scripts/programmers/programmers.js"
       ],
       "run_at": "document_idle"
     },
@@ -95,7 +95,7 @@
         "css/swexpertacademy/inject.css"
       ],
       "js": [
-        "swexpertacademy.js"
+        "scripts/swexpertacademy/swexpertacademy.js"
       ],
       "run_at": "document_idle"
     },
@@ -107,7 +107,7 @@
         "css/goormlevel/inject.css"
       ],
       "js": [
-        "goormlevel.js"
+        "scripts/goormlevel/goormlevel.js"
       ],
       "run_at": "document_idle"
     }
