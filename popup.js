@@ -77,3 +77,16 @@ chrome.storage.local.get('bjhEnable', (data4) => {
 $('#onffbox').on('click', () => {
   chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
 });
+
+document.addEventListener('DOMContentLoaded', async function() {
+  // Load saved token
+  const token = await chrome.storage.local.get('gpt_token');
+  if (token.gpt_token) {
+    document.getElementById('gpt_token').value = token.gpt_token;
+  }
+
+  // Save token when input changes
+  document.getElementById('gpt_token').addEventListener('input', async function(e) {
+    await chrome.storage.local.set({ 'gpt_token': e.target.value });
+  });
+});
