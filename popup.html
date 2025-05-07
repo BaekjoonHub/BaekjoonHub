@@ -46,6 +46,12 @@
             Want more features?
             <a style="color: rgb(10, 89, 92) !important" target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub/labels/feature">Request a feature!</a>
           </div>
+          <div class="ui input" style="margin-top: 10px; width: 100%;">
+            <input type="password" id="gpt_token" placeholder="Enter your OpenAI API Token" style="width: 100%;">
+          </div>
+          <div class="ui small header" style="margin-top: 5px; color: #666;">
+            To use the AI code review feature, an OpenAI API token is required.
+          </div>
         </div>
 
         <!-- 기능 on/off -->
@@ -67,6 +73,7 @@
     </div>
 
     <script src="scripts/oauth2.js"></script>
+    <script src="scripts/common/ai_review.js"></script>
     <script type="text/javascript" src="popup.js"></script>
   </body>
 </html>
