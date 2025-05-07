@@ -1,3 +1,15 @@
+# Introduce
+오픈소스 BeakjoonHub에 ChatGPT를 이용한 AI 코드 리뷰 기능을 추가한 프로젝트입니다.
+
+AI 코드 리뷰 기능을 통해 아래의 내용을 추가하였습니다.
+- 작성 코드 설명
+- 시간/공간 복잡도 분석
+- 코드 최적화 가능성 및 개선 제안
+
+# Changes
+OpenAI API Token 입력, 저장 및 불러오기 기능 추가
+
+# Origin Project README
 <h1 align="center">
   <img src="assets/thumbnail.png" alt="BaekjoonHub - Automatically sync your code to GitHub." width="400">
   <br>
