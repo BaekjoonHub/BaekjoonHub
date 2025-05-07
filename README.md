@@ -8,6 +8,7 @@ AI 코드 리뷰 기능을 통해 아래의 내용을 추가하였습니다.
 
 # Changes
 OpenAI API Token 입력, 저장 및 불러오기 기능 추가
+<img width="347" alt="image" src="https://github.com/user-attachments/assets/e9d87d7d-179e-46c2-a854-3548fa8a125d" />
 
 # Origin Project README
 <h1 align="center">
