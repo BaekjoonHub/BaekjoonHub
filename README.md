@@ -10,6 +10,19 @@ AI 코드 리뷰 기능을 통해 아래의 내용을 추가하였습니다.
 OpenAI API Token 입력, 저장 및 불러오기 기능 추가
 <img width="347" alt="image" src="https://github.com/user-attachments/assets/e9d87d7d-179e-46c2-a854-3548fa8a125d" />
 
+<br>
+
+AI 코드리뷰 기능 추가
+<img width="640" alt="description 2" src="https://github.com/user-attachments/assets/6d4b49ca-4815-4385-ace6-20fc2c3d80a2" />
+
+<img width="640" alt="description 3" src="https://github.com/user-attachments/assets/5d23d9da-73d8-4903-b4c0-23c2275b0de6" />
+
+![description 4](https://github.com/user-attachments/assets/37a69ad6-4971-4991-84ce-36f13e8794b1)
+
+<img width="1045" alt="description 5" src="https://github.com/user-attachments/assets/acd7aa56-1d41-4d4c-b0d4-45a8898a17d0" />
+
+<img width="1044" alt="description 6" src="https://github.com/user-attachments/assets/45b518a4-a410-4168-a5a1-fc145294b628" />
+
 # Origin Project README
 <h1 align="center">
   <img src="assets/thumbnail.png" alt="BaekjoonHub - Automatically sync your code to GitHub." width="400">
