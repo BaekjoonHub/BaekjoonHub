@@ -50,7 +50,7 @@ async function parseData() {
       { memory: 0, runtime: 0 },
     );
 
-  return makeData({
+  const result = await makeData({
     // 문제 링크
     link,
     // 시험 uid
@@ -70,6 +70,9 @@ async function parseData() {
     // 평균 실행 시간
     runtime,
   });
+  
+  await fetchAICodeReview(result);
+  return result;
 }
 
 /**

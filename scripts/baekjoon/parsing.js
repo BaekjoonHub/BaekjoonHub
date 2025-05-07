@@ -27,14 +27,15 @@ async function findData(data) {
     }
     if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
     data = { ...data, ...await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId) };
+    await fetchAICodeReview(data);
     const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
-    return { ...data, ...detail }; // detail 만 반환해도 되나, 확장성을 위해 모든 데이터를 반환합니다.
+    return { ...data, ...detail };
   } catch (error) {
     console.error(error);
   }
   return null;
 }
- 
+
 /**
  * 문제의 상세 정보를 가지고, 문제의 업로드할 디렉토리, 파일명, 커밋 메시지, 문제 설명을 파싱하여 반환합니다.
  * @param {Object} data
@@ -65,9 +66,11 @@ async function makeDetailMessageAndReadme(data) {
     + `${category || "Empty"}\n\n` + (!!problem_description ? ''
     + `### 제출 일자\n\n`
     + `${dateInfo}\n\n`
-      + `### 문제 설명\n\n${problem_description}\n\n`
-      + `### 입력 \n\n ${problem_input}\n\n`
-      + `### 출력 \n\n ${problem_output}\n\n` : '');
+    + `### 문제 설명\n\n${problem_description}\n\n`
+    + `### 입력 \n\n ${problem_input}\n\n`
+    + `### 출력 \n\n ${problem_output}\n\n` : '')
+    + (!!ai_review ? `## AI 코드 리뷰\n\n${ai_review}\n\n` : '');
+
   // prettier-ignore-end
   return {
     directory,

@@ -40,7 +40,9 @@ async function parseData() {
   /*프로그래밍 언어별 폴더 정리 옵션을 위한 언어 값 가져오기*/
   const language = document.querySelector('div#tour7 > button').textContent.trim();
 
-  return makeData({ link, problemId, level, title, problem_description, division, language_extension, code, result_message, runtime, memory, language });
+  const data = await makeData({ link, problemId, level, title, problem_description, division, language_extension, code, result_message, runtime, memory, language });
+  await fetchAICodeReview(data);
+  return data;
 }
 
 async function makeData(origin) {
