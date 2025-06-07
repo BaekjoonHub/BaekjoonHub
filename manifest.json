@@ -38,7 +38,6 @@
     "https://github.com/",
     "https://swexpertacademy.com/",
     "https://solved.ac/api/v3/*",
-    "https://api.ssafy.today/api/v3/*",
     "https://level.goorm.io/"
   ],
   "web_accessible_resources": [

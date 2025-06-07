@@ -3,7 +3,7 @@
  * @param {int} problemId
  */
 async function SolvedApiCall(problemId) {
-  return fetch(`https://api.ssafy.today/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
+  return fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
     .then((query) => query.json());
 }
 
