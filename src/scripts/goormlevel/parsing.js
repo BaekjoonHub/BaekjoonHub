@@ -25,7 +25,25 @@ async function parseData() {
 
   const languageList = [...document.querySelectorAll('#FrameBody .Tour__selectLang div[role="menu"] button[role="menuitem"]')].map(($element) => $element.textContent);
   const currentLanguageIndex = languageList.findIndex((language) => currentLanguage === language);
-  const code = [...document.querySelectorAll('#fileEditor textarea[readonly]')].map(($element) => $element.value)[currentLanguageIndex] || '';
+  
+  const editors = document.querySelectorAll("#fileEditor div.cm-content.cm-lineWrapping");
+
+  // 대상 에디터 결정
+  const targetIndex =
+    currentLanguageIndex >= 0 && currentLanguageIndex < editors.length
+      ? currentLanguageIndex
+      : editors.length === 1 && currentLanguageIndex < 0
+      ? 0
+      : -1;
+
+  // 코드 추출
+  const code =
+    targetIndex >= 0
+      ? Array.from(editors[targetIndex].querySelectorAll("div.cm-line"))
+          .map((line) => line.textContent)
+          .join("\n")
+      : "";
+
 
   const $dataList = [...document.querySelectorAll('.tab-content .tab-pane.active table tbody tr')].filter(($element) => $element.childNodes[1].textContent === 'PASS');
   const { memory, runtime } = $dataList
