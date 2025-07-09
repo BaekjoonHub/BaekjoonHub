@@ -1,6 +1,6 @@
 import { GitHub } from './Github.js';
-import { getToken, getHook, getStats, saveStats } from './storage.js';
-import { updateObjectDatafromPath, isNull, log } from './util.js';
+import { updateObjectDatafromPath, getToken, getHook, getStats, saveStats } from './storage.js';
+import { isNull, log } from './util.js';
 
 /**
  * 모든 플랫폼에서 공통으로 사용할 수 있는 업로드 서비스 클래스
