@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "release-type": "node",
   "pull-request-title-pattern": "chore(release): release ${version}",
-  "include-v-in-tag": false,
+  "include-v-in-tag": true,
   "include-component-in-tag": false,
   "packages": {
     ".": {
