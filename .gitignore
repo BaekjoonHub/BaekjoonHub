@@ -4,6 +4,7 @@ node_modules/
 # Build outputs
 dist/
 packages/
+baekjoonhub.zip
 
 # IDE and editor files
 .vscode/
