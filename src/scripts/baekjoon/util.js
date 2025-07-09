@@ -30,11 +30,6 @@ function markUploadFailedCSS() {
   markFailed(uploadState);
 }
 
-// convertImageTagAbsoluteURL 함수를 리팩토링된 공통 함수로 대체
-function convertImageTagAbsoluteURL(doc = document) {
-  convertImageTagToAbsoluteURL(doc);
-}
-
 /**
  * 제출 목록 비교함수입니다
  * @param {object} a - 제출 요소 피연산자 a
