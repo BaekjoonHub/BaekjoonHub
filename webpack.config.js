@@ -30,10 +30,6 @@ export default (env, argv = {}) => {
             // ES 모듈 형식 비활성화
         },
         plugins: [
-            new CleanWebpackPlugin({
-                cleanAfterEveryBuildPatterns: ["**/*.LICENSE.txt"],
-                protectWebpackAssets: false,
-            }),
             new CopyPlugin({
                 patterns: [
                     {from: "./src/manifest.json", to: "./"},
