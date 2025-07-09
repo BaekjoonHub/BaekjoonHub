@@ -11,6 +11,7 @@
     "lint": "eslint src/**/*.js",
     "test": "echo \"No tests implemented yet\""
   },
+  "type": "module",
   "keywords": [
     "chrome-extension",
     "baekjoonhub",
