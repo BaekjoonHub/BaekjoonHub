@@ -12,6 +12,9 @@
     "test": "echo \"No tests implemented yet\"",
     "zip": "node scripts/create-zip.js"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "type": "module",
   "keywords": [
     "chrome-extension",
