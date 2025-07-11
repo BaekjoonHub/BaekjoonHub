@@ -1,12 +1,10 @@
-/*
-    로컬스토리지에 swea 객체가 없는 경우 생성
-*/
-import { getObjectFromLocalStorage, saveObjectInLocalStorage } from "../storage.js";
-import { log, isNull } from "../util.js";
+import { getObjectFromLocalStorage, saveObjectInLocalStorage } from "@/commons/storage.js";
+import { log, isNull } from "@/commons/util.js";
+import { STORAGE_KEYS } from "@/constants/registry.js";
 
-getObjectFromLocalStorage("swea").then((data) => {
+getObjectFromLocalStorage(STORAGE_KEYS.SWEA).then((data) => {
   if (isNull(data)) {
-    saveObjectInLocalStorage({ swea: {} });
+    saveObjectInLocalStorage({ [STORAGE_KEYS.SWEA]: {} });
   }
 });
 
@@ -16,28 +14,28 @@ getObjectFromLocalStorage("swea").then((data) => {
  * @param {object} obj 저장할 추가 내용
  */
 export async function updateProblemData(problemId, obj) {
-  return getObjectFromLocalStorage("swea").then((data) => {
+  return getObjectFromLocalStorage(STORAGE_KEYS.SWEA).then((data) => {
     log("updateProblemData", data);
     log("obj", obj);
     if (isNull(data[problemId])) data[problemId] = {};
     data[problemId] = { ...data[problemId], ...obj, save_date: Date.now() };
 
     // 기존에 저장한 문제 중 일주일이 경과한 문제 내용들은 모두 삭제합니다.
-    const date_week_ago = Date.now() - 7 * 86400000;
+    const dateWeekAgo = Date.now() - 7 * 86400000;
     log("data before deletion", data);
-    log("date a week ago", date_week_ago);
+    log("date a week ago", dateWeekAgo);
     for (const [key, value] of Object.entries(data)) {
       // 무한 방치를 막기 위해 저장일자가 null이면 삭제
-      if (isNull(value) || isNull(value.save_date)) {
+      if (isNull(value) || isNull(value.saveDate)) {
         delete data[key];
       }
-      const save_date = new Date(value.save_date);
+      const saveDate = new Date(value.saveDate);
       // 1주가 지난 문제는 삭제
-      if (date_week_ago > save_date) {
+      if (dateWeekAgo > saveDate) {
         delete data[key];
       }
     }
-    saveObjectInLocalStorage({ swea: data });
+    saveObjectInLocalStorage({ [STORAGE_KEYS.SWEA]: data });
     return data;
   });
 }
@@ -48,5 +46,5 @@ export async function updateProblemData(problemId, obj) {
  * @returns {object} 문제 내 데이터
  */
 export async function getProblemData(problemId) {
-  return getObjectFromLocalStorage("swea").then((data) => data[problemId]);
+  return getObjectFromLocalStorage(STORAGE_KEYS.SWEA).then((data) => data[problemId]);
 }

@@ -1,5 +1,9 @@
+import sha1 from "js-sha1";
+
+const debug = true;
+
 /**
- * 현재 익스텐션의 버전정보를 반환합니다.
+ * 현재 익스텐션의 버전정보를 반환합니다。
  * @returns {string} - 현재 익스텐션의 버전정보
  */
 export function getVersion() {
@@ -11,7 +15,7 @@ export function getVersion() {
  * @returns {boolean} - 존재하면 true, 존재하지 않으면 false
  */
 export function elementExists(element) {
-  return element !== undefined && element !== null && element.hasOwnProperty('length') && element.length > 0;
+  return element !== undefined && element !== null && Object.prototype.hasOwnProperty.call(element, "length") && element.length > 0;
 }
 
 /**
@@ -29,7 +33,7 @@ export function isNull(value) {
  * @returns {boolean} - 비어있으면 true, 비어있지 않으면 false
  */
 export function isEmpty(value) {
-  return isNull(value) || (value.hasOwnProperty('length') && value.length === 0);
+  return isNull(value) || (Object.prototype.hasOwnProperty.call(value, "length") && value.length === 0);
 }
 
 /**
@@ -39,8 +43,8 @@ export function isEmpty(value) {
  * @returns {number} - 계산된 길이
  */
 export function utf8Length(str) {
-  const normalizedStr = str.replace(/\r\n/g, '\n');
-  return (new TextEncoder().encode(normalizedStr)).length;
+  const normalizedStr = str.replace(/\r\n/g, "\n");
+  return new TextEncoder().encode(normalizedStr).length;
 }
 
 /**
@@ -50,12 +54,12 @@ export function utf8Length(str) {
  * @returns {Object} - 반환할 객체
  */
 export function preProcessEmptyObj(obj) {
-  if (isEmpty(obj['codeLength']) && !isEmpty(obj['code'])) {
-    const code = obj['code'];
-    obj['codeLength'] = utf8Length(code);
+  if (isEmpty(obj.codeLength) && !isEmpty(obj.code)) {
+    const { code } = obj;
+    obj.codeLength = utf8Length(code);
   }
-  if (isEmpty(obj['problem_tags']) && !isEmpty(obj['code'])) {
-    obj['problem_tags'] = ['분류 없음'];
+  if (isEmpty(obj.problem_tags) && !isEmpty(obj.code)) {
+    obj.problem_tags = ["분류 없음"];
   }
   return obj;
 }
@@ -67,10 +71,10 @@ export function preProcessEmptyObj(obj) {
  */
 export function isNotEmpty(obj) {
   if (isEmpty(obj)) return false;
-  if (typeof obj !== 'object') return true;
+  if (typeof obj !== "object") return true;
   if (obj.length === 0) return false;
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       if (!isNotEmpty(obj[key])) return false;
     }
   }
@@ -84,52 +88,39 @@ export function isNotEmpty(obj) {
  */
 export function escapeHtml(text) {
   const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
   };
 
-  return text.replace(/[&<>"']/g, function (m) {
-    return map[m];
-  });
+  return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 // String prototype extensions
-String.prototype.escapeHtml = function () {
-  return escapeHtml(this);
-};
-
 /**
- * escape된 문자열을 unescape하여 반환합니다.
+ * escape된 문자열을 unescape하여 반환합니다。
  * @param {string} text - unescape할 문자열
  * @returns {string} - unescape된 문자열
  */
 export function unescapeHtml(text) {
   const unescaped = {
-    '&amp;': '&',
-    '&#38;': '&',
-    '&lt;': '<',
-    '&#60;': '<',
-    '&gt;': '>',
-    '&#62;': '>',
-    '&apos;': "'",
-    '&#39;': "'",
-    '&quot;': '"',
-    '&#34;': '"',
-    '&nbsp;': ' ',
-    '&#160;': ' ',
+    "&amp;": "&",
+    "&#38;": "&",
+    "&lt;": "<",
+    "&#60;": "<",
+    "&gt;": ">",
+    "&#62;": ">",
+    "&apos;": "'",
+    "&#39;": "'",
+    "&quot;": '"',
+    "&#34;": '"',
+    "&nbsp;": " ",
+    "&#160;": " ",
   };
-  return text.replace(/&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34|nbsp|#160);/g, function (m) {
-    return unescaped[m];
-  });
+  return text.replace(/&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34|nbsp|#160);/g, (m) => unescaped[m]);
 }
-
-// String prototype extensions
-String.prototype.unescapeHtml = function () {
-  return unescapeHtml(this);
-};
 
 /** 일반 특수문자를 전각문자로 변환하는 함수
  * @param {string} text - 변환할 문자열
@@ -138,39 +129,36 @@ String.prototype.unescapeHtml = function () {
 export function convertSingleCharToDoubleChar(text) {
   // singleChar to doubleChar mapping
   const map = {
-    '!': '！',
-    '%': '％',
-    '&': '＆',
-    '(': '（',
-    ')': '）',
-    '*': '＊',
-    '+': '＋',
-    ',': '，',
-    '-': '－',
-    '.': '．',
-    '/': '／',
-    ':': '：',
-    ';': '；',
-    '<': '＜',
-    '=': '＝',
-    '>': '＞',
-    '?': '？',
-    '@': '＠',
-    '[': '［',
-    '\\': '＼',
-    ']': '］',
-    '^': '＾',
-    _: '＿',
-    '`': '｀',
-    '{': '｛',
-    '|': '｜',
-    '}': '｝',
-    '~': '～',
-    ' ': ' ', // 공백만 전각문자가 아닌 FOUR-PER-EM SPACE로 변환
+    "!": "！",
+    "%": "％",
+    "&": "＆",
+    "(": "（",
+    ")": "）",
+    "*": "＊",
+    "+": "＋",
+    ",": "，",
+    ".": "．",
+    "/": "／",
+    ":": "：",
+    ";": "；",
+    "<": "＜",
+    "=": "＝",
+    ">": "＞",
+    "?": "？",
+    "@": "＠",
+    "[": "［",
+    "\\": "＼",
+    "]": "］",
+    "^": "＾",
+    _: "＿",
+    "`": "｀",
+    "{": "｛",
+    "|": "｜",
+    "}": "｝",
+    "~": "～",
+    " ": " ",
   };
-  return text.replace(/[!%&()*+,\-./:;<=>?@\[\\\]^_`{|}~ ]/g, function (m) {
-    return map[m];
-  });
+  return text.replace(/[!%&()*+,./:;<=>?@[\]^_`{|}~ -]/g, (m) => map[m]);
 }
 
 /**
@@ -179,11 +167,7 @@ export function convertSingleCharToDoubleChar(text) {
  * @returns {string} - base64로 인코딩된 문자열
  */
 export function b64EncodeUnicode(str) {
-  return btoa(
-    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
-      return String.fromCharCode(`0x${p1}`);
-    }),
-  );
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(`0x${p1}`)));
 }
 
 /**
@@ -194,11 +178,9 @@ export function b64EncodeUnicode(str) {
 export function b64DecodeUnicode(b64str) {
   return decodeURIComponent(
     atob(b64str)
-      .split('')
-      .map(function (c) {
-        return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
-      })
-      .join(''),
+      .split("")
+      .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+      .join("")
   );
 }
 
@@ -216,8 +198,10 @@ export function parseNumberFromString(str) {
  * @returns {object} - key 기준으로 그룹핑된 객체들 배열을 value로 갖는 map
  */
 export function groupBy(array, key) {
-  return array.reduce(function (rv, x) {
-    (rv[x[key]] = rv[x[key]] || []).push(x);
+  return array.reduce((rv, x) => {
+    // eslint-disable-next-line no-param-reassign
+    rv[x[key]] = rv[x[key]] || [];
+    rv[x[key]].push(x);
     return rv;
   }, {});
 }
@@ -232,10 +216,8 @@ export function groupBy(array, key) {
 export function maxValuesGroupBykey(arr, key, compare) {
   const map = groupBy(arr, key);
   const result = [];
-  for (const [key, value] of Object.entries(map)) {
-    const maxValue = value.reduce((max, current) => {
-      return compare(max, current) > 0 ? max : current;
-    });
+  for (const value of Object.values(map)) {
+    const maxValue = value.reduce((max, current) => (compare(max, current) > 0 ? max : current));
     result.push(maxValue);
   }
   return result;
@@ -248,7 +230,9 @@ export function maxValuesGroupBykey(arr, key, compare) {
  */
 export function filter(arr, conditions) {
   return arr.filter((item) => {
-    for (const [key, value] of Object.entries(conditions)) if (!item[key].includes(value)) return false;
+    for (const [key, value] of Object.entries(conditions)) {
+      if (!item[key].includes(value)) return false;
+    }
     return true;
   });
 }
@@ -276,9 +260,11 @@ export async function asyncPool(poolLimit, array, iteratorFn) {
     ret.push(p);
 
     if (poolLimit <= array.length) {
+      // eslint-disable-next-line no-await-in-loop
       const e = p.then(() => executing.splice(executing.indexOf(e), 1));
       executing.push(e);
       if (executing.length >= poolLimit) {
+        // eslint-disable-next-line no-await-in-loop
         await Promise.race(executing);
       }
     }
@@ -301,12 +287,5 @@ export function combine(a, b) {
  * @param  {...any} args - Arguments to log
  */
 export function log(...args) {
-  if (typeof debug !== 'undefined' && debug) console.log(...args);
-}
-
-// For development use - maintain compatibility with older code
-if (typeof __DEV__ !== "undefined") {
-  var exports = {};
-  exports.filter = filter;
-  module.exports = exports;
+  if (typeof debug !== "undefined" && debug) console.log(...args);
 }

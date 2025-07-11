@@ -1,155 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <link rel="stylesheet" href="css/settings.css" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- NPM packages will be bundled by webpack -->
+  <link rel="stylesheet" href="css/settings.css" />
+  <title>BaekjoonHub Settings</title>
 </head>
 
 <body>
   <div class="grid container">
-    <div class="sixteen wide center aligned column">
+    <header class="sixteen wide center aligned column">
       <h1 id="title">
         Baekjoon
         <span style="color: #0078c3">Hub</span>
         Settings
       </h1>
       <p class="caption">Configure your coding experience</p>
-      <p hidden id="error"></p>
-      <p hidden id="success"></p>
+      <p hidden id="error" class="message error"></p>
+      <p hidden id="success" class="message success"></p>
       <p hidden id="unlink">
         Linked the wrong repo?
-        <a>Unlink</a>
+        <a href="#" id="unlink_text">Unlink</a>
         .
       </p>
-    </div>
+    </header>
 
-    <!-- Create Hook -->
-    <div style="display: none" id="hook_mode" class="grid container">
-      <div class="sixteen wide column">
-        <h2 class="large header center aligned">GitHub Repository Setup</h2>
-      </div>
-
-      <div class="sixteen wide column">
-        <div class="form-card">
-          <div class="form">
+    <main class="sixteen wide column">
+      <!-- GitHub Repository Setup Steps -->
+      <section id="hook_mode" class="grid" style="display: none;">
+        <!-- Step 1: Repository Option -->
+        <div id="step_repo_option" class="step sixteen wide column">
+          <div class="form-card">
+            <h2 class="large header center aligned">Step 1: Repository Option</h2>
             <div class="field">
-              <label for="type">Repository Option</label>
+              <label for="type">How would you like to set up your repository?</label>
               <select id="type">
                 <option value="">Pick an Option</option>
                 <option value="new">Create a new Private Repository</option>
                 <option value="link">Link an Existing Repository</option>
               </select>
             </div>
-
-            <!-- Organization options -->
             <div class="field">
-              <label for="org_option">Organization Method</label>
-              <select id="org_option">
-                <!-- Platform organization -->
-                <option value="platform">Organize by Platform</option>
-                <!-- Language organization -->
-                <option value="language">Organize by Language</option>
-              </select>
+              <button id="next_to_repo_name" class="positive button" disabled>Next</button>
             </div>
+          </div>
+        </div>
 
-            <div class="field" id="repo_name_field">
+        <!-- Step 2: Full Repository Name -->
+        <div id="step_repo_name" class="step sixteen wide column" style="display: none;">
+          <div class="form-card">
+            <h2 class="large header center aligned">Step 2: Repository Name</h2>
+            <div class="field">
               <label for="name">Full Repository Name</label>
               <input autocomplete="off" id="name" placeholder="username/repository-name" type="text" />
             </div>
+            <div class="field">
+              <button id="back_to_repo_option" class="button">Back</button>
+              <button id="next_to_org_method" class="positive button" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Organization Method -->
+        <div id="step_org_method" class="step sixteen wide column" style="display: none;">
+          <div class="form-card">
+            <h2 class="large header center aligned">Step 3: Organization Method</h2>
+            <div class="field">
+              <label for="org_option">How should the repository be organized?</label>
+              <select id="org_option">
+                <option value="platform">Organize by Platform</option>
+                <option value="language">Organize by Language</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div class="field">
+              <button id="back_to_repo_name" class="button">Back</button>
+              <button id="finish_setup" class="positive button">Finish Setup</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Show stats and settings when connected -->
+      <section id="commit_mode" class="grid" style="display: none">
+        <div class="sixteen wide column">
+          <h2 class="large header center aligned">Repository Connected</h2>
+
+          <div class="form-card">
+            <div class="field">
+              <label>Current Repository</label>
+              <p id="current_repo" class="setting-value">Loading...</p>
+            </div>
 
             <div class="field">
-              <button id="hook_button" disabled class="positive button">Get Started</button>
+              <label>Organization Method</label>
+              <p id="current_org" class="setting-value">Loading...</p>
+            </div>
+
+            <div class="field">
+              <label>Custom Template</label>
+              <div class="toggle-switch">
+                <input type="checkbox" id="use_custom_template" />
+                <label for="use_custom_template"></label>
+              </div>
+            </div>
+
+            <div class="field" id="custom_template_field" style="display: none;">
+              <label for="custom_template">Custom Directory Template</label>
+              <input type="text" id="custom_template" placeholder="{{language}}/백준/{{level.replace(/ .*/, '')}}/{{problemId}}. {{title}}" />
+              <p class="help-text">
+                Available variables: problemId, title, level, language, problem_tags, memory, runtime, submissionTime<br>
+                Example: <code>{{language}}/백준/{{level.replace(/ .*/, '')}}/{{problemId}}. {{title}}</code>
+              </p>
+            </div>
+
+            <div class="field">
+              <label>Automatic Commits</label>
+              <div class="toggle-switch">
+                <input type="checkbox" id="auto_commit" checked />
+                <label for="auto_commit"></label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Reset Repository Connection</label>
+              <button id="unlinkButton" class="danger button">Unlink Repository</button>
             </div>
           </div>
         </div>
+      </section>
+    </main>
+
+    <footer class="sixteen wide center aligned column">
+      <div class="small header">
+        <a target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub">
+          Star
+          <span>Baekjoon</span>
+          <span style="color: #0078c3">Hub</span>
+          on GitHub
+        </a>
       </div>
-    </div>
-
-    <!-- Show stats and settings when connected -->
-    <div style="display: none" id="commit_mode" class="grid container">
-      <div class="sixteen wide column">
-        <h2 class="large header center aligned">Repository Connected</h2>
-
-        <div class="form-card">
-          <div class="field">
-            <label>Current Repository</label>
-            <p id="current_repo" class="setting-value">Loading...</p>
-          </div>
-
-          <div class="field">
-            <label>Organization Method</label>
-            <p id="current_org" class="setting-value">Loading...</p>
-          </div>
-
-          <div class="field">
-            <label>Custom Template</label>
-            <div class="toggle-switch">
-              <input type="checkbox" id="use_custom_template" />
-              <label for="use_custom_template"></label>
-            </div>
-          </div>
-
-          <div class="field" id="custom_template_field" style="display: none;">
-            <label for="custom_template">Custom Directory Template</label>
-            <input type="text" id="custom_template" placeholder="{{language}}/백준/{{level.replace(/ .*/, '')}}/{{problemId}}. {{title}}" />
-            <p class="help-text">
-              Available variables: problemId, title, level, language, problem_tags, memory, runtime, submissionTime<br>
-              Example: <code>{{language}}/백준/{{level.replace(/ .*/, '')}}/{{problemId}}. {{title}}</code>
-            </p>
-          </div>
-
-          <!-- <div class="tabs">
-            <button class="tab-button active" data-tab="general">General</button>
-            <button class="tab-button" data-tab="advanced">Advanced</button>
-          </div> -->
-
-          <!-- <div id="general" class="tab-content active">
-              <div class="field">
-                <label>Default File Format</label>
-                <select id="default_format">
-                  <option value="md">Markdown (.md)</option>
-                  <option value="txt">Plain Text (.txt)</option>
-                  <option value="source">Source Code (e.g., .py, .cpp)</option>
-                </select>
-              </div> -->
-
-          <div class="field">
-            <label>Automatic Commits</label>
-            <div class="toggle-switch">
-              <input type="checkbox" id="auto_commit" checked />
-              <label for="auto_commit"></label>
-            </div>
-          </div>
-          <!-- <div id="advanced" class="tab-content"> -->
-          <div class="field">
-            <label>Reset Repository Connection</label>
-            <button id="unlink_button" class="danger button">Unlink Repository</button>
-          </div>
-          <!-- </div> -->
-        </div>
-
-
-      </div>
-    </div>
+    </footer>
   </div>
 
-  <!-- GitHub Link -->
-  <div class="sixteen wide center aligned column">
-    <div class="small header">
-      <a target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub">
-        Star
-        <span>Baekjoon</span>
-        <span style="color: #0078c3">Hub</span>
-        on GitHub
-      </a>
-    </div>
-  </div>
-  </div>
-
-  <script src="vendors.js"></script>
-  <script src="settings.js"></script>
+  <script src="settings.js" defer></script>
 </body>
 
 </html>

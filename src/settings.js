@@ -1,511 +1,583 @@
-// Define stats at module scope
-let stats = {};
+import { getObjectFromLocalStorage, saveObjectInLocalStorage } from "@/commons/storage.js";
 
-// DOM utility functions to replace jQuery
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => document.querySelectorAll(selector);
+import beginOAuth2 from "@/commons/oauth2.js";
 
-// Replace jQuery functions with native DOM equivalents
-const getVal = (selector) => $(selector)?.value || '';
-const hideElement = (selector) => { $(selector).style.display = 'none'; };
-const showElement = (selector) => { $(selector).style.display = 'block'; };
-const setText = (selector, text) => { $(selector).textContent = text; };
-const setHTML = (selector, html) => { $(selector).innerHTML = html; };
-const focus = (selector) => { $(selector).focus(); };
-const setDisabled = (selector, disabled) => { $(selector).disabled = disabled; };
+// Step navigation
+const steps = ["step_repo_option", "step_repo_name", "step_org_method"];
+let currentStep = 0;
 
-const option = () => {
-  return getVal("#type");
+const showStep = (stepId) => {
+  document.querySelectorAll(".step").forEach((step) => {
+    const element = step;
+    if (element) element.style.display = "none";
+  });
+  const element = document.querySelector(`#${stepId}`);
+  if (element) {
+    element.style.display = "block";
+    element.removeAttribute("hidden");
+  }
 };
 
-const repositoryName = () => {
-  return getVal("#name").trim();
+const navigateToStep = (stepIndex) => {
+  if (stepIndex >= 0 && stepIndex < steps.length) {
+    currentStep = stepIndex;
+    showStep(steps[currentStep]);
+  }
 };
 
-/* Status codes for creating of repo */
-const statusCode = (res, status, fullName) => {
-  const parts = fullName.split('/');
-  const ownerName = parts[0];
-  const repoName = parts[1];
+/**
+ * Detects the mode (hook or commit) and sets the UI accordingly.
+ */
+const detectAndSetMode = async () => {
+  const data = (await getObjectFromLocalStorage(["mode_type", "baekjoonHubHook", "baekjoonHubOrgOption", "baekjoonHubToken"])) || {};
+  const { mode_type: modeType, baekjoonHubHook: BaekjoonHubHook, baekjoonHubOrgOption: BaekjoonHubOrgOption, baekjoonHubToken: BaekjoonHubToken } = data;
 
+  if (modeType === "commit" && BaekjoonHubHook) {
+    if (!BaekjoonHubToken) {
+      document.querySelector("#error").innerHTML =
+        'Authorization error - Grant BaekjoonHub access to your GitHub account to continue. <button id="authorize_button" class="button positive">Authorize</button>';
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#hook_mode").style.display = "block";
+      document.querySelector("#hook_mode").removeAttribute("hidden");
+      document.querySelector("#commit_mode").style.display = "none";
+      navigateToStep(0);
+      document.querySelector("#authorize_button").addEventListener("click", beginOAuth2);
+      return;
+    }
+
+    document.querySelector("#hook_mode").style.display = "none";
+    document.querySelector("#commit_mode").style.display = "block";
+    document.querySelector("#commit_mode").removeAttribute("hidden");
+    document.querySelector("#current_repo").textContent = BaekjoonHubHook;
+    const orgOptionValue = BaekjoonHubOrgOption || "platform";
+    let orgText;
+    if (orgOptionValue === "platform") {
+      orgText = "By Platform";
+    } else if (orgOptionValue === "language") {
+      orgText = "By Language";
+    } else {
+      orgText = "Custom";
+    }
+    document.querySelector("#current_org").textContent = orgText;
+    if (orgOptionValue !== "custom") {
+      document.querySelector("#customTemplateField").style.display = "none";
+    }
+    document.querySelector("#unlink").style.display = "block";
+    document.querySelector("#unlink").removeAttribute("hidden");
+  } else {
+    console.log("Entering hook mode");
+    document.querySelector("#hook_mode").style.display = "block";
+    console.log("hook_mode display set to block");
+    document.querySelector("#hook_mode").removeAttribute("hidden");
+    document.querySelector("#commit_mode").style.display = "none";
+    document.querySelector("#unlink").style.display = "none";
+    navigateToStep(0);
+  }
+};
+
+const getOptionType = () => document.querySelector("#type").value;
+const getRepositoryName = () => document.querySelector("#name").value.trim();
+const getOrgOption = () => document.querySelector("#org_option").value;
+
+/**
+ * Handles the status code from creating a repository and provides feedback to the user.
+ * @param {object} res - The response from the GitHub API.
+ * @param {number} status - The HTTP status code.
+ * @param {string} fullName - The full name of the repository (e.g., username/repo-name).
+ */
+const handleCreateRepoStatusCode = (res, status, fullName) => {
   switch (status) {
     case 304:
-      hideElement("#success");
-      setText("#error", `Error creating ${fullName} - Unable to modify repository. Try again later!`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").textContent = `Error creating ${fullName} - Unable to modify repository. Try again later!`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     case 400:
-      hideElement("#success");
-      setText("#error", `Error creating ${fullName} - Bad POST request, make sure you're not overriding any existing scripts`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").textContent = `Error creating ${fullName} - Bad POST request, make sure you're not overriding any existing scripts`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     case 401:
-      hideElement("#success");
-      setText("#error", `Error creating ${fullName} - Unauthorized access to repo. Try again later!`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").textContent = `Error creating ${fullName} - Unauthorized access to repo. Try again later!`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     case 403:
-      hideElement("#success");
-      setText("#error", `Error creating ${fullName} - Forbidden access to repository. Try again later!`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").textContent = `Error creating ${fullName} - Forbidden access to repository. Try again later!`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     case 422:
-      hideElement("#success");
-      setText("#error", `Error creating ${fullName} - Unprocessable Entity. Repository may have already been created. Try Linking instead (select 2nd option).`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").textContent = `Error creating ${fullName} - Unprocessable Entity. Repository may have already been created. Try Linking instead (select 2nd option).`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     default:
-      /* Change mode type to commit */
-      chrome.storage.local.set({ mode_type: "commit" }, () => {
-        hideElement("#error");
-        setHTML("#success", `Successfully created <a target="blank" href="${res.html_url}">${fullName}</a>. Start <a href="https://www.acmicpc.net/">BOJ</a>!`);
-        showElement("#success");
-        showElement("#unlink");
-        /* Show new layout */
-        $("#hook_mode").style.display = "none";
-        $("#commit_mode").style.display = "inherit";
+      saveObjectInLocalStorage({ mode_type: "commit" }).then(() => {
+        document.querySelector("#error").style.display = "none";
+        document.querySelector("#success").innerHTML = `Successfully created <a target='_blank' href='${res.html_url}'>${fullName}</a>. Start <a href='https://www.acmicpc.net/'>BOJ</a>!`;
+        document.querySelector("#success").style.display = "block";
+        document.querySelector("#success").removeAttribute("hidden");
+        document.querySelector("#unlink").style.display = "block";
+        document.querySelector("#unlink").removeAttribute("hidden");
+        document.querySelector("#hook_mode").style.display = "none";
+        document.querySelector("#commit_mode").style.display = "block";
+        document.querySelector("#commit_mode").removeAttribute("hidden");
+        detectAndSetMode(); // Refresh the settings page
       });
-      /* Set Repo Hook */
-      chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
+      saveObjectInLocalStorage({ baekjoonHubHook: res.full_name }).then(() => {
         console.log("Successfully set new repo hook");
       });
-
       break;
   }
 };
 
-const createRepo = (token, fullName) => {
-  // 사용자명/레포지토리명 형식에서 레포지토리 이름만 추출
-  const name = fullName.split('/')[1];
-  
+/**
+ * Creates a new GitHub repository.
+ * @param {string} token - The GitHub OAuth token.
+ * @param {string} fullName - The full name of the repository to create (e.g., username/repo-name).
+ */
+const createRepo = async (token, fullName) => {
+  const name = fullName.split("/")[1];
   const AUTHENTICATION_URL = "https://api.github.com/user/repos";
-  let data = {
+  const data = {
     name,
     private: true,
     auto_init: true,
     description: "This is an auto push repository for Baekjoon Online Judge created with [BaekjoonHub](https://github.com/BaekjoonHub/BaekjoonHub).",
   };
-  data = JSON.stringify(data);
 
-  const xhr = new XMLHttpRequest();
-  xhr.addEventListener("readystatechange", function () {
-    if (xhr.readyState === 4) {
-      statusCode(JSON.parse(xhr.responseText), xhr.status, fullName);
-    }
-  });
+  try {
+    const response = await fetch(AUTHENTICATION_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github.v3+json",
+      },
+      body: JSON.stringify(data),
+    });
+    const res = await response.json();
+    handleCreateRepoStatusCode(res, response.status, fullName);
 
-  stats = {};
-  stats.version = chrome.runtime.getManifest().version;
-  stats.submission = {};
-  chrome.storage.local.set({ stats });
-
-  xhr.open("POST", AUTHENTICATION_URL, true);
-  xhr.setRequestHeader("Authorization", `token ${token}`);
-  xhr.setRequestHeader("Accept", "application/vnd.github.v3+json");
-  xhr.send(data);
+    const stats = {};
+    stats.version = chrome.runtime.getManifest().version;
+    stats.submission = {};
+    saveObjectInLocalStorage({ stats });
+  } catch (error) {
+    console.error(error);
+    document.querySelector("#success").style.display = "none";
+    document.querySelector("#error").textContent = "Error creating repository. See console for details.";
+    document.querySelector("#error").style.display = "block";
+    document.querySelector("#error").removeAttribute("hidden");
+  }
 };
 
-/* Status codes for linking of repo */
-const linkStatusCode = (status, name) => {
-  let bool = false;
+/**
+ * Handles the status code from linking an existing repository.
+ * @param {number} status - The HTTP status code.
+ * @param {string} name - The name of the repository.
+ * @returns {boolean} - True if the link was successful, false otherwise.
+ */
+const handleLinkRepoStatusCode = (status, name) => {
+  let success = false;
   switch (status) {
     case 301:
-      hideElement("#success");
-      setHTML("#error", `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjoonHub. <br> This repository has been moved permenantly. Try creating a new one.`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").innerHTML =
+        `Error linking <a target='_blank' href='https://github.com/${name}'>${name}</a> to BaekjoonHub. <br> This repository has been moved permanently. Try creating a new one.`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     case 403:
-      hideElement("#success");
-      setHTML("#error", `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjoonHub. <br> Forbidden action. Please make sure you have the right access to this repository.`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").innerHTML =
+        `Error linking <a target='_blank' href='https://github.com/${name}'>${name}</a> to BaekjoonHub. <br> Forbidden action. Please make sure you have the right access to this repository.`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     case 404:
-      hideElement("#success");
-      setHTML("#error", `Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjoonHub. <br> Resource not found. Make sure you enter the right repository name.`);
-      showElement("#error");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#error").innerHTML =
+        `Error linking <a target='_blank' href='https://github.com/${name}'>${name}</a> to BaekjoonHub. <br> Resource not found. Make sure you enter the right repository name.`;
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
       break;
-
     default:
-      bool = true;
+      success = true;
       break;
   }
-  showElement("#unlink");
-  return bool;
+  document.querySelector("#unlink").style.display = "block";
+  document.querySelector("#unlink").removeAttribute("hidden");
+  return success;
 };
 
-/* 
-    Method for linking hook with an existing repository 
-    Steps:
-    1. Check if existing repository exists and the user has write access to it.
-    2. Link Hook to it (chrome Storage).
-*/
-const linkRepo = (token, name) => {
+/**
+ * Links an existing GitHub repository.
+ * @param {string} token - The GitHub OAuth token.
+ * @param {string} name - The full name of the repository to link (e.g., username/repo-name).
+ */
+const linkRepo = async (token, name) => {
   const AUTHENTICATION_URL = `https://api.github.com/repos/${name}`;
 
-  const xhr = new XMLHttpRequest();
-  xhr.addEventListener("readystatechange", function () {
-    if (xhr.readyState === 4) {
-      const res = JSON.parse(xhr.responseText);
-      const bool = linkStatusCode(xhr.status, name);
-      if (xhr.status === 200) {
-        // BUG FIX
-        if (!bool) {
-          // unable to gain access to repo in commit mode. Must switch to hook mode.
-          /* Set mode type to hook */
-          chrome.storage.local.set({ mode_type: "hook" }, () => {
-            console.log(`Error linking ${name} to BaekjoonHub`);
-          });
-          /* Set Repo Hook to NONE */
-          chrome.storage.local.set({ BaekjoonHub_hook: null }, () => {
-            console.log("Defaulted repo hook to NONE");
-          });
+  try {
+    const response = await fetch(AUTHENTICATION_URL, {
+      method: "GET",
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github.v3+json",
+      },
+    });
+    const res = await response.json();
+    const success = handleLinkRepoStatusCode(response.status, name);
+    if (response.status === 200 && success) {
+      saveObjectInLocalStorage({
+        mode_type: "commit",
+        repo: res.html_url,
+      }).then(() => {
+        document.querySelector("#error").style.display = "none";
+        document.querySelector("#success").innerHTML =
+          `Successfully linked <a target='_blank' href='${res.html_url}'>${name}</a> to BaekjoonHub. Start <a href='https://www.acmicpc.net/'>BOJ</a> now!`;
+        document.querySelector("#success").style.display = "block";
+        document.querySelector("#success").removeAttribute("hidden");
+        document.querySelector("#unlink").style.display = "block";
+        document.querySelector("#unlink").removeAttribute("hidden");
+        document.querySelector("#hook_mode").style.display = "none";
+        document.querySelector("#commit_mode").style.display = "block";
+        document.querySelector("#commit_mode").removeAttribute("hidden");
+        detectAndSetMode(); // Refresh the settings page
+      });
 
-          /* Hide accordingly */
-          $("#hook_mode").style.display = "inherit";
-          $("#commit_mode").style.display = "none";
-        } else {
-          /* Change mode type to commit */
-          /* Save repo url to chrome storage */
-          chrome.storage.local.set({ mode_type: "commit", repo: res.html_url }, () => {
-            hideElement("#error");
-            setHTML("#success", `Successfully linked <a target="blank" href="${res.html_url}">${name}</a> to BaekjoonHub. Start <a href="https://www.acmicpc.net/">BOJ</a> now!`);
-            showElement("#success");
-            showElement("#unlink");
-          });
-          /* Set Repo Hook */
+      const stats = {};
+      stats.version = chrome.runtime.getManifest().version;
+      stats.submission = {};
+      saveObjectInLocalStorage({ stats });
 
-          stats = {};
-          stats.version = chrome.runtime.getManifest().version;
-          stats.submission = {};
-          chrome.storage.local.set({ stats });
-
-          chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
-            console.log("Successfully set new repo hook");
-            /* Get problems solved count */
-            chrome.storage.local.get("stats", (psolved) => {
-              const { stats } = psolved;
-            });
-          });
-          /* Hide accordingly */
-          $("#hook_mode").style.display = "none";
-          $("#commit_mode").style.display = "inherit";
-        }
-      }
+      saveObjectInLocalStorage({ baekjoonHubHook: res.full_name }).then(() => {
+        console.log("Successfully set new repo hook");
+      });
+    } else {
+      document.querySelector("#hook_mode").style.display = "block";
+      document.querySelector("#hook_mode").removeAttribute("hidden");
+      document.querySelector("#commit_mode").style.display = "none";
     }
-  });
-
-  xhr.open("GET", AUTHENTICATION_URL, true);
-  xhr.setRequestHeader("Authorization", `token ${token}`);
-  xhr.setRequestHeader("Accept", "application/vnd.github.v3+json");
-  xhr.send();
+  } catch (error) {
+    console.error(error);
+    document.querySelector("#success").style.display = "none";
+    document.querySelector("#error").textContent = "Error linking repository. See console for details.";
+    document.querySelector("#error").style.display = "block";
+    document.querySelector("#error").removeAttribute("hidden");
+  }
 };
 
+/**
+ * Unlinks the currently connected repository.
+ */
 const unlinkRepo = () => {
-  /* Set mode type to hook */
-  chrome.storage.local.set({ mode_type: "hook" }, () => {
-    console.log(`Unlinking repo`);
+  saveObjectInLocalStorage({
+    mode_type: "hook",
+    baekjoonHubHook: null,
+    baekjoonHubOrgOption: "platform",
+  }).then(() => {
+    console.log("Unlinking repo and resetting options.");
+    document.querySelector("#commit_mode").style.display = "none";
+    document.querySelector("#hook_mode").style.display = "block";
+    document.querySelector("#hook_mode").removeAttribute("hidden");
+    navigateToStep(0); // Go back to the first step
   });
-  /* Set Repo Hook to NONE */
-  chrome.storage.local.set({ BaekjoonHub_hook: null }, () => {
-    console.log("Defaulted repo hook to NONE");
-  });
-
-  /*프로그래밍 언어별 폴더 정리 옵션 세션 저장 초기화*/
-  chrome.storage.local.set({ BaekjoonHub_disOption: "platform" }, () => {
-    console.log("DisOption Reset");
-  });
-
-  /* Hide accordingly */
-  $("#hook_mode").style.display = "inherit";
-  $("#commit_mode").style.display = "none";
 };
 
-// Add event listeners after the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-  // Function to fetch user repositories
-  const fetchUserRepositories = (token, username) => {
-    // /user/repos를 사용하여 private 레포지토리를 포함한 모든 레포지토리 가져오기
-    const REPOS_URL = `https://api.github.com/user/repos?per_page=100`;
-    
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.addEventListener("readystatechange", function () {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
-            const repos = JSON.parse(xhr.responseText);
-            
-            // 레포지토리 이름으로 사전순 정렬
-            repos.sort((a, b) => a.name.localeCompare(b.name));
-            
-            resolve(repos);
-          } else {
-            reject(new Error(`Failed to fetch repositories: ${xhr.status}`));
-          }
-        }
-      });
-      
-      xhr.open("GET", REPOS_URL, true);
-      xhr.setRequestHeader("Authorization", `token ${token}`);
-      xhr.setRequestHeader("Accept", "application/vnd.github.v3+json");
-      xhr.send();
-    });
-  };
-  
-  // Function to create repository dropdown
-  const createRepoDropdown = (repositories) => {
-    // Create the select element
-    const select = document.createElement('select');
-    select.id = 'name';
-    
-    // Add a default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Select a Repository';
-    select.appendChild(defaultOption);
-    
-    // Add repositories to dropdown with owner and private/public indicator
-    repositories.forEach(repo => {
-      const option = document.createElement('option');
-      // value에 사용자명/레포지토리명 형식으로 저장
-      option.value = `${repo.owner.login}/${repo.name}`;
-      // 사용자명/레포지토리명 형식으로 표시하고, private/public 여부도 함께 표시
-      option.textContent = `${repo.owner.login}/${repo.name} ${repo.private ? '(Private)' : '(Public)'}`;  
-      select.appendChild(option);
-    });
-    
-    // Replace the input field with the select dropdown
-    const repoNameField = $('#repo_name_field');
-    repoNameField.innerHTML = '<label for="name">Full Repository Name</label>';
-    repoNameField.appendChild(select);
-  };
-  
-  // Function to pre-fill text input with username
-  const prefillTextInput = (username) => {
-    const repoNameField = $('#repo_name_field');
-    repoNameField.innerHTML = `<label for="name">Full Repository Name</label><input autocomplete="off" id="name" placeholder="${username}/repository-name" value="${username}/" type="text" />`;
-  };
+/**
+ * Fetches the user's repositories from GitHub.
+ * @param {string} token - The GitHub OAuth token.
+ * @returns {Promise<Array<object>>} - A promise that resolves to a list of repositories.
+ */
+const fetchUserRepositories = async (token) => {
+  const REPOS_URL = `https://api.github.com/user/repos?per_page=100`;
+  const response = await fetch(REPOS_URL, {
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: "application/vnd.github.v3+json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch repositories: ${response.status}`);
+  }
+  const repos = await response.json();
+  repos.sort((a, b) => a.name.localeCompare(b.name));
+  return repos;
+};
 
-  // Type change handler
-  $("#type").addEventListener("change", function() {
-    const valueSelected = this.value;
-    setDisabled("#hook_button", !valueSelected);
-    
-    // If "Link an Existing Repository" is selected, fetch repositories
-    if (valueSelected === 'link') {
-      chrome.storage.local.get(["BaekjoonHub_token", "BaekjoonHub_username", "BaekjoonHub_UseCustomTemplate", "BaekjoonHub_DirTemplate"], (data) => {
-        const token = data.BaekjoonHub_token;
-        const username = data.BaekjoonHub_username;
-        
-        if (token && username) {
-          setText("#success", "Fetching your repositories... Please wait.");
-          showElement("#success");
-          hideElement("#error");
-          
-          fetchUserRepositories(token, username)
-            .then(repos => {
-              hideElement("#success");
-              createRepoDropdown(repos);
-            })
-            .catch(error => {
-              hideElement("#success");
-              setText("#error", `Error fetching repositories: ${error.message}`);
-              showElement("#error");
-            });
-        }
-      });
-    } else if (valueSelected === 'new') {
-      // 새 레포지토리 생성 시 사용자 이름 미리 채우기
-      chrome.storage.local.get(["BaekjoonHub_username"], (data) => {
-        const username = data.BaekjoonHub_username;
-        if (username) {
-          prefillTextInput(username);
-        } else {
-          // 사용자 이름이 없는 경우
-          const repoNameField = $('#repo_name_field');
-          repoNameField.innerHTML = '<label for="name">Full Repository Name</label><input autocomplete="off" id="name" placeholder="username/repository-name" type="text" />';
-        }
-      });
+/**
+ * Creates a dropdown menu for repository selection.
+ * @param {Array<object>} repositories - The list of repositories.
+ */
+const createRepoDropdown = (repositories) => {
+  const select = document.createElement("select");
+  select.id = "name";
+
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Select a Repository";
+  select.appendChild(defaultOption);
+
+  repositories.forEach((repo) => {
+    const option = document.createElement("option");
+    option.value = `${repo.owner.login}/${repo.name}`;
+    option.textContent = `${repo.owner.login}/${repo.name} ${repo.private ? "(Private)" : "(Public)"}`;
+    select.appendChild(option);
+  });
+
+  const repoNameField = document.querySelector("#step_repo_name .field");
+  repoNameField.innerHTML = '<label for="name">Full Repository Name</label>';
+  repoNameField.appendChild(select);
+  // Re-add event listener for the new select element
+  select.addEventListener("change", () => {
+    if (getRepositoryName() !== "") {
+      navigateToStep(2);
     }
   });
+};
 
-  // Hook button click handler
-  $("#hook_button").addEventListener("click", () => {
-    /* on click should generate: 1) option 2) repository name */
-    if (!option()) {
-      setText("#error", "No option selected - Pick an option from dropdown menu below that best suits you!");
-      showElement("#error");
-    } else if (!repositoryName()) {
-      setText("#error", "No repository entered - Please enter a repository in 'username/repository-name' format!");
-      focus("#name");
-      showElement("#error");
-    } else if (option() === "new" && !repositoryName().includes('/')) {
-      setText("#error", "Invalid repository format - Please use 'username/repository-name' format!");
-      focus("#name");
-      showElement("#error");
-    } else {
-      hideElement("#error");
-      setText("#success", "Attempting to create Hook... Please wait.");
-      showElement("#success");
-
-      /* 
-        Perform processing
-        - step 1: Check if current stage === hook.
-        - step 2: store repo name as repoName in chrome storage.
-        - step 3: if (1), POST request to repoName (iff option = create new repo) ; else display error message.
-        - step 4: if proceed from 3, hide hook_mode and display commit_mode (show stats e.g: files pushed/questions-solved/leaderboard)
-      */
-      chrome.storage.local.get("BaekjoonHub_token", (data) => {
-        const token = data.BaekjoonHub_token;
-        if (token === null || token === undefined) {
-          /* Not authorized yet. */
-          setText("#error", "Authorization error - Grant BaekjoonHub access to your GitHub account to continue (launch extension to proceed)");
-          showElement("#error");
-          hideElement("#success");
-        } else if (option() === "new") {
-          // 사용자명/레포지토리명 형식 확인
-          const fullName = repositoryName();
-          if (!fullName.includes('/')) {
-            setText("#error", "Invalid format - Please use 'username/repository-name' format!");
-            showElement("#error");
-            hideElement("#success");
-            return;
-          }
-          createRepo(token, fullName);
-        } else {
-          chrome.storage.local.get("BaekjoonHub_username", (data2) => {
-            const username = data2.BaekjoonHub_username;
-            if (!username) {
-              /* Improper authorization. */
-              setText("#error", "Improper Authorization error - Grant BaekjoonHub access to your GitHub account to continue (launch extension to proceed)");
-              showElement("#error");
-              hideElement("#success");
-            } else {
-              linkRepo(token, repositoryName());
-            }
-          });
-        }
-      });
-    }
-
-    /*프로그래밍 언어별 폴더 정리 옵션 세션 저장*/
-    let org_option = getVal("#org_option");
-    chrome.storage.local.set({ BaekjoonHub_OrgOption: org_option }, () => {
-      console.log(`Set Organize by ${org_option}`);
-    });
-  });
-
-  // Unlink click handler
-  $("#unlink a").addEventListener("click", () => {
-    unlinkRepo();
-    hideElement("#unlink");
-    setText("#success", "Successfully unlinked your current git repo. Please create/link a new hook.");
-  });
-
-  // Tab switching logic
-  // $$('.tab-button').forEach(button => {
-  //   button.addEventListener('click', function() {
-  //     // Remove active class from all buttons and content
-  //     $$('.tab-button').forEach(btn => btn.classList.remove('active'));
-  //     $$('.tab-content').forEach(content => content.classList.remove('active'));
-      
-  //     // Add active class to clicked button and corresponding content
-  //     this.classList.add('active');
-  //     $(`#${this.dataset.tab}`).classList.add('active');
-  //   });
-  // });
-
-  // Advanced tab unlink button
-  $("#unlink_button")?.addEventListener("click", () => {
-    unlinkRepo();
-    hideElement("#unlink");
-    setText("#success", "Successfully unlinked your current git repo. Please create/link a new hook.");
-    showElement("#success");
-  });
-
-  // Custom template toggle and field handler
-  $("#use_custom_template").addEventListener("change", function() {
-    if (this.checked) {
-      $("#custom_template_field").style.display = "block";
-      chrome.storage.local.set({ BaekjoonHub_UseCustomTemplate: true });
-    } else {
-      $("#custom_template_field").style.display = "none";
-      chrome.storage.local.set({ BaekjoonHub_UseCustomTemplate: false });
+/**
+ * Prefills the text input with the username.
+ * @param {string} username - The GitHub username.
+ */
+const prefillTextInput = (username) => {
+  const repoNameField = document.querySelector("#step_repo_name .field");
+  repoNameField.innerHTML = `<label for="name">Full Repository Name</label><input autocomplete="off" id="name" placeholder="${username}/repository-name" value="${username}/" type="text" />`;
+  // Re-add event listener for the new input element
+  document.querySelector("#name").addEventListener("input", () => {
+    const repoName = getRepositoryName();
+    const selectedOption = getOptionType();
+    const isValid = repoName !== "" && (selectedOption !== "new" || repoName.includes("/"));
+    if (isValid) {
+      navigateToStep(2);
     }
   });
+};
 
-  $("#custom_template").addEventListener("input", function() {
-    chrome.storage.local.set({ BaekjoonHub_DirTemplate: this.value });
-  });
+/**
+ * Handles changes to the repository type selection.
+ */
+const handleRepoTypeChange = async function handleRepoTypeChange() {
+  const valueSelected = this.value;
+  document.querySelector("#next_to_repo_name").disabled = !valueSelected; // This button will be removed later
 
-  // Load custom template settings if they exist
-  chrome.storage.local.get(["BaekjoonHub_UseCustomTemplate", "BaekjoonHub_DirTemplate"], (data) => {
-    if (data.BaekjoonHub_UseCustomTemplate) {
-      $("#use_custom_template").checked = true;
-      $("#custom_template_field").style.display = "block";
-      
-      if (data.BaekjoonHub_DirTemplate) {
-        $("#custom_template").value = data.BaekjoonHub_DirTemplate;
+  if (valueSelected === "link") {
+    const data = await getObjectFromLocalStorage(["baekjoonHubToken", "baekjoonHubUsername"]);
+    const { baekjoonHubToken: token, baekjoonHubUsername: username } = data || {};
+
+    if (token && username) {
+      document.querySelector("#success").textContent = "Fetching your repositories... Please wait.";
+      document.querySelector("#success").style.display = "block";
+      document.querySelector("#success").removeAttribute("hidden");
+      document.querySelector("#error").style.display = "none";
+
+      try {
+        const repos = await fetchUserRepositories(token);
+        document.querySelector("#success").style.display = "none";
+        createRepoDropdown(repos);
+        navigateToStep(1); // Move to step 2 after dropdown is created
+      } catch (error) {
+        document.querySelector("#success").style.display = "none";
+        document.querySelector("#error").textContent = `Error fetching repositories: ${error.message}`;
+        document.querySelector("#error").style.display = "block";
+        document.querySelector("#error").removeAttribute("hidden");
       }
+    } else {
+      document.querySelector("#error").innerHTML =
+        'Authorization error - Grant BaekjoonHub access to your GitHub account to continue. <button id="authorize_button" class="button positive">Authorize</button>';
+      document.querySelector("#error").style.display = "block";
+      document.querySelector("#error").removeAttribute("hidden");
+      document.querySelector("#success").style.display = "none";
+      document.querySelector("#authorize_button").addEventListener("click", beginOAuth2);
     }
-  });
-
-  /* Detect mode type */
-  chrome.storage.local.get("mode_type", (data) => {
-    const mode = data.mode_type;
-
-    if (mode && mode === "commit") {
-      /* Check if still access to repo */
-      chrome.storage.local.get("BaekjoonHub_token", (data2) => {
-        const token = data2.BaekjoonHub_token;
-        if (token === null || token === undefined) {
-          /* Not authorized yet. */
-          setText("#error", "Authorization error - Grant BaekjoonHub access to your GitHub account to continue (click BaekjoonHub extension on the top right to proceed)");
-          showElement("#error");
-          hideElement("#success");
-          /* Hide accordingly */
-          $("#hook_mode").style.display = "inherit";
-          $("#commit_mode").style.display = "none";
-        } else {
-          /* Get access to repo */
-          chrome.storage.local.get("BaekjoonHub_hook", (repoName) => {
-            const hook = repoName.BaekjoonHub_hook;
-            if (!hook) {
-              /* Not authorized yet. */
-              setText("#error", "Improper Authorization error - Grant BaekjoonHub access to your GitHub account to continue (click BaekjoonHub extension on the top right to proceed)");
-              showElement("#error");
-              hideElement("#success");
-              /* Hide accordingly */
-              $("#hook_mode").style.display = "inherit";
-              $("#commit_mode").style.display = "none";
-            } else {
-              /* Username exists, at least in storage. Confirm this */
-              linkRepo(token, hook);
-              
-              // Display repository information in the commit mode
-              setText("#current_repo", hook);
-              
-              // Display organization method
-              chrome.storage.local.get("BaekjoonHub_OrgOption", (data3) => {
-                const orgOption = data3.BaekjoonHub_OrgOption || "platform";
-                setText("#current_org", orgOption === "platform" ? "By Platform" : "By Language");
-              });
-            }
-          });
+  } else if (valueSelected === "new") {
+    const data = await getObjectFromLocalStorage(["baekjoonHubUsername"]);
+    const { baekjoonHubUsername: username } = data || {};
+    if (username) {
+      prefillTextInput(username);
+    } else {
+      const repoNameField = document.querySelector("#step_repo_name .field");
+      repoNameField.innerHTML = '<label for="name">Full Repository Name</label><input autocomplete="off" id="name" placeholder="username/repository-name" type="text" />';
+      // Add event listener for the new input element
+      document.querySelector("#name").addEventListener("input", () => {
+        const repoName = getRepositoryName();
+        const selectedOption = getOptionType();
+        const isValid = repoName !== "" && (selectedOption !== "new" || repoName.includes("/"));
+        if (isValid) {
+          navigateToStep(2);
         }
       });
+    }
+    navigateToStep(1); // Move to step 2 after text input is created
+  }
+};
 
-      $("#hook_mode").style.display = "none";
-      $("#commit_mode").style.display = "inherit";
+/**
+ * Handles the final setup button click.
+ */
+const handleFinishSetupClick = async () => {
+  const selectedOption = getOptionType();
+  const repoName = getRepositoryName();
+
+  if (!repoName) {
+    document.querySelector("#error").textContent = "No repository entered - Please enter a repository in 'username/repository-name' format!";
+    document.querySelector("#error").style.display = "block";
+    document.querySelector("#error").removeAttribute("hidden");
+    navigateToStep(1); // Go back to repo name step
+    document.querySelector("#name").focus();
+    return;
+  }
+  if (selectedOption === "new" && !repoName.includes("/")) {
+    document.querySelector("#error").textContent = "Invalid repository format - Please use 'username/repository-name' format!";
+    document.querySelector("#error").style.display = "block";
+    document.querySelector("#error").removeAttribute("hidden");
+    navigateToStep(1); // Go back to repo name step
+    document.querySelector("#name").focus();
+    return;
+  }
+
+  document.querySelector("#error").style.display = "none";
+  document.querySelector("#success").textContent = "Attempting to create Hook... Please wait.";
+  document.querySelector("#success").style.display = "block";
+  document.querySelector("#success").removeAttribute("hidden");
+
+  const token = await getObjectFromLocalStorage("baekjoonHubToken");
+  if (!token) {
+    document.querySelector("#error").innerHTML =
+      'Authorization error - Grant BaekjoonHub access to your GitHub account to continue. <button id="authorize_button" class="button positive">Authorize</button>';
+    document.querySelector("#error").style.display = "block";
+    document.querySelector("#error").removeAttribute("hidden");
+    document.querySelector("#success").style.display = "none";
+    document.querySelector("#authorize_button").addEventListener("click", beginOAuth2);
+    return;
+  }
+
+  if (selectedOption === "new") {
+    createRepo(token, repoName);
+  } else {
+    linkRepo(token, repoName);
+  }
+
+  const orgOption = getOrgOption();
+  saveObjectInLocalStorage({ baekjoonHubOrgOption: orgOption }).then(() => {
+    console.log(`Set Organize by ${orgOption}`);
+  });
+};
+
+/**
+ * Handles changes to the organization method selection.
+ */
+const handleOrgOptionChange = async () => {
+  const orgOption = await getOrgOption(); // Await the promise
+  const customTemplateField = document.querySelector("#customTemplateField");
+  const customTemplateInput = document.querySelector("#customTemplate");
+
+  if (orgOption === "custom") {
+    customTemplateField.style.display = "block";
+    customTemplateField.removeAttribute("hidden");
+    const data = await getObjectFromLocalStorage("baekjoonHubDirTemplate");
+    if (data && data.baekjoonHubDirTemplate) {
+      customTemplateInput.value = data.baekjoonHubDirTemplate;
     } else {
-      $("#hook_mode").style.display = "inherit";
-      $("#commit_mode").style.display = "none";
+      // Set a default custom template if none exists
+      customTemplateInput.value = `{{language}}/백준/{{level.replace(/ .*/, '')}}/{{problemId}}. {{title}}`;
+      saveObjectInLocalStorage({
+        baekjoonHubDirTemplate: customTemplateInput.value,
+      });
+    }
+  } else {
+    customTemplateField.style.display = "none";
+  }
+
+  saveObjectInLocalStorage({ baekjoonHubOrgOption: orgOption }).then(() => {
+    console.log(`Set Organize by ${orgOption}`);
+  });
+
+  handleFinishSetupClick();
+};
+
+/**
+ * Loads custom template settings.
+ */
+const loadCustomTemplateSettings = async () => {
+  const data = (await getObjectFromLocalStorage(["baekjoonHubUseCustomTemplate", "baekjoonHubDirTemplate"])) || {};
+  const customTemplateField = document.querySelector("#customTemplateField");
+  if (data.baekjoonHubUseCustomTemplate) {
+    document.querySelector("#use_custom_template").checked = true;
+    customTemplateField.style.display = "block";
+    customTemplateField.removeAttribute("hidden");
+    if (data.baekjoonHubDirTemplate) {
+      document.querySelector("#customTemplate").value = data.baekjoonHubDirTemplate;
+    }
+  }
+};
+
+// DOMContentLoaded event listener
+document.addEventListener("DOMContentLoaded", () => {
+  // Navigation listeners
+  // document.querySelector('#next_to_repo_name').addEventListener('click', () => navigateToStep(1)); // Removed as navigation is now automatic
+  document.querySelector("#back_to_repo_option").addEventListener("click", () => navigateToStep(0));
+  document.querySelector("#next_to_org_method").addEventListener("click", () => navigateToStep(2));
+  document.querySelector("#back_to_repo_name").addEventListener("click", () => navigateToStep(1));
+
+  // Step 1: Repo Option
+  document.querySelector("#type").addEventListener("change", handleRepoTypeChange);
+
+  // Step 2: Repo Name (initial setup for validation)
+  document.querySelector("#name").addEventListener("input", () => {
+    const repoName = getRepositoryName();
+    const selectedOption = getOptionType();
+    const isValid = repoName !== "" && (selectedOption !== "new" || repoName.includes("/"));
+    document.querySelector("#next_to_org_method").disabled = !isValid;
+    if (isValid) {
+      navigateToStep(2);
     }
   });
+
+  document.querySelector("#org_option").addEventListener("change", handleOrgOptionChange);
+
+  // Finish button (no longer needed as it's automated)
+  // document.querySelector('#finish_setup').addEventListener('click', handleFinishSetupClick);
+
+  // Unlink buttons
+  document.querySelector("#unlink a").addEventListener("click", () => {
+    unlinkRepo();
+    document.querySelector("#success").textContent = "Successfully unlinked your current git repo. Please create/link a new hook.";
+  });
+  document.querySelector("#unlinkButton")?.addEventListener("click", () => {
+    unlinkRepo();
+    document.querySelector("#success").textContent = "Successfully unlinked your current git repo. Please create/link a new hook.";
+    document.querySelector("#success").style.display = "block";
+    document.querySelector("#success").removeAttribute("hidden");
+  });
+
+  // Settings in commit_mode
+  const useCustomTemplateCheckbox = document.querySelector("#use_custom_template");
+  if (useCustomTemplateCheckbox) {
+    useCustomTemplateCheckbox.addEventListener("change", function handleUseCustomTemplateChange() {
+      const useCustom = this.checked;
+      document.querySelector("#customTemplateField").style.display = "block";
+      document.querySelector("#customTemplateField").removeAttribute("hidden");
+      saveObjectInLocalStorage({ baekjoonHubUseCustomTemplate: useCustom });
+    });
+  }
+
+  const customTemplateInput = document.querySelector("#customTemplate");
+  if (customTemplateInput) {
+    customTemplateInput.addEventListener("input", function handleCustomTemplateInput() {
+      saveObjectInLocalStorage({ baekjoonHubDirTemplate: this.value });
+    });
+  }
+
+  loadCustomTemplateSettings();
+  detectAndSetMode();
 });

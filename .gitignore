@@ -22,3 +22,6 @@ yarn-error.log*
 *.tmp
 .tmp/
 tmp/
+test/temp_chrome_profile/
+*screenshot.png
+COMMIT_EDITMSG
