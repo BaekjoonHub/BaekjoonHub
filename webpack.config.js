@@ -23,10 +23,6 @@ module.exports = {
     filename: "[name].js",
   },
   plugins: [
-    new CleanWebpackPlugin({
-      cleanAfterEveryBuildPatterns: ["**/*.LICENSE.txt"],
-      protectWebpackAssets: false,
-    }),
     new CopyPlugin({
       patterns: [
         { from: "./src/manifest.json", to: "./" },

@@ -32,28 +32,6 @@ export function markUploadFailedCSS() {
 }
 
 /**
- * 백준에서 표기된 프로그래밍 언어의 버전을 없애고 업로드 하기 위함입니다.
- * 버전에 차이가 중요하게 여겨진다면, 'ignore'에 예외 케이스를 추가하세요.
- * 해당 코드는 'lang'이 "PyPy3" 같이 주어진다면은 버전을 제거하지 않습니다.
- * 예외에 추가 되어있거나, "Python 3.8" 혹은 "Java 11" 같이 주어진다면 버전이 제거될것입니다.
- * @param {string} lang - 처리 하고자 하는 언어입니다.
- * @param {Set} ignores - 예외 처리 하고자 하는 언어를 추가 해주세요.
- * @return {string} - 분기 처리에 따른 lang
- *  */
-export function langVersionRemove(originalLang, ignores) {
-  let lang = originalLang;
-  if (isNull(ignores) || !ignores.has(lang)) {
-    const parts = lang.split(" ");
-    if (/^\d/.test(parts[parts.length - 1])) {
-      parts.pop();
-    }
-    lang = parts.join(" ");
-  }
-
-  return lang;
-}
-
-/**
  * 제출 목록 비교함수입니다
  * @param {object} a - 제출 요소 피연산자 a
  * @param {object} b - 제출 요소 피연산자 b

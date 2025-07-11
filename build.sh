@@ -1,40 +1,48 @@
 #!/bin/bash
 
-# Build script for the bundled BaekjoonHub extension
-echo "Building BaekjoonHub extension..."
+# This script packages the extension from the 'dist' directory into a zip file.
+# It's intended to be run after 'npm run build'.
 
-# Check if we need to copy source files from the old directory
-if [ "$1" == "--copy-source" ] || [ ! -d "src/scripts" ]; then
-  echo "Copying source files from old directory structure..."
-  ./copy-source.sh
-fi
+echo "Packaging BaekjoonHub extension..."
 
-# Clean output directories
-rm -rf dist packages
+# Clean and create the packages directory
+rm -rf packages
+mkdir -p packages
 
-# Install dependencies if needed
-if [ ! -d "node_modules" ]; then
-  echo "Installing dependencies..."
-  npm install
-fi
+# Get version from package.json (executed from root directory)
+VERSION=$(grep '"version"' package.json | awk -F'"' '{print $4}')
+ZIP_FILE_NAME="baekjoonhub-v${VERSION}.zip"
 
-# Create directories for packaging
-mkdir -p dist packages
-
-# Build the bundled extension
-echo "Building the extension..."
-npm run build
-
-# Create a release package
 echo "Creating release package..."
-cd dist && zip -r ../packages/baekjoonhub-v$(grep '"version"' ../package.json | awk -F'"' '{print $4}').zip * && cd ..
 
-echo "Build complete! Extension is available in dist/ directory"
-echo "Packaged extension is available in packages/ directory"
-echo "To load the extension in Chrome:"
-echo "1. Open chrome://extensions/"
-echo "2. Enable Developer mode"
-echo "3. Click 'Load unpacked' and select the dist directory"
+# Determine the absolute path for the destination zip file in Windows format if on Windows
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+  # Get current working directory in Windows format
+  CURRENT_DIR_WIN=$(pwd -W)
+  FULL_DEST_PATH_WIN="${CURRENT_DIR_WIN}\\packages\\${ZIP_FILE_NAME}"
+else
+  # Linux/macOS environment
+  FULL_DEST_PATH_UNIX="$(pwd)/packages/${ZIP_FILE_NAME}"
+fi
 
-echo ""
-echo "Note: Use './build.sh --copy-source' if you need to copy files from the old directory again."
+# Change to dist directory to zip its contents
+cd dist || exit
+
+# Check OS type for zipping
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+  # Windows environment (e.g., Git Bash, Cygwin)
+  # Use PowerShell's Compress-Archive
+  # -Path '.' means zip the current directory's contents
+  # -DestinationPath needs an absolute path in Windows format
+  powershell -Command "Compress-Archive -Path '.' -DestinationPath '${FULL_DEST_PATH_WIN}' -Force"
+else
+  # Linux/macOS environment
+  # Zip the contents of the current directory (which is 'dist')
+  zip -r "${FULL_DEST_PATH_UNIX}" .
+fi
+
+# Go back to the original directory
+cd .. || exit
+
+echo "Packaging complete!"
+echo "Packaged extension is available in the 'packages' directory."
