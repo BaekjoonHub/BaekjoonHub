@@ -6,11 +6,14 @@
   "scripts": {
     "build": "webpack --config webpack.config.js",
     "dev": "webpack --watch --config webpack.config.js",
-    "package": "cd dist && zip -r ../packages/baekjoonhub-v$(node -p \"require('../package.json').version\").zip *",
+    "package": "npm run build && bash build.sh",
     "clean": "rm -rf dist packages node_modules",
     "lint": "eslint src/**/*.js",
     "format": "prettier --write \"src/**/*.js\"",
     "test": "node test/settings.test.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "keywords": [
     "chrome-extension",

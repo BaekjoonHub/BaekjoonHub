@@ -11,7 +11,7 @@ export function getVersion() {
 }
 
 /** element가 존재하는지 반환합니다.
- * @param {DOMElement} element - 존재하는지 확인할 element
+ * @param {HTMLElement} element - 존재하는지 확인할 element
  * @returns {boolean} - 존재하면 true, 존재하지 않으면 false
  */
 export function elementExists(element) {

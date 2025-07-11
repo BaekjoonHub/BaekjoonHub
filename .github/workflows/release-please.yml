@@ -1,0 +1,52 @@
+name: release-please.yml
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: '${{ secrets.GITHUB_TOKEN }}'
+          config-file: 'release-please-config.json'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build and package
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          npm ci
+          npm run package
+
+      - name: Get release package name
+        id: get_release_package_name
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          RELEASE_PACKAGE_NAME="baekjoonhub-v${VERSION}.zip"
+          echo "RELEASE_PACKAGE_NAME=${RELEASE_PACKAGE_NAME}" >> $GITHUB_ENV
+          echo "Release package name: ${RELEASE_PACKAGE_NAME}"
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          files: packages/${{ env.RELEASE_PACKAGE_NAME }}
+          tag_name: ${{ steps.release.outputs.tag_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
