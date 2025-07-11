@@ -1,39 +1,39 @@
-import { log } from './util.js';
+import { log } from "./util.js";
 
 export const ToastType = {
   Danger: "#eb3b5a",
   Warning: "#fdcb6e",
   Success: "#00b894",
-}
+};
 
 export class Toast {
   constructor(message, color, time) {
-    log('Constructor', message);
+    log("Constructor", message);
     this.message = message;
     this.color = color;
     this.time = time;
     this.element = null;
-    var element = document.createElement('div');
+    const element = document.createElement("div");
     element.className = "toast-notification";
     this.element = element;
-    var countElements = document.getElementsByClassName("toast-notification");
+    const countElements = document.getElementsByClassName("toast-notification");
 
     element.style.opacity = 0.8;
 
-    element.style.marginBottom = (countElements.length * 55) + "px";
+    element.style.marginBottom = `${countElements.length * 55}px`;
 
     element.style.backgroundColor = this.color;
 
-    var message = document.createElement("div");
-    message.className = "message-container";
-    message.textContent = this.message;
+    const messageElement = document.createElement("div");
+    messageElement.className = "message-container";
+    messageElement.textContent = this.message;
 
-    element.appendChild(message);
+    element.appendChild(messageElement);
 
-    var close = document.createElement("div");
+    const close = document.createElement("div");
     close.className = "close-notification";
 
-    var icon = document.createElement("i");
+    const icon = document.createElement("i");
     icon.className = "lni lni-close";
 
     close.appendChild(icon);
@@ -42,14 +42,14 @@ export class Toast {
 
     document.body.appendChild(element);
 
-    setTimeout(function () {
+    setTimeout(() => {
       element.remove();
     }, this.time);
 
     element.addEventListener("click", () => {
       element.remove();
-    })
-    log('Closed');
+    });
+    log("Closed");
   }
 
   static raiseToast(message, duration = 5000) {

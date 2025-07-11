@@ -82,17 +82,17 @@
 
 ### 1. 동작 화면
 
-![](assets/extension/Baekjoon.gif)
+![](assets/extension/baekjoon.gif)
 
 <div align="center">백준 동작 화면</div>
 <br/>
 
-![](assets/extension/Programmers.gif)
+![](assets/extension/programmers.gif)
 
 <div align="center">프로그래머스 동작 화면</div>
 <br/>
 
-![](assets/extension/SWExpertAcademy.gif)
+![](assets/extension/swexpertacademy.gif)
 
 <div align="center">SW Expert Academy 동작 화면</div>
 <br/>

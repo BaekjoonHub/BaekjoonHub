@@ -1,10 +1,6 @@
-/* state of upload for progress */
-const uploadState = { uploading: false };
+import constants from "@/constants/code.js";
 
-// prettier-ignore
-const languages = {
-  'c': 'c',
-  'c++': 'cpp',
-  'python': 'py',
-  'java': 'java'
-};
+export const languages = constants.languages.swexpertacademy;
+
+/* state of upload for progress */
+export const uploadState = { uploading: false };
