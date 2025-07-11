@@ -9,7 +9,8 @@
     "package": "cd dist && zip -r ../packages/baekjoonhub-v$(node -p \"require('../package.json').version\").zip *",
     "clean": "rm -rf dist packages node_modules",
     "lint": "eslint src/**/*.js",
-    "test": "echo \"No tests implemented yet\""
+    "format": "prettier --write \"src/**/*.js\"",
+    "test": "node test/settings.test.js"
   },
   "keywords": [
     "chrome-extension",
@@ -27,14 +28,19 @@
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^13.0.0",
     "eslint": "^8.57.1",
-    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.5.1",
     "globals": "^16.0.0",
+    "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "webpack": "^5.98.0",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^6.0.1",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "selenium-webdriver": "^4.34.0"
   },
   "dependencies": {
+    "chrome": "^0.1.0",
     "file-saver": "^2.0.5",
     "js-sha1": "^0.6.0",
     "jszip": "^3.7.1",

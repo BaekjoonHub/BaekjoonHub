@@ -1,83 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/popup.css" />
+    <title>BaekjoonHub Popup</title>
+  </head>
 
-<head>
-  <link rel="stylesheet" href="css/popup.css" />
-  <!-- NPM packages will be bundled by webpack -->
-</head>
+  <body>
+    <div class="grid container">
+      <header class="sixteen wide center aligned column">
+        <h1 id="title">
+          Baekjoon
+          <span style="color: #0078c3">Hub</span>
+        </h1>
+        <p id="caption">Sync your code from BOJ to GitHub</p>
+      </header>
 
-<body>
-  <div class="grid container">
-    <div class="sixteen wide center aligned column">
-      <h1 id="title">
-        Baekjoon
-        <span style="color: #0078c3">Hub</span>
-      </h1>
-      <p id="caption">Sync your code from BOJ to GitHub</p>
-      <br />
-      <!-- Authentication mode -->
-      <div id="auth_mode" hidden>
-        <p class="onboarding">
-          <br />
-          Authenticate with GitHub to use
-          <strong>
-            Baekjoon
-            <span style="color: #f18500">Hub</span>
-          </strong>
-        </p>
-        <button id="authenticate" class="secondary button">
-          <i class="icon github"></i>
-          Authenticate
-        </button>
-      </div>
+      <main class="sixteen wide center aligned column">
+        <!-- Authentication mode -->
+        <section id="auth_mode" hidden>
+          <p class="onboarding">
+            Authenticate with GitHub to use
+            <strong>
+              Baekjoon
+              <span style="color: #f18500">Hub</span>
+            </strong>
+          </p>
+          <button id="authenticate" class="secondary button">
+            <i class="icon github" aria-hidden="true"></i>
+            Authenticate
+          </button>
+        </section>
 
-      <!-- Repo Hook mode -->
-      <div id="hook_mode" hidden>
-        <p class="onboarding">
-          <br />
-          Set up repository hook to use
-          <strong>
-            Baekjoon
-            <span style="color: #0078c3">Hub</span>
-          </strong>
-        </p>
-        <a id="hook_URL" href="" target="blank" class="secondary button">
-          <i class="icon github"></i>
-          Set up Hook
-        </a>
-      </div>
+        <!-- Repo Hook mode -->
+        <section id="hook_mode" hidden>
+          <p class="onboarding">
+            Set up repository hook to use
+            <strong>
+              Baekjoon
+              <span style="color: #0078c3">Hub</span>
+            </strong>
+          </p>
+          <a id="hook_URL" href="" target="_blank" class="secondary button">
+            <i class="icon github" aria-hidden="true"></i>
+            Set up Hook
+          </a>
+        </section>
 
-      <div id="commit_mode" hidden>
-        <p id="repo_url" class="small header" style="margin-top: 5px; margin-bottom: 6px !important"></p>
-        <div class="small header" style="margin-bottom: 5px; margin-top: 0px !important">
-          Want more features?
-          <a style="color: rgb(10, 89, 92) !important" target="_blank"
-            href="https://github.com/BaekjoonHub/BaekjoonHub/labels/feature">Request a feature!</a>
+        <section id="commit_mode" hidden>
+          <p id="repo_url" class="small header"></p>
+          <div class="small header">
+            Want more features?
+            <a style="color: rgb(10, 89, 92) !important" target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub/labels/feature">Request a feature!</a>
+          </div>
+        </section>
+
+        <!-- 기능 on/off -->
+        <div class="toggle-switch-container">
+          <input type="checkbox" id="onffbox" class="toggle-switch-checkbox" />
+          <label for="onffbox" class="toggle-switch-label">
+            <span class="toggle-switch-inner"></span>
+            <span class="toggle-switch-switch"></span>
+          </label>
         </div>
-      </div>
+      </main>
 
-      <!-- 기능 on/off -->
-      <div style="margin-top: 10px">
-        <input type="checkbox" id="onffbox" />
-        <label for="onffbox" id="onffmain">
-          <span id="onffball"></span>
-        </label>
-      </div>
+      <footer id="socials" class="sixteen wide column">
+        <a title="BaekjoonHub GitHub" href="https://github.com/BaekjoonHub/BaekjoonHub" target="_blank"><i class="github icon" aria-hidden="true"></i></a>
+        <a title="Settings" id="settings_URL" href="settings.html" target="_blank"><i class="settings icon" aria-hidden="true"></i></a>
+        <!-- <a title="Email" href="mailto:baekjoonhub@googlegroups.com" target="_blank"><i class="envelope icon" aria-hidden="true"></i></a> -->
+      </footer>
     </div>
 
-    <!-- Generate Socials -->
-    <div id="socials" class="sixteen wide column">
-      <a title="BaekjoonHub GitHub" href="https://github.com/BaekjoonHub/BaekjoonHub" target="_blank"><i
-          class="github icon"></i></a>
-      <a title="Settings" id="settings_URL" href="" target="_blank"><i class="settings icon"></i></a>
-      <a title="Email" href="mailto:baekjoonhub@googlegroups.com" target="_blank"><i class="envelope icon"></i></a>
-    </div>
-  </div>
-
-  <script src="vendors.js"></script>
-  <script src="oauth2.js"></script>
-  <script src="authorize.js"></script>
-  <script src="popup.js"></script>
+    <script src="popup.js" type="module" defer></script>
 </body>
-
 </html>

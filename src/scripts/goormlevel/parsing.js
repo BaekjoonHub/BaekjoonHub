@@ -1,111 +1,9 @@
-/** NOTE
- * 문제가 맞았다면 문제 관련 데이터를 파싱하는 함수의 모음입니다.
- * 모든 해당 파일의 모든 함수는 parseData()를 통해 호출됩니다.
- */
+import { languages, difficultyLabels } from "@/goormlevel/variables.js";
+import { convertSingleCharToDoubleChar } from "@/commons/util.js";
+import { getDirNameByOrgOption } from "@/commons/storage.js";
+import { getDateString } from "@/commons/ui-util.js";
 
-/**
- *
- * @returns {ReturnType<makeData>}
- */
-async function parseData() {
-  const { href: link, pathname } = window.location;
-
-  const pathnameList = pathname.split('/');
-
-  const examSequence = Number(pathnameList[2]) || 0;
-  const quizNumber = Number(pathnameList[5]) || 0;
-  const difficultyLabel = document.querySelector('span[role=text] > span').innerHTML;
-  const difficulty = difficultyLabels[difficultyLabel];
-
-  const titlePrefix = 'title-';
-  const title = document.querySelector(`div[aria-label^="${titlePrefix}"]`).ariaLabel.replace(titlePrefix, '');
-
-  /*프로그래밍 언어별 폴더 정리 옵션을 위한 언어 값 가져오기*/
-  const currentLanguage = document.querySelector('.Tour__selectLang button').textContent.trim();
-
-  const languageList = [...document.querySelectorAll('#FrameBody .Tour__selectLang div[role="menu"] button[role="menuitem"]')].map(($element) => $element.textContent);
-  const currentLanguageIndex = languageList.findIndex((language) => currentLanguage === language);
-  
-  const editors = document.querySelectorAll("#fileEditor div.cm-content.cm-lineWrapping");
-
-  // 대상 에디터 결정
-  const targetIndex =
-    currentLanguageIndex >= 0 && currentLanguageIndex < editors.length
-      ? currentLanguageIndex
-      : editors.length === 1 && currentLanguageIndex < 0
-      ? 0
-      : -1;
-
-  // 코드 추출
-  const code =
-    targetIndex >= 0
-      ? Array.from(editors[targetIndex].querySelectorAll("div.cm-line"))
-          .map((line) => line.textContent)
-          .join("\n")
-      : "";
-
-
-  const $dataList = [...document.querySelectorAll('.tab-content .tab-pane.active table tbody tr')].filter(($element) => $element.childNodes[1].textContent === 'PASS');
-  const { memory, runtime } = $dataList
-    .map(($element) => {
-      const memory = Number($element.childNodes[5].textContent.trim());
-      const runtime = Number($element.childNodes[6].textContent.trim());
-      return { memory, runtime };
-    })
-    .reduce(
-      (acc, cur, index) => {
-        if (index === $dataList.length - 1) {
-          return {
-            memory: `${((acc.memory + cur.memory) / $dataList.length / 1024).toFixed(2)} MB`,
-            runtime: `${((acc.runtime + cur.runtime) / $dataList.length).toFixed(2)} ms`,
-          };
-        }
-        return {
-          memory: acc.memory + cur.memory,
-          runtime: acc.runtime + cur.runtime,
-        };
-      },
-      { memory: 0, runtime: 0 },
-    );
-
-  return makeData({
-    // 문제 링크
-    link,
-    // 시험 uid
-    examSequence,
-    // 시험 uid와 연계된 퀴즈 uid
-    quizNumber,
-    // 난이도
-    difficulty,
-    // 제목
-    title,
-    // 프로그래밍 언어
-    language: currentLanguage || '',
-    // 코드
-    code,
-    // 평균 메모리 사용량
-    memory,
-    // 평균 실행 시간
-    runtime,
-  });
-}
-
-/**
- * @typedef MakeDataReturnType
- * @prop {number} examSequence 시험 sequence
- * @prop {number} quizNumber 퀴즈 number
- * @prop {string} directory 레포에 기록될 폴더명
- * @prop {string} message 커밋 메시지
- * @prop {string} fileName 파일명
- * @prop {string} readme README.md에 작성할 내용
- * @prop {string} code 소스코드 내용
- */
-
-/**
- *
- * @returns {MakeDataReturnType}
- */
-async function makeData({
+export async function makeData({
   // 문제 링크
   link,
   // 시험 uid
@@ -126,34 +24,29 @@ async function makeData({
   runtime,
 }) {
   const languageExtension = languages[language.toLowerCase()];
-  
+
   // 기본 디렉토리 경로 생성
   const baseDirPath = `goormlevel/${examSequence}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`;
-  
+
   // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
-  const directory = await getDirNameByOrgOption(
-    baseDirPath,
+  const directory = await getDirNameByOrgOption(baseDirPath, language, {
+    problemId: quizNumber,
+    title,
+    level: `난이도 ${difficulty}`,
+    memory,
+    runtime,
+    submissionTime: getDateString(new Date(Date.now())),
     language,
-    {
-      problemId: quizNumber,
-      title,
-      level: `난이도 ${difficulty}`,
-      memory,
-      runtime,
-      submissionTime: getDateString(new Date(Date.now())),
-      language,
-      examSequence,
-      difficulty,
-      link
-    }
-  );
-  
+    examSequence,
+    difficulty,
+    link,
+  });
+
   const message = `[난이도 ${difficulty}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = getDateString(new Date(Date.now()));
   // prettier-ignore
-  const readme =
-    `# ${title} - ${examSequence}/${quizNumber} \n\n`
+  const readme = `# ${title} - ${examSequence}/${quizNumber} \n\n`
     + `[문제 링크](${link}) \n\n`
     + `### 성능 요약\n\n`
     + `메모리: ${memory}, `
@@ -161,5 +54,111 @@ async function makeData({
     + `### 제출 일자\n\n`
     + `${dateInfo}\n\n`;
 
-  return { examSequence, quizNumber, directory, message, fileName, readme, code };
+  return {
+    examSequence,
+    quizNumber,
+    directory,
+    message,
+    fileName,
+    readme,
+    code,
+  };
+}
+
+/**
+ * @typedef MakeDataReturnType
+ * @prop {number} examSequence 시험 sequence
+ * @prop {number} quizNumber 퀴즈 number
+ * @prop {string} directory 레포에 기록될 폴더명
+ * @prop {string} message 커밋 메시지
+ * @prop {string} fileName 파일명
+ * @prop {string} readme README.md에 작성할 내용
+ * @prop {string} code 소스코드 내용
+ */
+
+/**
+ *
+ * @returns {ReturnType<makeData>}
+ */
+export async function parseData() {
+  const { href: link, pathname } = window.location;
+
+  const pathnameList = pathname.split("/");
+
+  const examSequence = Number(pathnameList[2]) || 0;
+  const quizNumber = Number(pathnameList[5]) || 0;
+  const difficultyLabel = document.querySelector("span[role=text] > span").innerHTML;
+  const difficulty = difficultyLabels[difficultyLabel];
+
+  const titlePrefix = "title-";
+  const title = document.querySelector(`div[aria-label^="${titlePrefix}"]`).ariaLabel.replace(titlePrefix, "");
+
+  /* 프로그래밍 언어별 폴더 정리 옵션을 위한 언어 값 가져오기 */
+  const currentLanguage = document.querySelector(".Tour__selectLang button").textContent.trim();
+
+  const languageList = [...document.querySelectorAll('#FrameBody .Tour__selectLang div[role="menu"] button[role="menuitem"]').map((element) => element.textContent)];
+  const currentLanguageIndex = languageList.findIndex((language) => currentLanguage === language);
+
+  const editors = document.querySelectorAll("#fileEditor div.cm-content.cm-lineWrapping");
+
+  // 대상 에디터 결정
+  let targetIndex;
+  if (currentLanguageIndex >= 0 && currentLanguageIndex < editors.length) {
+    targetIndex = currentLanguageIndex;
+  } else if (editors.length === 1 && currentLanguageIndex < 0) {
+    targetIndex = 0;
+  } else {
+    targetIndex = -1;
+  }
+
+  // 코드 추출
+  const code =
+    targetIndex >= 0
+      ? Array.from(editors[targetIndex].querySelectorAll("div.cm-line"))
+          .map((line) => line.textContent)
+          .join("\n")
+      : "";
+
+  const $dataList = [...document.querySelectorAll(".tab-content .tab-pane.active table tbody tr")].filter((element) => element.childNodes[1].textContent === "PASS");
+  const { memory, runtime } = $dataList
+    .map((element) => ({
+      memory: Number(element.childNodes[5].textContent.trim()),
+      runtime: Number(element.childNodes[6].textContent.trim()),
+    }))
+    .reduce(
+      (acc, cur, index) => {
+        if (index === $dataList.length - 1) {
+          return {
+            memory: `${((acc.memory + cur.memory) / $dataList.length / 1024).toFixed(2)} MB`,
+            runtime: `${((acc.runtime + cur.runtime) / $dataList.length).toFixed(2)} ms`,
+          };
+        }
+        return {
+          memory: acc.memory + cur.memory,
+          runtime: acc.runtime + cur.runtime,
+        };
+      },
+      { memory: 0, runtime: 0 }
+    );
+
+  return makeData({
+    // 문제 링크
+    link,
+    // 시험 uid
+    examSequence,
+    // 시험 uid와 연계된 퀴즈 uid
+    quizNumber,
+    // 난이도
+    difficulty,
+    // 제목
+    title,
+    // 프로그래밍 언어
+    language: currentLanguage || "",
+    // 코드
+    code,
+    // 평균 메모리 사용량
+    memory,
+    // 평균 실행 시간
+    runtime,
+  });
 }
