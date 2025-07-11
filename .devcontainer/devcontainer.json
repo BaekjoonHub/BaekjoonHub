@@ -1,0 +1,14 @@
+{
+  "name": "Node.js",
+  // "Officially" maintained node devcontainer image from Microsoft
+  // https://github.com/devcontainers/templates/tree/main/src/javascript-node
+  // https://mcr.microsoft.com/en-us/artifact/mar/devcontainers/javascript-node/tags
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-18-bookworm",
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+
+  "postCreateCommand": "npm ci",
+}
