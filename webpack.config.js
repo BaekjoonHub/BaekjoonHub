@@ -38,7 +38,7 @@ module.exports = {
     extensions: [".js", ".jsx", ".json"],
     alias: {
       sha1: "js-sha1",
-      jszip: "jszip",
+      
       filesaver: "file-saver",
       "@": path.resolve(__dirname, "src/scripts"),
     },
