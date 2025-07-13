@@ -10,11 +10,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/v/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="chrome-webstore"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/d/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="users"></a>
-    
-</a>
 </p>
-
-</br>
 
 ## 목차
 
@@ -22,10 +18,10 @@
 2. [백준허브란?](#백준허브란what-is-baekjoonhub)
 3. [설치 및 연동](#설치-및-연동how-to-set-it-up)
 4. [작동 원리](#작동원리how-it-works)
-  1. [동작 화면](#1-동작-화면)
-  2. [업로드 시점](#2-업로드-시점)
-  3. [백준 제출 기준](#3-백준-제출-기준)
-  4. [저장되는 정보](#4-저장되는-정보)
+    1. [동작 화면](#1-동작-화면)
+    2. [업로드 시점](#2-업로드-시점)
+    3. [백준 제출 기준](#3-백준-제출-기준)
+    4. [저장되는 정보](#4-저장되는-정보)
 5. [링크 및 문서](#링크-및-문서)
 
    <br />
@@ -36,11 +32,11 @@
 ## 지금 크롬 마켓에서 확인하세요!
 
 <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk">
-  <img src="assets/extension/bookmark1.png"/>
+  <img src="assets/extension/bookmark1.png" alt="BaekjoonHub - Automatically sync your code to GitHub."/>
 </a>
 
 <a href="https://chrome.google.com/webstore/detail/ebcggjojbiojfmiaammkfbdgmlpfflig">
-  <img src="assets/extension/bookmark2.png"/>
+  <img src="assets/extension/bookmark2.png" alt="BaekjoonHub - Automatically sync your code to GitHub."/>
 </a>
 
 <!--- 소개 --->
@@ -51,7 +47,7 @@
   백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. <a href="https://www.acmicpc.net/">백준</a>, <a href="https://programmers.co.kr/">프로그래머스</a>, <a href="https://level.goorm.io/">goormlevel</a>를 통해 알고리즘 공부를 하시는 분들이 더욱 쉽게 코드를 저장하고 관리할 수 있게 하도록 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.<br/>
 </p>
 <p>
-  BaekjoonHub is a chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://www.acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>, a similar extension for Leetcode.
+  BaekjoonHub is a Chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://www.acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>, a similar extension for Leetcode.
 </p>
 👉 <a href="https://github.com/flaxinger/BOJAutoPush"> 예시 Repository</a> 보러 가기<br/>
 
@@ -82,17 +78,17 @@
 
 ### 1. 동작 화면
 
-![](assets/extension/baekjoon.gif)
+![](assets/extension/Baekjoon.gif)
 
 <div align="center">백준 동작 화면</div>
 <br/>
 
-![](assets/extension/programmers.gif)
+![](assets/extension/Programmers.gif)
 
 <div align="center">프로그래머스 동작 화면</div>
 <br/>
 
-![](assets/extension/swexpertacademy.gif)
+![](assets/extension/SWExpertAcademy.gif)
 
 <div align="center">SW Expert Academy 동작 화면</div>
 <br/>
@@ -206,16 +202,16 @@
   <tr>
     <td align="center">
       <a href="https://github.com/BaekjoonHub/BaekjoonHub/issues" title="버그신고">
-          <img src="./assets/readme_icons/bug.png" width="100" height="100">
+          <img src="./assets/readme_icons/bug.png" width="100" height="100" alt="버그 신고">
       </a><br/><sub><b>버그 신고</b></sub>
     </td>
     <td align="center">
       <a href="https://open.kakao.com/o/gOWn2ySd" title="카카오톡 협업방">
-        <img src="./assets/readme_icons/kakao.png" width="100" height="100">
+        <img src="./assets/readme_icons/kakao.png" width="100" height="100" alt="카카오톡 협업방">
       </a><br/><sub><b>카카오톡 협업방</b></sub>
     </td>
   </tr>
 </table>
 
-<br />
-<br />
+<br>
+<br>

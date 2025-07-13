@@ -9,7 +9,7 @@
     "package": "npm run build && node build.js",
     "clean": "rm -rf dist packages node_modules",
     "lint": "eslint src/**/*.js",
-    "format": "prettier --write \"src/**/*.js\" build.js",
+    "prettier": "prettier --write \"**/*.@(cjs|mjs|js|ts|md|json|yml)\"",
     "test": "node test/settings.test.js"
   },
   "engines": {
