@@ -1,5 +1,3 @@
-import sha1 from "js-sha1";
-
 const debug = true;
 
 /**
@@ -127,6 +125,8 @@ export function unescapeHtml(text) {
  * @returns {string} - 전각문자로 변환된 문자열
  */
 export function convertSingleCharToDoubleChar(text) {
+  // prettier-ignore
+  /* eslint-disable */
   // singleChar to doubleChar mapping
   const map = {
     "!": "！",
@@ -150,15 +150,17 @@ export function convertSingleCharToDoubleChar(text) {
     "\\": "＼",
     "]": "］",
     "^": "＾",
-    _: "＿",
+    "_": "＿",
     "`": "｀",
     "{": "｛",
     "|": "｜",
     "}": "｝",
     "~": "～",
-    " ": " ",
+    " ": " ", // 공백만 전각문자가 아닌 FOUR-PER-EM SPACE로 변환
+    "-": "－",
   };
-  return text.replace(/[!%&()*+,./:;<=>?@[\]^_`{|}~ -]/g, (m) => map[m]);
+  return text.replace(/[!%&()*+,./:;<=>?@[\]\\^`{|}~ -]/g, (m) => map[m]);
+  /* eslint-enable */
 }
 
 /**
@@ -241,8 +243,13 @@ export function filter(arr, conditions) {
  * @param {string} content - file content
  * @returns {string} - SHA hash
  */
-export function calculateBlobSHA(content) {
-  return sha1(`blob ${new Blob([content]).size}\0${content}`);
+export async function calculateBlobSHA(content) {
+  const textEncoder = new TextEncoder();
+  const data = textEncoder.encode(`blob ${new Blob([content]).size}\0${content}`);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hexHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hexHash;
 }
 
 /**

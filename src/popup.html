@@ -50,25 +50,25 @@
 
         <section id="commit_mode" hidden>
           <p id="repo_url" class="small header"></p>
-          <div class="small header">
-            Want more features?
-            <a style="color: rgb(10, 89, 92) !important" target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub/labels/feature">Request a feature!</a>
+          
+          <!-- Enable Toggle -->
+          <div class="auto-commit-container">
+            <div class="auto-commit-label">Enabled</div>
+            <div class="toggle-switch-container">
+              <input type="checkbox" id="enable_popup" class="toggle-switch-checkbox" checked />
+              <label for="enable_popup" class="toggle-switch-label">
+                <span class="toggle-switch-inner"></span>
+                <span class="toggle-switch-switch"></span>
+              </label>
+            </div>
           </div>
         </section>
 
-        <!-- 기능 on/off -->
-        <div class="toggle-switch-container">
-          <input type="checkbox" id="onffbox" class="toggle-switch-checkbox" />
-          <label for="onffbox" class="toggle-switch-label">
-            <span class="toggle-switch-inner"></span>
-            <span class="toggle-switch-switch"></span>
-          </label>
-        </div>
       </main>
 
       <footer id="socials" class="sixteen wide column">
-        <a title="BaekjoonHub GitHub" href="https://github.com/BaekjoonHub/BaekjoonHub" target="_blank"><i class="github icon" aria-hidden="true"></i></a>
         <a title="Settings" id="settings_URL" href="settings.html" target="_blank"><i class="settings icon" aria-hidden="true"></i></a>
+        <a title="BaekjoonHub GitHub" href="https://github.com/BaekjoonHub/BaekjoonHub" target="_blank"><i class="github icon" aria-hidden="true"></i></a>
         <!-- <a title="Email" href="mailto:baekjoonhub@googlegroups.com" target="_blank"><i class="envelope icon" aria-hidden="true"></i></a> -->
       </footer>
     </div>

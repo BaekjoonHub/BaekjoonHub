@@ -45,22 +45,25 @@ async function runTest() {
     // Navigate to the extension's settings page
     await driver.get(`chrome-extension://${extensionId}/settings.html`);
 
-    // Inject a simple console.log to check if JavaScript execution is possible
-    await driver.executeScript("console.log('Injected console.log: JavaScript is executing on settings.html');");
-
     // Wait for the hook_mode element to be located
     const hookMode = await driver.wait(until.elementLocated(By.id('hook_mode')), 30000);
 
     // Explicitly wait for the hook_mode's display style to be 'block'
     await driver.wait(async () => {
       const displayStyle = await hookMode.getCssValue('display');
-      console.log(`Waiting for hook_mode display: ${displayStyle}`); // Add this log for more insight
+      console.log(`Waiting for hook_mode display: ${displayStyle}`);
       return displayStyle === 'block';
     }, 30000, 'hook_mode did not become visible (display: block) within 30 seconds');
 
-    // Now, wait for the 'type' dropdown to be visible (assuming it's inside hook_mode)
-    const typeSelect = await driver.wait(until.elementIsVisible(driver.findElement(By.id('type'))), 30000);
-    console.log("Settings page loaded and 'type' dropdown is visible.");
+    console.log("Settings page loaded and hook_mode is visible.");
+
+    // Assert that commit_mode is hidden
+    const commitMode = await driver.wait(until.elementLocated(By.id('commit_mode')), 10000); // Add a wait here
+    const commitModeDisplayStyle = await commitMode.getCssValue('display');
+    if (commitModeDisplayStyle !== 'none') {
+      throw new Error(`commit_mode is visible (display: ${commitModeDisplayStyle}) but should be hidden.`);
+    }
+    console.log("commit_mode is hidden.");
 
   } catch (error) {
     console.error("Test failed:", error);
