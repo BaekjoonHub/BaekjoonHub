@@ -26,9 +26,10 @@ export async function getDefaultBranchOnRepo(hook, token) {
  * @param {string} ref - reference name
  * @return {Promise} - the promise for the reference sha
  */
-export async function getReference(hook, token, branch = "main") {
+export async function getReference(hook, token, branch) {
+  const defaultBranch = branch || await getDefaultBranchOnRepo(hook, token);
   // return fetch(`https://api.github.com/repos/${hook}/git/refs`, {
-  return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/refs/heads/${branch}`, {
+  return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/refs/heads/${defaultBranch}`, {
     method: "GET",
     headers: {
       Authorization: `token ${token}`,
@@ -165,7 +166,7 @@ export class GitHub {
     this.token = token;
   }
 
-  async getReference(branch = "main") {
+  async getReference(branch) {
     // hook, token, branch
     return getReference(this.hook, this.token, branch);
   }

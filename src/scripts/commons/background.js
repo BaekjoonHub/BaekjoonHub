@@ -1,4 +1,5 @@
 import urls from "@/constants/url.js";
+import { STORAGE_KEYS } from "@/constants/registry.js";
 
 /**
  * solvedac 문제 데이터를 파싱해오는 함수.
@@ -11,13 +12,16 @@ export async function SolvedApiCall(problemId) {
 }
 
 export function handleMessage(request, sender, sendResponse) {
+  console.log("background.js: handleMessage called with request:", request);
   if (request && request.closeWebPage === true && request.isSuccess === true) {
     /* Set username */
-    chrome.storage.local.set({ BaekjoonHub_username: request.username }, () => {
+    chrome.storage.local.set({ [STORAGE_KEYS.USERNAME]: request.username }, () => {
+      console.log("background.js: Username saved to local storage.");
       /* Set token */
-      chrome.storage.local.set({ BaekjoonHub_token: request.token }, () => {
+      chrome.storage.local.set({ [STORAGE_KEYS.TOKEN]: request.token }, () => {
+        console.log("background.js: Token saved to local storage.");
         /* Close pipe */
-        chrome.storage.local.set({ pipeBaekjoonHub: false }, () => {
+        chrome.storage.local.set({ [STORAGE_KEYS.PIPE]: false }, () => {
           console.log("Closed pipe.");
 
           /* Go to onboarding for UX */
@@ -27,7 +31,7 @@ export function handleMessage(request, sender, sendResponse) {
       });
     });
   } else if (request && request.closeWebPage === true && request.isSuccess === false) {
-    console.error("Something went wrong while trying to authenticate your profile!");
+    console.error("background.js: Something went wrong while trying to authenticate your profile!");
     chrome.tabs.getCurrent((tab) => {
       chrome.tabs.remove(tab.id);
     });

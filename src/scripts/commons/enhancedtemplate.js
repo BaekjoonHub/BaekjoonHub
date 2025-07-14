@@ -1,5 +1,5 @@
 import { parseTemplateString } from "safe-template-parser";
-import { STORAGE_KEYS } from "@/constants/registry.js";
+import { getTextTransforms } from "./text-transforms";
 
 /**
  * 모든 플랫폼에서 공통으로 사용할 수 있는 향상된 템플릿 시스템
@@ -22,6 +22,9 @@ export default class EnhancedTemplateService {
       ...(data.problemInfo || {}),
     };
 
+    // 템플릿에서 사용할 수 있는 텍스트 변환 함수들 추가
+    Object.assign(templateData, textTransforms);
+
     return templateData;
   }
 
@@ -39,14 +42,6 @@ export default class EnhancedTemplateService {
       // 템플릿에 사용할 데이터 준비
       const templateData = this.prepareTemplateData(platform, data);
       templateData.language = language; // 언어 정보 보장
-
-      // 로컬 스토리지에서 커스텀 템플릿 설정을 가져옵니다
-      // const useCustomTemplate = await getObjectFromLocalStorage(STORAGE_KEYS.USE_CUSTOM_TEMPLATE);
-      // const customTemplate = await getObjectFromLocalStorage(STORAGE_KEYS.DIR_TEMPLATE);
-
-      // TODO: getObjectFromLocalStorage를 직접 import하지 않고, 인자로 받거나 다른 방식으로 처리해야 함
-      // const useCustomTemplate = false; // 임시
-      // const customTemplate = ''; // 임시
 
       // 커스텀 템플릿이 설정되어 있고 활성화되어 있다면 사용
       if (useCustomTemplate === true && customTemplate && customTemplate.trim() !== "") {
@@ -70,6 +65,7 @@ export default class EnhancedTemplateService {
 
   /**
    * 템플릿 문자열을 파싱하여 디렉토리 경로를 생성합니다.
+   * 새로운 safe-template-parser API에 맞춰 allowedFunctions를 세 번째 인자로 전달합니다.
    *
    * @param {string} templateString - 템플릿 문자열
    * @param {Object} data - 템플릿에 사용할 데이터
@@ -77,7 +73,8 @@ export default class EnhancedTemplateService {
    */
   static parseDirectoryTemplate(templateString, data) {
     try {
-      return parseTemplateString(templateString, data);
+      // 새로운 API에 맞춰 parseTemplateString 호출 (data, allowedFunctions가 두 번째, 세 번째 인자)
+      return parseTemplateString(templateString, data, getTextTransforms());
     } catch (error) {
       console.error("템플릿 파싱 중 오류가 발생했습니다:", error);
 
