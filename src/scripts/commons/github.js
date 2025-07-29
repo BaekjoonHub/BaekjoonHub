@@ -1,5 +1,6 @@
-import { log, b64EncodeUnicode } from "./util.js";
+import { b64EncodeUnicode } from "./util.js";
 import urls from "@/constants/url.js";
+import log from "@/commons/logger.js";
 
 /** get a repo default branch
  * @see https://docs.github.com/en/rest/reference/repos
@@ -8,6 +9,7 @@ import urls from "@/constants/url.js";
  * @return {Promise} - the promise for the branch sha
  */
 export async function getDefaultBranchOnRepo(hook, token) {
+  log.info("getDefaultBranchOnRepo called with hook:", hook);
   return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}`, {
     method: "GET",
     headers: {
@@ -15,8 +17,14 @@ export async function getDefaultBranchOnRepo(hook, token) {
       Accept: "application/vnd.github.v3+json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => data.default_branch);
+    .then((res) => {
+      log.debug("getDefaultBranchOnRepo response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("getDefaultBranchOnRepo data:", data);
+      return data.default_branch;
+    });
 }
 
 /** get a reference
@@ -27,7 +35,9 @@ export async function getDefaultBranchOnRepo(hook, token) {
  * @return {Promise} - the promise for the reference sha
  */
 export async function getReference(hook, token, branch) {
-  const defaultBranch = branch || await getDefaultBranchOnRepo(hook, token);
+  log.info("getReference called with hook:", hook, "branch:", branch);
+  const defaultBranch = branch || (await getDefaultBranchOnRepo(hook, token));
+  log.debug("getReference - defaultBranch:", defaultBranch);
   // return fetch(`https://api.github.com/repos/${hook}/git/refs`, {
   return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/refs/heads/${defaultBranch}`, {
     method: "GET",
@@ -36,8 +46,14 @@ export async function getReference(hook, token, branch) {
       Accept: "application/vnd.github.v3+json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => ({ refSHA: data.object.sha, ref: data.ref }));
+    .then((res) => {
+      log.debug("getReference response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("getReference data:", data);
+      return { refSHA: data.object.sha, ref: data.ref };
+    });
 }
 /** create a Blob
  * @see https://docs.github.com/en/rest/reference/git#create-a-blob
@@ -48,6 +64,7 @@ export async function getReference(hook, token, branch) {
  * @return {Promise} - the promise for the tree_item object
  */
 export async function createBlob(hook, token, content, path) {
+  log.info("createBlob called with hook:", hook, "path:", path);
   return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/blobs`, {
     method: "POST",
     body: JSON.stringify({
@@ -60,13 +77,19 @@ export async function createBlob(hook, token, content, path) {
       "content-type": "application/json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => ({
-      path,
-      sha: data.sha,
-      mode: "100644",
-      type: "blob",
-    }));
+    .then((res) => {
+      log.debug("createBlob response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("createBlob data:", data);
+      return {
+        path,
+        sha: data.sha,
+        mode: "100644",
+        type: "blob",
+      };
+    });
 }
 
 /** create a new tree in git
@@ -78,6 +101,7 @@ export async function createBlob(hook, token, content, path) {
  * @return {Promise} - the promise for the tree sha
  */
 export async function createTree(hook, token, refSHA, treeItems) {
+  log.info("createTree called with hook:", hook, "refSHA:", refSHA);
   return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/trees`, {
     method: "POST",
     body: JSON.stringify({ tree: treeItems, base_tree: refSHA }),
@@ -87,8 +111,14 @@ export async function createTree(hook, token, refSHA, treeItems) {
       "content-type": "application/json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => data.sha);
+    .then((res) => {
+      log.debug("createTree response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("createTree data:", data);
+      return data.sha;
+    });
 }
 
 /** create a commit in git
@@ -101,6 +131,7 @@ export async function createTree(hook, token, refSHA, treeItems) {
  * @return {Promise} - the promise for the commit sha
  */
 export async function createCommit(hook, token, message, treeSHA, refSHA) {
+  log.info("createCommit called with hook:", hook, "message:", message);
   return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/commits`, {
     method: "POST",
     body: JSON.stringify({ message, tree: treeSHA, parents: [refSHA] }),
@@ -110,8 +141,14 @@ export async function createCommit(hook, token, message, treeSHA, refSHA) {
       "content-type": "application/json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => data.sha);
+    .then((res) => {
+      log.debug("createCommit response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("createCommit data:", data);
+      return data.sha;
+    });
 }
 
 /** update a ref
@@ -124,6 +161,7 @@ export async function createCommit(hook, token, message, treeSHA, refSHA) {
  * @return {Promise} - the promise for the http request
  */
 export async function updateHead(hook, token, ref, commitSHA, force = true) {
+  log.info("updateHead called with hook:", hook, "ref:", ref, "commitSHA:", commitSHA);
   return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/${ref}`, {
     method: "PATCH",
     body: JSON.stringify({ sha: commitSHA, force }),
@@ -133,8 +171,14 @@ export async function updateHead(hook, token, ref, commitSHA, force = true) {
       "content-type": "application/json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => data.sha);
+    .then((res) => {
+      log.debug("updateHead response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("updateHead data:", data);
+      return data.sha;
+    });
 }
 
 /** get a tree recursively
@@ -144,6 +188,7 @@ export async function updateHead(hook, token, ref, commitSHA, force = true) {
  * @return {Promise} - the promise for the tree items
  */
 export async function getTree(hook, token) {
+  log.info("getTree called with hook:", hook);
   return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/git/trees/HEAD?recursive=1`, {
     method: "GET",
     headers: {
@@ -151,13 +196,28 @@ export async function getTree(hook, token) {
       Accept: "application/vnd.github.v3+json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => data.tree);
+    .then((res) => {
+      log.debug("getTree response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("getTree data:", data);
+      // GitHub API 에러 응답인 경우 빈 배열 반환
+      if (data.message || !data.tree) {
+        log.warn("getTree error or empty response:", data);
+        return [];
+      }
+      return data.tree;
+    })
+    .catch((error) => {
+      log.error("getTree fetch error:", error);
+      return [];
+    });
 }
 
 export class GitHub {
   constructor(hook, token) {
-    log("GitHub constructor", hook, token);
+    log.debug("GitHub constructor", hook, token);
     this.update(hook, token);
   }
 
@@ -182,19 +242,19 @@ export class GitHub {
 
   async createTree(refSHA, treeItems) {
     // hook, token, baseSHA, tree_items
-    log("GitHub createTree", "refSHA:", refSHA, "tree_items:", treeItems);
+    log.debug("GitHub createTree", "refSHA:", refSHA, "tree_items:", treeItems);
     return createTree(this.hook, this.token, refSHA, treeItems);
   }
 
   async createCommit(message, treeSHA, refSHA) {
     // hook, token, message, tree, parent
-    log("GitHub createCommit", "message:", message, "treeSHA:", treeSHA, "refSHA:", refSHA);
+    log.debug("GitHub createCommit", "message:", message, "treeSHA:", treeSHA, "refSHA:", refSHA);
     return createCommit(this.hook, this.token, message, treeSHA, refSHA);
   }
 
   async updateHead(ref, commitSHA) {
     // hook, token, commitSHA, force = true)
-    log("GitHub updateHead", "ref:", ref, "commitSHA:", commitSHA);
+    log.debug("GitHub updateHead", "ref:", ref, "commitSHA:", commitSHA);
     return updateHead(this.hook, this.token, ref, commitSHA, true);
   }
 

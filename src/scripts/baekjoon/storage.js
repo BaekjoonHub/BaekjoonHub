@@ -1,5 +1,6 @@
 import { getStats, saveStats } from "@/commons/storage.js";
-import { log, isNull } from "@/commons/util.js";
+import { isNull } from "@/commons/util.js";
+import log from "@/commons/logger.js";
 
 export class TTLCacheStats {
   constructor(name) {
@@ -10,6 +11,9 @@ export class TTLCacheStats {
 
   async forceLoad() {
     this.stats = await getStats();
+    if (isNull(this.stats)) {
+      this.stats = {};
+    }
     if (isNull(this.stats[this.name])) {
       this.stats[this.name] = {};
     }
@@ -28,7 +32,7 @@ export class TTLCacheStats {
     }
     this.saveTimer = setTimeout(async () => {
       const clone = this.stats[this.name]; // 얇은 복사
-      console.log("Saving stats...", clone);
+      log.debug("Saving stats...", clone);
       await this.forceLoad(); // 최신화
       this.stats[this.name] = clone; // 업데이트
       await saveStats(this.stats);
@@ -38,21 +42,24 @@ export class TTLCacheStats {
 
   async expired() {
     await this.load();
+    if (isNull(this.stats) || isNull(this.stats[this.name])) {
+      await this.forceLoad();
+    }
     if (!this.stats[this.name].last_check_date) {
       this.stats[this.name].last_check_date = Date.now();
       this.save(this.stats);
-      log("Initialized stats date", this.stats[this.name].last_check_date);
+      log.debug("Initialized stats date", this.stats[this.name].last_check_date);
       return;
     }
 
     const dateYesterday = Date.now() - 86400000; // 1day
-    log("금일 로컬스토리지 정리를 완료하였습니다.");
+    log.debug("금일 로컬스토리지 정리를 완료하였습니다.");
     if (dateYesterday < this.stats[this.name].last_check_date) return;
 
     // 1 주가 지난 문제 내용은 삭제
     const dateWeekAgo = Date.now() - 7 * 86400000;
-    log("stats before deletion", this.stats);
-    log("date a week ago", dateWeekAgo);
+    log.debug("stats before deletion", this.stats);
+    log.debug("date a week ago", dateWeekAgo);
     // eslint-disable-next-line no-restricted-syntax
     for (const [key, value] of Object.entries(this.stats[this.name])) {
       // 무한 방치를 막기 위해 저장일자가 null이면 삭제
@@ -67,7 +74,7 @@ export class TTLCacheStats {
       }
     }
     this.stats[this.name].last_check_date = Date.now();
-    log("stats after deletion", this.stats);
+    log.debug("stats after deletion", this.stats);
     await this.save();
   }
 
@@ -78,13 +85,16 @@ export class TTLCacheStats {
       ...data,
       save_date: Date.now(),
     };
-    log("date", this.stats[this.name][data.id].save_date);
-    log("stats", this.stats);
+    log.debug("date", this.stats[this.name][data.id].save_date);
+    log.debug("stats", this.stats);
     await this.save();
   }
 
   async get(id) {
     await this.load();
+    if (isNull(this.stats) || isNull(this.stats[this.name])) {
+      return null;
+    }
     const cur = this.stats[this.name];
     if (isNull(cur)) return null;
     return cur[id];

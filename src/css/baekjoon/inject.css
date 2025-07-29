@@ -2,17 +2,175 @@
 @import url('../common.css');
 
 /* 백준 플랫폼 특화 스타일 */
-.BaekjoonHub_progress {
+.baekjoonHubProgress {
   width: 0.8em !important;
   height: 0.8em !important;
 }
 
-#BaekjoonHub_progress_elem.markuploadfailed {
+#baekjoonHubProgressElem.markuploadfailed {
   height: 13px !important;
   width: 5px !important;
 }
 
-#BaekjoonHub_progress_elem.markuploaded {
+#baekjoonHubProgressElem.markuploaded {
   height: 13px !important;
   width: 5px !important;
+}
+
+/* 백준 사이트에서 SweetAlert2 스타일 토스트가 올바르게 표시되도록 추가 스타일 */
+body .toast-notification.sweetalert2-style {
+  min-width: 400px !important;
+  max-width: 500px !important;
+  padding: 40px !important;
+  background: white !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000001 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  /* 배경색이 사라지는 문제를 해결하기 위한 추가 스타일 */
+  background-clip: padding-box !important;
+  -webkit-background-clip: padding-box !important;
+  isolation: isolate !important;
+}
+
+/* 오버레이 스타일 */
+body .toast-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 1000000 !important;
+}
+
+/* 메시지 컨테이너 */
+body .toast-notification .message-container {
+  width: 100% !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Noto Sans KR', sans-serif !important;
+  color: #545454 !important;
+  font-weight: 400 !important;
+  font-size: 18px !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  word-break: keep-all !important;
+}
+
+/* 아이콘 컨테이너 */
+body .swal2-icon-container {
+  width: 80px !important;
+  height: 80px !important;
+  margin: 0 auto 20px !important;
+  position: relative !important;
+}
+
+body .swal2-icon {
+  width: 80px !important;
+  height: 80px !important;
+  border: 4px solid !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+/* 타입별 아이콘 색상 */
+body .swal2-icon.swal2-success {
+  border-color: #10B981 !important;
+  color: #10B981 !important;
+}
+
+body .swal2-icon.swal2-danger {
+  border-color: #EF4444 !important;
+  color: #EF4444 !important;
+}
+
+body .swal2-icon.swal2-warning {
+  border-color: #F59E0B !important;
+  color: #F59E0B !important;
+}
+
+body .swal2-icon.swal2-info {
+  border-color: #3B82F6 !important;
+  color: #3B82F6 !important;
+}
+
+/* 확인 버튼 */
+body .swal2-confirm {
+  margin-top: 25px !important;
+  padding: 10px 24px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  color: white !important;
+  outline: none !important;
+}
+
+body .swal2-confirm:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 백준 사이트에서 SweetAlert2 애니메이션 정의 */
+@keyframes baekjoonSwal2AnimateIcon {
+  0% {
+    transform: rotateY(0deg) scale(0.5) !important;
+    opacity: 0 !important;
+  }
+  50% {
+    transform: rotateY(180deg) scale(1.1) !important;
+    opacity: 1 !important;
+  }
+  100% {
+    transform: rotateY(360deg) scale(1) !important;
+    opacity: 1 !important;
+  }
+}
+
+@keyframes baekjoonSwal2AnimatePopup {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5) !important;
+    opacity: 0 !important;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.05) !important;
+    opacity: 1 !important;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) !important;
+    opacity: 1 !important;
+  }
+}
+
+/* 애니메이션 클래스 */
+body .swal2-icon {
+  animation: baekjoonSwal2AnimateIcon 0.5s !important;
+}
+
+body .toast-notification.sweetalert2-style {
+  animation: baekjoonSwal2AnimatePopup 0.3s cubic-bezier(0.215, 0.61, 0.355, 1) !important;
+}
+
+/* 백준 사이트의 기존 스타일 오버라이드 */
+body .toast-notification * {
+  box-sizing: border-box !important;
+}
+
+/* 스크롤바 숨기기 (모달이 화면을 덮으므로) */
+body.swal2-shown {
+  overflow: hidden !important;
 }

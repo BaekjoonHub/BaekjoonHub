@@ -1,9 +1,10 @@
-import { log, isNull, convertSingleCharToDoubleChar } from "@/commons/util.js";
+import { isNull, convertSingleCharToDoubleChar } from "@/commons/util.js";
 import { getProblemData, updateProblemData } from "@/swexpertacademy/storage.js";
 import { languages } from "@/swexpertacademy/variables.js";
 import { getNickname } from "@/swexpertacademy/util.js";
-import { getDirNameByOrgOption } from "@/commons/storage.js";
+import { getDirNameByTemplate } from "@/commons/storage.js";
 import urls from "@/constants/url.js";
+import log from "@/commons/logger.js";
 
 export function updateTextSourceEvent() {
   document.documentElement.setAttribute("onreset", "cEditor.save();");
@@ -12,7 +13,7 @@ export function updateTextSourceEvent() {
 }
 
 export async function makeData(origin) {
-  const { link, problemId, level, extension, title, runtime, memory, code, length, submissionTime, language } = origin;
+  const { link, problemId, level, languageExtension, title, runtime, memory, code, length, submissionTime, language } = origin;
   /*
    * SWEA의 경우에는 JAVA 같이 모두 대문자인 경우가 존재합니다. 하지만 타 플랫폼들(백준, 프로그래머스)는 첫문자가 모두 대문자로 시작합니다.
    * 그래서 이와 같은 케이스를 처리를 위해 첫문자만 대문자를 유지하고 나머지 문자는 소문자로 변환합니다.
@@ -24,7 +25,7 @@ export async function makeData(origin) {
   const baseDirPath = `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
 
   // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
-  const directory = await getDirNameByOrgOption(baseDirPath, lang, {
+  const directory = await getDirNameByTemplate(baseDirPath, lang, {
     problemId,
     title,
     level,
@@ -37,7 +38,7 @@ export async function makeData(origin) {
   });
 
   const message = `[${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
-  const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
+  const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = submissionTime;
   // prettier-ignore
   const readme = `# [${level}] ${title} - ${problemId} \n\n`
@@ -85,13 +86,13 @@ export async function parseCode() {
 export async function parseData() {
   const nickname = document.querySelector("#searchinput").value;
 
-  log("사용자 로그인 정보 및 유무 체크", nickname, document.querySelector("#problemForm div.info"));
+  log.debug("사용자 로그인 정보 및 유무 체크", nickname, document.querySelector("#problemForm div.info"));
   // 검색하는 유저 정보와 로그인한 유저의 닉네임이 같은지 체크
   // PASS를 맞은 기록 유무 체크
   if (getNickname() !== nickname) return;
   if (isNull(document.querySelector("#problemForm div.info"))) return;
 
-  log("결과 데이터 파싱 시작");
+  log.debug("결과 데이터 파싱 시작");
 
   const title = document
     .querySelector("div.problem_box > p.problem_title")
@@ -115,26 +116,26 @@ export async function parseData() {
   const length = document.querySelector("#problemForm div.info > ul > li:nth-child(4) > span:nth-child(1)").textContent.trim();
 
   // 확장자명
-  const extension = languages[language.toLowerCase()];
+  const languageExtension = languages[language.toLowerCase()];
 
   // 제출날짜
   const submissionTime = document.querySelector(".smt_txt > dd").textContent.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/g)[0];
   // 로컬스토리지에서 기존 코드에 대한 정보를 불러올 수 없다면 코드 디테일 창으로 이동 후 제출하도록 이동
   const data = await getProblemData(problemId);
-  log("data", data);
+  log.debug("data", data);
   if (isNull(data?.code)) {
-    console.error("소스코드 데이터가 없습니다.");
+    log.error("소스코드 데이터가 없습니다.");
     return;
   }
   const { code } = data;
-  log("파싱 완료");
+  log.debug("파싱 완료");
   // eslint-disable-next-line consistent-return
   return makeData({
     link,
     problemId,
     level,
     title,
-    extension,
+    languageExtension,
     code,
     runtime,
     memory,

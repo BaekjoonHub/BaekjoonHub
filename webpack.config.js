@@ -4,9 +4,8 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 // 모든 스크립트를 일반 JavaScript로 빌드 (ES 모듈 사용하지 않음)
 module.exports = {
-  mode: "production",
-  // Set devtool to false for production to avoid eval() usage
-  devtool: false,
+  mode: "development",
+  devtool: "cheap-module-source-map",
   entry: {
     background: "./src/scripts/commons/background.js",
     authorize: "./src/scripts/commons/authorize.js",
@@ -21,6 +20,10 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "[name].js",
+  },
+  optimization: {
+    splitChunks: false,
+    runtimeChunk: false,
   },
   plugins: [
     new CopyPlugin({
@@ -38,7 +41,7 @@ module.exports = {
     extensions: [".js", ".jsx", ".json"],
     alias: {
       sha1: "js-sha1",
-      
+
       filesaver: "file-saver",
       "@": path.resolve(__dirname, "src/scripts"),
     },

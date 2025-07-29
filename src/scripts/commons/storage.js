@@ -1,7 +1,8 @@
-import { log, isNull } from "./util.js";
+import { isNull } from "./util.js";
 import { STORAGE_KEYS } from "@/constants/registry.js";
 import { GitHub } from "./github.js";
 import EnhancedTemplateService from "./enhancedtemplate.js";
+import log from "@/commons/logger.js";
 
 /**
  * 현재 익스텐션의 버전정보를 반환합니다.
@@ -17,17 +18,20 @@ export function getVersion() {
  * @param {string} key
  */
 export async function getObjectFromLocalStorage(key) {
+  log.info("storage.js: getObjectFromLocalStorage called with key:", key);
   return new Promise((resolve) => {
     try {
       chrome.storage.local.get(key, (value) => {
         if (Array.isArray(key)) {
+          log.debug("storage.js: getObjectFromLocalStorage resolved with value:", value);
           resolve(value);
         } else {
+          log.debug("storage.js: getObjectFromLocalStorage resolved with value[key]:", value[key]);
           resolve(value[key]);
         }
       });
     } catch (ex) {
-      console.error(ex);
+      log.error("storage.js: Error in getObjectFromLocalStorage:", ex);
     }
   });
 }
@@ -38,13 +42,15 @@ export async function getObjectFromLocalStorage(key) {
  * @param {*} obj
  */
 export async function saveObjectInLocalStorage(obj) {
+  log.info("storage.js: saveObjectInLocalStorage called with obj:", obj);
   return new Promise((resolve) => {
     try {
       chrome.storage.local.set(obj, () => {
+        log.debug("storage.js: saveObjectInLocalStorage resolved.");
         resolve();
       });
     } catch (ex) {
-      console.error(ex);
+      log.error("storage.js: Error in saveObjectInLocalStorage:", ex);
     }
   });
 }
@@ -56,13 +62,15 @@ export async function saveObjectInLocalStorage(obj) {
  * @param {string or array of string keys} keys
  */
 export async function removeObjectFromLocalStorage(keys) {
+  log.info("storage.js: removeObjectFromLocalStorage called with keys:", keys);
   return new Promise((resolve) => {
     try {
       chrome.storage.local.remove(keys, () => {
+        log.debug("storage.js: removeObjectFromLocalStorage resolved.");
         resolve();
       });
     } catch (ex) {
-      console.error(ex);
+      log.error("storage.js: Error in removeObjectFromLocalStorage:", ex);
     }
   });
 }
@@ -72,13 +80,15 @@ export async function removeObjectFromLocalStorage(keys) {
  * @param {string} key
  */
 export async function getObjectFromSyncStorage(key) {
+  log.info("storage.js: getObjectFromSyncStorage called with key:", key);
   return new Promise((resolve) => {
     try {
       chrome.storage.sync.get(key, (value) => {
+        log.debug("storage.js: getObjectFromSyncStorage resolved with value[key]:", value[key]);
         resolve(value[key]);
       });
     } catch (ex) {
-      console.error(ex);
+      log.error("storage.js: Error in getObjectFromSyncStorage:", ex);
     }
   });
 }
@@ -88,13 +98,15 @@ export async function getObjectFromSyncStorage(key) {
  * @param {*} obj
  */
 export async function saveObjectInSyncStorage(obj) {
+  log.info("storage.js: saveObjectInSyncStorage called with obj:", obj);
   return new Promise((resolve) => {
     try {
       chrome.storage.sync.set(obj, () => {
+        log.debug("storage.js: saveObjectInSyncStorage resolved.");
         resolve();
       });
     } catch (ex) {
-      console.error(ex);
+      log.error("storage.js: Error in saveObjectInSyncStorage:", ex);
     }
   });
 }
@@ -104,13 +116,15 @@ export async function saveObjectInSyncStorage(obj) {
  * @param {string or array of string keys} keys
  */
 export async function removeObjectFromSyncStorage(keys) {
+  log.info("storage.js: removeObjectFromSyncStorage called with keys:", keys);
   return new Promise((resolve) => {
     try {
       chrome.storage.sync.remove(keys, () => {
+        log.debug("storage.js: removeObjectFromSyncStorage resolved.");
         resolve();
       });
     } catch (ex) {
-      console.error(ex);
+      log.error("storage.js: Error in removeObjectFromSyncStorage:", ex);
     }
   });
 }
@@ -124,19 +138,40 @@ export async function getGithubUsername() {
 }
 
 export async function getStats() {
-  return getObjectFromLocalStorage(STORAGE_KEYS.STATS);
+  const stats = await getObjectFromLocalStorage(STORAGE_KEYS.STATS);
+
+  // stats가 null이거나 undefined인 경우 기본 객체 반환
+  if (!stats) {
+    const defaultStats = {
+      version: "0.0.0",
+      branches: {},
+      submission: {},
+      problems: {},
+    };
+    // 기본값을 저장해서 다음번에 문제가 생기지 않도록 함
+    await saveStats(defaultStats);
+    return defaultStats;
+  }
+
+  // 각 필드가 존재하는지 확인하고 없으면 초기화
+  if (!stats.branches) stats.branches = {};
+  if (!stats.submission) stats.submission = {};
+  if (!stats.problems) stats.problems = {};
+  if (!stats.version) stats.version = "0.0.0";
+
+  return stats;
 }
 
 export async function getHook() {
   return getObjectFromLocalStorage(STORAGE_KEYS.HOOK);
 }
 
-/** settings.html 의 분기 처리 dis_option에서 설정된 값을 반환합니다. */
+/** @deprecated settings.html 의 분기 처리 dis_option에서 설정된 값을 반환합니다. 현재는 사용되지 않습니다. */
 export async function getOrgOption() {
   try {
     return getObjectFromLocalStorage(STORAGE_KEYS.ORG_OPTION);
   } catch (ex) {
-    console.log("The way it works has changed with updates. Update your storage.");
+    log.warn("The way it works has changed with updates. Update your storage.");
     saveObjectInLocalStorage({ [STORAGE_KEYS.ORG_OPTION]: "platform" });
     return "platform";
   }
@@ -180,76 +215,156 @@ export function _swexpertacademyRankRemoveFilter(path) {
 }
 
 export function updateObjectDatafromPath(obj, path, data) {
-  let current = obj;
-  const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
-    .split("/")
-    .filter((p) => p !== "");
-
-  for (const p of pathArray.slice(0, -1)) {
-    if (isNull(current[p])) {
-      current[p] = {};
-    }
-    current = current[p];
+  // obj가 null이거나 undefined인 경우 에러 로그만 찍고 처리하지 않음
+  if (!obj) {
+    log.error("updateObjectDatafromPath: obj is null or undefined", { obj, path, data });
+    return;
   }
 
-  current[pathArray.pop()] = data;
+  try {
+    let current = obj;
+    const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
+      .split("/")
+      .filter((p) => p !== "");
+
+    for (const p of pathArray.slice(0, -1)) {
+      if (isNull(current[p])) {
+        current[p] = {};
+      }
+      current = current[p];
+    }
+
+    const lastKey = pathArray.pop();
+    if (lastKey) {
+      current[lastKey] = data;
+    }
+  } catch (error) {
+    log.error("updateObjectDatafromPath error:", error, { obj, path, data });
+  }
 }
 
 export function getObjectDatafromPath(obj, path) {
-  let current = obj;
-  const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
-    .split("/")
-    .filter((p) => p !== "");
-
-  for (const p of pathArray.slice(0, -1)) {
-    if (isNull(current[p])) {
-      return null;
-    }
-    current = current[p];
+  // obj가 null이거나 undefined인 경우 null 반환
+  if (!obj) {
+    log.warn("getObjectDatafromPath: obj is null or undefined", { obj, path });
+    return null;
   }
 
-  return current[pathArray.pop()];
+  try {
+    let current = obj;
+    const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
+      .split("/")
+      .filter((p) => p !== "");
+
+    for (const p of pathArray.slice(0, -1)) {
+      if (isNull(current[p])) {
+        return null;
+      }
+      current = current[p];
+    }
+
+    const lastKey = pathArray.pop();
+    return lastKey ? current[lastKey] : null;
+  } catch (error) {
+    log.error("getObjectDatafromPath error:", error, { obj, path });
+    return null;
+  }
 }
 
 export async function updateStatsSHAfromPath(path, sha) {
   const stats = await getStats();
+
+  if (!stats.submission) {
+    stats.submission = {};
+  }
+
   updateObjectDatafromPath(stats.submission, path, sha);
   await saveStats(stats);
 }
 
 export async function getStatsSHAfromPath(path) {
   const stats = await getStats();
+
+  if (!stats.submission) {
+    return null;
+  }
+
   return getObjectDatafromPath(stats.submission, path);
 }
 
 export async function updateLocalStorageStats() {
-  const hook = await getHook();
-  const token = await getToken();
-  const git = new GitHub(hook, token);
-  const stats = await getStats();
-  const treeItems = [];
+  try {
+    const hook = await getHook();
+    const token = await getToken();
 
-  await git.getTree().then((tree) => {
-    tree.forEach((item) => {
-      if (item.type === "blob") {
-        treeItems.push(item);
+    if (!hook || !token) {
+      log.error("Missing hook or token for updateLocalStorageStats", { hook, token });
+      return await getStats(); // 기존 stats 반환
+    }
+
+    const git = new GitHub(hook, token);
+    let stats = await getStats(); // getStats에서 이미 초기화된 객체를 반환함
+    const treeItems = [];
+
+    // 이중 확인 - getStats에서 이미 초기화되지만 한번 더 확인
+    if (!stats.submission) {
+      stats.submission = {};
+    }
+    if (!stats.branches) {
+      stats.branches = {};
+    }
+
+    try {
+      const tree = await git.getTree();
+      // tree가 유효한 배열인지 확인
+      if (Array.isArray(tree)) {
+        tree.forEach((item) => {
+          if (item && item.type === "blob" && item.path) {
+            treeItems.push(item);
+          }
+        });
+      } else {
+        log.warn("getTree returned invalid data:", tree);
       }
-    });
-  });
+    } catch (error) {
+      log.error("Error getting tree from GitHub:", error);
+    }
 
-  const { submission } = stats;
-  treeItems.forEach((item) => {
-    updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
-  });
+    // submission이 존재하는지 다시 한번 확인
+    if (stats.submission) {
+      treeItems.forEach((item) => {
+        try {
+          updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
+        } catch (error) {
+          log.error("Error updating object data from path:", error, item);
+        }
+      });
+    }
 
-  const defaultBranch = await git.getDefaultBranchOnRepo();
-  stats.branches[hook] = defaultBranch;
-  await saveStats(stats);
-  log("update stats", stats);
-  return stats;
+    try {
+      const defaultBranch = await git.getDefaultBranchOnRepo();
+      if (defaultBranch && stats.branches) {
+        stats.branches[hook] = defaultBranch;
+      }
+    } catch (error) {
+      log.error("Error getting default branch:", error);
+      // branches가 존재할 때만 기본값 설정
+      if (stats.branches) {
+        stats.branches[hook] = "main";
+      }
+    }
+
+    await saveStats(stats);
+    log.debug("update stats", stats);
+    return stats;
+  } catch (error) {
+    log.error("Critical error in updateLocalStorageStats:", error);
+    // 오류 발생 시 기본 stats 반환
+    return await getStats();
+  }
 }
 
-export async function getDirNameByOrgOption(dirName, language, data = null) {
+export async function getDirNameByTemplate(dirName, language, data = null) {
   try {
     let platform = "";
     if (dirName.startsWith("백준/")) {
@@ -262,19 +377,17 @@ export async function getDirNameByOrgOption(dirName, language, data = null) {
       platform = "goormlevel";
     }
 
-    const orgOption = await getOrgOption();
+    const useCustomTemplate = await getObjectFromLocalStorage(STORAGE_KEYS.USE_CUSTOM_TEMPLATE);
     const customTemplate = await getObjectFromLocalStorage(STORAGE_KEYS.DIR_TEMPLATE);
 
-    if (orgOption === "custom") {
+    if (useCustomTemplate && customTemplate) {
       return EnhancedTemplateService.getDirNameWithTemplate(platform, dirName, language, data, true, customTemplate, "custom");
     }
-    if (orgOption === "language") {
-      return `${language}/${dirName}`;
-    }
 
-    return dirName;
+    // 기본 템플릿 사용 (언어별 정리)
+    return `${language}/${dirName}`;
   } catch (error) {
-    console.error("디렉토리 구조 생성 중 오류가 발생했습니다:", error);
+    log.error("디렉토리 구조 생성 중 오류가 발생했습니다:", error);
     return dirName;
   }
 }
@@ -283,28 +396,56 @@ export function initializeStorage() {
   getObjectFromLocalStorage(STORAGE_KEYS.IS_SYNC).then((data) => {
     const keys = [STORAGE_KEYS.TOKEN, STORAGE_KEYS.USERNAME, STORAGE_KEYS.PIPE, STORAGE_KEYS.STATS, STORAGE_KEYS.HOOK, STORAGE_KEYS.MODE_TYPE];
     if (data && data.isSync) {
-      console.log("BaekjoonHub Local storage already synced!");
+      log.info("BaekjoonHub Local storage already synced!");
       return;
     }
 
-    keys.forEach((key) => {
-      chrome.storage.sync.get(key, (data) => {
-        saveObjectInLocalStorage({ [key]: data[key] });
-      });
+    keys.forEach(async (key) => {
+      const localValue = await getObjectFromLocalStorage(key);
+      if (isNull(localValue)) {
+        chrome.storage.sync.get(key, (data) => {
+          saveObjectInLocalStorage({ [key]: data[key] });
+        });
+      }
     });
 
     saveObjectInLocalStorage({ [STORAGE_KEYS.IS_SYNC]: true }).then(() => {
-      console.log("BaekjoonHub Synced to local values");
+      log.info("BaekjoonHub Synced to local values");
     });
   });
 
   getStats().then((stats) => {
-    let newStats = stats;
-    if (isNull(newStats)) newStats = {};
-    if (isNull(newStats.version)) newStats.version = "0.0.0";
-    if (isNull(newStats.branches) || newStats.version !== getVersion()) newStats.branches = {};
-    if (isNull(newStats.submission) || newStats.version !== getVersion()) newStats.submission = {};
-    if (isNull(newStats.problems) || newStats.version !== getVersion()) newStats.problems = {};
-    saveStats(newStats);
+    // getStats에서 이미 기본값을 반환하므로 stats는 항상 유효한 객체
+    let needsUpdate = false;
+
+    if (!stats.version || stats.version === "0.0.0") {
+      stats.version = getVersion();
+      needsUpdate = true;
+    }
+
+    if (!stats.branches || stats.version !== getVersion()) {
+      stats.branches = {};
+      needsUpdate = true;
+    }
+
+    if (!stats.submission || stats.version !== getVersion()) {
+      stats.submission = {};
+      needsUpdate = true;
+    }
+
+    if (!stats.problems || stats.version !== getVersion()) {
+      stats.problems = {};
+      needsUpdate = true;
+    }
+
+    // 버전이 다르면 업데이트
+    if (stats.version !== getVersion()) {
+      stats.version = getVersion();
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      saveStats(stats);
+    }
   });
 }

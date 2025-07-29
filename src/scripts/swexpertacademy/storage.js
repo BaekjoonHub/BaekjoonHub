@@ -1,6 +1,7 @@
 import { getObjectFromLocalStorage, saveObjectInLocalStorage } from "@/commons/storage.js";
-import { log, isNull } from "@/commons/util.js";
+import { isNull } from "@/commons/util.js";
 import { STORAGE_KEYS } from "@/constants/registry.js";
+import log from "@/commons/logger.js";
 
 (async () => {
   const data = await getObjectFromLocalStorage(STORAGE_KEYS.SWEA);
@@ -16,15 +17,15 @@ import { STORAGE_KEYS } from "@/constants/registry.js";
  */
 export async function updateProblemData(problemId, obj) {
   const data = await getObjectFromLocalStorage(STORAGE_KEYS.SWEA);
-  log("updateProblemData", data);
-  log("obj", obj);
+  log.debug("updateProblemData", data);
+  log.debug("obj", obj);
   if (isNull(data[problemId])) data[problemId] = {};
   data[problemId] = { ...data[problemId], ...obj, save_date: Date.now() };
 
   // 기존에 저장한 문제 중 일주일이 경과한 문제 내용들은 모두 삭제합니다.
   const dateWeekAgo = Date.now() - 7 * 86400000;
-  log("data before deletion", data);
-  log("date a week ago", dateWeekAgo);
+  log.debug("data before deletion", data);
+  log.debug("date a week ago", dateWeekAgo);
   for (const [key, value] of Object.entries(data)) {
     // 무한 방치를 막기 위해 저장일자가 null이면 삭제
     if (isNull(value) || isNull(value.saveDate)) {

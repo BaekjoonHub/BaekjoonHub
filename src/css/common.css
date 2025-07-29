@@ -1,12 +1,12 @@
 /* 공통 UI 컴포넌트 스타일 */
 
 /* 로딩 진행 상태 표시 요소 */
-#BaekjoonHub_progress_anchor_element {
+#baekjoonHubProgressAnchorElement {
   margin-right: 20px !important;
 }
 
 /* 로딩 애니메이션 */
-.BaekjoonHub_progress {
+.baekjoonHubProgress {
   display: inline-block;
   pointer-events: none;
   width: 1.7em;
@@ -26,7 +26,7 @@
 }
 
 /* 업로드 실패 아이콘 */
-#BaekjoonHub_progress_elem.markuploadfailed {
+#baekjoonHubProgressElem.markuploadfailed {
   display: inline-block;
   transform: rotate(45deg);
   width: 0.9em;
@@ -36,7 +36,7 @@
 }
 
 /* 업로드 성공 아이콘 */
-#BaekjoonHub_progress_elem.markuploaded {
+#baekjoonHubProgressElem.markuploaded {
   display: inline-block;
   transform: rotate(45deg);
   width: 0.9em;
@@ -60,32 +60,123 @@
   position: relative !important;
 }
 
-/* 토스트 알림 스타일 */
-.toast-notification {
-  min-width: 150px;
-  height: auto;
-  background-color: white;
-  border-radius: 10px !important;
-  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-  bottom: 50px;
-  margin: 50px;
-  padding: 10px;
-  right: 20px;
+/* 토스트 알림 스타일 - SweetAlert2 스타일 */
+.toast-notification.sweetalert2-style {
+  /* 기본 SweetAlert2 스타일 - common.css에서는 !important 없이 */
+  min-width: 400px;
+  max-width: 500px;
+  padding: 40px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
   position: fixed;
-  z-index: 999;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000001;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-.toast-notification:hover {
-  cursor: pointer;
+/* 토스트 오버레이 */
+.toast-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000000;
 }
+
+/* SweetAlert2 아이콘 스타일 */
+.swal2-icon-container {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+
+.swal2-icon {
+  width: 80px;
+  height: 80px;
+  border: 4px solid;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* SweetAlert2 버튼 스타일 */
+.swal2-confirm {
+  margin-top: 25px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+  outline: none;
+}
+
+.swal2-confirm:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* SweetAlert2 애니메이션 */
+@keyframes swal2-animate-icon {
+  0% {
+    transform: rotateY(0deg) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: rotateY(180deg) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(360deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes swal2-animate-popup {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+
 
 .message-container {
   width: 100%;
-  font-family: 'Roboto', sans-serif;
-  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Noto Sans KR', sans-serif;
+  color: #545454;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  word-break: keep-all;
 }
+
+
 
 /* 삭제 관련 UI */
 .BJH_deletion_board {

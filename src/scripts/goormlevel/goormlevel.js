@@ -1,14 +1,73 @@
-/** NOTE: goormlevel 핵심 로직입니다. */
-
-// Import all dependencies directly
-// Common utilities
-import { log, isNull, isEmpty, isNotEmpty, calculateBlobSHA, getVersion } from "@/commons/util.js";
-import { getStats, getHook, getObjectFromLocalStorage, getObjectFromSyncStorage, saveObjectInLocalStorage, saveObjectInSyncStorage, saveStats, updateLocalStorageStats } from "@/commons/storage.js";
+import PlatformHubBase from "@/commons/platformhub-base.js";
+import { SubmissionChecker } from "@/commons/loader-service.js";
 import { Toast } from "@/commons/toast.js";
 import { checkEnable } from "@/commons/enable.js";
 
-// Platform-specific utilities
-import { languages, difficultyLabels, uploadState } from "@/goormlevel/variables.js";
 import { parseData } from "@/goormlevel/parsing.js";
 import uploadOneSolveProblemOnGit from "@/goormlevel/uploadfunctions.js";
 import { startUpload, markUploadedCSS } from "@/goormlevel/util.js";
+class GoormLevelHub extends PlatformHubBase {
+  constructor() {
+    super({
+      platformName: "구름레벨",
+      loaderInterval: 2000,
+    });
+  }
+
+  async init() {
+    super.init();
+
+    // Check if extension is enabled
+    const enabled = await checkEnable();
+    if (!enabled) {
+      Toast.info("구름레벨 Hub가 비활성화되어 있습니다.");
+      return;
+    }
+
+    if (this.isGoormLevelExamPage()) {
+      this.startSubmissionMonitoring();
+    }
+  }
+
+  /**
+   * Check if current page is a GoormLevel exam page
+   * @returns {boolean}
+   */
+  isGoormLevelExamPage() {
+    return /^\/exam\/\d+\/[^/]+\/quiz\/1$/.test(this.currentPathname);
+  }
+
+  /**
+   * Start monitoring for successful submissions
+   */
+  startSubmissionMonitoring() {
+    Toast.info("구름레벨 문제 모니터링을 시작합니다.");
+    
+    const checker = SubmissionChecker.createMultiStepChecker([
+      () => {
+        const activeSubmitTab = this.querySelectorAll("#FrameBody li.nav-item > a.nav-link.active").find((element) => element.textContent === "제출 결과");
+        return Boolean(activeSubmitTab);
+      },
+      () => {
+        const result = this.querySelectorAll("#FrameBody div > p[class] > span").find((element) => element.textContent === "정답입니다.");
+        return Boolean(result);
+      },
+    ]);
+
+    const onSuccess = async () => {
+      const parsedData = await parseData();
+
+      if (parsedData) {
+        startUpload();
+        const { examSequence, quizNumber, message, directory, fileName, readme, code } = parsedData;
+        const uploadData = { code, readme, directory, fileName, message, examSequence, quizNumber };
+
+        await this.beginUpload(uploadData, uploadOneSolveProblemOnGit, markUploadedCSS);
+      }
+    };
+
+    this.setupSubmissionMonitoring(checker, onSuccess);
+  }
+}
+
+new GoormLevelHub();

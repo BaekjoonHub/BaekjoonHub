@@ -1,6 +1,6 @@
 import { languages, difficultyLabels } from "@/goormlevel/variables.js";
 import { convertSingleCharToDoubleChar } from "@/commons/util.js";
-import { getDirNameByOrgOption } from "@/commons/storage.js";
+import { getDirNameByTemplate } from "@/commons/storage.js";
 import { getDateString } from "@/commons/ui-util.js";
 
 export async function makeData({
@@ -9,9 +9,9 @@ export async function makeData({
   // 시험 uid
   examSequence,
   // 시험 uid와 연계된 퀴즈 uid
-  quizNumber,
+  problemId,
   // 난이도
-  difficulty,
+  level,
   // 제목
   title,
   // 프로그래밍 언어
@@ -26,27 +26,27 @@ export async function makeData({
   const languageExtension = languages[language.toLowerCase()];
 
   // 기본 디렉토리 경로 생성
-  const baseDirPath = `goormlevel/${examSequence}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`;
+  const baseDirPath = `goormlevel/${examSequence}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
 
   // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
-  const directory = await getDirNameByOrgOption(baseDirPath, language, {
-    problemId: quizNumber,
+  const directory = await getDirNameByTemplate(baseDirPath, language, {
+    problemId,
     title,
-    level: `난이도 ${difficulty}`,
+    level: `난이도 ${level}`,
     memory,
     runtime,
     submissionTime: getDateString(new Date(Date.now())),
     language,
     examSequence,
-    difficulty,
+    difficulty: level,
     link,
   });
 
-  const message = `[난이도 ${difficulty}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
+  const message = `[난이도 ${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = getDateString(new Date(Date.now()));
   // prettier-ignore
-  const readme = `# ${title} - ${examSequence}/${quizNumber} \n\n`
+  const readme = `# ${title} - ${examSequence}/${problemId} \n\n`
     + `[문제 링크](${link}) \n\n`
     + `### 성능 요약\n\n`
     + `메모리: ${memory}, `
@@ -56,7 +56,7 @@ export async function makeData({
 
   return {
     examSequence,
-    quizNumber,
+    problemId,
     directory,
     message,
     fileName,
@@ -68,7 +68,7 @@ export async function makeData({
 /**
  * @typedef MakeDataReturnType
  * @prop {number} examSequence 시험 sequence
- * @prop {number} quizNumber 퀴즈 number
+ * @prop {number} problemId 문제 ID
  * @prop {string} directory 레포에 기록될 폴더명
  * @prop {string} message 커밋 메시지
  * @prop {string} fileName 파일명
@@ -86,9 +86,9 @@ export async function parseData() {
   const pathnameList = pathname.split("/");
 
   const examSequence = Number(pathnameList[2]) || 0;
-  const quizNumber = Number(pathnameList[5]) || 0;
+  const problemId = Number(pathnameList[5]) || 0;
   const difficultyLabel = document.querySelector("span[role=text] > span").innerHTML;
-  const difficulty = difficultyLabels[difficultyLabel];
+  const level = difficultyLabels[difficultyLabel];
 
   const titlePrefix = "title-";
   const title = document.querySelector(`div[aria-label^="${titlePrefix}"]`).ariaLabel.replace(titlePrefix, "");
@@ -147,9 +147,9 @@ export async function parseData() {
     // 시험 uid
     examSequence,
     // 시험 uid와 연계된 퀴즈 uid
-    quizNumber,
+    problemId,
     // 난이도
-    difficulty,
+    level,
     // 제목
     title,
     // 프로그래밍 언어
