@@ -45,25 +45,25 @@ async function runTest() {
     // Navigate to the extension's settings page
     await driver.get(`chrome-extension://${extensionId}/settings.html`);
 
-    // Wait for the hook_mode element to be located
-    const hookMode = await driver.wait(until.elementLocated(By.id('hook_mode')), 30000);
+    // Wait for the setupSection element to be located
+    const setupSection = await driver.wait(until.elementLocated(By.id('setupSection')), 30000);
 
-    // Explicitly wait for the hook_mode's display style to be 'block'
+    // Explicitly wait for the setupSection's display style to be 'block'
     await driver.wait(async () => {
-      const displayStyle = await hookMode.getCssValue('display');
-      console.log(`Waiting for hook_mode display: ${displayStyle}`);
+      const displayStyle = await setupSection.getCssValue('display');
+      console.log(`Waiting for setupSection display: ${displayStyle}`);
       return displayStyle === 'block';
-    }, 30000, 'hook_mode did not become visible (display: block) within 30 seconds');
+    }, 30000, 'setupSection did not become visible (display: block) within 30 seconds');
 
-    console.log("Settings page loaded and hook_mode is visible.");
+    console.log("Settings page loaded and setupSection is visible.");
 
-    // Assert that commit_mode is hidden
-    const commitMode = await driver.wait(until.elementLocated(By.id('commit_mode')), 10000); // Add a wait here
-    const commitModeDisplayStyle = await commitMode.getCssValue('display');
-    if (commitModeDisplayStyle !== 'none') {
-      throw new Error(`commit_mode is visible (display: ${commitModeDisplayStyle}) but should be hidden.`);
+    // Assert that settingsSection is hidden
+    const settingsSection = await driver.wait(until.elementLocated(By.id('settingsSection')), 10000); // Add a wait here
+    const settingsSectionDisplayStyle = await settingsSection.getCssValue('display');
+    if (settingsSectionDisplayStyle !== 'none') {
+      throw new Error(`settingsSection is visible (display: ${settingsSectionDisplayStyle}) but should be hidden.`);
     }
-    console.log("commit_mode is hidden.");
+    console.log("settingsSection is hidden.");
 
   } catch (error) {
     console.error("Test failed:", error);
@@ -77,7 +77,7 @@ async function runTest() {
       console.log("Browser Logs:", logs);
 
     } catch (screenshotError) {
-      console.error("Failed to take screenshot or capture logs:", screenshotError);
+      console.error("Failed to take screenshot or logs:", screenshotError);
     }
   } finally {
     if (driver) {

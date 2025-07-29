@@ -288,11 +288,3 @@ export async function asyncPool(poolLimit, array, iteratorFn) {
 export function combine(a, b) {
   return a.map((x, i) => ({ ...x, ...b[i] }));
 }
-
-/**
- * Log function that only works when debug is true
- * @param  {...any} args - Arguments to log
- */
-export function log(...args) {
-  if (typeof debug !== "undefined" && debug) console.log(...args);
-}

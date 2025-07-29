@@ -15,15 +15,20 @@ export default class EnhancedTemplateService {
    * @returns {Object} - 템플릿에 사용할 데이터
    */
   static prepareTemplateData(platform, data) {
-    // 기본 데이터 준비
+    // 기본 데이터 준비 - 두 가지 데이터 구조를 모두 지원
     const templateData = {
       platform,
       language: data.language || "",
+      // 직접 속성과 problemInfo 구조를 모두 처리
+      problemId: data.problemId || data.problemInfo?.problemId || "",
+      title: data.title || data.problemInfo?.title || "",
+      level: data.level || data.problemInfo?.level || "",
+      // problemInfo의 나머지 속성들 추가
       ...(data.problemInfo || {}),
     };
 
     // 템플릿에서 사용할 수 있는 텍스트 변환 함수들 추가
-    Object.assign(templateData, textTransforms);
+    Object.assign(templateData, getTextTransforms());
 
     return templateData;
   }
@@ -78,19 +83,8 @@ export default class EnhancedTemplateService {
     } catch (error) {
       console.error("템플릿 파싱 중 오류가 발생했습니다:", error);
 
-      // 플랫폼별 기본 템플릿으로 대체
-      switch (data.platform) {
-        case "백준":
-          return `백준/${data.level?.replace?.(/ .*/, "") || "Unrated"}/${data.problemId || "0000"}. ${data.title || "Unknown"}`;
-        case "프로그래머스":
-          return `프로그래머스/${data.level || "0"}/${data.problemId || "0000"}. ${data.title || "Unknown"}`;
-        case "SWEA":
-          return `SWEA/${data.level || "Unrated"}/${data.problemId || "0000"}. ${data.title || "Unknown"}`;
-        case "goormlevel":
-          return `goormlevel/${data.examSequence || "0"}/${data.problemId || "0000"}. ${data.title || "Unknown"}`;
-        default:
-          return `${data.platform || "Unknown"}/${data.problemId || "0000"}. ${data.title || "Unknown"}`;
-      }
+      // 기본 템플릿으로 대체
+      return parseTemplateString("{{platform}}/{{removeAfterSpace(level)}}/{{problemId}}. {{title}}", data, getTextTransforms());
     }
   }
 }

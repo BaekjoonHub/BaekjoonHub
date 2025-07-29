@@ -1,553 +1,211 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#667eea" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/settings.css" />
-  <title>BaekjoonHub Settings</title>
-</head>
-
-<body>
-  <!-- Theme Toggle Button -->
-  <button class="theme-toggle" id="theme-toggle" aria-label="테마 전환" title="다크/라이트 모드 전환">
-    <span id="theme-icon">🌙</span>
-  </button>
-
-  <div class="grid container">
-    <header class="sixteen wide center aligned column">
-      <h1 id="title">
-        Baekjoon
-        <span style="color: #0078c3">Hub</span>
-        Settings
-      </h1>
-      <p class="caption">Configure your coding experience</p>
-      
-      <!-- Enhanced Message Components -->
-      <div id="error" class="message error" hidden role="alert" aria-live="assertive"></div>
-      <div id="success" class="message success" hidden role="status" aria-live="polite"></div>
-      <div id="unlink" hidden role="status" aria-live="polite">
-        Linked the wrong repo?
-        <a href="#" id="unlink_text">Unlink</a>
-        .
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BaekjoonHub Settings</title>
+    <link rel="stylesheet" href="css/settings.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 class="title">🚀 BaekjoonHub</h1>
+        <p class="subtitle">GitHub 연동 설정</p>
       </div>
-    </header>
 
-    <main class="sixteen wide column" role="main">
-      <!-- GitHub Repository Setup Steps -->
-      <section id="hook_mode" class="grid" style="display: none;" aria-label="저장소 설정">
-        <!-- Step 1: Repository Option -->
-        <div id="step_repo_option" class="step sixteen wide column">
-          <div class="form-card">
-            <h2 class="large header center aligned">Step 1: Repository Option</h2>
-            <div class="field">
-              <label for="type">How would you like to set up your repository?</label>
-              <select id="type" aria-describedby="type-help">
-                <option value="">Pick an Option</option>
-                <option value="new">Create a new Private Repository</option>
-                <option value="link">Link an Existing Repository</option>
+      <div class="content">
+        <!-- 연결 상태 -->
+        <div id="connectionStatus"></div>
+
+        <!-- 메시지 -->
+        <div id="errorMessage" class="message error"></div>
+        <div id="successMessage" class="message success"></div>
+
+        <!-- GitHub 저장소 설정 -->
+        <div id="setupSection" class="section">
+          <h2 class="section-title">GitHub 저장소 설정</h2>
+
+          <div class="tutorial-tip">
+            <span class="tip-icon">💡</span>
+            <strong>시작하기:</strong> GitHub 저장소를 연결하여 백준 문제 해결 기록을 자동으로 관리해보세요!
+          </div>
+
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label" for="repoType">저장소 옵션</label>
+              <select id="repoType" class="form-control">
+                <option value="">옵션을 선택하세요</option>
+                <option value="new">새 저장소 생성</option>
+                <option value="existing">기존 저장소 연결</option>
               </select>
-              <div id="type-help" class="help-text">
-                새 저장소를 생성하거나 기존 저장소를 연결할 수 있습니다.
-              </div>
+              <div class="help-text">새로운 저장소를 만들거나 기존 저장소와 연결할 수 있습니다.</div>
             </div>
-            <div class="field">
-              <button id="next_to_repo_name" class="positive button" disabled aria-label="다음 단계로">
-                <span>Next</span>
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Step 2: Full Repository Name -->
-        <div id="step_repo_name" class="step sixteen wide column" style="display: none;">
-          <div class="form-card">
-            <h2 class="large header center aligned">Step 2: Repository Name</h2>
-            <div class="field">
-              <label for="name">Full Repository Name</label>
-              <input autocomplete="off" id="name" placeholder="username/repository-name" type="text" 
-                     aria-describedby="name-help" />
-              <div id="name-help" class="help-text">
-                형식: 사용자명/저장소명 (예: john/baekjoon-solutions)
-              </div>
-            </div>
-            <div class="field" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <button id="back_to_repo_option" class="button" aria-label="이전 단계로">
-                <span aria-hidden="true">←</span>
-                <span>Back</span>
-              </button>
-              <button id="next_to_org_method" class="positive button" disabled aria-label="다음 단계로">
-                <span>Next</span>
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 3: Organization Method -->
-        <div id="step_org_method" class="step sixteen wide column" style="display: none;">
-          <div class="form-card">
-            <h2 class="large header center aligned">Step 3: Organization Method</h2>
-            <div class="field">
-              <label for="org_option">How should the repository be organized?</label>
-              <select id="org_option" aria-describedby="org-help">
-                <option value="platform">Organize by Platform</option>
-                <option value="language">Organize by Language</option>
-                <option value="custom">Custom</option>
+            <div class="form-group">
+              <label class="form-label" for="repoName">저장소 이름</label>
+              <input type="text" id="repoName" class="form-control" placeholder="username/repository-name" />
+              <select id="repoSelect" class="form-control" style="display: none;">
+                <option value="">저장소를 선택하세요</option>
               </select>
-              <div id="org-help" class="help-text">
-                플랫폼별, 언어별 또는 사용자 정의 방식으로 저장소를 구성할 수 있습니다.
-              </div>
+              <div class="help-text">형식: GitHub사용자명/저장소명 (예: john/baekjoon-solutions)</div>
             </div>
-            <div class="field" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <button id="back_to_repo_name" class="button" aria-label="이전 단계로">
-                <span aria-hidden="true">←</span>
-                <span>Back</span>
-              </button>
-              <button id="finish_setup" class="positive button" aria-label="설정 완료">
-                <span>Finish Setup</span>
-                <span aria-hidden="true">✓</span>
-              </button>
+
+            <div class="button-group">
+              <button id="connectRepo" class="button button-primary" disabled><span>🔗</span> 연결하기</button>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- Show stats and settings when connected -->
-      <section id="commit_mode" class="grid" style="display: none" aria-label="저장소 연결됨">
-        <div class="sixteen wide column">
-          <h2 class="large header center aligned">Repository Connected</h2>
+        <!-- 기본 설정 -->
+        <div id="settingsSection" class="section" style="display: none">
+          <h2 class="section-title">기본 설정</h2>
 
-          <div class="form-card modern-card">
-            <!-- Repository Info Section -->
-            <div class="info-section">
-              <div class="info-item">
-                <div class="info-label">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                  </svg>
-                  <span>Current Repository</span>
-                </div>
-                <p id="current_repo" class="info-value loading">Loading...</p>
+          <div class="card">
+            <div class="toggle-section">
+              <div>
+                <div class="toggle-label">자동 업로드</div>
+                <div class="help-text">문제를 해결하면 자동으로 GitHub에 업로드됩니다.</div>
               </div>
-
-              <div class="info-item">
-                <div class="info-label">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-                  </svg>
-                  <span>Organization Method</span>
-                </div>
-                <p id="current_org" class="info-value loading">Loading...</p>
-              </div>
+              <label class="toggle">
+                <input type="checkbox" id="autoUpload" checked />
+                <span class="slider"></span>
+                <span class="sr-only">자동 업로드 설정</span>
+              </label>
             </div>
 
-            <!-- Settings Section -->
-            <div class="settings-section">
-              <h3 class="section-header">Configuration</h3>
-              
-              <div class="field modern-field">
-                <div class="field-header">
-                  <label class="modern-label">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
-                    </svg>
-                    Custom Template
-                  </label>
-                  <div class="toggle-switch">
-                    <input type="checkbox" id="use_custom_template" aria-describedby="custom-template-help" />
-                    <label for="use_custom_template"></label>
-                  </div>
-                </div>
-                <p id="custom-template-help" class="field-description">
-                  Enable custom directory structure for your submissions
-                </p>
-                
-                <!-- Template Preview Container -->
-                <div class="template-preview-container" id="template_preview_container" 
-                     style="display: none;" role="region" aria-label="템플릿 편집기">
-                  <div class="template-editor-section">
-                    <div class="template-current">
-                      <label class="modern-label">Current Template:</label>
-                      <div class="template-display" id="current_template_display" role="text">
-                        {{language}}/백준/{{removeAfterSpace(level)}}/{{problemId}}. {{title}}
-                      </div>
-                    </div>
-                    
-                    <div class="template-editor-inline">
-                      <label for="template_input" class="modern-label">Edit Template:</label>
-                      <textarea id="template_input" class="template-textarea" rows="2" 
-                                placeholder="Enter your custom template pattern..."
-                                aria-describedby="template-help">{{language}}/백준/{{removeAfterSpace(level)}}/{{problemId}}. {{title}}</textarea>
-                      <div id="template-help" class="help-text">
-                        Use variables and functions to customize your directory structure
-                      </div>
-                      
-                      <div class="template-actions">
-                        <button type="button" id="save_template" class="positive button" aria-label="템플릿 저장">
-                          <span>Save Template</span>
-                          <span aria-hidden="true">💾</span>
-                        </button>
-                        <button type="button" class="secondary button" aria-label="템플릿 초기화">
-                          <span>Reset</span>
-                          <span aria-hidden="true">↺</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Variables Section -->
-                  <div class="variables-section" role="region" aria-label="사용 가능한 변수들">
-                    <h4>Available Variables:</h4>
-                    <div class="variables-grid compact" role="group" aria-label="Core Variables">
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert platform variable">{{platform}}</button>
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert problemId variable">{{problemId}}</button>
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert title variable">{{title}}</button>
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert level variable">{{level}}</button>
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert language variable">{{language}}</button>
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert memory variable">{{memory}}</button>
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert runtime variable">{{runtime}}</button>
-                      <button type="button" class="variable-tag" role="button" aria-label="Insert submissionTime variable">{{submissionTime}}</button>
-                    </div>
-                    
-                    <h4>Text Transform Functions:</h4>
-                    <div class="variables-grid compact" role="group" aria-label="Transform Functions">
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert safe function">{{safe(title)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert urlSafe function">{{urlSafe(title)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert truncate function">{{truncate(title, 20)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert trim function">{{trim(title)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert extractNumbers function">{{extractNumbers(problemId)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert extractLetters function">{{extractLetters(language)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert arrayJoin function">{{arrayJoin(problem_tags, '-')}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert removeAfterSpace function">{{removeAfterSpace(level)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert htmlEscape function">{{htmlEscape(title)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert htmlUnescape function">{{htmlUnescape(title)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert base64Encode function">{{base64Encode(title)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert base64Decode function">{{base64Decode(title)}}</button>
-                      <button type="button" class="variable-tag function-tag" role="button" aria-label="Insert toFullWidth function">{{toFullWidth(title)}}</button>
-                    </div>
-                  </div>
-
-                  <!-- Preview Section -->
-                  <div class="preview-section" role="region" aria-label="템플릿 미리보기">
-                    <h4>Sample Data & Preview:</h4>
-                    <div class="sample-data-editor">
-                      <div class="sample-inputs">
-                        <div class="sample-row">
-                          <label for="sample_platform">Platform:</label>
-                          <input type="text" id="sample_platform" value="백준" aria-label="Sample platform" />
-                        </div>
-                        <div class="sample-row">
-                          <label for="sample_problemId">Problem ID:</label>
-                          <input type="text" id="sample_problemId" value="1000" aria-label="Sample problem ID" />
-                        </div>
-                        <div class="sample-row">
-                          <label for="sample_title">Title:</label>
-                          <input type="text" id="sample_title" value="A+B" aria-label="Sample title" />
-                        </div>
-                        <div class="sample-row">
-                          <label for="sample_level">Level:</label>
-                          <input type="text" id="sample_level" value="Bronze V" aria-label="Sample level" />
-                        </div>
-                        <div class="sample-row">
-                          <label for="sample_language">Language:</label>
-                          <input type="text" id="sample_language" value="Python" aria-label="Sample language" />
-                        </div>
-                      </div>
-                      
-                      <div class="preview-result">
-                        <h5>Generated Path:</h5>
-                        <div id="template_preview" class="preview-path" role="text" aria-live="polite">
-                          Python/백준/Bronze/1000. A+B
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div class="toggle-section">
+              <div>
+                <div class="toggle-label">커스텀 템플릿 사용</div>
+                <div class="help-text">파일명과 폴더 구조를 커스터마이징할 수 있습니다.</div>
               </div>
-
-              <div class="field modern-field">
-                <div class="field-header">
-                  <label class="modern-label">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    Enabled
-                  </label>
-                  <div class="toggle-switch">
-                    <input type="checkbox" id="enable_toggle" checked aria-describedby="enable-help" />
-                    <label for="enable_toggle"></label>
-                  </div>
-                </div>
-                <p id="enable-help" class="field-description">
-                  Enable or disable automatic submissions to GitHub
-                </p>
-              </div>
+              <label class="toggle">
+                <input type="checkbox" id="useCustomTemplate" />
+                <span class="slider"></span>
+                <span class="sr-only">커스텀 템플릿 사용 설정</span>
+              </label>
             </div>
+          </div>
 
-            <!-- Actions Section -->
-            <div class="actions-section">
-              <h3 class="section-header">Actions</h3>
-              <div class="field modern-field">
-                <label class="modern-label">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M9 3V1h6v2h5a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5zM7 6v13h10V6H7zm2 2h2v9H9V8zm4 0h2v9h-2V8z"/>
-                  </svg>
-                  Reset Repository Connection
-                </label>
-                <p class="field-description">Disconnect the current repository and reset settings</p>
-                <button id="unlinkButton" class="danger button" aria-label="저장소 연결 해제">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                  <span>Unlink Repository</span>
-                </button>
+          <!-- 향상된 템플릿 설정 -->
+          <div id="customTemplateInput" style="display: none">
+            <div class="card">
+              <h3 style="margin-bottom: 20px; color: #2d3748; font-size: 18px">📁 템플릿 패턴 설정</h3>
+
+              <div class="tutorial-tip">
+                <span class="tip-icon">✨</span>
+                아래 변수 버튼을 클릭하여 원하는 폴더 구조를 만들어보세요! 필터 함수를 사용하여 텍스트를 변환할 수 있습니다.
+              </div>
+
+              <!-- 미리 설정된 템플릿 -->
+              <div class="form-group">
+                <label class="form-label">자주 사용하는 템플릿</label>
+                <div class="template-presets">
+                  <div class="preset-card" data-template="{{platform}}/{{language}}/{{removeAfterSpace(level)}}/{{problemId}}. {{safe(title)}}">
+                    <div class="preset-title">기본형 (복합)</div>
+                    <div class="preset-example">백준/Python/Silver/1000. A＋B</div>
+                  </div>
+                  <div class="preset-card" data-template="{{removeAfterSpace(level)}}/{{language}}/{{problemId}}-{{safe(title)}}">
+                    <div class="preset-title">난이도별 + 언어별</div>
+                    <div class="preset-example">Bronze/Python/1000-A+B</div>
+                  </div>
+                  <div class="preset-card" data-template="{{platform}}/{{problemId}}/{{safe(title)}}">
+                    <div class="preset-title">플랫폼별 + 문제별</div>
+                    <div class="preset-example">백준/1000/A+B</div>
+                  </div>
+                  <div class="preset-card" data-template="{{language}}/{{problemId}}-{{safe(title)}}">
+                    <div class="preset-title">언어별 단순 구조</div>
+                    <div class="preset-example">Python/1000-A+B</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 변수 버튼들 -->
+              <div class="form-group">
+                <label class="form-label">사용 가능한 변수</label>
+                <div class="template-variables">
+                  <button type="button" class="variable-btn" data-variable="{{platform}}" data-tooltip="문제를 푼 플랫폼 이름 (예: 백준, 프로그래머스)">platform</button>
+                  <button type="button" class="variable-btn" data-variable="{{problemId}}" data-tooltip="문제 번호 또는 ID (예: 1000, 42586)">problemId</button>
+                  <button type="button" class="variable-btn" data-variable="{{title}}" data-tooltip="문제 제목 (예: A+B, 괄호 변환)">title</button>
+                  <button type="button" class="variable-btn" data-variable="{{level}}" data-tooltip="문제 난이도 (예: Bronze V, Silver III)">level</button>
+                  <button type="button" class="variable-btn" data-variable="{{language}}" data-tooltip="사용한 프로그래밍 언어 (예: Python, Java)">language</button>
+                </div>
+                <div class="help-text">변수를 클릭하여 템플릿에 추가하세요. 함수와 함께 사용할 수 있습니다: {{safe(title)}}</div>
+              </div>
+
+              <!-- 필터 함수 버튼들 -->
+              <div class="form-group">
+                <label class="form-label">텍스트 변환 함수</label>
+                <div class="filter-buttons">
+                  <button type="button" class="filter-btn" data-function="safe" data-tooltip="파일명에 안전한 문자로 변환 (특수문자 → 전각)">safe()</button>
+                  <button type="button" class="filter-btn" data-function="urlSafe" data-tooltip="URL에 안전한 문자로 변환">urlSafe()</button>
+                  <button type="button" class="filter-btn" data-function="removeAfterSpace" data-tooltip="첫 번째 공백 이후 문자 제거 (Silver V → Silver)">removeAfterSpace()</button>
+                  <button type="button" class="filter-btn" data-function="trim" data-tooltip="앞뒤 공백 제거">trim()</button>
+                  <button type="button" class="filter-btn" data-function="extractNumbers" data-tooltip="숫자만 추출 (abc123def → 123)">extractNumbers()</button>
+                  <button type="button" class="filter-btn" data-function="extractLetters" data-tooltip="영문자만 추출 (abc123def → abcdef)">extractLetters()</button>
+                  <!-- <button type="button" class="filter-btn" data-function="toKebabCase" data-tooltip="kebab-case로 변환 (Hello World → hello-world)">toKebabCase()</button> -->
+                  <!-- <button type="button" class="filter-btn" data-function="toSnakeCase" data-tooltip="snake_case로 변환 (Hello World → hello_world)">toSnakeCase()</button> -->
+                  <!-- <button type="button" class="filter-btn" data-function="toCamelCase" data-tooltip="camelCase로 변환 (hello world → helloWorld)">toCamelCase()</button> -->
+                  <!-- <button type="button" class="filter-btn" data-function="toPascalCase" data-tooltip="PascalCase로 변환 (hello world → HelloWorld)">toPascalCase()</button> -->
+                  <button type="button" class="filter-btn" data-function="truncate" data-tooltip="문자열 길이 제한 (기본 50자)">truncate()</button>
+                  <button type="button" class="filter-btn" data-function="htmlEscape" data-tooltip='HTML 특수문자 이스케이프 (&lt;&gt;&amp;")'>htmlEscape()</button>
+                  <!-- <button type="button" class="filter-btn" data-function="htmlUnescape" data-tooltip="HTML 특수문자 디코딩 (&lt;&gt; → <>)">htmlUnescape()</button> -->
+                  <button type="button" class="filter-btn" data-function="base64Encode" data-tooltip="Base64로 인코딩">base64Encode()</button>
+                  <!-- <button type="button" class="filter-btn" data-function="base64Decode" data-tooltip="Base64에서 디코딩">base64Decode()</button> -->
+                  <!-- <button type="button" class="filter-btn" data-function="formatKoreanDate" data-tooltip="한국어 날짜 형식으로 변환">formatKoreanDate()</button> -->
+                  <!-- <button type="button" class="filter-btn" data-function="arrayJoin" data-tooltip="배열을 지정된 구분자로 연결 (기본: -)">arrayJoin()</button> -->
+                </div>
+                <div class="help-text">
+                  함수를 클릭하면 커서 위치에 함수가 추가됩니다. 변수를 함수로 감쌀 수 있습니다.
+                  <br /><strong>예시:</strong> safe(파일명 안전문자), removeAfterSpace(공백 이후 제거), urlSafe(URL 안전문자)
+                </div>
+              </div>
+
+              <!-- 템플릿 입력 -->
+              <div class="form-group">
+                <label class="form-label" for="templateString">템플릿 패턴</label>
+                <input type="text" id="templateString" class="form-control" placeholder="변수 및 함수 버튼을 클릭하여 템플릿을 구성하세요" />
+                <div class="help-text">
+                  슬래시(/)로 폴더를 구분합니다. 파일 확장자는 자동으로 추가됩니다.
+                  <br /><strong>예시:</strong> {{language}}/{{safe(title)}} 또는 {{removeAfterSpace(level)}}/{{problemId}}
+                </div>
+              </div>
+
+              <!-- 실시간 미리보기 -->
+              <div class="template-preview">
+                <div class="preview-label">🎯 미리보기:</div>
+                <div id="templatePreview" class="preview-result">Python/Silver/1000. A+B.py</div>
+              </div>
+
+              <!-- 템플릿 저장 버튼 -->
+              <div class="button-group" style="margin-top: 20px">
+                <button id="saveTemplate" class="button button-primary"><span>💾</span> 템플릿 저장</button>
+                <button id="resetTemplate" class="button button-secondary"><span>🔄</span> 초기화</button>
               </div>
             </div>
           </div>
         </div>
-      </section>
-    </main>
 
-    <footer class="sixteen wide center aligned column" role="contentinfo">
-      <div class="small header">
-        <a target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub" rel="noopener">
-          ⭐ Star
-          <span>Baekjoon</span>
-          <span style="color: #0078c3">Hub</span>
-          on GitHub
-        </a>
+        <!-- 저장소 관리 -->
+        <div id="managementSection" class="section" style="display: none">
+          <h2 class="section-title">저장소 관리</h2>
+
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">연결 해제</label>
+              <div class="help-text">현재 저장소와의 연결을 해제하고 새로운 저장소를 설정할 수 있습니다.</div>
+              <div class="button-group" style="margin-top: 16px">
+                <button id="unlinkRepo" class="button button-danger"><span>🔓</span> 저장소 연결 해제</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </footer>
-  </div>
 
-  <script src="settings.js" defer></script>
-
-  <!-- Theme Toggle Script -->
-  <script>
-    // Theme management
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    
-    // Get initial theme
-    const getInitialTheme = () => {
-      const saved = localStorage.getItem('baekjoon-hub-theme');
-      if (saved) return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    };
-    
-    // Apply theme
-    const applyTheme = (theme) => {
-      document.body.classList.toggle('dark-theme', theme === 'dark');
-      themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
-      localStorage.setItem('baekjoon-hub-theme', theme);
-    };
-    
-    // Initialize theme
-    let currentTheme = getInitialTheme();
-    applyTheme(currentTheme);
-    
-    // Theme toggle handler
-    themeToggle.addEventListener('click', () => {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(currentTheme);
-    });
-    
-    // Listen for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem('baekjoon-hub-theme')) {
-        currentTheme = e.matches ? 'dark' : 'light';
-        applyTheme(currentTheme);
-      }
-    });
-
-    // Improved keyboard navigation for variable tags
-    document.addEventListener('DOMContentLoaded', () => {
-      const variableTags = document.querySelectorAll('.variable-tag');
-      
-      variableTags.forEach((tag, index) => {
-        tag.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            tag.click();
-          } else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            const next = variableTags[index + 1] || variableTags[0];
-            next.focus();
-          } else if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            const prev = variableTags[index - 1] || variableTags[variableTags.length - 1];
-            prev.focus();
-          }
-        });
-      });
-    });
-
-    // Loading state management
-    const showLoading = (element) => {
-      if (element) {
-        element.classList.add('loading');
-        element.textContent = 'Loading...';
-      }
-    };
-    
-    const hideLoading = (element, text) => {
-      if (element) {
-        element.classList.remove('loading');
-        element.textContent = text;
-      }
-    };
-
-    // Enhanced form validation feedback
-    const showValidationError = (input, message) => {
-      input.setAttribute('aria-invalid', 'true');
-      input.style.borderColor = 'var(--danger-color, #dc2626)';
-      
-      let errorElement = input.parentNode.querySelector('.validation-error');
-      if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.className = 'validation-error';
-        errorElement.setAttribute('role', 'alert');
-        input.parentNode.appendChild(errorElement);
-      }
-      errorElement.textContent = message;
-    };
-    
-    const clearValidationError = (input) => {
-      input.setAttribute('aria-invalid', 'false');
-      input.style.borderColor = '';
-      
-      const errorElement = input.parentNode.querySelector('.validation-error');
-      if (errorElement) {
-        errorElement.remove();
-      }
-    };
-  </script>
-</body>
-
-</html>
-    </main>
-
-    <footer class="sixteen wide center aligned column" role="contentinfo">
-      <div class="small header">
-        <a target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub" rel="noopener">
-          ⭐ Star
-          <span>Baekjoon</span>
-          <span style="color: #0078c3">Hub</span>
-          on GitHub
-        </a>
+      <div class="footer">
+        <a href="https://github.com/BaekjoonHub/BaekjoonHub" target="_blank"> ⭐ GitHub에서 BaekjoonHub 보기 </a>
       </div>
-    </footer>
-  </div>
+    </div>
 
-  <script src="settings.js" defer></script>
-
-  <!-- Theme Toggle Script -->
-  <script>
-    // Theme management
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    
-    // Get initial theme
-    const getInitialTheme = () => {
-      const saved = localStorage.getItem('baekjoon-hub-theme');
-      if (saved) return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    };
-    
-    // Apply theme
-    const applyTheme = (theme) => {
-      document.body.classList.toggle('dark-theme', theme === 'dark');
-      themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
-      localStorage.setItem('baekjoon-hub-theme', theme);
-    };
-    
-    // Initialize theme
-    let currentTheme = getInitialTheme();
-    applyTheme(currentTheme);
-    
-    // Theme toggle handler
-    themeToggle.addEventListener('click', () => {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(currentTheme);
-    });
-    
-    // Listen for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem('baekjoon-hub-theme')) {
-        currentTheme = e.matches ? 'dark' : 'light';
-        applyTheme(currentTheme);
-      }
-    });
-
-    // Improved keyboard navigation for variable tags
-    document.addEventListener('DOMContentLoaded', () => {
-      const variableTags = document.querySelectorAll('.variable-tag');
-      
-      variableTags.forEach((tag, index) => {
-        tag.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            tag.click();
-          } else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            const next = variableTags[index + 1] || variableTags[0];
-            next.focus();
-          } else if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            const prev = variableTags[index - 1] || variableTags[variableTags.length - 1];
-            prev.focus();
-          }
-        });
-      });
-    });
-
-    // Loading state management
-    const showLoading = (element) => {
-      if (element) {
-        element.classList.add('loading');
-        element.textContent = 'Loading...';
-      }
-    };
-    
-    const hideLoading = (element, text) => {
-      if (element) {
-        element.classList.remove('loading');
-        element.textContent = text;
-      }
-    };
-
-    // Enhanced form validation feedback
-    const showValidationError = (input, message) => {
-      input.setAttribute('aria-invalid', 'true');
-      input.style.borderColor = 'var(--danger-color, #dc2626)';
-      
-      let errorElement = input.parentNode.querySelector('.validation-error');
-      if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.className = 'validation-error';
-        errorElement.setAttribute('role', 'alert');
-        input.parentNode.appendChild(errorElement);
-      }
-      errorElement.textContent = message;
-    };
-    
-    const clearValidationError = (input) => {
-      input.setAttribute('aria-invalid', 'false');
-      input.style.borderColor = '';
-      
-      const errorElement = input.parentNode.querySelector('.validation-error');
-      if (errorElement) {
-        errorElement.remove();
-      }
-    };
-  </script>
-</body>
-
+    <script src="settings.js"></script>
+  </body>
 </html>

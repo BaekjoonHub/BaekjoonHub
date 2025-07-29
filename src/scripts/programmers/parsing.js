@@ -1,6 +1,6 @@
 import { convertSingleCharToDoubleChar } from "@/commons/util.js";
 import { getDateString } from "@/commons/ui-util.js";
-import { getDirNameByOrgOption } from "@/commons/storage.js";
+import { getDirNameByTemplate } from "@/commons/storage.js";
 import urls from "@/constants/url.js";
 
 /*
@@ -9,7 +9,7 @@ import urls from "@/constants/url.js";
 */
 
 /*
-  bojData를 초기화하는 함수로 문제 요약과 코드를 파싱합니다.
+  problemData를 초기화하는 함수로 문제 요약과 코드를 파싱합니다.
   - directory : 레포에 기록될 폴더명
   - message : 커밋 메시지
   - fileName : 파일명
@@ -23,7 +23,7 @@ export async function makeData(origin) {
   const baseDirPath = `프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`;
 
   // 공통 업로드 서비스를 사용하여 디렉토리 경로 생성
-  const directory = await getDirNameByOrgOption(baseDirPath, language, {
+  const directory = await getDirNameByTemplate(baseDirPath, language, {
     problemId,
     title,
     level,
@@ -73,7 +73,7 @@ export async function makeData(origin) {
 /**
  * @typedef MakeDataReturnType
  * @prop {number} examSequence 시험 sequence
- * @prop {number} quizNumber 퀴즈 number
+ * @prop {number} problemId 퀴즈 number
  * @prop {string} directory 레포에 기록될 폴더명
  * @prop {string} message 커밋 메시지
  * @prop {string} fileName 파일명

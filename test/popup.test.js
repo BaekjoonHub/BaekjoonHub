@@ -54,70 +54,132 @@ async function runTest() {
     // If we reach here, the extension loaded and popup.html displayed correctly.
     console.log("Basic extension load and popup.html display test passed.");
 
-    // // GitHub 인증 테스트 시작
-    // console.log("Attempting GitHub login...");
-    // try {
-    //   // Wait for the auth_mode section to be visible
-    //   const authModeSection = await driver.wait(until.elementIsVisible(driver.findElement(By.id('auth_mode'))), 60000);
-    //
-    //   // Wait for the authenticate button to be clickable
-    //   const authenticateButton = await driver.wait(until.elementToBeClickable(By.id('authenticate')), 60000);
-    //   await authenticateButton.click();
-    //   console.log("Authenticate button clicked. Waiting for new window for authentication...");
-    //
-    //   // Get all window handles
-    //   const originalWindow = await driver.getWindowHandle();
-    //   let allWindows = await driver.getAllWindowHandles();
-    //
-    //   // Wait for a new window to appear
-    //   await driver.wait(async () => {
-    //     allWindows = await driver.getAllWindowHandles();
-    //     return allWindows.length > 1;
-    //   }, 10000);
-    //
-    //   let newWindowHandle;
-    //   for (const handle of allWindows) {
-    //     if (handle !== originalWindow) {
-    //       newWindowHandle = handle;
-    //       break;
-    //     }
-    //   }
-    //
-    //   if (newWindowHandle) {
-    //     await driver.switchTo().window(newWindowHandle);
-    //     console.log("Switched to new window for GitHub authentication. Waiting 60 seconds for user to complete authentication...");
-    //     await driver.sleep(60000); // 60 seconds wait for user to complete OAuth
-    //
-    //     // After 60 seconds, try to close the new window if it's still open and switch back
-    //     try {
-    //       await driver.close();
-    //       console.log("Authentication window closed.");
-    //     } catch (closeError) {
-    //       console.log("Authentication window might have already closed or an error occurred trying to close it:", closeError.message);
-    //     }
-    //     await driver.switchTo().window(originalWindow);
-    //     console.log("Switched back to original popup window.");
-    //
-    //     // Verify successful login on the original popup (e.g., by checking for a logout button or absence of authenticate button)
-    //     await driver.wait(until.elementLocated(By.id('logout-button')), 10000); // Adjust ID if different
-    //     console.log("GitHub login successful! (Logout button found on original popup)");
-    //
-    //   } else {
-    //     throw new Error("New authentication window did not appear.");
-    //   }
-    //
-    // } catch (githubError) {
-    //   console.error("GitHub login test failed:", githubError);
-    //   // Optionally, take a screenshot specifically for GitHub login failure
-    //   try {
-    //     const githubLoginFailureScreenshot = await driver.takeScreenshot();
-    //     fs.writeFileSync("github_login_failure_screenshot.png", githubLoginFailureScreenshot, "base64");
-    //     console.log("Screenshot of GitHub login failure saved to github_login_failure_screenshot.png");
-    //   } catch (screenshotError) {
-    //     console.error("Failed to take screenshot after GitHub login failure:", screenshotError);
-    //   }
-    //   throw githubError; // Re-throw to mark the overall test as failed
-    // }
+    // GitHub 인증 테스트 시작
+    console.log("Attempting GitHub login...");
+    try {
+      // Wait for the auth_mode section to be visible
+      console.log("Waiting for auth_mode section to be visible...");
+      let authModeSection = await driver.wait(until.elementIsVisible(driver.findElement(By.id('auth_mode'))), 60000);
+      console.log("auth_mode section is visible.");
+
+      // Wait for the authenticate button to be located
+      const authenticateButtonLocator = By.id('authenticate');
+      console.log("Waiting for authenticate button to be located...");
+      const authenticateButton = await driver.wait(until.elementLocated(authenticateButtonLocator), 60000);
+      console.log("Authenticate button located.");
+
+      // Wait for the authenticate button to be visible
+      console.log("Waiting for authenticate button to be visible...");
+      await driver.wait(until.elementIsVisible(authenticateButton), 60000);
+      console.log("Authenticate button is visible.");
+
+      // Now click the button
+      await authenticateButton.click();
+      console.log("Authenticate button clicked. Waiting for new window for authentication...");
+
+      // Get all window handles
+      const originalWindow = await driver.getWindowHandle();
+      let allWindows = await driver.getAllWindowHandles();
+      console.log("Current window handles:", allWindows);
+
+      // Wait for a new window to appear
+      console.log("Waiting for a new window to appear...");
+      await driver.wait(async () => {
+        allWindows = await driver.getAllWindowHandles();
+        console.log("Checking for new window. Current handles:", allWindows);
+        return allWindows.length > 1;
+      }, 30000); // Increased timeout to 30 seconds
+      console.log("New window detected.");
+
+      let newWindowHandle;
+      for (const handle of allWindows) {
+        if (handle !== originalWindow) {
+          newWindowHandle = handle;
+          break;
+        }
+      }
+
+      if (newWindowHandle) {
+        await driver.switchTo().window(newWindowHandle);
+        console.log("Switched to new window for GitHub authentication. Closing it as we will mock authentication.");
+        await driver.close(); // Close the new window immediately
+        await driver.switchTo().window(originalWindow);
+        console.log("Switched back to original popup window. Mocking authentication...");
+
+        // Mock the fetch API to simulate a successful GitHub API response
+        await driver.executeScript(`
+          window.fetch = async (url, options) => {
+            if (url === 'https://api.github.com/user') {
+              return Promise.resolve({
+                ok: true,
+                status: 200,
+                json: () => Promise.resolve({}),
+              });
+            }
+            return originalFetch(url, options);
+          };
+          const originalFetch = window.fetch;
+        `);
+
+        // Mock successful authentication by setting local storage values
+        await driver.executeScript(`
+          chrome.storage.local.set({
+            baekjoonhub_token: 'mock_token_123',
+            baekjoonhub_username: 'mock_user',
+            baekjoonhub_mode_type: 'commit'
+          }, function() {
+            console.log('Mock token and username set in local storage.');
+          });
+        `);
+
+        // Reload the popup page to simulate the actual behavior after authentication
+        await driver.get(`chrome-extension://${extensionId}/popup.html`);
+        console.log("Popup page reloaded after mocking authentication.");
+
+        // Verify successful login on the original popup by checking UI changes...
+        console.log("Verifying successful login by checking UI changes...");
+
+      } else {
+        console.log("New authentication window did not appear.");
+        throw new Error("New authentication window did not appear.");
+      }
+
+        // Verify successful login on the original popup by checking UI changes...
+        console.log("Verifying successful login by checking UI changes...");
+        
+        // Wait for auth_mode section to be hidden
+        authModeSection = await driver.wait(until.elementLocated(By.id('auth_mode')), 10000);
+        await driver.wait(async () => {
+          const displayStyle = await authModeSection.getCssValue('display');
+          return displayStyle === 'none';
+        }, 10000, "Auth mode section did not become hidden.");
+        console.log("Auth mode section is hidden.");
+
+        // Wait for commit_mode or hook_mode section to be visible
+        await driver.wait(until.elementLocated(By.id('commit_mode')), 10000);
+        const commitModeSection = await driver.findElement(By.id('commit_mode'));
+        await driver.wait(until.elementLocated(By.id('hook_mode')), 10000);
+        const hookModeSection = await driver.findElement(By.id('hook_mode'));
+
+        await driver.wait(async () => {
+          const commitModeDisplay = await commitModeSection.getCssValue('display');
+          const hookModeDisplay = await hookModeSection.getCssValue('display');
+          return commitModeDisplay === 'block' || hookModeDisplay === 'block';
+        }, 30000, "Neither commit_mode nor hook_mode section became visible.");
+        console.log("Commit or Hook mode section is visible. GitHub login successful!");
+
+    } catch (githubError) {
+      console.log("GitHub login test failed:", githubError);
+      // Optionally, take a screenshot specifically for GitHub login failure
+      try {
+        const githubLoginFailureScreenshot = await driver.takeScreenshot();
+        fs.writeFileSync("github_login_failure_screenshot.png", githubLoginFailureScreenshot, "base64");
+        console.log("Screenshot of GitHub login failure saved to github_login_failure_screenshot.png");
+      } catch (screenshotError) {
+        console.log("Failed to take screenshot after GitHub login failure:", screenshotError);
+      }
+      throw githubError; // Re-throw to mark the overall test as failed
+    }
 
   } catch (error) {
     console.error("Test failed:", error);

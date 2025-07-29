@@ -40,7 +40,7 @@ export function arrayJoin(arr, separator = "-") {
 
 /**
  * 문자열에서 첫 번째 공백 이후의 모든 내용을 제거합니다
- * 주로 level에서 \"Bronze V\" → \"Bronze\" 변환에 사용
+ * 주로 level에서 "Bronze V" → "Bronze" 변환에 사용
  * @param {string} text - 처리할 텍스트
  * @returns {string} - 처리된 텍스트
  */
@@ -85,7 +85,7 @@ export function toSnakeCase(text) {
   if (typeof text !== "string") return text;
   return text
     .replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`)
-    .replace(/[\s\-]+/g, "_")
+    .replace(/[\s-]+/g, "_")
     .replace(/^_|_$/g, "")
     .toLowerCase();
 }
@@ -152,15 +152,14 @@ export function formatKoreanDate(dateString) {
   if (typeof dateString !== "string") return dateString;
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
-export function getTextTransforms() {
-  return {
+export const textTransforms = {
   // 기본 함수들
   safe: convertSingleCharToDoubleChar,
   urlSafe,
@@ -170,13 +169,18 @@ export function getTextTransforms() {
   extractLetters,
   arrayJoin,
   removeAfterSpace,
-  
+  toKebabCase,
+  toSnakeCase,
+  toCamelCase,
+  toPascalCase,
+
   // HTML & 인코딩
   htmlEscape: escapeHtml,
   htmlUnescape: unescapeHtml,
   base64Encode: b64EncodeUnicode,
   base64Decode: b64DecodeUnicode,
-  
-  toFullWidth: convertSingleCharToDoubleChar,
-  };
 };
+
+export function getTextTransforms() {
+  return textTransforms;
+}

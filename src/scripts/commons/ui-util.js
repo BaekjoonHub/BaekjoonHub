@@ -16,20 +16,16 @@ export function markUploadFailedCSS(uploadState) {
 
 /**
  * 업로드 타임아웃을 설정합니다.
- * 10초 이내에 업로드가 완료되지 않으면 실패로 간주합니다.
+ * Toast를 사용하므로 이 함수는 더 이상 필요하지 않지만 호환성을 위해 유지합니다.
  *
  * @param {Object} uploadState - 업로드 상태를 관리하는 객체
  * @param {number} timeout - 타임아웃 시간 (기본값: 10000ms)
  */
 export function startUploadCountDown(uploadState, timeout = 10000) {
-  if (!uploadState) return;
-
-  uploadState.uploading = true;
-  uploadState.countdown = setTimeout(() => {
-    if (uploadState.uploading === true) {
-      markUploadFailedCSS(uploadState);
-    }
-  }, timeout);
+  // Toast를 사용하므로 별도의 타임아웃 처리가 필요 없음
+  if (uploadState) {
+    uploadState.uploading = true;
+  }
 }
 
 /**
@@ -65,23 +61,10 @@ export function getDateString(date) {
 export function initUploadUI(targetElement, uploadState) {
   if (!targetElement) return null;
 
-  // 로딩 아이콘 컨테이너 생성
-  let container = document.getElementById("baekjoonHubProgressAnchorElement");
-  if (!container || container === undefined) {
-    container = document.createElement("span");
-    container.id = "baekjoonHubProgressAnchorElement";
-    container.className = "runcode-wrapper__8rXm";
-    container.style = "margin-left: 10px; padding-top: 0px;";
-  }
-
-  // 로딩 아이콘 요소 추가
-  container.innerHTML = `<div id="baekjoonHubProgressElem" class="baekjoonHubProgress"></div>`;
-  targetElement.append(container);
-
-  // 업로드 타임아웃 시작
+  // Toast를 사용하므로 로딩 UI는 더 이상 필요하지 않지만
+  // 다른 플랫폼과의 호환성을 위해 기본 구조는 유지
   startUploadCountDown(uploadState);
-
-  return container;
+  return null;
 }
 
 /**

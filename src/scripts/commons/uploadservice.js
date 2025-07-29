@@ -1,6 +1,7 @@
 import { GitHub } from "./github.js";
 import { getToken, getHook, getStats, saveStats, updateObjectDatafromPath } from "./storage.js";
-import { isNull, log } from "./util.js";
+import { isNull } from "./util.js";
+import log from "@/commons/logger.js";
 
 /**
  * 모든 플랫폼에서 공통으로 사용할 수 있는 업로드 서비스 클래스
@@ -29,7 +30,7 @@ export default class UploadService {
       const hook = await getHook();
 
       if (isNull(token) || isNull(hook)) {
-        console.error("Token or hook is null", token, hook);
+        log.error("Token or hook is null", token, hook);
         return Promise.resolve();
       }
 
@@ -37,7 +38,7 @@ export default class UploadService {
 
       return this.upload(token, hook, code, readme, directory, fileName, message, callback);
     } catch (error) {
-      console.error("Error uploading problem:", error);
+      log.error("Error uploading problem:", error);
       throw error; // 오류 위로 전파하여 호출자가 오류 처리할 수 있도록 함
     }
   }
@@ -58,13 +59,27 @@ export default class UploadService {
   static async upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, callback) {
     try {
       const git = new GitHub(hook, token);
-      const stats = await getStats();
+      let stats = await getStats();
+
+      // stats 객체 강제 초기화 확인
+      if (!stats.branches) {
+        stats.branches = {};
+      }
+      if (!stats.submission) {
+        stats.submission = {};
+      }
 
       // 기본 브랜치 확인
       let defaultBranch = stats.branches[hook];
       if (isNull(defaultBranch)) {
-        defaultBranch = await git.getDefaultBranchOnRepo();
-        stats.branches[hook] = defaultBranch;
+        try {
+          defaultBranch = await git.getDefaultBranchOnRepo();
+          stats.branches[hook] = defaultBranch;
+        } catch (error) {
+          log.error("Error getting default branch, using 'main':", error);
+          defaultBranch = "main";
+          stats.branches[hook] = defaultBranch;
+        }
       }
 
       // GitHub 업로드 작업 수행
@@ -76,16 +91,18 @@ export default class UploadService {
       await git.updateHead(ref, commitSHA);
 
       // 통계 정보 업데이트
-      updateObjectDatafromPath(stats.submission, `${hook}/${source.path}`, source.sha);
-      updateObjectDatafromPath(stats.submission, `${hook}/${readme.path}`, readme.sha);
+      if (stats.submission) {
+        updateObjectDatafromPath(stats.submission, `${hook}/${source.path}`, source.sha);
+        updateObjectDatafromPath(stats.submission, `${hook}/${readme.path}`, readme.sha);
+      }
       await saveStats(stats);
 
       // 콜백 함수 실행
-      if (typeof callback === "function") {
+      if (typeof callback === "function" && stats.branches) {
         callback(stats.branches, directory);
       }
 
-      log("Upload completed successfully", directory);
+      log.info("Upload completed successfully", directory);
 
       // 업로드 결과 정보 반환
       return {
@@ -104,7 +121,7 @@ export default class UploadService {
         commitSHA,
       };
     } catch (error) {
-      log("Upload failed:", error);
+      log.error("Upload failed:", error);
       // 업로드 실패 시 콜백 함수를 호출하지 않음 - 오류 처리는 호출측에서 함
       throw error;
     }
@@ -124,12 +141,26 @@ export default class UploadService {
   static async uploadSingleFile(token, hook, content, path, commitMessage) {
     try {
       const git = new GitHub(hook, token);
-      const stats = await getStats();
+      let stats = await getStats();
+
+      // stats 객체 강제 초기화 확인
+      if (!stats.branches) {
+        stats.branches = {};
+      }
+      if (!stats.submission) {
+        stats.submission = {};
+      }
 
       let defaultBranch = stats.branches[hook];
       if (isNull(defaultBranch)) {
-        defaultBranch = await git.getDefaultBranchOnRepo();
-        stats.branches[hook] = defaultBranch;
+        try {
+          defaultBranch = await git.getDefaultBranchOnRepo();
+          stats.branches[hook] = defaultBranch;
+        } catch (error) {
+          log.error("Error getting default branch, using 'main':", error);
+          defaultBranch = "main";
+          stats.branches[hook] = defaultBranch;
+        }
       }
 
       const { refSHA, ref } = await git.getReference(defaultBranch);
@@ -138,10 +169,12 @@ export default class UploadService {
       const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
       await git.updateHead(ref, commitSHA);
 
-      updateObjectDatafromPath(stats.submission, `${hook}/${file.path}`, file.sha);
+      if (stats.submission) {
+        updateObjectDatafromPath(stats.submission, `${hook}/${file.path}`, file.sha);
+      }
       await saveStats(stats);
 
-      log("Single file upload completed successfully", path);
+      log.info("Single file upload completed successfully", path);
 
       return {
         success: true,
@@ -152,7 +185,7 @@ export default class UploadService {
         commitSHA,
       };
     } catch (error) {
-      log("Single file upload failed:", error);
+      log.error("Single file upload failed:", error);
       throw error;
     }
   }

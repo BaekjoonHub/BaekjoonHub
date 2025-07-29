@@ -19,9 +19,9 @@ export default async function uploadOneSolveProblemOnGit(problemData, callback) 
     platform: "goormlevel",
     problemInfo: {
       examSequence: problemData.examSequence || 0,
-      quizNumber: problemData.quizNumber || 0,
+      problemId: problemData.problemId || 0,
       title: problemData.title || "",
-      difficulty: problemData.difficulty || 0,
+      level: problemData.level || 0,
       language: problemData.language || "",
       memory: problemData.memory || "",
       runtime: problemData.runtime || "",

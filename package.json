@@ -10,7 +10,8 @@
     "clean": "rm -rf dist packages node_modules",
     "lint": "eslint src/**/*.js",
     "format": "prettier --write \"src/**/*.js\" build.js",
-    "test": "node test/settings.test.js"
+    "test": "node test/popup.test.js",
+    "test:baekjoon": "node test/baekjoon.test.js"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -46,6 +47,8 @@
     "chrome": "^0.1.0",
     "fflate": "^0.8.2",
     "file-saver": "^2.0.5",
+    "loglevel": "^1.9.2",
+    "loglevel-plugin-prefix": "^0.8.4",
     "safe-template-parser": "^1.2.0"
   }
 }
