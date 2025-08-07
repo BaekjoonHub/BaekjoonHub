@@ -3,8 +3,9 @@ import { getStats, getHook, saveStats, updateLocalStorageStats, getStatsSHAfromP
 import { Toast } from "@/commons/toast.js";
 import { checkEnable } from "@/commons/enable.js";
 import { LoaderFactory } from "@/commons/loader-service.js";
-import { UploadHandlerFactory } from "@/commons/uploadservice.js";
+import UploadService, { UploadHandlerFactory } from "@/commons/uploadservice.js";
 import log from "@/commons/logger.js";
+import { TIMEOUTS, RETRY_LIMITS } from "@/constants/config.js";
 
 // Re-export commonly used utilities for subclasses
 export { Toast, checkEnable, log };
@@ -19,7 +20,7 @@ export default class PlatformHubBase {
     this.currentUrl = window.location.href;
     this.currentPathname = window.location.pathname;
     this.config = {
-      loaderInterval: 2000,
+      loaderInterval: TIMEOUTS.LOADER_INTERVAL,
       platformName: "unknown",
       ...config,
     };
@@ -210,5 +211,51 @@ export default class PlatformHubBase {
   getTextContent(selector) {
     const element = this.querySelector(selector);
     return element?.textContent?.trim() || "";
+  }
+
+  /**
+   * Create a generic upload function for platform-specific implementations
+   * This eliminates code duplication across platform upload functions
+   * @param {string} platformName - Platform display name
+   * @param {Function} problemInfoMapper - Function to map problem data to platform-specific format
+   * @returns {Function} Upload function
+   */
+  static createUploadFunction(platformName, problemInfoMapper) {
+    return async function uploadOneSolveProblemOnGit(problemData, callback) {
+      try {
+        const enhancedData = {
+          ...problemData,
+          platform: platformName,
+          problemInfo: problemInfoMapper ? problemInfoMapper(problemData) : problemData.problemInfo,
+        };
+        return await UploadService.uploadProblem(enhancedData, callback);
+      } catch (error) {
+        log.error(`Error in ${platformName} upload function:`, error);
+        throw error;
+      }
+    };
+  }
+
+  /**
+   * Retry operation with exponential backoff
+   * @param {Function} operation - Async operation to retry
+   * @param {number} maxRetries - Maximum number of retries
+   * @param {string} operationName - Name for logging
+   * @returns {Promise<any>} Operation result
+   */
+  async retryWithBackoff(operation, maxRetries = RETRY_LIMITS.API_MAX_RETRIES, operationName = "operation") {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        if (i === maxRetries - 1) {
+          log.error(`${operationName} failed after ${maxRetries} retries:`, error);
+          throw error;
+        }
+        const delay = Math.min(TIMEOUTS.API_RETRY_BASE * Math.pow(2, i), TIMEOUTS.MAX_RETRY_WAIT);
+        log.debug(`${operationName} failed, retrying in ${delay}ms (attempt ${i + 1}/${maxRetries})`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
   }
 }

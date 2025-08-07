@@ -2,6 +2,7 @@ import PlatformHubBase, { log, checkEnable } from "@/commons/platformhub-base.js
 import { SubmissionChecker } from "@/commons/loader-service.js";
 import { isEmpty, isNull } from "@/commons/util.js";
 import { RESULT_MESSAGE } from "@/baekjoon/variables.js";
+import { TIMEOUTS, RETRY_LIMITS, RESULT_MESSAGES, PLATFORMS } from "@/constants/config.js";
 import { findUsername, startUpload, markUploadedCSS, isExistResultTable, startMonitoringToast } from "@/baekjoon/util.js";
 import { findData, parseProblemDescription, parsingResultTableList } from "@/baekjoon/parsing.js";
 import uploadOneSolveProblemOnGit from "@/baekjoon/uploadfunctions.js";
@@ -9,52 +10,62 @@ import uploadOneSolveProblemOnGit from "@/baekjoon/uploadfunctions.js";
 class BaekjoonHub extends PlatformHubBase {
   constructor() {
     super({
-      platformName: "백준",
-      loaderInterval: 2000,
+      platformName: PLATFORMS.BAEKJOON,
+      loaderInterval: TIMEOUTS.LOADER_INTERVAL,
     });
 
     this.username = findUsername();
   }
 
   async init() {
-    setTimeout(async () => {
-      const isEnabled = await super.init();
-      if (!isEnabled) return;
+    const isEnabled = await super.init();
+    if (!isEnabled) return;
 
-      // Try to find username again in case it wasn't available during construction
+    // Retry finding username with exponential backoff
+    const foundUsername = await this.retryFindUsername();
+    if (!foundUsername) {
+      log.warn("Could not find username after multiple retries");
+      return;
+    }
+
+    const requiredParams = ["status", `user_id=${this.username}`, "problem_id", "from_mine=1"];
+
+    log.debug("BaekjoonHub Debug - Required params:", requiredParams);
+    log.debug(
+      "BaekjoonHub Debug - URL contains all params:",
+      requiredParams.every((key) => this.currentUrl.includes(key))
+    );
+
+    if (requiredParams.every((key) => this.currentUrl.includes(key))) {
+      log.debug("BaekjoonHub Debug - Starting submission monitoring");
+      this.startSubmissionMonitoring();
+    } else if (/\.net\/problem\/\d+/.test(this.currentUrl)) {
+      log.debug("BaekjoonHub Debug - Parsing problem description");
+      parseProblemDescription();
+    } else {
+      log.debug("BaekjoonHub Debug - No matching URL pattern");
+    }
+  }
+
+  /**
+   * Retry finding username with exponential backoff
+   * @returns {Promise<boolean>} True if username found
+   */
+  async retryFindUsername() {
+    for (let i = 0; i < RETRY_LIMITS.USERNAME_MAX_RETRIES; i++) {
       this.username = findUsername();
-      log.debug("BaekjoonHub Debug - Username found:", this.username);
-
       if (!isNull(this.username)) {
-        const requiredParams = ["status", `user_id=${this.username}`, "problem_id", "from_mine=1"];
-
-        log.debug("BaekjoonHub Debug - Required params:", requiredParams);
-        log.debug(
-          "BaekjoonHub Debug - URL contains all params:",
-          requiredParams.every((key) => this.currentUrl.includes(key))
-        );
-
-        if (requiredParams.every((key) => this.currentUrl.includes(key))) {
-          log.debug("BaekjoonHub Debug - Starting submission monitoring");
-          this.startSubmissionMonitoring();
-        } else if (/\.net\/problem\/\d+/.test(this.currentUrl)) {
-          log.debug("BaekjoonHub Debug - Parsing problem description");
-          parseProblemDescription();
-        } else {
-          log.debug("BaekjoonHub Debug - No matching URL pattern");
-        }
-      } else {
-        log.debug("BaekjoonHub Debug - Username is null, retrying in 1 second...");
-        // Retry after a short delay in case page is still loading
-        setTimeout(() => {
-          this.username = findUsername();
-          log.debug("BaekjoonHub Debug - Retry - Username found:", this.username);
-          if (!isNull(this.username)) {
-            this.init(); // Retry initialization
-          }
-        }, 1000);
+        log.debug("Username found:", this.username);
+        return true;
       }
-    }, 1000);
+
+      if (i < RETRY_LIMITS.USERNAME_MAX_RETRIES - 1) {
+        const delay = Math.min(TIMEOUTS.USERNAME_RETRY * Math.pow(2, i), TIMEOUTS.MAX_RETRY_WAIT);
+        log.debug(`Username not found, retrying in ${delay}ms (attempt ${i + 1}/${RETRY_LIMITS.USERNAME_MAX_RETRIES})`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+    return false;
   }
 
   /**
@@ -169,7 +180,12 @@ class BaekjoonHub extends PlatformHubBase {
 
     // Check if result indicates success
     const isAccepted =
-      result === RESULT_MESSAGE.ac || result === RESULT_MESSAGE.Accepted || result === "맞았습니다!!" || result === "Accepted" || result.includes("맞았습니다") || result.startsWith("100");
+      result === RESULT_MESSAGE.ac ||
+      result === RESULT_MESSAGE.Accepted ||
+      result === RESULT_MESSAGES.BAEKJOON.SUCCESS ||
+      result === RESULT_MESSAGES.BAEKJOON.ACCEPTED ||
+      result.includes("맞았습니다") ||
+      result.startsWith("100");
 
     log.debug("BaekjoonHub Debug - Result validation:", {
       result: result,
