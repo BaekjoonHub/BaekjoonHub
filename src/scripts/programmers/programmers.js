@@ -1,7 +1,5 @@
-import PlatformHubBase from "@/commons/platformhub-base.js";
+import PlatformHubBase, { Toast, checkEnable } from "@/commons/platformhub-base.js";
 import { SubmissionChecker } from "@/commons/loader-service.js";
-import { Toast } from "@/commons/toast.js";
-import { checkEnable } from "@/commons/enable.js";
 
 import { parseData } from "@/programmers/parsing.js";
 import uploadOneSolveProblemOnGit from "@/programmers/uploadfunctions.js";
@@ -16,14 +14,8 @@ class ProgrammersHub extends PlatformHubBase {
   }
 
   async init() {
-    super.init();
-
-    // Check if extension is enabled
-    const enabled = await checkEnable();
-    if (!enabled) {
-      Toast.info("프로그래머스 Hub가 비활성화되어 있습니다.");
-      return;
-    }
+    const isEnabled = await super.init();
+    if (!isEnabled) return;
 
     if (this.isProgrammersLessonPage()) {
       this.startSubmissionMonitoring();
