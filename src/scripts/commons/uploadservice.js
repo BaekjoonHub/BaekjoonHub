@@ -1,6 +1,6 @@
 import { GitHub } from "./github.js";
 import { getToken, getHook, getStats, saveStats, updateObjectDatafromPath } from "./storage.js";
-import { isNull } from "./util.js";
+import { isNull, isEmpty, preProcessEmptyObj } from "./util.js";
 import log from "@/commons/logger.js";
 
 /**
@@ -188,5 +188,43 @@ export default class UploadService {
       log.error("Single file upload failed:", error);
       throw error;
     }
+  }
+}
+
+/**
+ * Factory for creating platform-specific upload handlers
+ */
+export class UploadHandlerFactory {
+  /**
+   * Create an upload handler for a specific platform
+   * @param {string} platformName - Name of the platform
+   * @param {Function} parseDataFunction - Platform-specific data parsing function
+   * @param {Function} uploadFunction - Platform-specific upload function
+   * @param {Function} markFunction - Platform-specific mark function
+   * @param {Function} startUploadFunction - Platform-specific start upload function
+   */
+  static create(platformName, parseDataFunction, uploadFunction, markFunction, startUploadFunction) {
+    return async function () {
+      try {
+        const rawData = await parseDataFunction();
+        const processedData = preProcessEmptyObj(rawData);
+        log.debug(`${platformName} processed data:`, processedData);
+
+        if (isEmpty(processedData)) {
+          log.debug(`No data to upload for ${platformName}`);
+          return false;
+        }
+
+        // Signal start of upload process
+        if (startUploadFunction) {
+          startUploadFunction();
+        }
+
+        return { success: true, data: processedData };
+      } catch (error) {
+        log.error(`Error in ${platformName} upload handler:`, error);
+        throw error;
+      }
+    };
   }
 }

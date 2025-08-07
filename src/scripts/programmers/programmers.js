@@ -43,7 +43,7 @@ class ProgrammersHub extends PlatformHubBase {
    */
   startSubmissionMonitoring() {
     Toast.info("프로그래머스 문제 모니터링을 시작합니다.");
-    
+
     const checker = SubmissionChecker.createTextChecker("div.modal-header > h4", "정답");
 
     const onSuccess = async () => {

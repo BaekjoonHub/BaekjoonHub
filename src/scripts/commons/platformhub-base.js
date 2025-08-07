@@ -3,7 +3,7 @@ import { getStats, getHook, saveStats, updateLocalStorageStats, getStatsSHAfromP
 import { Toast } from "@/commons/toast.js";
 import { checkEnable } from "@/commons/enable.js";
 import { LoaderService, LoaderFactory } from "@/commons/loader-service.js";
-import { UploadHandlerFactory } from "@/commons/upload-service.js";
+import { UploadHandlerFactory } from "@/commons/uploadservice.js";
 import log from "@/commons/logger.js";
 
 /**

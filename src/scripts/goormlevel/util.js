@@ -21,22 +21,22 @@ export function markUploadedCSS(branches, directory) {
   if (uploadState) {
     uploadState.uploading = false;
   }
-  
+
   // GitHub 링크 생성
   const repoName = Object.keys(branches)[0];
   const branchName = branches[repoName];
   const uploadedUrl = `https://github.com/${repoName}/tree/${branchName}/${directory}`;
-  
+
   // 성공 Toast에 클릭 가능한 링크 표시
-  const directoryParts = directory.split('/');
+  const directoryParts = directory.split("/");
   const problemInfo = directoryParts[directoryParts.length - 1] || directory;
   const successMessage = `✨ 업로드 성공! ${problemInfo}`;
   const toast = Toast.success(successMessage, 8000);
-  
+
   // Toast 클릭 시 GitHub 페이지로 이동
   if (toast && toast.element) {
     toast.element.style.cursor = "pointer";
-    
+
     // 클릭 가능한 시각적 히트 추가
     const linkIcon = document.createElement("div");
     linkIcon.innerHTML = `
@@ -47,13 +47,13 @@ export function markUploadedCSS(branches, directory) {
     `;
     linkIcon.style.display = "inline-block";
     linkIcon.style.verticalAlign = "middle";
-    
+
     const messageContainer = toast.element.querySelector(".message-container");
     const textSpan = messageContainer.querySelector("span");
     if (textSpan) {
       textSpan.appendChild(linkIcon);
     }
-    
+
     // 안내 텍스트 추가
     const infoText = document.createElement("div");
     infoText.style.cssText = `
@@ -64,12 +64,12 @@ export function markUploadedCSS(branches, directory) {
     `;
     infoText.textContent = "클릭하여 GitHub에서 확인 →";
     messageContainer.appendChild(infoText);
-    
+
     toast.element.addEventListener("click", () => {
       window.open(uploadedUrl, "_blank");
     });
   }
-  
+
   log.debug("markUploadedCSS: Upload success toast displayed");
 }
 
@@ -80,7 +80,7 @@ export function markUploadFailedCSS() {
   if (uploadState) {
     uploadState.uploading = false;
   }
-  
+
   Toast.danger("🚫 업로드 실패! 다시 시도해주세요.", 5000);
   log.debug("markUploadFailedCSS: Upload failure toast displayed");
 }

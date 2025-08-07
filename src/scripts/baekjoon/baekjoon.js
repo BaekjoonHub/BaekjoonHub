@@ -63,7 +63,7 @@ class BaekjoonHub extends PlatformHubBase {
             log.info("BaekjoonHub is disabled, skipping retry");
             return;
           }
-          
+
           this.username = findUsername();
           log.debug("BaekjoonHub Debug - Retry - Username found:", this.username);
           if (!isNull(this.username)) {
@@ -83,10 +83,10 @@ class BaekjoonHub extends PlatformHubBase {
     if (!enabled) {
       return;
     }
-    
+
     // 제출 페이지에 들어가자마자 모니터링 Toast 표시
     startMonitoringToast();
-    
+
     let table; // Declare table in a broader scope
 
     const checker = () => {
@@ -127,7 +127,7 @@ class BaekjoonHub extends PlatformHubBase {
 
     const onSuccess = async () => {
       log.info("풀이가 맞았습니다. 업로드를 시작합니다.");
-      
+
       // 업로드 시작 Toast 표시
       startUpload();
 

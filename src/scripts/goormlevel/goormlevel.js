@@ -42,7 +42,7 @@ class GoormLevelHub extends PlatformHubBase {
    */
   startSubmissionMonitoring() {
     Toast.info("구름레벨 문제 모니터링을 시작합니다.");
-    
+
     const checker = SubmissionChecker.createMultiStepChecker([
       () => {
         const activeSubmitTab = this.querySelectorAll("#FrameBody li.nav-item > a.nav-link.active").find((element) => element.textContent === "제출 결과");
