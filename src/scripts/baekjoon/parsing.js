@@ -207,7 +207,7 @@ export async function makeDetailMessageAndReadme(data) {
     `메모리: ${memory} KB, ` +
     `시간: ${runtime} ms\n\n` +
     `### 분류\n\n` +
-    `${category || "Empty"}\n\n${problemDescription ? `### 제출 일자\n\n${dateInfo}\n\n### 문제 설명\n\n${problemDescription}\n\n### 입력 \n\n ${problemInput}\n\n### 출력 \n\n ${problemOutput}\n\n` : ""}`;
+    `${category || "Empty"}\n\n${dateInfo ? `### 제출 일자\n\n${dateInfo}` : ""}`;
   // prettier-ignore-end
 
   return {
