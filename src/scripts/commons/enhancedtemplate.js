@@ -1,5 +1,6 @@
 import { parseTemplateString } from "safe-template-parser";
 import { getTextTransforms } from "./text-transforms";
+import log from "./logger.js";
 
 /**
  * 모든 플랫폼에서 공통으로 사용할 수 있는 향상된 템플릿 시스템
@@ -63,7 +64,7 @@ export default class EnhancedTemplateService {
       // 기본 디렉토리 반환
       return defaultDirName;
     } catch (error) {
-      console.error("템플릿 적용 중 오류가 발생했습니다:", error);
+      log.error("템플릿 적용 중 오류가 발생했습니다:", error);
       return defaultDirName; // 오류 발생 시 기본 디렉토리 반환
     }
   }
@@ -81,7 +82,7 @@ export default class EnhancedTemplateService {
       // 새로운 API에 맞춰 parseTemplateString 호출 (data, allowedFunctions가 두 번째, 세 번째 인자)
       return parseTemplateString(templateString, data, getTextTransforms());
     } catch (error) {
-      console.error("템플릿 파싱 중 오류가 발생했습니다:", error);
+      log.error("템플릿 파싱 중 오류가 발생했습니다:", error);
 
       // 기본 템플릿으로 대체
       return parseTemplateString("{{platform}}/{{removeAfterSpace(level)}}/{{problemId}}. {{title}}", data, getTextTransforms());

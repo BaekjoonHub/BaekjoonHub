@@ -16,12 +16,12 @@ export class Toast {
     this.type = type;
     this.element = null;
     this.overlay = null;
-    
+
     // 오버레이 생성
     const overlay = document.createElement("div");
     overlay.className = "toast-overlay";
     this.overlay = overlay;
-    
+
     const element = document.createElement("div");
     element.className = "toast-notification sweetalert2-style";
     element.setAttribute("data-type", type);
@@ -52,7 +52,7 @@ export class Toast {
       transition: all 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
     `;
-    
+
     // 오버레이 스타일
     overlay.style.cssText = `
       position: fixed;
@@ -76,11 +76,11 @@ export class Toast {
       margin: 0 auto 20px;
       position: relative;
     `;
-    
+
     // 타입별 아이콘 생성
     const iconElement = this.createIcon(type);
     iconContainer.appendChild(iconElement);
-    
+
     const messageElement = document.createElement("div");
     messageElement.className = "message-container";
     messageElement.style.cssText = `
@@ -94,7 +94,7 @@ export class Toast {
       padding: 0;
       word-break: keep-all;
     `;
-    
+
     // 메시지 텍스트를 span으로 감싸서 추이1 나중에 아이콘을 추가할 수 있도록 함
     const textSpan = document.createElement("span");
     textSpan.textContent = this.message;
@@ -119,7 +119,7 @@ export class Toast {
       color: white;
       outline: none;
     `;
-    
+
     // 타입별 버튼 색상
     const buttonColors = {
       success: "#10B981",
@@ -128,14 +128,12 @@ export class Toast {
       info: "#3B82F6",
     };
     confirmButton.style.background = buttonColors[type] || buttonColors.info;
-    
+
     element.appendChild(confirmButton);
-
-
 
     document.body.appendChild(overlay);
     document.body.appendChild(element);
-    
+
     // 애니메이션 시작
     setTimeout(() => {
       overlay.style.opacity = "1";
@@ -153,13 +151,13 @@ export class Toast {
       clearTimeout(autoRemoveTimer);
       this.remove();
     });
-    
+
     // 오버레이 클릭 시 삭제
     overlay.addEventListener("click", () => {
       clearTimeout(autoRemoveTimer);
       this.remove();
     });
-    
+
     // ESC 키로 닫기
     const handleEscape = (e) => {
       if (e.key === "Escape") {
@@ -169,13 +167,13 @@ export class Toast {
       }
     };
     document.addEventListener("keydown", handleEscape);
-    
+
     // 버튼 호버 효과
     confirmButton.addEventListener("mouseenter", () => {
       confirmButton.style.transform = "scale(1.05)";
       confirmButton.style.boxShadow = "0 5px 15px rgba(0, 0, 0, 0.2)";
     });
-    
+
     confirmButton.addEventListener("mouseleave", () => {
       confirmButton.style.transform = "scale(1)";
       confirmButton.style.boxShadow = "none";
@@ -205,28 +203,28 @@ export class Toast {
   createIcon(type) {
     const iconWrapper = document.createElement("div");
     iconWrapper.className = `swal2-icon swal2-${type}`;
-    
+
     const iconStyles = {
       success: {
         borderColor: "#10B981",
-        color: "#10B981"
+        color: "#10B981",
       },
       danger: {
         borderColor: "#EF4444",
-        color: "#EF4444"
+        color: "#EF4444",
       },
       warning: {
         borderColor: "#F59E0B",
-        color: "#F59E0B"
+        color: "#F59E0B",
       },
       info: {
         borderColor: "#3B82F6",
-        color: "#3B82F6"
-      }
+        color: "#3B82F6",
+      },
     };
-    
+
     const style = iconStyles[type] || iconStyles.info;
-    
+
     iconWrapper.style.cssText = `
       width: 80px;
       height: 80px;
@@ -239,7 +237,7 @@ export class Toast {
       box-sizing: border-box;
       animation: swal2-animate-icon 0.5s;
     `;
-    
+
     // 아이콘 내부 요소
     if (type === "success") {
       iconWrapper.innerHTML = `
@@ -281,7 +279,7 @@ export class Toast {
         ">i</span>
       `;
     }
-    
+
     return iconWrapper;
   }
 

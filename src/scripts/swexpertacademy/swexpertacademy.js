@@ -67,7 +67,7 @@ class SWExpertAcademyHub extends PlatformHubBase {
    */
   startSubmissionMonitoring() {
     Toast.info("SW Expert Academy 문제 모니터링을 시작합니다.");
-    
+
     const checker = SubmissionChecker.createTextChecker("div.popup_layer.show > div > p.txt", "pass입니다", { caseSensitive: false });
 
     const onSuccess = async () => {
