@@ -1,7 +1,26 @@
-import UploadService from "@/commons/uploadservice.js";
+import PlatformHubBase from "@/commons/platformhub-base.js";
+import { PLATFORMS } from "@/constants/config.js";
+
+/**
+ * Problem info mapper for Goorm Level platform
+ */
+const goormlevelProblemInfoMapper = (problemData) => ({
+  problemId: problemData.problemId || "",
+  title: problemData.title || "",
+  level: problemData.level || "",
+  language: problemData.language || "",
+  memory: problemData.memory || "",
+  runtime: problemData.runtime || "",
+  submissionTime: problemData.submissionTime || "",
+  problem_description: problemData.problem_description || "",
+  problem_input: problemData.problem_input || "",
+  problem_output: problemData.problem_output || "",
+  result_message: problemData.result_message || "",
+});
 
 /**
  * 구름레벨 문제 풀이를 GitHub에 업로드합니다.
+ * Uses the generic upload function from PlatformHubBase
  *
  * @param {Object} problemData - 업로드할 문제 데이터
  * @param {string} problemData.code - 소스코드 내용
@@ -12,23 +31,6 @@ import UploadService from "@/commons/uploadservice.js";
  * @param {Function} callback - 업로드 완료 후 실행할 콜백 함수 (마크업 아이콘 표시 등)
  * @returns {Promise<void>}
  */
-export default async function uploadOneSolveProblemOnGit(problemData, callback) {
-  // 원본 데이터에 구름레벨 플랫폼 정보와 문제 관련 메타데이터를 추가
-  const enhancedData = {
-    ...problemData,
-    platform: "goormlevel",
-    problemInfo: {
-      examSequence: problemData.examSequence || 0,
-      problemId: problemData.problemId || 0,
-      title: problemData.title || "",
-      level: problemData.level || 0,
-      language: problemData.language || "",
-      memory: problemData.memory || "",
-      runtime: problemData.runtime || "",
-      submissionTime: problemData.submissionTime || "",
-      link: problemData.link || "",
-    },
-  };
+const uploadOneSolveProblemOnGit = PlatformHubBase.createUploadFunction(PLATFORMS.GOORMLEVEL, goormlevelProblemInfoMapper);
 
-  return UploadService.uploadProblem(enhancedData, callback);
-}
+export default uploadOneSolveProblemOnGit;
