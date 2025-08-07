@@ -1,12 +1,9 @@
-import PlatformHubBase from "@/commons/platformhub-base.js";
+import PlatformHubBase, { Toast, checkEnable, log } from "@/commons/platformhub-base.js";
 import { SubmissionChecker } from "@/commons/loader-service.js";
-import { Toast } from "@/commons/toast.js";
-import { checkEnable } from "@/commons/enable.js";
 
 import { parseCode, parseData } from "@/swexpertacademy/parsing.js";
 import uploadOneSolveProblemOnGit from "@/swexpertacademy/uploadfunctions.js";
 import { startUpload, markUploadedCSS, getNickname, makeSubmitButton } from "@/swexpertacademy/util.js";
-import log from "@/commons/logger.js";
 
 class SWExpertAcademyHub extends PlatformHubBase {
   constructor() {
@@ -17,14 +14,8 @@ class SWExpertAcademyHub extends PlatformHubBase {
   }
 
   async init() {
-    super.init();
-
-    // Check if extension is enabled
-    const enabled = await checkEnable();
-    if (!enabled) {
-      Toast.info("SW Expert Academy Hub가 비활성화되어 있습니다.");
-      return;
-    }
+    const isEnabled = await super.init();
+    if (!isEnabled) return;
 
     if (this.isSWEASolvingPage()) {
       this.startSubmissionMonitoring();

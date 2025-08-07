@@ -1,8 +1,6 @@
-import PlatformHubBase from "@/commons/platformhub-base.js";
+import PlatformHubBase, { log, checkEnable } from "@/commons/platformhub-base.js";
 import { SubmissionChecker } from "@/commons/loader-service.js";
-import log from "@/commons/logger.js";
 import { isEmpty, isNull } from "@/commons/util.js";
-import { checkEnable } from "@/commons/enable.js";
 import { RESULT_MESSAGE } from "@/baekjoon/variables.js";
 import { findUsername, startUpload, markUploadedCSS, isExistResultTable, startMonitoringToast } from "@/baekjoon/util.js";
 import { findData, parseProblemDescription, parsingResultTableList } from "@/baekjoon/parsing.js";
@@ -18,18 +16,10 @@ class BaekjoonHub extends PlatformHubBase {
     this.username = findUsername();
   }
 
-  init() {
+  async init() {
     setTimeout(async () => {
-      super.init();
-
-      log.info(`Initializing ${this.config.platformName} hub`);
-
-      // Check if extension is enabled
-      const enabled = await checkEnable();
-      if (!enabled) {
-        log.info("BaekjoonHub is disabled, skipping initialization");
-        return;
-      }
+      const isEnabled = await super.init();
+      if (!isEnabled) return;
 
       // Try to find username again in case it wasn't available during construction
       this.username = findUsername();
@@ -56,14 +46,7 @@ class BaekjoonHub extends PlatformHubBase {
       } else {
         log.debug("BaekjoonHub Debug - Username is null, retrying in 1 second...");
         // Retry after a short delay in case page is still loading
-        setTimeout(async () => {
-          // Re-check if extension is enabled before retry
-          const enabled = await checkEnable();
-          if (!enabled) {
-            log.info("BaekjoonHub is disabled, skipping retry");
-            return;
-          }
-
+        setTimeout(() => {
           this.username = findUsername();
           log.debug("BaekjoonHub Debug - Retry - Username found:", this.username);
           if (!isNull(this.username)) {
@@ -78,12 +61,6 @@ class BaekjoonHub extends PlatformHubBase {
    * Start monitoring for successful submissions
    */
   async startSubmissionMonitoring() {
-    // Check if extension is enabled before showing monitoring toast
-    const enabled = await checkEnable();
-    if (!enabled) {
-      return;
-    }
-
     // 제출 페이지에 들어가자마자 모니터링 Toast 표시
     startMonitoringToast();
 

@@ -2,9 +2,12 @@ import { isNull, isEmpty, calculateBlobSHA, getVersion } from "@/commons/util.js
 import { getStats, getHook, saveStats, updateLocalStorageStats, getStatsSHAfromPath } from "@/commons/storage.js";
 import { Toast } from "@/commons/toast.js";
 import { checkEnable } from "@/commons/enable.js";
-import { LoaderService, LoaderFactory } from "@/commons/loader-service.js";
+import { LoaderFactory } from "@/commons/loader-service.js";
 import { UploadHandlerFactory } from "@/commons/uploadservice.js";
 import log from "@/commons/logger.js";
+
+// Re-export commonly used utilities for subclasses
+export { Toast, checkEnable, log };
 
 /**
  * Base class for all platform hub implementations
@@ -21,16 +24,24 @@ export default class PlatformHubBase {
       ...config,
     };
 
-    this.init();
+    this.init().catch((error) => log.error(`Error initializing ${this.config.platformName}:`, error));
   }
 
   /**
    * Initialize the platform hub
    * This method should be overridden by subclasses
    */
-  init() {
+  async init() {
     log.info(`Initializing ${this.config.platformName} hub`);
-    // Subclasses should implement their specific initialization logic
+
+    // Check if extension is enabled globally
+    const enabled = await checkEnable();
+    if (!enabled) {
+      log.info(`${this.config.platformName} hub is disabled, skipping initialization`);
+      return false;
+    }
+
+    return true;
   }
 
   /**
