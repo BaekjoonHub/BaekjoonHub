@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your competitive programming submissions to GitHub",
@@ -15,7 +16,8 @@
     "128": "assets/thumbnail.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "declarative_net_request": {
     "rule_resources": [
