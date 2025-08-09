@@ -32,15 +32,9 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: |
           npm ci
-          npm run package
-
-      - name: Get release package name
-        id: get_release_package_name
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          RELEASE_PACKAGE_NAME="baekjoonhub-v${VERSION}.zip"
-          echo "RELEASE_PACKAGE_NAME=${RELEASE_PACKAGE_NAME}" >> $GITHUB_ENV
-          echo "Release package name: ${RELEASE_PACKAGE_NAME}"
+          npm run package >> package_output.txt
+          grep "RELEASE_PACKAGE_NAME=" package_output.txt >> $GITHUB_ENV
+          cat package_output.txt
 
       - name: Upload release
         uses: softprops/action-gh-release@v1

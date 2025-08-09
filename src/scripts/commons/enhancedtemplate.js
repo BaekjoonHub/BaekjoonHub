@@ -1,5 +1,5 @@
 import { parseTemplateString } from "safe-template-parser";
-import { getTextTransforms } from "./text-transforms";
+import { getTextTransforms } from "./text-transforms.js";
 import log from "./logger.js";
 
 /**
