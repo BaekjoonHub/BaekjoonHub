@@ -27,9 +27,9 @@ export class Toast {
     // 기본 스타일 설정
     Object.assign(toast.style, {
       position: 'fixed',
-      bottom: '30px',
-      left: '50%',
-      transform: 'translateX(-50%)',
+      top: '30px',
+      right: '30px',
+      transform: 'none',
       backgroundColor: '#333',
       color: '#fff',
       padding: '12px 20px',
@@ -74,11 +74,11 @@ export class Toast {
     const emoji = typeEmojis[this.type] || '';
     toast.textContent = emoji ? `${emoji} ${this.message}` : this.message;
 
-    // 기존 토스트들을 위로 올리기
+    // 기존 토스트들을 아래로 내리기
     const existingToasts = document.querySelectorAll('.bj-toast');
     existingToasts.forEach(el => {
-      const currentBottom = parseInt(el.style.bottom) || 30;
-      el.style.bottom = `${currentBottom + 60}px`;
+      const currentTop = parseInt(el.style.top) || 30;
+      el.style.top = `${currentTop + 70}px`;
     });
 
     this.element = toast;
@@ -110,7 +110,7 @@ export class Toast {
 
       // Fade out 애니메이션
       this.element.style.opacity = '0';
-      this.element.style.transform = 'translateX(-50%) translateY(20px)';
+      this.element.style.transform = 'translateY(-20px)';
       
       setTimeout(() => {
         if (this.element && this.element.parentNode) {
@@ -150,9 +150,9 @@ export function showToast(message, color = '#333', duration = 3000) {
 
   Object.assign(toast.style, {
     position: 'fixed',
-    bottom: '30px',
-    left: '50%',
-    transform: 'translateX(-50%)',
+    top: '30px',
+    right: '30px',
+    transform: 'none',
     backgroundColor: color,
     color: '#fff',
     padding: '12px 20px',
@@ -171,11 +171,11 @@ export function showToast(message, color = '#333', duration = 3000) {
     userSelect: 'none'
   });
 
-  // 기존 토스트가 있으면 위로 올리기
+  // 기존 토스트가 있으면 아래로 내리기
   const existingToasts = document.querySelectorAll('.bj-toast');
   existingToasts.forEach(el => {
-    const currentBottom = parseInt(el.style.bottom) || 30;
-    el.style.bottom = `${currentBottom + 60}px`;
+    const currentTop = parseInt(el.style.top) || 30;
+    el.style.top = `${currentTop + 70}px`;
   });
 
   document.body.appendChild(toast);
