@@ -31,6 +31,12 @@ export function markUploadedCSS(branches, directory) {
     uploadState.uploading = false;
   }
 
+  // directory가 undefined인 경우 처리
+  if (!directory) {
+    log.warn("markUploadedCSS called with undefined directory");
+    return;
+  }
+
   // GitHub 링크 생성
   const repoName = Object.keys(branches)[0];
   const branchName = branches[repoName];
@@ -57,8 +63,8 @@ export function markUploadedCSS(branches, directory) {
     linkIcon.style.display = "inline-block";
     linkIcon.style.verticalAlign = "middle";
 
-    const messageContainer = toast.element.querySelector(".message-container");
-    const textSpan = messageContainer.querySelector("span");
+    const messageContainer = toast.element?.querySelector?.(".message-container");
+    const textSpan = messageContainer?.querySelector?.("span");
     if (textSpan) {
       textSpan.appendChild(linkIcon);
     }
@@ -72,9 +78,9 @@ export function markUploadedCSS(branches, directory) {
       font-weight: 400;
     `;
     infoText.textContent = "클릭하여 GitHub에서 확인 →";
-    messageContainer.appendChild(infoText);
+    messageContainer?.appendChild?.(infoText);
 
-    toast.element.addEventListener("click", () => {
+    toast.element?.addEventListener?.("click", () => {
       window.open(uploadedUrl, "_blank");
     });
   }

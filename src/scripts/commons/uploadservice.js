@@ -26,6 +26,18 @@ export default class UploadService {
     try {
       const { code, readme, directory, fileName, message } = problemData;
 
+      // 필수 데이터 유효성 검사
+      if (!code || !readme || !directory || !fileName || !message) {
+        log.error("Missing required upload data:", { 
+          hasCode: !!code, 
+          hasReadme: !!readme, 
+          hasDirectory: !!directory, 
+          hasFileName: !!fileName, 
+          hasMessage: !!message 
+        });
+        throw new Error("Missing required upload data");
+      }
+
       const token = await getToken();
       const hook = await getHook();
 
@@ -84,11 +96,48 @@ export default class UploadService {
 
       // GitHub 업로드 작업 수행
       const { refSHA, ref } = await git.getReference(defaultBranch);
-      const source = await git.createBlob(sourceText, `${directory}/${filename}`);
-      const readme = await git.createBlob(readmeText, `${directory}/README.md`);
-      const treeSHA = await git.createTree(refSHA, [source, readme]);
-      const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
-      await git.updateHead(ref, commitSHA);
+      
+      let source, readme; // 스코프 밖으로 변수 선언
+      let commitSHA;
+      
+      // 빈 저장소인 경우 먼저 루트 README.md로 초기화
+      if (refSHA === null) {
+        log.info("Empty repository detected, creating initial commit with problem files");
+        
+        try {
+          // 빈 저장소에 직접 파일 업로드 (createOrUpdateFile 사용)
+          await git.createOrUpdateFile("README.md", "Initial commit", 
+            `# ${hook.split('/')[1] || 'TIL'}\nThis is a auto push repository for Baekjoon Online Judge created with [BaekjoonHub](https://github.com/BaekjoonHub/BaekjoonHub).`, 
+            defaultBranch
+          );
+          
+          // 문제 파일들 업로드
+          const sourceFile = await git.createOrUpdateFile(`${directory}/${filename}`, commitMessage, sourceText, defaultBranch);
+          const readmeFile = await git.createOrUpdateFile(`${directory}/README.md`, commitMessage, readmeText, defaultBranch);
+          
+          // createOrUpdateFile의 응답을 source/readme 형태로 변환
+          source = {
+            path: `${directory}/${filename}`,
+            sha: sourceFile.content?.sha || 'empty-repo-upload'
+          };
+          readme = {
+            path: `${directory}/README.md`,
+            sha: readmeFile.content?.sha || 'empty-repo-upload'
+          };
+          
+          log.info("Empty repository initialized with problem files");
+        } catch (initError) {
+          log.error("Error initializing empty repository:", initError);
+          throw initError;
+        }
+      } else {
+        // 기존 저장소의 경우 기존 로직 사용
+        source = await git.createBlob(sourceText, `${directory}/${filename}`);
+        readme = await git.createBlob(readmeText, `${directory}/README.md`);
+        const treeSHA = await git.createTree(refSHA, [source, readme]);
+        commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
+        await git.updateHead(ref, commitSHA);
+      }
 
       // 통계 정보 업데이트
       if (stats.submission) {

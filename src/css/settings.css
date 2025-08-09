@@ -8,7 +8,7 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #f8fafc;
   color: #2d3748;
   line-height: 1.6;
   min-height: 100vh;
@@ -19,13 +19,14 @@ body {
   max-width: 800px;
   margin: 0 auto;
   background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #667eea;
   color: white;
   padding: 30px;
   text-align: center;
@@ -65,8 +66,8 @@ body {
 }
 
 .card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 16px;
@@ -271,7 +272,7 @@ body {
 }
 
 input:checked + .slider {
-  background: #667eea;
+  background-color: #667eea;
 }
 
 input:checked + .slider:before {
@@ -294,12 +295,12 @@ input:checked + .slider:before {
 }
 
 .button-primary {
-  background: #667eea;
+  background-color: #667eea;
   color: white;
 }
 
 .button-primary:hover {
-  background: #5a67d8;
+  background-color: #5a67d8;
 }
 
 .button-secondary {
@@ -355,6 +356,16 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.repo-info:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  opacity: 0.8;
 }
 
 .repo-info svg {
@@ -386,8 +397,8 @@ input:checked + .slider:before {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
-  border: 2px solid #e879f9;
+  background: #faf5ff;
+  border: 1px solid #e879f9;
   border-radius: 12px;
   padding: 20px;
   margin: 16px 0;
@@ -420,16 +431,13 @@ input:checked + .slider:before {
 
 .auth-required-notice .button {
   margin-top: 0;
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  background-color: #7c3aed;
   border: none;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
   transition: all 0.2s ease;
 }
 
 .auth-required-notice .button:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
-  transform: translateY(-1px);
+  background-color: #6d28d9;
 }
 
 .button-group {

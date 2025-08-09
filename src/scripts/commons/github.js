@@ -52,9 +52,74 @@ export async function getReference(hook, token, branch) {
     })
     .then((data) => {
       log.debug("getReference data:", data);
+      // 빈 저장소 처리: API가 409 오류를 반환하거나 object가 없는 경우
+      if (data.status === "409" || data.message === "Git Repository is empty." || !data.object) {
+        log.info("Empty repository detected, returning null for initial commit");
+        return { refSHA: null, ref: null };
+      }
       return { refSHA: data.object.sha, ref: data.ref };
     });
 }
+
+/** create or update file using Contents API (works for empty repositories)
+ * @see https://docs.github.com/en/rest/repos/contents#create-or-update-file-contents
+ * @param {string} hook - github repository
+ * @param {string} token - github access token
+ * @param {string} path - file path
+ * @param {string} message - commit message
+ * @param {string} content - file content
+ * @param {string} branch - branch name (optional)
+ * @return {Promise} - the promise for the file creation
+ */
+export async function createOrUpdateFile(hook, token, path, message, content, branch = null) {
+  log.info("createOrUpdateFile called with hook:", hook, "path:", path);
+  
+  const body = {
+    message: message,
+    content: b64EncodeUnicode(content),
+  };
+  
+  if (branch) {
+    body.branch = branch;
+  }
+  
+  return fetch(`${urls.GITHUB_API_REPOS_URL}/${hook}/contents/${path}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: "application/vnd.github.v3+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  })
+    .then((res) => {
+      log.debug("createOrUpdateFile response:", res);
+      return res.json();
+    })
+    .then((data) => {
+      log.debug("createOrUpdateFile data:", data);
+      return data;
+    });
+}
+
+/** Initialize empty repository with README.md
+ * @param {string} hook - github repository
+ * @param {string} token - github access token
+ * @param {string} branch - branch name
+ * @return {Promise} - the promise for the initialization
+ */
+export async function initializeEmptyRepository(hook, token, branch = "master") {
+  log.info("initializeEmptyRepository called with hook:", hook, "branch:", branch);
+  
+  // 저장소 이름 추출 (hook에서 "owner/repo" 형태)
+  const repoName = hook.split('/')[1] || 'TIL';
+  
+  // 루트에 초기 README.md 생성하여 저장소 초기화
+  const initialReadmeContent = `# ${repoName}\nThis is a auto push repository for Baekjoon Online Judge created with [BaekjoonHub](https://github.com/BaekjoonHub/BaekjoonHub).`;
+  
+  return createOrUpdateFile(hook, token, "README.md", "Initial commit", initialReadmeContent, branch);
+}
+
 /** create a Blob
  * @see https://docs.github.com/en/rest/reference/git#create-a-blob
  * @param {string} hook - github repository
@@ -256,6 +321,16 @@ export class GitHub {
     // hook, token, commitSHA, force = true)
     log.debug("GitHub updateHead", "ref:", ref, "commitSHA:", commitSHA);
     return updateHead(this.hook, this.token, ref, commitSHA, true);
+  }
+
+  async createOrUpdateFile(path, message, content, branch = null) {
+    log.debug("GitHub createOrUpdateFile", "path:", path, "message:", message);
+    return createOrUpdateFile(this.hook, this.token, path, message, content, branch);
+  }
+
+  async initializeEmptyRepository(branch = "master") {
+    log.debug("GitHub initializeEmptyRepository", "branch:", branch);
+    return initializeEmptyRepository(this.hook, this.token, branch);
   }
 
   async getTree() {

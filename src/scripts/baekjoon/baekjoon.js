@@ -137,7 +137,7 @@ class BaekjoonHub extends PlatformHubBase {
         }
 
         log.debug("BaekjoonHub Debug - Upload data prepared:", bojData);
-        await this.beginUpload(bojData, uploadOneSolveProblemOnGit, markUploadedCSS);
+        await this.beginUpload(bojData.data, uploadOneSolveProblemOnGit, markUploadedCSS);
       } catch (error) {
         log.error("BaekjoonHub Debug - Error during upload process:", error);
       }

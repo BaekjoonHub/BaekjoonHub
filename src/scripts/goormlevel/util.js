@@ -22,6 +22,12 @@ export function markUploadedCSS(branches, directory) {
     uploadState.uploading = false;
   }
 
+  // directory가 undefined인 경우 처리
+  if (!directory) {
+    log.warn("markUploadedCSS called with undefined directory");
+    return;
+  }
+
   // GitHub 링크 생성
   const repoName = Object.keys(branches)[0];
   const branchName = branches[repoName];
