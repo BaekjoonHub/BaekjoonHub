@@ -5,14 +5,15 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --config webpack.config.mjs",
-    "dev": "webpack --watch --config webpack.config.mjs",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
     "package": "npm run build && node build.mjs",
-    "clean": "rm -rf dist packages node_modules",
-    "lint": "eslint src/**/*.js",
+    "clean": "rimraf dist packages node_modules",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
     "prettier": "prettier --write \"**/*.@(cjs|mjs|js|ts|md|json|yml)\"",
-    "test": "node test/settings.test.js",
-    "test:baekjoon": "node test/baekjoon.test.js"
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -21,7 +22,8 @@
     "chrome-extension",
     "baekjoonhub",
     "competitive-programming",
-    "github-integration"
+    "github-integration",
+    "typescript"
   ],
   "author": "flaxinger",
   "license": "MIT",
@@ -30,10 +32,12 @@
     "url": "https://github.com/BaekjoonHub/BaekjoonHub.git"
   },
   "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.28",
     "@eslint/js": "^9.33.0",
-    "@types/chrome": "^0.1.1",
-    "clean-webpack-plugin": "^4.0.0",
-    "copy-webpack-plugin": "^13.0.0",
+    "@types/chrome": "^0.0.287",
+    "@types/node": "^22.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-alias": "^1.1.2",
@@ -42,13 +46,12 @@
     "globals": "^16.3.0",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
-    "selenium-webdriver": "^4.34.0",
-    "webpack": "^5.101.0",
-    "webpack-cli": "^6.0.1"
+    "terser": "^5.36.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
   },
   "dependencies": {
     "fflate": "^0.8.2",
-    "file-saver": "^2.0.5",
     "loglevel": "^1.9.2",
     "loglevel-plugin-prefix": "^0.8.4",
     "safe-template-parser": "^1.2.0"
