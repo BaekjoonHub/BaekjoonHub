@@ -6,11 +6,33 @@ import constants from "@/constants/code";
 import { createUploadState } from "@/commons/shared-state";
 import type { UploadState } from "@/types/platform";
 
+// Import new flexible language system
+import {
+  languages as flexibleLanguages,
+  getLanguageExtension,
+  isLanguageSupported,
+  getSupportedLanguages,
+  addLanguageMapping,
+  extractBaseLangName,
+  normalizeLangName,
+} from "@/baekjoon/languages";
+
 // Re-export constants for backward compatibility
-export const languages = constants.languages;
+// Use new flexible language system instead of hardcoded constants
+export const languages = flexibleLanguages;
 export const bjLevel = constants.bjLevel;
 export const RESULT_CATEGORY = constants.RESULT_CATEGORY;
 export const RESULT_MESSAGE = constants.RESULT_MESSAGE;
+
+// Re-export language utilities for convenience
+export {
+  getLanguageExtension,
+  isLanguageSupported,
+  getSupportedLanguages,
+  addLanguageMapping,
+  extractBaseLangName,
+  normalizeLangName,
+};
 
 // Upload state using shared factory
 export const uploadState: UploadState = createUploadState();

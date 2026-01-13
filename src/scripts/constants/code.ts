@@ -1,9 +1,17 @@
 /**
  * Code-related constants for BaekjoonHub
  * Language mappings, difficulty levels, result categories
+ *
+ * NOTE: Baekjoon language mappings have been moved to a more flexible system.
+ * See: @/baekjoon/languages.ts for the new language extension mapping system.
+ * The new system supports:
+ * - Automatic version stripping (e.g., "Python 3.11" -> "py")
+ * - Pattern-based inference for unknown languages
+ * - Easy addition of new languages without modifying core code
+ * - Runtime language mapping additions
  */
 
-// Language extension mappings
+// Language extension mappings (for platform-specific use)
 export interface LanguageMap {
   [key: string]: string;
 }
@@ -28,55 +36,16 @@ export interface ProgrammersLevelMap {
 }
 
 const code = {
+  // Platform-specific language mappings (non-Baekjoon platforms)
+  // For Baekjoon, use @/baekjoon/languages.ts instead
   languages: {
-    "C++": "cpp",
-    C: "c",
-    Java: "java",
-    "Python 3": "py",
-    "Python 2": "py",
-    Ruby: "rb",
-    "C#": "cs",
-    Swift: "swift",
-    Go: "go",
-    Kotlin: "kt",
-    JavaScript: "js",
-    "Node.js": "js",
-    PHP: "php",
-    Rust: "rs",
-    Perl: "pl",
-    Haskell: "hs",
-    "Objective-C": "m",
-    D: "d",
-    Text: "txt",
-    "F#": "fs",
-    "Visual Basic": "vb",
-    Scala: "scala",
-    Assembly: "asm",
-    Pascal: "pas",
-    Fortran: "for",
-    Scheme: "scm",
-    Ada: "adb",
-    Awk: "awk",
-    Brainfuck: "bf",
-    Cobol: "cob",
-    Forth: "fth",
-    Pypy: "py",
-    Pypy3: "py",
-    "Go (gccgo)": "go",
-    "Java (OpenJDK)": "java",
-    "C++11": "cpp",
-    "C++14": "cpp",
-    "C++17": "cpp",
-    "C++20": "cpp",
-    C99: "c",
-    C11: "c",
     swexpertacademy: {
       c: "c",
       "c++": "cpp",
       python: "py",
       java: "java",
     } as LanguageMap,
-  } as unknown as LanguageMap & PlatformLanguageMap,
+  } as PlatformLanguageMap,
 
   bjLevel: {
     0: "Unrated",
