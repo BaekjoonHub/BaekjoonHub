@@ -44,7 +44,7 @@ async function findData(data) {
 async function makeDetailMessageAndReadme(data) {
   const { problemId, submissionId, result, title, level, problem_tags,
     problem_description, problem_input, problem_output, submissionTime,
-    code, language, memory, runtime } = data;
+    code, language, memory, runtime, ai_review } = data;
   const score = parseNumberFromString(result);
   const directory = await getDirNameByOrgOption(
     `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
