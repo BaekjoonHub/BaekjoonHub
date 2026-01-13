@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "백준허브(BaekjoonHub) with ai review",
-  "description": "기존 백준허브에 ai 기능 추가",
-  "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
+  "name": "BOJ AI review",
+  "description": "백준 문제풀이 시 AI Review 기능 추가(forked from BaekjoonHub)",
+  "homepage_url": "https://github.com/0-tae/BaekjoonHub-with-ai-review",
   "version": "1.2.3.1",
   "author": "flaxinger",
   "action": {
