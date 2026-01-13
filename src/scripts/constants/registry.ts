@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   PIPE: "baekjoonhub_pipe",
   IS_SYNC: "baekjoonhub_is_sync",
   SWEA: "baekjoonhub_swea",
+  MIGRATION_VERSION: "baekjoonhub_migration_version",
 } as const;
 
 export type StorageKey = keyof typeof STORAGE_KEYS;

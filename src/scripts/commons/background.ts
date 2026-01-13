@@ -1,10 +1,11 @@
 /**
  * Background service worker for BaekjoonHub Chrome Extension
- * Handles messaging, Solved.ac API calls, and authentication flow
+ * Handles messaging, Solved.ac API calls, authentication flow, and migration
  */
 import urls from "@/constants/url";
 import { STORAGE_KEYS } from "@/constants/registry";
 import log from "@/commons/logger";
+import { runMigrationSafely } from "./migration";
 
 // Message request interface
 interface MessageRequest {
@@ -95,3 +96,27 @@ export function handleMessage(
 
 // Register message listener
 chrome.runtime.onMessage.addListener(handleMessage);
+
+/**
+ * Handle extension install/update events
+ * Runs migration when extension is installed or updated
+ */
+chrome.runtime.onInstalled.addListener(async (details) => {
+  log.info("background.ts: onInstalled event fired with reason:", details.reason);
+
+  if (details.reason === "install" || details.reason === "update") {
+    log.info("background.ts: Running migration check...");
+
+    const result = await runMigrationSafely();
+
+    if (result.success) {
+      if (result.migratedKeys.length > 0) {
+        log.info("background.ts: Migration completed successfully. Migrated keys:", result.migratedKeys);
+      } else {
+        log.info("background.ts: No migration needed or already completed.");
+      }
+    } else {
+      log.error("background.ts: Migration failed:", result.errors);
+    }
+  }
+});
