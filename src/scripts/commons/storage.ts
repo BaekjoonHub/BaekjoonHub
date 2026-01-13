@@ -405,6 +405,7 @@ export async function updateLocalStorageStats(): Promise<Stats> {
 
 /**
  * Get directory name by template
+ * Supports both legacy org_option behavior and custom templates
  */
 export async function getDirNameByTemplate(
   dirName: string,
@@ -436,8 +437,14 @@ export async function getDirNameByTemplate(
       );
     }
 
-    // Default template (by language)
-    return `${language}/${dirName}`;
+    // Legacy org_option behavior for backwards compatibility
+    const orgOption = await getOrgOption();
+    if (orgOption === "language") {
+      return `${language}/${dirName}`;
+    }
+
+    // Default: platform option - return dirName as-is
+    return dirName;
   } catch (error) {
     log.error("디렉토리 구조 생성 중 오류가 발생했습니다:", error);
     return dirName;
