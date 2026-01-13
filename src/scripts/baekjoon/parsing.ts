@@ -22,7 +22,7 @@ import {
   updateSolvedACData,
   getSolvedACData,
 } from "@/baekjoon/storage";
-import { languages, bjLevel, RESULT_CATEGORY, uploadState } from "@/baekjoon/variables";
+import { bjLevel, RESULT_CATEGORY, uploadState, getLanguageExtension } from "@/baekjoon/variables";
 import {
   findUsername,
   isExistResultTable,
@@ -306,7 +306,7 @@ export async function makeDetailMessageAndReadme(data: Record<string, unknown>):
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB${Number.isNaN(score) ? "" : `, Score: ${score} point`} -BaekjoonHub`;
 
   const category = problemTags.join(", ");
-  const fileName = `${convertSingleCharToDoubleChar(title)}.${languages[language] || "txt"}`;
+  const fileName = `${convertSingleCharToDoubleChar(title)}.${getLanguageExtension(language)}`;
   const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
 
   // Build readme content
