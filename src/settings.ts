@@ -8,6 +8,7 @@ import beginOAuth2 from "./scripts/commons/oauth2";
 import { parseTemplateString, TextTransforms as SafeTextTransforms } from "safe-template-parser";
 import { getTextTransforms } from "./scripts/commons/text-transforms";
 import log from "./scripts/commons/logger";
+import { AIReviewService, DEFAULT_PROMPT_TEMPLATE } from "./scripts/commons/ai-review";
 
 // Interfaces
 interface AppSettings {
@@ -16,6 +17,10 @@ interface AppSettings {
   autoUpload: boolean;
   useCustomTemplate: boolean;
   templateString: string;
+  // AI Review settings
+  aiReviewEnabled: boolean;
+  openaiToken: string;
+  aiPrompt: string;
 }
 
 interface GitHubRepository {
@@ -49,6 +54,18 @@ interface SettingsElements {
   unlinkRepo: HTMLButtonElement | null;
   saveTemplate: HTMLButtonElement | null;
   resetTemplate: HTMLButtonElement | null;
+  // AI Review elements
+  aiReviewSection: HTMLElement | null;
+  aiReviewEnabled: HTMLInputElement | null;
+  aiReviewSettings: HTMLElement | null;
+  openaiToken: HTMLInputElement | null;
+  toggleTokenVisibility: HTMLButtonElement | null;
+  saveAISettings: HTMLButtonElement | null;
+  testAIConnection: HTMLButtonElement | null;
+  aiPrompt: HTMLTextAreaElement | null;
+  aiPromptVariables: HTMLElement | null;
+  savePrompt: HTMLButtonElement | null;
+  resetPrompt: HTMLButtonElement | null;
 }
 
 // Settings state
@@ -58,6 +75,10 @@ let appSettings: AppSettings = {
   autoUpload: true,
   useCustomTemplate: false,
   templateString: "{{language}}/{{removeAfterSpace(level)}}/{{problemId}}. {{safe(title)}}",
+  // AI Review defaults
+  aiReviewEnabled: false,
+  openaiToken: "",
+  aiPrompt: "",
 };
 
 // GitHub user info
@@ -92,6 +113,18 @@ function initElements(): void {
     unlinkRepo: document.getElementById("unlinkRepo") as HTMLButtonElement | null,
     saveTemplate: document.getElementById("saveTemplate") as HTMLButtonElement | null,
     resetTemplate: document.getElementById("resetTemplate") as HTMLButtonElement | null,
+    // AI Review elements
+    aiReviewSection: document.getElementById("aiReviewSection"),
+    aiReviewEnabled: document.getElementById("aiReviewEnabled") as HTMLInputElement | null,
+    aiReviewSettings: document.getElementById("aiReviewSettings"),
+    openaiToken: document.getElementById("openaiToken") as HTMLInputElement | null,
+    toggleTokenVisibility: document.getElementById("toggleTokenVisibility") as HTMLButtonElement | null,
+    saveAISettings: document.getElementById("saveAISettings") as HTMLButtonElement | null,
+    testAIConnection: document.getElementById("testAIConnection") as HTMLButtonElement | null,
+    aiPrompt: document.getElementById("aiPrompt") as HTMLTextAreaElement | null,
+    aiPromptVariables: document.getElementById("aiPromptVariables"),
+    savePrompt: document.getElementById("savePrompt") as HTMLButtonElement | null,
+    resetPrompt: document.getElementById("resetPrompt") as HTMLButtonElement | null,
   };
 }
 
@@ -154,6 +187,7 @@ function updateConnectionStatus(): void {
     `;
     if (elements.setupSection) elements.setupSection.style.display = "none";
     if (elements.settingsSection) elements.settingsSection.style.display = "block";
+    if (elements.aiReviewSection) elements.aiReviewSection.style.display = "block";
     if (elements.managementSection) elements.managementSection.style.display = "block";
   } else {
     elements.connectionStatus.innerHTML = `
@@ -163,6 +197,7 @@ function updateConnectionStatus(): void {
     `;
     if (elements.setupSection) elements.setupSection.style.display = "block";
     if (elements.settingsSection) elements.settingsSection.style.display = "none";
+    if (elements.aiReviewSection) elements.aiReviewSection.style.display = "none";
     if (elements.managementSection) elements.managementSection.style.display = "none";
   }
 }
@@ -179,6 +214,9 @@ async function detectAndSetMode(): Promise<void> {
       STORAGE_KEYS.ENABLE,
       STORAGE_KEYS.USE_CUSTOM_TEMPLATE,
       STORAGE_KEYS.DIR_TEMPLATE,
+      STORAGE_KEYS.AI_REVIEW_ENABLED,
+      STORAGE_KEYS.OPENAI_TOKEN,
+      STORAGE_KEYS.AI_REVIEW_PROMPT,
     ]);
 
     const modeType = data?.[STORAGE_KEYS.MODE_TYPE] as string | undefined;
@@ -187,6 +225,9 @@ async function detectAndSetMode(): Promise<void> {
     const enabled = data?.[STORAGE_KEYS.ENABLE] as boolean | undefined;
     const useCustomTemplate = data?.[STORAGE_KEYS.USE_CUSTOM_TEMPLATE] as boolean | undefined;
     const dirTemplate = data?.[STORAGE_KEYS.DIR_TEMPLATE] as string | undefined;
+    const aiReviewEnabled = data?.[STORAGE_KEYS.AI_REVIEW_ENABLED] as boolean | undefined;
+    const openaiToken = data?.[STORAGE_KEYS.OPENAI_TOKEN] as string | undefined;
+    const aiPrompt = data?.[STORAGE_KEYS.AI_REVIEW_PROMPT] as string | undefined;
 
     if (modeType === "commit" && hook) {
       if (!token) {
@@ -199,6 +240,9 @@ async function detectAndSetMode(): Promise<void> {
       appSettings.autoUpload = enabled !== false;
       appSettings.useCustomTemplate = useCustomTemplate || false;
       appSettings.templateString = dirTemplate || "{{language}}/{{level}}/{{problemId}}. {{title}}";
+      appSettings.aiReviewEnabled = aiReviewEnabled || false;
+      appSettings.openaiToken = openaiToken || "";
+      appSettings.aiPrompt = aiPrompt || "";
 
       // ENABLE이 설정되지 않은 기존 사용자를 위해 자동으로 초기화
       if (enabled === undefined) {
@@ -298,6 +342,20 @@ function updateFormValues(): void {
   }
   if (elements.templateString) {
     elements.templateString.value = appSettings.templateString;
+  }
+
+  // AI Review settings
+  if (elements.aiReviewEnabled) {
+    elements.aiReviewEnabled.checked = appSettings.aiReviewEnabled;
+    if (elements.aiReviewSettings) {
+      elements.aiReviewSettings.style.display = appSettings.aiReviewEnabled ? "block" : "none";
+    }
+  }
+  if (elements.openaiToken) {
+    elements.openaiToken.value = appSettings.openaiToken;
+  }
+  if (elements.aiPrompt) {
+    elements.aiPrompt.value = appSettings.aiPrompt || DEFAULT_PROMPT_TEMPLATE;
   }
 }
 
@@ -586,6 +644,103 @@ function setupEventListeners(): void {
   if (elements.templateString) {
     elements.templateString.addEventListener("input", (e) => {
       appSettings.templateString = (e.target as HTMLInputElement).value;
+    });
+  }
+
+  // AI Review event listeners
+  if (elements.aiReviewEnabled) {
+    elements.aiReviewEnabled.addEventListener("change", async (e) => {
+      const enabled = (e.target as HTMLInputElement).checked;
+      appSettings.aiReviewEnabled = enabled;
+      if (elements.aiReviewSettings) {
+        elements.aiReviewSettings.style.display = enabled ? "block" : "none";
+      }
+      await saveObjectInLocalStorage({ [STORAGE_KEYS.AI_REVIEW_ENABLED]: enabled });
+    });
+  }
+
+  // Toggle token visibility
+  if (elements.toggleTokenVisibility && elements.openaiToken) {
+    elements.toggleTokenVisibility.addEventListener("click", () => {
+      const isPassword = elements.openaiToken!.type === "password";
+      elements.openaiToken!.type = isPassword ? "text" : "password";
+      elements.toggleTokenVisibility!.textContent = isPassword ? "숨기기" : "보기";
+    });
+  }
+
+  // Save AI settings (OpenAI token)
+  if (elements.saveAISettings) {
+    elements.saveAISettings.addEventListener("click", async () => {
+      const token = elements.openaiToken?.value || "";
+      appSettings.openaiToken = token;
+      await saveObjectInLocalStorage({ [STORAGE_KEYS.OPENAI_TOKEN]: token });
+      showMessage("success", "API 키가 저장되었습니다.");
+    });
+  }
+
+  // Test AI connection
+  if (elements.testAIConnection) {
+    elements.testAIConnection.addEventListener("click", async () => {
+      const token = elements.openaiToken?.value || "";
+      if (!token) {
+        showMessage("error", "API 키를 먼저 입력해주세요.");
+        return;
+      }
+
+      elements.testAIConnection!.disabled = true;
+      elements.testAIConnection!.textContent = "테스트 중...";
+
+      const result = await AIReviewService.testConnection(token);
+
+      elements.testAIConnection!.disabled = false;
+      elements.testAIConnection!.textContent = "연결 테스트";
+
+      if (result.success) {
+        showMessage("success", "OpenAI API 연결 성공!");
+      } else {
+        showMessage("error", `연결 실패: ${result.error}`);
+      }
+    });
+  }
+
+  // Save AI prompt
+  if (elements.savePrompt) {
+    elements.savePrompt.addEventListener("click", async () => {
+      const prompt = elements.aiPrompt?.value || "";
+      appSettings.aiPrompt = prompt;
+      await saveObjectInLocalStorage({ [STORAGE_KEYS.AI_REVIEW_PROMPT]: prompt });
+      showMessage("success", "프롬프트가 저장되었습니다.");
+    });
+  }
+
+  // Reset AI prompt to default
+  if (elements.resetPrompt) {
+    elements.resetPrompt.addEventListener("click", async () => {
+      if (elements.aiPrompt) {
+        elements.aiPrompt.value = DEFAULT_PROMPT_TEMPLATE;
+      }
+      appSettings.aiPrompt = DEFAULT_PROMPT_TEMPLATE;
+      await saveObjectInLocalStorage({ [STORAGE_KEYS.AI_REVIEW_PROMPT]: DEFAULT_PROMPT_TEMPLATE });
+      showMessage("success", "프롬프트가 기본값으로 초기화되었습니다.");
+    });
+  }
+
+  // AI prompt variable buttons
+  if (elements.aiPromptVariables) {
+    const variableBtns = elements.aiPromptVariables.querySelectorAll<HTMLElement>(".variable-btn");
+    variableBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const variable = btn.dataset.variable;
+        if (variable && elements.aiPrompt) {
+          const cursorPos = elements.aiPrompt.selectionStart || 0;
+          const currentValue = elements.aiPrompt.value;
+          const newValue = currentValue.slice(0, cursorPos) + variable + currentValue.slice(cursorPos);
+          elements.aiPrompt.value = newValue;
+          const newCursorPos = cursorPos + variable.length;
+          elements.aiPrompt.setSelectionRange(newCursorPos, newCursorPos);
+          elements.aiPrompt.focus();
+        }
+      });
     });
   }
 }

@@ -185,6 +185,114 @@
           </div>
         </div>
 
+        <!-- AI 코드 리뷰 설정 -->
+        <div id="aiReviewSection" class="section" style="display: none">
+          <h2 class="section-title">AI 코드 리뷰</h2>
+
+          <div class="tutorial-tip">
+            <span class="tip-icon">🤖</span>
+            <strong>AI 리뷰:</strong> OpenAI GPT를 사용하여 코드 리뷰, 복잡도 분석, 최적화 제안을 자동으로 받아보세요!
+          </div>
+
+          <!-- AI 리뷰 활성화 토글 -->
+          <div class="card">
+            <div class="toggle-section">
+              <div>
+                <div class="toggle-label">AI 코드 리뷰 활성화</div>
+                <div class="help-text">문제 풀이 후 AI가 자동으로 코드를 분석하고 README에 리뷰를 추가합니다.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="aiReviewEnabled" />
+                <span class="slider"></span>
+                <span class="sr-only">AI 코드 리뷰 활성화</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- AI 설정 상세 (토글 활성화시 표시) -->
+          <div id="aiReviewSettings" style="display: none">
+            <!-- API 키 설정 -->
+            <div class="card">
+              <div class="form-group">
+                <label class="form-label" for="openaiToken">OpenAI API 키</label>
+                <div style="position: relative">
+                  <input
+                    type="password"
+                    id="openaiToken"
+                    class="form-control"
+                    placeholder="sk-..."
+                    style="padding-right: 70px"
+                  />
+                  <button
+                    type="button"
+                    id="toggleTokenVisibility"
+                    class="button button-secondary"
+                    style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); padding: 6px 12px; font-size: 12px"
+                  >
+                    표시
+                  </button>
+                </div>
+                <div class="help-text">
+                  API 키는 <a href="https://platform.openai.com/api-keys" target="_blank">여기</a>에서 발급받을 수
+                  있습니다. API 키는 로컬에만 저장됩니다.
+                </div>
+              </div>
+              <div class="button-group">
+                <button id="saveAISettings" class="button button-primary"><span>💾</span> API 키 저장</button>
+                <button id="testAIConnection" class="button button-secondary"><span>🔗</span> 연결 테스트</button>
+              </div>
+            </div>
+
+            <!-- 프롬프트 커스터마이징 -->
+            <div class="card">
+              <h3 style="margin-bottom: 20px; color: #2d3748; font-size: 18px">📝 프롬프트 설정</h3>
+
+              <!-- 사용 가능한 변수 -->
+              <div class="form-group">
+                <label class="form-label">사용 가능한 변수</label>
+                <div class="template-variables" id="aiPromptVariables">
+                  <button type="button" class="variable-btn" data-variable="{{title}}" data-tooltip="문제 제목">
+                    title
+                  </button>
+                  <button type="button" class="variable-btn" data-variable="{{language}}" data-tooltip="프로그래밍 언어">
+                    language
+                  </button>
+                  <button type="button" class="variable-btn" data-variable="{{code}}" data-tooltip="제출한 코드">
+                    code
+                  </button>
+                  <button
+                    type="button"
+                    class="variable-btn"
+                    data-variable="{{problemDescription}}"
+                    data-tooltip="문제 설명 (있는 경우)"
+                  >
+                    problemDescription
+                  </button>
+                </div>
+                <div class="help-text">변수를 클릭하여 프롬프트에 추가하세요.</div>
+              </div>
+
+              <!-- 프롬프트 입력 -->
+              <div class="form-group">
+                <label class="form-label" for="aiPrompt">AI 리뷰 프롬프트</label>
+                <textarea
+                  id="aiPrompt"
+                  class="form-control"
+                  rows="12"
+                  placeholder="AI에게 전달할 프롬프트를 입력하세요..."
+                  style="font-family: monospace; font-size: 13px; line-height: 1.5"
+                ></textarea>
+                <div class="help-text">AI에게 코드를 어떻게 분석하고 리뷰할지 지시합니다.</div>
+              </div>
+
+              <div class="button-group">
+                <button id="savePrompt" class="button button-primary"><span>💾</span> 프롬프트 저장</button>
+                <button id="resetPrompt" class="button button-secondary"><span>🔄</span> 기본값으로 초기화</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 저장소 관리 -->
         <div id="managementSection" class="section" style="display: none">
           <h2 class="section-title">저장소 관리</h2>
