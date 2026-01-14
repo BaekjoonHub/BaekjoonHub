@@ -16,6 +16,10 @@ export const STORAGE_KEYS = {
   IS_SYNC: "baekjoonhub_is_sync",
   SWEA: "baekjoonhub_swea",
   MIGRATION_VERSION: "baekjoonhub_migration_version",
+  // AI Review settings
+  OPENAI_TOKEN: "baekjoonhub_openai_token",
+  AI_REVIEW_ENABLED: "baekjoonhub_ai_review_enabled",
+  AI_REVIEW_PROMPT: "baekjoonhub_ai_review_prompt",
 } as const;
 
 export type StorageKey = keyof typeof STORAGE_KEYS;
