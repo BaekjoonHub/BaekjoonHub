@@ -6,6 +6,7 @@ import { convertSingleCharToDoubleChar } from "@/commons/util";
 import { getDateString } from "@/commons/ui-util";
 import { getDirNameByTemplate } from "@/commons/storage";
 import log from "@/commons/logger";
+import { ReadmeBuilder } from "@/commons/readme-builder";
 
 // Problem data interface for Programmers
 interface ProgrammersProblemOrigin {
@@ -77,21 +78,16 @@ export async function makeData(origin: ProgrammersProblemOrigin): Promise<Parsed
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = getDateString(new Date(Date.now()));
 
-  const readme =
-    `# [${levelWithLv}] ${title} - ${problemId} \n\n` +
-    `[문제 링크](${link}) \n\n` +
-    `### 성능 요약\n\n` +
-    `메모리: ${memory}, ` +
-    `시간: ${runtime}\n\n` +
-    `### 구분\n\n` +
-    `${division.replace("/", " > ")}\n\n` +
-    `### 채점결과\n\n` +
-    `${resultMessage}\n\n` +
-    `### 제출 일자\n\n` +
-    `${dateInfo}\n\n` +
-    `### 문제 설명\n\n` +
-    `${problemDescription}\n\n` +
-    `> 출처: 프로그래머스 코딩 테스트 연습, https://school.programmers.co.kr/learn/challenges`;
+  const readme = new ReadmeBuilder()
+    .addTitle(levelWithLv, title, problemId)
+    .addProblemLink(link)
+    .addPerformance(memory, runtime)
+    .addSection("구분", division.replace("/", " > "))
+    .addSection("채점결과", resultMessage)
+    .addSubmissionDate(dateInfo)
+    .addProblemDescription(problemDescription)
+    .addSource("프로그래머스 코딩 테스트 연습", "https://school.programmers.co.kr/learn/challenges")
+    .build();
 
   return {
     problemId,

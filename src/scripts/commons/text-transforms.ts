@@ -174,7 +174,7 @@ export function formatKoreanDate(dateString: string): string {
 
 // Text transform function type - compatible with safe-template-parser
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TransformFunction = (...args: any[]) => any;
+type TransformFunction = (...args: any[]) => string;
 
 // Text transform function interface
 export interface TextTransforms {

@@ -18,8 +18,7 @@ interface TemplateData {
   memory?: string;
   runtime?: string;
   submissionTime?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: string | string[] | number | undefined;
 }
 
 // Problem data with optional problemInfo

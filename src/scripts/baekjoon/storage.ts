@@ -1,169 +1,36 @@
 /**
  * Baekjoon-specific storage with TTL caching
  * Handles problem data, submission code, and Solved.ac data caching
+ *
+ * Refactored to use CacheRepository for code deduplication
  */
-import { getStats, saveStats } from "@/commons/storage";
-import { isNull } from "@/commons/util";
-import log from "@/commons/logger";
-import type { Stats } from "@/types/storage";
+import { CacheRepository } from "@/commons/cache-repository";
+import type { CacheEntry } from "@/commons/cache-repository";
 
-// Cached data item interface
-interface CacheItem<T = unknown> {
-  id: string | number;
-  save_date?: number;
-  data?: T;
+// Problem description data structure
+export interface ProblemDescription {
   problemDescription?: string;
   problemInput?: string;
   problemOutput?: string;
 }
 
-// Cache stats structure
-interface CacheStats {
-  [key: string]: CacheItem | number | undefined;
-  last_check_date?: number;
-}
+// Cache instances using CacheRepository
+const problemCache = new CacheRepository<ProblemDescription>("problem", {
+  ttl: 7 * 86400000, // 7 days
+  maxSize: 1000,
+});
 
-/**
- * TTL-based cache stats manager
- * Automatically expires cached data after a week
- */
-export class TTLCacheStats {
-  private name: string;
-  private stats: Stats | null = null;
-  private saveTimer: ReturnType<typeof setTimeout> | null = null;
+const submitCodeCache = new CacheRepository<string>("scode", {
+  ttl: 7 * 86400000, // 7 days
+  maxSize: 1000,
+});
 
-  constructor(name: string) {
-    this.name = name;
-  }
+const solvedACCache = new CacheRepository<unknown>("solvedac", {
+  ttl: 7 * 86400000, // 7 days
+  maxSize: 1000,
+});
 
-  /**
-   * Force reload stats from storage
-   */
-  async forceLoad(): Promise<void> {
-    this.stats = await getStats();
-    if (isNull(this.stats)) {
-      this.stats = {
-        version: "0.0.0",
-        branches: {},
-        submission: {},
-        problems: {},
-      };
-    }
-    if (isNull((this.stats as Record<string, unknown>)[this.name])) {
-      (this.stats as Record<string, CacheStats>)[this.name] = {};
-    }
-  }
-
-  /**
-   * Load stats if not already loaded
-   */
-  async load(): Promise<void> {
-    if (this.stats === null) {
-      await this.forceLoad();
-    }
-  }
-
-  /**
-   * Save stats with debouncing (1 second delay)
-   */
-  async save(): Promise<void> {
-    if (this.saveTimer) {
-      clearTimeout(this.saveTimer);
-    }
-    this.saveTimer = setTimeout(async () => {
-      const clone = (this.stats as Record<string, CacheStats>)[this.name];
-      log.debug("Saving stats...", clone);
-      await this.forceLoad();
-      (this.stats as Record<string, CacheStats>)[this.name] = clone;
-      await saveStats(this.stats!);
-      this.saveTimer = null;
-    }, 1000);
-  }
-
-  /**
-   * Check and clean expired cache entries
-   */
-  async expired(): Promise<void> {
-    await this.load();
-    if (isNull(this.stats) || isNull((this.stats as Record<string, CacheStats>)[this.name])) {
-      await this.forceLoad();
-    }
-
-    const cacheData = (this.stats as Record<string, CacheStats>)[this.name];
-
-    if (!cacheData.last_check_date) {
-      cacheData.last_check_date = Date.now();
-      await this.save();
-      log.debug("Initialized stats date", cacheData.last_check_date);
-      return;
-    }
-
-    const dateYesterday = Date.now() - 86400000; // 1 day
-    log.debug("금일 로컬스토리지 정리를 완료하였습니다.");
-    if (dateYesterday < cacheData.last_check_date) return;
-
-    // Delete items older than a week
-    const dateWeekAgo = Date.now() - 7 * 86400000;
-    log.debug("stats before deletion", this.stats);
-    log.debug("date a week ago", dateWeekAgo);
-
-    for (const [key, value] of Object.entries(cacheData)) {
-      if (key === "last_check_date") continue;
-
-      const item = value as CacheItem | undefined;
-      if (!item || !item.save_date) {
-        delete cacheData[key];
-      } else {
-        const saveDate = new Date(item.save_date).getTime();
-        if (dateWeekAgo > saveDate) {
-          delete cacheData[key];
-        }
-      }
-    }
-
-    cacheData.last_check_date = Date.now();
-    log.debug("stats after deletion", this.stats);
-    await this.save();
-  }
-
-  /**
-   * Update cache with new data
-   */
-  async update(data: CacheItem): Promise<void> {
-    await this.expired();
-    await this.load();
-
-    const cacheData = (this.stats as Record<string, CacheStats>)[this.name];
-    cacheData[data.id] = {
-      ...data,
-      save_date: Date.now(),
-    };
-
-    log.debug("date", (cacheData[data.id] as CacheItem).save_date);
-    log.debug("stats", this.stats);
-    await this.save();
-  }
-
-  /**
-   * Get cached data by ID
-   */
-  async get(id: string | number): Promise<CacheItem | null> {
-    await this.load();
-    if (isNull(this.stats) || isNull((this.stats as Record<string, CacheStats>)[this.name])) {
-      return null;
-    }
-    const cacheData = (this.stats as Record<string, CacheStats>)[this.name];
-    if (isNull(cacheData)) return null;
-    return (cacheData[id] as CacheItem) || null;
-  }
-}
-
-// Cache instances
-const problemCache = new TTLCacheStats("problem");
-const submitCodeCache = new TTLCacheStats("scode");
-const SolvedACCache = new TTLCacheStats("solvedac");
-
-// Problem data interface
+// Problem data interface (for compatibility with existing code)
 interface ProblemCacheData {
   problemId: string;
   problem_description?: string;
@@ -178,19 +45,18 @@ interface ProblemCacheData {
  * Update cached problem data
  */
 export async function updateProblemData(problem: ProblemCacheData): Promise<void> {
-  const data: CacheItem = {
-    id: problem.problemId,
+  const data: ProblemDescription = {
     problemDescription: problem.problemDescription || problem.problem_description,
     problemInput: problem.problemInput || problem.problem_input,
     problemOutput: problem.problemOutput || problem.problem_output,
   };
-  await problemCache.update(data);
+  await problemCache.set(problem.problemId, data);
 }
 
 /**
  * Get cached problem data by ID
  */
-export async function getProblemData(problemId: string | number): Promise<CacheItem | null> {
+export async function getProblemData(problemId: string | number): Promise<ProblemDescription | null> {
   return problemCache.get(problemId);
 }
 
@@ -204,19 +70,14 @@ interface SubmitCodeCacheData {
  * Update cached submission code
  */
 export async function updateSubmitCodeData(obj: SubmitCodeCacheData): Promise<void> {
-  const data: CacheItem = {
-    id: obj.submissionId,
-    data: obj.code,
-  };
-  await submitCodeCache.update(data);
+  await submitCodeCache.set(obj.submissionId, obj.code);
 }
 
 /**
  * Get cached submission code by ID
  */
 export async function getSubmitCodeData(submissionId: string | number): Promise<string | null> {
-  const item = await submitCodeCache.get(submissionId);
-  return item?.data as string | null;
+  return submitCodeCache.get(submissionId);
 }
 
 // Solved.ac data interface
@@ -229,17 +90,12 @@ interface SolvedACCacheData {
  * Update cached Solved.ac data
  */
 export async function updateSolvedACData(obj: SolvedACCacheData): Promise<void> {
-  const data: CacheItem = {
-    id: obj.problemId,
-    data: obj.jsonData,
-  };
-  await SolvedACCache.update(data);
+  await solvedACCache.set(obj.problemId, obj.jsonData);
 }
 
 /**
  * Get cached Solved.ac data by ID
  */
 export async function getSolvedACData(problemId: string | number): Promise<unknown | null> {
-  const item = await SolvedACCache.get(problemId);
-  return item?.data ?? null;
+  return solvedACCache.get(problemId);
 }
