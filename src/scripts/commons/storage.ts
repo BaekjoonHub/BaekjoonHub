@@ -1,6 +1,8 @@
 /**
  * Chrome Storage API wrapper for BaekjoonHub
  * Provides typed access to chrome.storage.local and chrome.storage.sync
+ *
+ * Refactored to use ChromeStorageAdapter for better separation of concerns
  */
 
 import { isNull } from "./util";
@@ -8,6 +10,7 @@ import { STORAGE_KEYS } from "@/constants/registry";
 import { GitHub } from "./github";
 import EnhancedTemplateService from "./enhanced-template";
 import log from "@/commons/logger";
+import { chromeStorageAdapter } from "./storage-adapter";
 import type { Stats, StorageData } from "@/types/storage";
 import type { PlatformName } from "@/types/platform";
 
@@ -26,22 +29,7 @@ export function getVersion(): string {
  */
 export async function getObjectFromLocalStorage<T = unknown>(key: string | string[]): Promise<T | undefined> {
   log.info("storage.ts: getObjectFromLocalStorage called with key:", key);
-  return new Promise((resolve) => {
-    try {
-      chrome.storage.local.get(key, (value: Record<string, unknown>) => {
-        if (Array.isArray(key)) {
-          log.debug("storage.ts: getObjectFromLocalStorage resolved with value:", value);
-          resolve(value as T);
-        } else {
-          log.debug("storage.ts: getObjectFromLocalStorage resolved with value[key]:", value[key]);
-          resolve(value[key] as T);
-        }
-      });
-    } catch (ex) {
-      log.error("storage.ts: Error in getObjectFromLocalStorage:", ex);
-      resolve(undefined);
-    }
-  });
+  return chromeStorageAdapter.get<T>(key, "local");
 }
 
 /**
@@ -50,17 +38,7 @@ export async function getObjectFromLocalStorage<T = unknown>(key: string | strin
  */
 export async function saveObjectInLocalStorage(obj: Record<string, unknown>): Promise<void> {
   log.info("storage.ts: saveObjectInLocalStorage called with obj:", obj);
-  return new Promise((resolve) => {
-    try {
-      chrome.storage.local.set(obj, () => {
-        log.debug("storage.ts: saveObjectInLocalStorage resolved.");
-        resolve();
-      });
-    } catch (ex) {
-      log.error("storage.ts: Error in saveObjectInLocalStorage:", ex);
-      resolve();
-    }
-  });
+  return chromeStorageAdapter.set(obj, "local");
 }
 
 /**
@@ -69,17 +47,7 @@ export async function saveObjectInLocalStorage(obj: Record<string, unknown>): Pr
  */
 export async function removeObjectFromLocalStorage(keys: string | string[]): Promise<void> {
   log.info("storage.ts: removeObjectFromLocalStorage called with keys:", keys);
-  return new Promise((resolve) => {
-    try {
-      chrome.storage.local.remove(keys, () => {
-        log.debug("storage.ts: removeObjectFromLocalStorage resolved.");
-        resolve();
-      });
-    } catch (ex) {
-      log.error("storage.ts: Error in removeObjectFromLocalStorage:", ex);
-      resolve();
-    }
-  });
+  return chromeStorageAdapter.remove(keys, "local");
 }
 
 /**
@@ -89,17 +57,7 @@ export async function removeObjectFromLocalStorage(keys: string | string[]): Pro
  */
 export async function getObjectFromSyncStorage<T = unknown>(key: string): Promise<T | undefined> {
   log.info("storage.ts: getObjectFromSyncStorage called with key:", key);
-  return new Promise((resolve) => {
-    try {
-      chrome.storage.sync.get(key, (value: Record<string, unknown>) => {
-        log.debug("storage.ts: getObjectFromSyncStorage resolved with value[key]:", value[key]);
-        resolve(value[key] as T);
-      });
-    } catch (ex) {
-      log.error("storage.ts: Error in getObjectFromSyncStorage:", ex);
-      resolve(undefined);
-    }
-  });
+  return chromeStorageAdapter.get<T>(key, "sync");
 }
 
 /**
@@ -108,17 +66,7 @@ export async function getObjectFromSyncStorage<T = unknown>(key: string): Promis
  */
 export async function saveObjectInSyncStorage(obj: Record<string, unknown>): Promise<void> {
   log.info("storage.ts: saveObjectInSyncStorage called with obj:", obj);
-  return new Promise((resolve) => {
-    try {
-      chrome.storage.sync.set(obj, () => {
-        log.debug("storage.ts: saveObjectInSyncStorage resolved.");
-        resolve();
-      });
-    } catch (ex) {
-      log.error("storage.ts: Error in saveObjectInSyncStorage:", ex);
-      resolve();
-    }
-  });
+  return chromeStorageAdapter.set(obj, "sync");
 }
 
 /**
@@ -127,17 +75,7 @@ export async function saveObjectInSyncStorage(obj: Record<string, unknown>): Pro
  */
 export async function removeObjectFromSyncStorage(keys: string | string[]): Promise<void> {
   log.info("storage.ts: removeObjectFromSyncStorage called with keys:", keys);
-  return new Promise((resolve) => {
-    try {
-      chrome.storage.sync.remove(keys, () => {
-        log.debug("storage.ts: removeObjectFromSyncStorage resolved.");
-        resolve();
-      });
-    } catch (ex) {
-      log.error("storage.ts: Error in removeObjectFromSyncStorage:", ex);
-      resolve();
-    }
-  });
+  return chromeStorageAdapter.remove(keys, "sync");
 }
 
 // ============ Convenience getters/setters ============
@@ -516,4 +454,49 @@ export function initializeStorage(): void {
       saveStats(stats);
     }
   });
+}
+
+// ============ AI Review helpers ============
+
+/**
+ * Get OpenAI API token
+ */
+export async function getOpenAIToken(): Promise<string | undefined> {
+  return getObjectFromLocalStorage<string>(STORAGE_KEYS.OPENAI_TOKEN);
+}
+
+/**
+ * Save OpenAI API token
+ */
+export async function saveOpenAIToken(token: string): Promise<void> {
+  return saveObjectInLocalStorage({ [STORAGE_KEYS.OPENAI_TOKEN]: token });
+}
+
+/**
+ * Get AI review enabled status
+ */
+export async function getAIReviewEnabled(): Promise<boolean> {
+  const enabled = await getObjectFromLocalStorage<boolean>(STORAGE_KEYS.AI_REVIEW_ENABLED);
+  return enabled === true;
+}
+
+/**
+ * Save AI review enabled status
+ */
+export async function saveAIReviewEnabled(enabled: boolean): Promise<void> {
+  return saveObjectInLocalStorage({ [STORAGE_KEYS.AI_REVIEW_ENABLED]: enabled });
+}
+
+/**
+ * Get AI review custom prompt
+ */
+export async function getAIReviewPrompt(): Promise<string | undefined> {
+  return getObjectFromLocalStorage<string>(STORAGE_KEYS.AI_REVIEW_PROMPT);
+}
+
+/**
+ * Save AI review custom prompt
+ */
+export async function saveAIReviewPrompt(prompt: string): Promise<void> {
+  return saveObjectInLocalStorage({ [STORAGE_KEYS.AI_REVIEW_PROMPT]: prompt });
 }

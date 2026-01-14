@@ -28,7 +28,7 @@ interface PlatformHubConfig {
 }
 
 // Upload data interface
-interface UploadData {
+export interface UploadData {
   directory: string;
   fileName: string;
   code: string;

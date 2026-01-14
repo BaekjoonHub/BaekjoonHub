@@ -62,6 +62,7 @@ export interface ProblemData {
   message: string;
   platform: string;
   problemInfo: ProblemInfo;
+  [key: string]: string | ProblemInfo | undefined;
 }
 
 // Problem info mapper function type

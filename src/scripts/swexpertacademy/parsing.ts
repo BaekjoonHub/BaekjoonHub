@@ -9,6 +9,7 @@ import { getNickname } from "@/swexpertacademy/util";
 import { getDirNameByTemplate } from "@/commons/storage";
 import urls from "@/constants/url";
 import log from "@/commons/logger";
+import { ReadmeBuilder } from "@/commons/readme-builder";
 
 // Problem origin data interface
 interface SWEAProblemOrigin {
@@ -96,17 +97,13 @@ export async function makeData(origin: SWEAProblemOrigin): Promise<ParsedProblem
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = submissionTime;
 
-  const readme =
-    `# [${level}] ${title} - ${problemId} \n\n` +
-    `[문제 링크](${urls.SWEA_PROBLEM_DETAIL_URL}) \n\n` +
-    `### 성능 요약\n\n` +
-    `메모리: ${memory}, ` +
-    `시간: ${runtime}, ` +
-    `코드길이: ${length} Bytes\n\n` +
-    `### 제출 일자\n\n` +
-    `${dateInfo}\n\n` +
-    `\n\n` +
-    `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
+  const readme = new ReadmeBuilder()
+    .addTitle(level, title, problemId)
+    .addProblemLink(urls.SWEA_PROBLEM_DETAIL_URL)
+    .addPerformance(memory, runtime, `${length} Bytes`)
+    .addSubmissionDate(dateInfo)
+    .addSource("SW Expert Academy", "https://swexpertacademy.com/main/code/problem/problemList.do")
+    .build();
 
   return {
     problemId,

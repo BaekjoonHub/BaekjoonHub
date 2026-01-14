@@ -2,7 +2,7 @@
  * Baekjoon Hub main entry point
  * Content script for acmicpc.net (Baekjoon Online Judge)
  */
-import PlatformHubBase, { log, checkEnable } from "@/commons/platformhub-base";
+import PlatformHubBase, { log, checkEnable, type UploadData } from "@/commons/platformhub-base";
 import { isEmpty, isNull } from "@/commons/util";
 import { RESULT_MESSAGE } from "@/baekjoon/variables";
 import { TIMEOUTS, RETRY_LIMITS, RESULT_MESSAGES, PLATFORMS } from "@/constants/config";
@@ -183,8 +183,7 @@ class BaekjoonHub extends PlatformHubBase {
         }
 
         log.debug("BaekjoonHub Debug - Upload data prepared:", bojData);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await this.beginUpload(bojData.data as any, uploadOneSolveProblemOnGit, markUploadedCSS);
+        await this.beginUpload(bojData.data as UploadData, uploadOneSolveProblemOnGit, markUploadedCSS);
       } catch (error) {
         log.error("BaekjoonHub Debug - Error during upload process:", error);
       }

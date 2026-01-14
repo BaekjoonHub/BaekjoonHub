@@ -1,4 +1,4 @@
-import PlatformHubBase, { Toast, log } from "@/commons/platformhub-base";
+import PlatformHubBase, { Toast, log, type UploadData } from "@/commons/platformhub-base";
 import { SubmissionChecker } from "@/commons/loader-service";
 import { parseCode, parseData } from "@/swexpertacademy/parsing";
 import uploadOneSolveProblemOnGit from "@/swexpertacademy/uploadfunctions";
@@ -201,8 +201,7 @@ class SWExpertAcademyHub extends PlatformHubBase {
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await this.beginUpload(parsedData as any, uploadOneSolveProblemOnGit, markUploadedCSS);
+      await this.beginUpload(parsedData as unknown as UploadData, uploadOneSolveProblemOnGit, markUploadedCSS);
     } catch (error) {
       log.error("Error in SWEA parseAndUpload:", error);
     }

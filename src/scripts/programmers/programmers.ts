@@ -2,7 +2,7 @@
  * Programmers Hub main entry point
  * Content script for programmers.co.kr
  */
-import PlatformHubBase, { Toast, checkEnable } from "@/commons/platformhub-base";
+import PlatformHubBase, { Toast, checkEnable, type UploadData } from "@/commons/platformhub-base";
 import { SubmissionChecker } from "@/commons/loader-service";
 import { parseData } from "@/programmers/parsing";
 import uploadOneSolveProblemOnGit from "@/programmers/uploadfunctions";
@@ -60,8 +60,7 @@ class ProgrammersHub extends PlatformHubBase {
       );
 
       if (result?.success && result?.data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await this.beginUpload(result.data as any, uploadOneSolveProblemOnGit, markUploadedCSS);
+        await this.beginUpload(result.data as UploadData, uploadOneSolveProblemOnGit, markUploadedCSS);
       }
     };
 

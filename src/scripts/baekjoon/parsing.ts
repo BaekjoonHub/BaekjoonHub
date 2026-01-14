@@ -14,6 +14,8 @@ import {
 } from "@/commons/util";
 import log from "@/commons/logger";
 import { getDateString, convertImageTagToAbsoluteURL } from "@/commons/ui-util";
+import { ReadmeBuilder } from "@/commons/readme-builder";
+import { httpClient } from "@/commons/http-client";
 import {
   updateProblemData,
   getProblemData,
@@ -33,6 +35,7 @@ import {
 } from "@/baekjoon/util";
 import { getDirNameByTemplate } from "@/commons/storage";
 import urls from "@/constants/url";
+import { AIReviewService } from "@/commons/ai-review";
 
 // Submission data interface
 interface SubmissionData {
@@ -99,10 +102,7 @@ interface UploadData {
  * @returns Parsed HTML document
  */
 export async function findHtmlDocumentByUrl(url: string): Promise<Document> {
-  const response = await fetch(url, { method: "GET" });
-  const text = await response.text();
-  const parser = new DOMParser();
-  return parser.parseFromString(text, "text/html");
+  return httpClient.getDocument(url);
 }
 
 /**
@@ -309,19 +309,42 @@ export async function makeDetailMessageAndReadme(data: Record<string, unknown>):
   const fileName = `${convertSingleCharToDoubleChar(title)}.${getLanguageExtension(language)}`;
   const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
 
-  // Build readme content
-  const readme =
-    `# [${level}] ${title} - ${problemId} \n\n` +
-    `[문제 링크](${urls.BAEKJOON_PROBLEM_URL}${problemId}) \n\n` +
-    `### 성능 요약\n\n` +
-    `메모리: ${memory} KB, ` +
-    `시간: ${runtime} ms\n\n` +
-    `### 분류\n\n` +
-    `${category || "Empty"}\n\n` +
-    `${problemDescription ? `### 문제 설명\n\n${problemDescription}` : ""}` +
-    `${problemInput ? `### 문제 입력\n\n${problemInput}` : ""}` +
-    `${problemOutput ? `### 문제 출력\n\n${problemOutput}` : ""}\n\n` +
-    `${dateInfo ? `### 제출 일자\n\n${dateInfo}` : ""}`;
+  // Build readme content using ReadmeBuilder
+  const builder = new ReadmeBuilder()
+    .addTitle(level, title, problemId)
+    .addProblemLink(`${urls.BAEKJOON_PROBLEM_URL}${problemId}`)
+    .addPerformance(`${memory} KB`, `${runtime} ms`)
+    .addTags(category || "Empty")
+    .addProblemDescription(problemDescription || "")
+    .addProblemInput(problemInput || "")
+    .addProblemOutput(problemOutput || "")
+    .addSubmissionDate(dateInfo || "");
+
+  // AI Code Review (if enabled)
+  try {
+    const isAIEnabled = await AIReviewService.isEnabled();
+    if (isAIEnabled) {
+      log.info("AI 코드 리뷰 요청 중...");
+      const reviewResult = await AIReviewService.fetchReview({
+        code,
+        language: processedLanguage,
+        problemTitle: title,
+        problemDescription: problemDescription || undefined,
+      });
+
+      if (reviewResult.success && reviewResult.review) {
+        builder.addAIReview(reviewResult.review);
+        log.info("AI 코드 리뷰가 README에 추가되었습니다.");
+      } else if (reviewResult.error) {
+        log.warn("AI 코드 리뷰 실패:", reviewResult.error);
+      }
+    }
+  } catch (error) {
+    log.error("AI 코드 리뷰 처리 중 오류:", error);
+    // AI 리뷰 실패해도 기본 업로드는 계속 진행
+  }
+
+  const readme = builder.build();
 
   return {
     directory,
@@ -489,11 +512,8 @@ export async function fetchProblemDescriptionById(
   log.debug("fetchProblemDescriptionById - fetching problemId:", problemId);
 
   try {
-    const response = await fetch(`${urls.BAEKJOON_PROBLEM_URL}${problemId}`);
-    const html = await response.text();
-    log.debug("fetchProblemDescriptionById - fetched html length:", html.length);
-
-    const doc = new DOMParser().parseFromString(html, "text/html");
+    const doc = await httpClient.getDocument(`${urls.BAEKJOON_PROBLEM_URL}${problemId}`);
+    log.debug("fetchProblemDescriptionById - fetched document");
     return parseProblemDescription(doc);
   } catch (error) {
     log.error("fetchProblemDescriptionById - Error:", error);
@@ -508,10 +528,7 @@ export async function fetchProblemDescriptionById(
  */
 export async function fetchSubmitCodeById(submissionId: string | number): Promise<string | null> {
   try {
-    const response = await fetch(`${urls.BAEKJOON_SOURCE_DOWNLOAD_URL}${submissionId}`, {
-      method: "GET",
-    });
-    return await response.text();
+    return await httpClient.getText(`${urls.BAEKJOON_SOURCE_DOWNLOAD_URL}${submissionId}`);
   } catch (error) {
     log.error("fetchSubmitCodeById - Error:", error);
     return null;
@@ -597,7 +614,7 @@ async function findResultTableListByUsername(username: string): Promise<Submissi
  * @param problemId - Problem ID
  * @returns Solved.ac problem data
  */
-export async function fetchSolvedACById(problemId: string | number): Promise<unknown> {
+export async function fetchSolvedACById(problemId: string | number): Promise<SolvedACProblem | null> {
   return chrome.runtime.sendMessage({
     sender: "baekjoon",
     task: "SolvedApiCall",
@@ -616,11 +633,7 @@ export async function fetchProblemInfoByIds(problemIds: (string | number)[][]): 
     dividedProblemIds.push(problemIdChunk.slice(0, 100));
   }
   const results = await asyncPool(1, dividedProblemIds, async (pids) => {
-    const result = await fetch(
-      `https://solved.ac/api/v3/problem/lookup?problemIds=${pids.join("%2C")}`,
-      { method: "GET" }
-    );
-    return result.json();
+    return httpClient.getJson(`https://solved.ac/api/v3/problem/lookup?problemIds=${pids.join("%2C")}`);
   });
   return results.flatMap((result) => result as unknown[]);
 }
@@ -661,12 +674,8 @@ export async function findResultTableByProblemIdAndUsername(
   problemId: string | number,
   username: string
 ): Promise<SubmissionData[]> {
-  const response = await fetch(
-    `https://www.acmicpc.net/status?from_mine=1&problem_id=${problemId}&user_id=${username}`,
-    { method: "GET" }
+  const doc = await httpClient.getDocument(
+    `https://www.acmicpc.net/status?from_mine=1&problem_id=${problemId}&user_id=${username}`
   );
-  const text = await response.text();
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(text, "text/html");
   return parsingResultTableList(doc);
 }
