@@ -9,7 +9,15 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
     default_branch = await git.getDefaultBranchOnRepo();
     stats.branches[hook] = default_branch;
   }
-  const { refSHA, ref } = await git.getReference(default_branch);
+  let refData;
+  try {
+    refData = await git.getReference(default_branch);
+  } catch (e) {
+    default_branch = await git.getDefaultBranchOnRepo();
+    stats.branches[hook] = default_branch;
+    refData = await git.getReference(default_branch);
+  }
+  const { refSHA, ref } = refData;
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
   const treeSHA = await git.createTree(refSHA, [source, readme]);

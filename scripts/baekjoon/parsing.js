@@ -23,7 +23,9 @@ async function findData(data) {
         'username': findUsername(),
         'language': table[0]["language"]
       })
-      data = selectBestSubmissionList(table)[0];
+      if (isEmpty(table)) return null;
+      // 자동 업로드 시 가장 최근 accepted 제출을 사용 (과거 best가 아닌 현재 제출)
+      data = table[0];
     }
     if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
     data = { ...data, ...await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId) };

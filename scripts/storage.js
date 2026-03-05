@@ -27,7 +27,7 @@ getStats().then((stats) => {
   if (isNull(stats)) stats = {};
   if (isNull(stats.version)) stats.version = '0.0.0';
   if (isNull(stats.branches) || stats.version !== getVersion()) stats.branches = {};
-  if (isNull(stats.submission) || stats.version !== getVersion()) stats.submission = {};
+  if (isNull(stats.submission)) stats.submission = {};
   if (isNull(stats.problems) || stats.version !== getVersion()) stats.problems = {};
   saveStats(stats);
 });
@@ -236,16 +236,23 @@ async function updateLocalStorageStats() {
   const git = new GitHub(hook, token);
   const stats = await getStats();
   const tree_items = [];
-  await git.getTree().then((tree) => {
-    tree.forEach((item) => {
-      if (item.type === 'blob') {
-        tree_items.push(item);
-      }
-    });
-  });
-  const { submission } = stats;
+  try {
+    const tree = await git.getTree();
+    if (Array.isArray(tree)) {
+      tree.forEach((item) => {
+        if (item.type === 'blob') {
+          tree_items.push(item);
+        }
+      });
+    }
+  } catch (e) {
+    // 빈 레포(커밋 없음)인 경우 tree가 없으므로 무시
+    log('getTree failed (empty repo?)', e);
+  }
+  // GitHub tree 기반으로 submission 캐시를 재구축 (삭제된 파일 정리)
+  stats.submission = {};
   tree_items.forEach((item) => {
-    updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
+    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
   });
   const default_branch = await git.getDefaultBranchOnRepo();
   stats.branches[hook] = default_branch;

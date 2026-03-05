@@ -99,7 +99,7 @@
   display: inline-block;
 }
 
-*{
+.toast-notification *{
   margin:0;
   padding:0;
 }
