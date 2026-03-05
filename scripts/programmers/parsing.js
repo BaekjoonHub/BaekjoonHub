@@ -24,7 +24,10 @@ async function parseData() {
   const title = document.querySelector('.algorithm-title .challenge-title').textContent.replace(/\\n/g, '').trim();
   const problem_description = document.querySelector('div.guide-section-description > div.markdown').innerHTML;
   const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').innerText.split('.')[1];
-  const code = document.querySelector('textarea#code').value;
+  const codeTextarea = document.querySelector('textarea#code');
+  const codeMirrorEl = document.querySelector('.CodeMirror');
+  const code = (codeMirrorEl && codeMirrorEl.CodeMirror ? codeMirrorEl.CodeMirror.getValue() : null)
+    || (codeTextarea ? codeTextarea.value : '');
   const result_message =
     [...document.querySelectorAll('#output .console-message')]
       .map((node) => node.textContent)
