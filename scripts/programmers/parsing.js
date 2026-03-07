@@ -11,6 +11,20 @@
   - readme : README.md에 작성할 내용
   - code : 소스코드 내용
 */
+function reconstructFillBlankCode(node) {
+  let result = '';
+  for (const child of node.childNodes) {
+    if (child.tagName === 'INPUT') {
+      result += child.value;
+    } else if (child.childNodes && child.childNodes.length > 0) {
+      result += reconstructFillBlankCode(child);
+    } else {
+      result += child.textContent;
+    }
+  }
+  return result;
+}
+
 async function parseData() {
   const link = document.querySelector('head > meta[name$=url]').content.replace(/\?.*/g, '').trim();
   const problemId = document.querySelector('div.main > div.lesson-content').getAttribute('data-lesson-id');
@@ -26,8 +40,18 @@ async function parseData() {
   const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').innerText.split('.')[1];
   const codeTextarea = document.querySelector('textarea#code');
   const codeMirrorEl = document.querySelector('.CodeMirror');
-  const code = (codeMirrorEl && codeMirrorEl.CodeMirror ? codeMirrorEl.CodeMirror.getValue() : null)
-    || (codeTextarea ? codeTextarea.value : '');
+  const fillBlankInputs = document.querySelectorAll('input[name^="input_code"]');
+  let code;
+  if (codeMirrorEl && codeMirrorEl.CodeMirror) {
+    code = codeMirrorEl.CodeMirror.getValue();
+  } else if (codeTextarea) {
+    code = codeTextarea.value;
+  } else if (fillBlankInputs.length > 0) {
+    const pre = fillBlankInputs[0].closest('pre');
+    code = reconstructFillBlankCode(pre);
+  } else {
+    code = '';
+  }
   const result_message =
     [...document.querySelectorAll('#output .console-message')]
       .map((node) => node.textContent)
