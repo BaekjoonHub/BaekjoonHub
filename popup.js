@@ -1,5 +1,7 @@
-/* global oAuth2 */
+/* global oAuth2, I18N */
 /* eslint no-undef: "error" */
+
+I18N.init();
 
 let action = false;
 
@@ -34,7 +36,12 @@ chrome.storage.local.get('BaekjoonHub_token', (data) => {
               chrome.storage.local.get(['stats', 'BaekjoonHub_hook'], (data3) => {
                 const BaekjoonHubHook = data3.BaekjoonHub_hook;
                 if (BaekjoonHubHook) {
-                  $('#repo_url').html(`Your Repo: <a target="blank" style="color: cadetblue !important;" href="https://github.com/${BaekjoonHubHook}">${BaekjoonHubHook}</a>`);
+                  const repoLink = `<a target="blank" style="color: cadetblue !important;" href="https://github.com/${BaekjoonHubHook}">${BaekjoonHubHook}</a>`;
+                  const updateRepoUrl = () => {
+                    $('#repo_url').html(`${I18N.t('popup.yourRepo')} ${repoLink}`);
+                  };
+                  updateRepoUrl();
+                  I18N.onChange(updateRepoUrl);
                 }
               });
             } else {

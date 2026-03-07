@@ -20,31 +20,31 @@ const statusCode = (res, status, name) => {
   switch (status) {
     case 304:
       $('#success').hide();
-      $('#error').text(`Error creating ${name} - Unable to modify repository. Try again later!`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.creating304', { name }, 'text');
       $('#error').show();
       break;
 
     case 400:
       $('#success').hide();
-      $('#error').text(`Error creating ${name} - Bad POST request, make sure you're not overriding any existing scripts`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.creating400', { name }, 'text');
       $('#error').show();
       break;
 
     case 401:
       $('#success').hide();
-      $('#error').text(`Error creating ${name} - Unauthorized access to repo. Try again later!`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.creating401', { name }, 'text');
       $('#error').show();
       break;
 
     case 403:
       $('#success').hide();
-      $('#error').text(`Error creating ${name} - Forbidden access to repository. Try again later!`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.creating403', { name }, 'text');
       $('#error').show();
       break;
 
     case 422:
       $('#success').hide();
-      $('#error').text(`Error creating ${name} - Unprocessable Entity. Repository may have already been created. Try Linking instead (select 2nd option).`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.creating422', { name }, 'text');
       $('#error').show();
       break;
 
@@ -52,7 +52,7 @@ const statusCode = (res, status, name) => {
       /* Change mode type to commit */
       chrome.storage.local.set({ mode_type: 'commit' }, () => {
         $('#error').hide();
-        $('#success').html(`Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="https://www.acmicpc.net/">BOJ</a>!`);
+        I18N.bind(document.getElementById('success'), 'welcome.success.created', { url: res.html_url, name });
         $('#success').show();
         $('#unlink').show();
         /* Show new layout */
@@ -102,19 +102,19 @@ const linkStatusCode = (status, name) => {
   switch (status) {
     case 301:
       $('#success').hide();
-      $('#error').html(`Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjoonHub. <br> This repository has been moved permenantly. Try creating a new one.`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.linking301', { name });
       $('#error').show();
       break;
 
     case 403:
       $('#success').hide();
-      $('#error').html(`Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjoonHub. <br> Forbidden action. Please make sure you have the right access to this repository.`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.linking403', { name });
       $('#error').show();
       break;
 
     case 404:
       $('#success').hide();
-      $('#error').html(`Error linking <a target="blank" href="${`https://github.com/${name}`}">${name}</a> to BaekjoonHub. <br> Resource not found. Make sure you enter the right repository name.`);
+      I18N.bind(document.getElementById('error'), 'welcome.error.linking404', { name });
       $('#error').show();
       break;
 
@@ -186,7 +186,7 @@ const linkRepo = (token, name) => {
           /* Save repo url to chrome storage */
           chrome.storage.local.set({ mode_type: 'commit', repo: res.html_url }, () => {
             $('#error').hide();
-            $('#success').html(`Successfully linked <a target="blank" href="${res.html_url}">${name}</a> to BaekjoonHub. Start <a href="https://www.acmicpc.net/">BOJ</a> now!`);
+            I18N.bind(document.getElementById('success'), 'welcome.success.linked', { url: res.html_url, name });
             $('#success').show();
             $('#unlink').show();
           });
@@ -252,15 +252,15 @@ $('#type').on('change', function() {
 $('#hook_button').on('click', () => {
   /* on click should generate: 1) option 2) repository name */
   if (!option()) {
-    $('#error').text('No option selected - Pick an option from dropdown menu below that best suits you!');
+    I18N.bind(document.getElementById('error'), 'welcome.error.noOption', null, 'text');
     $('#error').show();
   } else if (!repositoryName()) {
-    $('#error').text('No repository name added - Enter the name of your repository!');
+    I18N.bind(document.getElementById('error'), 'welcome.error.noRepoName', null, 'text');
     $('#name').focus();
     $('#error').show();
   } else {
     $('#error').hide();
-    $('#success').text('Attempting to create Hook... Please wait.');
+    I18N.bind(document.getElementById('success'), 'welcome.attempting', null, 'text');
     $('#success').show();
 
     /* 
@@ -274,7 +274,7 @@ $('#hook_button').on('click', () => {
       const token = data.BaekjoonHub_token;
       if (token === null || token === undefined) {
         /* Not authorized yet. */
-        $('#error').text('Authorization error - Grant BaekjoonHub access to your GitHub account to continue (launch extension to proceed)');
+        I18N.bind(document.getElementById('error'), 'welcome.error.auth', null, 'text');
         $('#error').show();
         $('#success').hide();
       } else if (option() === 'new') {
@@ -284,7 +284,7 @@ $('#hook_button').on('click', () => {
           const username = data2.BaekjoonHub_username;
           if (!username) {
             /* Improper authorization. */
-            $('#error').text('Improper Authorization error - Grant BaekjoonHub access to your GitHub account to continue (launch extension to proceed)');
+            I18N.bind(document.getElementById('error'), 'welcome.error.improperAuth', null, 'text');
             $('#error').show();
             $('#success').hide();
           } else {
@@ -312,10 +312,12 @@ $('#name').on('input', function () {
 $('#unlink a').on('click', () => {
   unlinkRepo();
   $('#unlink').hide();
-  $('#success').text('Successfully unlinked your current git repo. Please create/link a new hook.');
+  I18N.bind(document.getElementById('success'), 'welcome.success.unlinked', null, 'text');
 });
 
-/* Detect mode type */
+/* Initialize i18n and detect mode type */
+I18N.init(() => {
+
 chrome.storage.local.get('mode_type', (data) => {
   const mode = data.mode_type;
 
@@ -325,7 +327,7 @@ chrome.storage.local.get('mode_type', (data) => {
       const token = data2.BaekjoonHub_token;
       if (token === null || token === undefined) {
         /* Not authorized yet. */
-        $('#error').text('Authorization error - Grant BaekjoonHub access to your GitHub account to continue (click BaekjoonHub extension on the top right to proceed)');
+        I18N.bind(document.getElementById('error'), 'welcome.error.authTopRight', null, 'text');
         $('#error').show();
         $('#success').hide();
         /* Hide accordingly */
@@ -337,7 +339,7 @@ chrome.storage.local.get('mode_type', (data) => {
           const hook = repoName.BaekjoonHub_hook;
           if (!hook) {
             /* Not authorized yet. */
-            $('#error').text('Improper Authorization error - Grant BaekjoonHub access to your GitHub account to continue (click BaekjoonHub extension on the top right to proceed)');
+            I18N.bind(document.getElementById('error'), 'welcome.error.improperAuthTopRight', null, 'text');
             $('#error').show();
             $('#success').hide();
             /* Hide accordingly */
@@ -358,3 +360,5 @@ chrome.storage.local.get('mode_type', (data) => {
     document.getElementById('commit_mode').style.display = 'none';
   }
 });
+
+}); /* end I18N.init callback */
