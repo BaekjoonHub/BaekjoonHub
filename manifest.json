@@ -84,6 +84,7 @@
         "scripts/authorize.js",
         "scripts/storage.js",
         "scripts/enable.js",
+        "scripts/baekjoon/statusicons.js",
         "scripts/baekjoon/variables.js",
         "scripts/baekjoon/storage.js",
         "scripts/baekjoon/parsing.js",
