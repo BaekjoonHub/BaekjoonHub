@@ -17,22 +17,6 @@ function startUpload() {
   // start the countdown
   startUploadCountDown();
 }
-function makeSubmitButton(link) {
-  let elem = document.getElementById('BaekjoonHub_submit_button_element');
-  if (elem !== undefined) {
-    elem = document.createElement('a');
-    elem.id = 'BaekjoonHub_submit_button_element';
-    elem.className = 'btn_grey3 md btn';
-    elem.style = 'cursor:pointer';
-    elem.href = link;
-  }
-  elem.innerHTML = '백준허브로 업로드';
-  const target = document.querySelector('body > div.popup_layer.show > div > div');
-  if (!isNull(target)) {
-    target.append(elem);
-  }
-}
-
 /**
  * 업로드 완료 아이콘 표시 및 링크 생성
  * @param {object} branches - 브랜치 정보 ('userName/repositoryName': 'branchName')

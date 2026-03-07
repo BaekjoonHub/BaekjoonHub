@@ -32,12 +32,13 @@ function startLoader() {
       stopLoader();
       try {
         const { contestProbId } = await parseCode();
+        // 자동으로 업로드 페이지로 이동
         // prettier-ignore
-        await makeSubmitButton(`${window.location.origin}`
+        window.location.href = `${window.location.origin}`
           + `/main/code/problem/problemSolver.do?`
           + `contestProbId=${contestProbId}&`
           + `nickName=${getNickname()}&`
-          + `extension=BaekjoonHub`);
+          + `extension=BaekjoonHub`;
       } catch (error) {
         log(error);
       }
