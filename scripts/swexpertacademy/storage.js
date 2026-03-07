@@ -2,6 +2,7 @@
     로컬스토리지에 swea 객체가 없는 경우 생성
 */
 getObjectFromLocalStorage('swea').then((data) => {
+  if (!chrome.runtime?.id) return;
   if (isNull(data)) {
     saveObjectInLocalStorage({ swea: {} });
   }
@@ -14,6 +15,7 @@ getObjectFromLocalStorage('swea').then((data) => {
  */
 async function updateProblemData(problemId, obj) {
   return getObjectFromLocalStorage('swea').then((data) => {
+    if (isNull(data)) data = {};
     log('updateProblemData', data);
     log('obj', obj);
     if (isNull(data[problemId])) data[problemId] = {};
@@ -45,5 +47,5 @@ async function updateProblemData(problemId, obj) {
  * @returns {object} 문제 내 데이터
  */
 async function getProblemData(problemId) {
-  return getObjectFromLocalStorage('swea').then((data) => data[problemId]);
+  return getObjectFromLocalStorage('swea').then((data) => data?.[problemId]);
 }
