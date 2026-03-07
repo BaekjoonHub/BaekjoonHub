@@ -22,6 +22,8 @@ function parseAndUpload() {
 }
 function startLoader() {
   loader = setInterval(async () => {
+    // 확장 컨텍스트가 무효화된 경우 interval 정리
+    if (!chrome.runtime?.id) { stopLoader(); return; }
     // 기능 Off시 작동하지 않도록 함
     const enable = await checkEnable();
     if (!enable) stopLoader();
