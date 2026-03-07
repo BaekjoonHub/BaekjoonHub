@@ -315,6 +315,33 @@ $('#unlink a').on('click', () => {
   I18N.bind(document.getElementById('success'), 'welcome.success.unlinked', null, 'text');
 });
 
+$('#token_refresh_button').on('click', () => {
+  chrome.storage.local.get('BaekjoonHub_token', (data) => {
+    const token = data.BaekjoonHub_token;
+    if (!token) {
+      I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.notFound', null, 'text');
+      $('#token_status').css('color', '#ff6b6b').show();
+      return;
+    }
+    fetch('https://api.github.com/user', {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+    })
+      .then((res) => {
+        if (res.ok) {
+          I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.valid', null, 'text');
+          $('#token_status').css('color', '#51cf66').show();
+        } else {
+          I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.expired');
+          $('#token_status').css('color', '#ff6b6b').show();
+        }
+      })
+      .catch(() => {
+        I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.error', null, 'text');
+        $('#token_status').css('color', '#ff6b6b').show();
+      });
+  });
+});
+
 /* Initialize i18n and detect mode type */
 I18N.init(() => {
 

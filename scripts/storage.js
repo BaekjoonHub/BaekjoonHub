@@ -254,8 +254,12 @@ async function updateLocalStorageStats() {
   tree_items.forEach((item) => {
     updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
   });
-  const default_branch = await git.getDefaultBranchOnRepo();
-  stats.branches[hook] = default_branch;
+  try {
+    const default_branch = await git.getDefaultBranchOnRepo();
+    stats.branches[hook] = default_branch;
+  } catch (e) {
+    log('getDefaultBranchOnRepo failed', e);
+  }
   await saveStats(stats);
   log('update stats', stats);
   return stats;

@@ -36,6 +36,11 @@ const I18N = (() => {
       'welcome.error.authTopRight': 'Authorization error - Grant BaekjoonHub access to your GitHub account to continue (click BaekjoonHub extension on the top right to proceed)',
       'welcome.error.improperAuthTopRight': 'Improper Authorization error - Grant BaekjoonHub access to your GitHub account to continue (click BaekjoonHub extension on the top right to proceed)',
       'welcome.success.unlinked': 'Successfully unlinked your current git repo. Please create/link a new hook.',
+      'welcome.refreshToken': 'Refresh GitHub Token',
+      'welcome.tokenStatus.valid': 'Token is valid!',
+      'welcome.tokenStatus.expired': 'Token has expired or is invalid. Please re-authenticate by clicking the BaekjoonHub extension icon in the top right.',
+      'welcome.tokenStatus.notFound': 'No token found. Please authenticate first.',
+      'welcome.tokenStatus.error': 'Failed to verify token. Please check your network connection.',
 
       // popup.html
       'popup.caption': 'Sync your code from BOJ to GitHub',
@@ -85,6 +90,11 @@ const I18N = (() => {
       'welcome.error.authTopRight': 'GitHub 인증이 필요해요. 오른쪽 위의 BaekjoonHub 아이콘을 클릭해주세요.',
       'welcome.error.improperAuthTopRight': 'GitHub 인증이 제대로 되지 않았어요. 오른쪽 위의 BaekjoonHub 아이콘을 클릭해주세요.',
       'welcome.success.unlinked': '저장소 연결을 해제했어요. 새 저장소를 만들거나 다른 저장소를 연결해주세요.',
+      'welcome.refreshToken': 'GitHub 토큰 새로고침',
+      'welcome.tokenStatus.valid': '토큰이 유효합니다!',
+      'welcome.tokenStatus.expired': '토큰이 만료되었거나 유효하지 않습니다. 오른쪽 위의 BaekjoonHub 아이콘을 클릭하여 재인증해주세요.',
+      'welcome.tokenStatus.notFound': '토큰을 찾을 수 없습니다. 먼저 인증을 진행해주세요.',
+      'welcome.tokenStatus.error': '토큰 검증에 실패했습니다. 네트워크 연결을 확인해주세요.',
 
       // popup.html
       'popup.caption': '백준 코드를 GitHub에 동기화',

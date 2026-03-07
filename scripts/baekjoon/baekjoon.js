@@ -18,6 +18,10 @@ if (!isNull(username)) {
   else if (currentUrl.match(/\.net\/problem\/\d+/) !== null) parseProblemDescription();
 }
 
+/* 제출 직후에는 결과가 "기다리는 중/채점 중" → "맞았습니다"로 전이됨.
+   이력 페이지에서는 즉시 "맞았습니다"가 보이므로, 전이를 감지하여 구분함. */
+let seenPending = false;
+
 function startLoader() {
   loader = setInterval(async () => {
     // 기능 Off시 작동하지 않도록 함
@@ -29,15 +33,26 @@ function startLoader() {
       const data = table[0];
       if (data.hasOwnProperty('username') && data.hasOwnProperty('resultCategory')) {
         const { username, resultCategory } = data;
-        if (username === findUsername() &&
-          (resultCategory.includes(RESULT_CATEGORY.RESULT_ACCEPTED) ||
-            resultCategory.includes(RESULT_CATEGORY.RESULT_ENG_ACCEPTED))) {
-          stopLoader();
-          console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
-          startUpload();
-          const bojData = await findData();
-          await beginUpload(bojData);
+        if (username !== findUsername()) return;
+        const isAccepted = resultCategory.includes(RESULT_CATEGORY.RESULT_ACCEPTED) ||
+          resultCategory.includes(RESULT_CATEGORY.RESULT_ENG_ACCEPTED);
+        if (!isAccepted) {
+          // 채점 중/기다리는 중 등 비완료 상태를 감지
+          seenPending = true;
+          return;
         }
+        if (isAccepted && !seenPending) {
+          // 이력 페이지: 첫 폴링부터 바로 맞았습니다 → 업로드 스킵
+          stopLoader();
+          console.log('이력 페이지에서 이미 채점된 제출을 감지했습니다. 업로드를 건너뜁니다.');
+          return;
+        }
+        // 제출 직후: 채점 중 → 맞았습니다 전이 감지
+        stopLoader();
+        console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+        startUpload();
+        const bojData = await findData();
+        await beginUpload(bojData);
       }
     }
   }, 2000);
@@ -73,7 +88,10 @@ async function beginUpload(bojData) {
     calcSHA = calculateBlobSHA(bojData.code)
     log('cachedSHA', cachedSHA, 'calcSHA', calcSHA)
 
-    if (cachedSHA == calcSHA) {
+    if (isNull(cachedSHA)) {
+      /* GitHub에서 파일이 삭제된 경우, 새 업로드로 처리 */
+      console.log('캐시된 SHA가 없습니다. 새로 업로드합니다.');
+    } else if (cachedSHA == calcSHA) {
       markUploadedCSS(stats.branches, bojData.directory);
       console.log(`현재 제출번호를 업로드한 기록이 있습니다.` /* submissionID ${bojData.submissionId}` */);
       return;

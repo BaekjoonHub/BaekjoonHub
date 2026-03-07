@@ -1,3 +1,30 @@
+class GitHubApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = 'GitHubApiError';
+    this.status = status;
+  }
+}
+
+class TokenExpiredError extends GitHubApiError {
+  constructor(message, status) {
+    super(message, status);
+    this.name = 'TokenExpiredError';
+  }
+}
+
+async function handleGitHubResponse(res) {
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}));
+    const message = errorBody.message || `GitHub API error: ${res.status}`;
+    if (res.status === 401 || res.status === 403) {
+      throw new TokenExpiredError(message, res.status);
+    }
+    throw new GitHubApiError(message, res.status);
+  }
+  return res.json();
+}
+
 class GitHub {
   constructor(hook, token) {
     log('GitHub constructor', hook, token);
@@ -58,7 +85,7 @@ async function getDefaultBranchOnRepo(hook, token) {
     method: 'GET',
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   })
-    .then((res) => res.json())
+    .then(handleGitHubResponse)
     .then((data) => {
       return data.default_branch;
     });
@@ -77,7 +104,7 @@ async function getReference(hook, token, branch = 'main') {
     method: 'GET',
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   })
-    .then((res) => res.json())
+    .then(handleGitHubResponse)
     .then((data) => {
       return { refSHA: data.object.sha, ref: data.ref };
       // return { refSHA: data[0].object.sha, ref: data[0].ref };
@@ -97,7 +124,7 @@ async function createBlob(hook, token, content, path) {
     body: JSON.stringify({ content: b64EncodeUnicode(content), encoding: 'base64' }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
   })
-    .then((res) => res.json())
+    .then(handleGitHubResponse)
     .then((data) => {
       return { path, sha: data.sha, mode: '100644', type: 'blob' };
     });
@@ -117,7 +144,7 @@ async function createTree(hook, token, refSHA, tree_items) {
     body: JSON.stringify({ tree: tree_items, base_tree: refSHA }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
   })
-    .then((res) => res.json())
+    .then(handleGitHubResponse)
     .then((data) => {
       return data.sha;
     });
@@ -138,7 +165,7 @@ async function createCommit(hook, token, message, treeSHA, refSHA) {
     body: JSON.stringify({ message, tree: treeSHA, parents: [refSHA] }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
   })
-    .then((res) => res.json())
+    .then(handleGitHubResponse)
     .then((data) => {
       return data.sha;
     });
@@ -159,7 +186,7 @@ async function updateHead(hook, token, ref, commitSHA, force = true) {
     body: JSON.stringify({ sha: commitSHA, force }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
   })
-    .then((res) => res.json())
+    .then(handleGitHubResponse)
     .then((data) => {
       return data.sha;
     });
@@ -176,7 +203,7 @@ async function getTree(hook, token) {
     method: 'GET',
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   })
-    .then((res) => res.json())
+    .then(handleGitHubResponse)
     .then((data) => {
       return data.tree;
     });

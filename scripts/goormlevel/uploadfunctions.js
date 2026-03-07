@@ -4,19 +4,9 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
   const stats = await getStats();
-  let default_branch = stats.branches[hook];
-  if (isNull(default_branch)) {
-    default_branch = await git.getDefaultBranchOnRepo();
-    stats.branches[hook] = default_branch;
-  }
-  let refData;
-  try {
-    refData = await git.getReference(default_branch);
-  } catch (e) {
-    default_branch = await git.getDefaultBranchOnRepo();
-    stats.branches[hook] = default_branch;
-    refData = await git.getReference(default_branch);
-  }
+  const default_branch = await git.getDefaultBranchOnRepo();
+  stats.branches[hook] = default_branch;
+  const refData = await git.getReference(default_branch);
   const { refSHA, ref } = refData;
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
@@ -52,7 +42,15 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     console.error('token or hook is null', token, hook);
     return;
   }
-  return upload(token, hook, code, readme, directory, fileName, message, cb);
+  try {
+    return await upload(token, hook, code, readme, directory, fileName, message, cb);
+  } catch (e) {
+    if (e.name === 'TokenExpiredError') {
+      console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);
+      return;
+    }
+    throw e;
+  }
 }
 
 /** Github api를 사용하여 업로드를 합니다.
