@@ -9,6 +9,6 @@
             { "header": "sec-fetch-mode", "operation": "set", "value": "navigate" }
           ]
         },
-        "condition": { "domains":["acmicpc.net"], "resourceTypes": ["xmlhttprequest"] }
+        "condition": { "initiatorDomains":["acmicpc.net"], "resourceTypes": ["xmlhttprequest"] }
     }
 ]
