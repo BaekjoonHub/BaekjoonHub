@@ -270,6 +270,26 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
 }
 
 /**
+ * 맞은 문제 목록에 대해 문제 정보와 제출 코드를 병렬로 파싱하여 반환합니다.
+ * asyncPool(2)로 동시 요청을 제한하고, TTL 캐시를 활용합니다.
+ * @param {Array} datas - findUniqueResultTableListByUsername()의 결과
+ * @returns {Promise<Array>}
+ */
+async function findDatas(datas) {
+  datas = datas.filter((data) => !isNaN(Number(data.problemId)) && Number(data.problemId) >= 1000);
+  const enriched = await asyncPool(2, datas, async (data) => {
+    const info = await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId);
+    return { ...data, ...info };
+  });
+  const results = [];
+  for (const data of enriched) {
+    const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
+    results.push({ ...data, ...detail });
+  }
+  return results;
+}
+
+/**
  * 문제의 목록을 문제 번호로 한꺼번에 반환합니다.
  * (한번 조회 시 100개씩 나눠서 진행)
  * @param {Array} problemIds

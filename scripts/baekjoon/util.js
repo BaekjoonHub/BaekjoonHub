@@ -127,6 +127,87 @@ function selectBestSubmissionList(submissions) {
   return maxValuesGroupBykey(submissions, 'problemId', (a, b) => -compareSubmission(a, b));
 }
 
+/**
+ * 프로필 페이지의 nav-tabs에 "전체제출 업로드" 버튼을 삽입합니다.
+ */
+function insertUploadAllButton() {
+  const navTabs = document.querySelector('ul.nav.nav-tabs');
+  if (isNull(navTabs)) return;
+  const li = document.createElement('li');
+  const btn = document.createElement('a');
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" fill="currentColor"/></svg>전체제출 업로드';
+  btn.style.cursor = 'pointer';
+  btn.addEventListener('click', () => {
+    if (confirm('GitHub에 전체 제출을 업로드하시겠습니까?')) {
+      insertMultiLoader();
+      uploadAllSolvedProblem();
+    }
+  });
+  li.appendChild(btn);
+  navTabs.appendChild(li);
+}
+
+/**
+ * 전체 업로드 진행률 표시 DOM을 생성합니다.
+ */
+function insertMultiLoader() {
+  const navTabs = document.querySelector('ul.nav.nav-tabs');
+  if (isNull(navTabs)) return;
+  const wrap = document.createElement('li');
+  wrap.className = 'BJH_loading_wrap';
+  const nom = document.createElement('span');
+  nom.className = 'BJH_loading_number';
+  nom.textContent = '0';
+  const slash = document.createTextNode(' / ');
+  const denom = document.createElement('span');
+  denom.className = 'BJH_loading_number';
+  denom.textContent = '0';
+  wrap.appendChild(nom);
+  wrap.appendChild(slash);
+  wrap.appendChild(denom);
+  navTabs.appendChild(wrap);
+  multiloader.wrap = wrap;
+  multiloader.nom = nom;
+  multiloader.denom = denom;
+}
+
+/**
+ * 전체 업로드 전체 개수를 설정합니다.
+ */
+function setMultiLoaderDenom(num) {
+  if (!isNull(multiloader.denom)) {
+    multiloader.denom.textContent = String(num);
+  }
+}
+
+/**
+ * 전체 업로드 완료 개수를 증가시킵니다.
+ */
+function incMultiLoader(num) {
+  if (!isNull(multiloader.nom)) {
+    multiloader.nom.textContent = String(Number(multiloader.nom.textContent) + num);
+  }
+}
+
+/**
+ * 전체 업로드가 이미 최신 상태임을 표시합니다.
+ */
+function MultiloaderUpToDate() {
+  if (!isNull(multiloader.wrap)) {
+    multiloader.wrap.textContent = 'Up To Date';
+  }
+}
+
+/**
+ * 전체 업로드 성공을 표시합니다.
+ */
+function MultiloaderSuccess() {
+  if (!isNull(multiloader.wrap)) {
+    multiloader.wrap.textContent = 'SUCCESS';
+    setTimeout(() => location.reload(), 3000);
+  }
+}
+
 function convertResultTableHeader(header) {
   switch (header) {
     case '문제번호':
