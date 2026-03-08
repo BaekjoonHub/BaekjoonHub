@@ -72,7 +72,14 @@ async function parseData() {
 
 async function makeData(origin) {
   const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code, language } = origin;
-  const directory = await getDirNameByOrgOption(`프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, language);
+  const directory = await buildDirectory('programmers', {
+    platform: '프로그래머스',
+    level,
+    id: problemId,
+    title: convertSingleCharToDoubleChar(title),
+    language,
+    _defaultDir: `프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+  });
   const levelWithLv = `${level}`.includes('lv') ? level : `lv${level}`.replace('lv', 'level ');
   const message = `[${levelWithLv}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
@@ -224,7 +231,14 @@ async function fetchProblemCodeAndData(problemInfo) {
  */
 async function makeDataForBulkUpload(origin) {
   const { problem_description, problemId, level, division, language_extension, title, code, language, link } = origin;
-  const directory = await getDirNameByOrgOption(`프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, language);
+  const directory = await buildDirectory('programmers', {
+    platform: '프로그래머스',
+    level,
+    id: problemId,
+    title: convertSingleCharToDoubleChar(title),
+    language,
+    _defaultDir: `프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+  });
   const levelWithLv = `${level}`.includes('lv') ? level : `lv${level}`.replace('lv', 'level ');
   const message = `[${levelWithLv}] Title: ${title} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;

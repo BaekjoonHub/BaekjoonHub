@@ -342,6 +342,91 @@ $id('examplesBox').addEventListener('click', () => {
   chrome.storage.local.set({ bjhSaveExamples: $id('examplesBox').checked });
 });
 
+/* === Directory Template Settings === */
+const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea', 'goormlevel'];
+
+const TEMPLATE_PREVIEW_VARS = {
+  baekjoon:    { platform: '백준', level: 'Gold', levelFull: 'Gold V', id: '1000', title: 'A＋B', language: 'Python' },
+  programmers: { platform: '프로그래머스', level: 'lv2', id: '12345', title: '타겟 넘버', language: 'JavaScript' },
+  swea:        { platform: 'SWEA', level: 'D4', id: '1234', title: '문제제목', language: 'Java' },
+  goormlevel:  { platform: 'goormlevel', level: '보통', examId: '12345', id: '54321', title: '문제제목', language: 'Python' },
+};
+
+const TEMPLATE_DEFAULTS = {
+  baekjoon:    '${platform}/${level}/${id}. ${title}',
+  programmers: '${platform}/${level}/${id}. ${title}',
+  swea:        '${platform}/${level}/${id}. ${title}',
+  goormlevel:  '${platform}/${level}/${id}. ${title}',
+};
+
+function updateTemplatePreview(platform) {
+  const input = $id(`tmpl_${platform}`);
+  const preview = $id(`tmpl_preview_${platform}`);
+  if (!input || !preview) return;
+  const template = input.value || TEMPLATE_DEFAULTS[platform];
+  const vars = TEMPLATE_PREVIEW_VARS[platform];
+  const result = template.replace(/\$\{(\w+)\}/g, (match, key) => {
+    return vars.hasOwnProperty(key) ? vars[key] : '';
+  });
+  preview.textContent = `\u279C ${result}`;
+}
+
+function loadTemplateSettings() {
+  TEMPLATE_PLATFORMS.forEach((platform) => {
+    const key = `BaekjoonHub_dirTemplate_${platform}`;
+    chrome.storage.local.get(key, (data) => {
+      const input = $id(`tmpl_${platform}`);
+      if (input && data[key]) {
+        input.value = data[key];
+      }
+      updateTemplatePreview(platform);
+    });
+  });
+}
+
+function saveTemplateSettings() {
+  TEMPLATE_PLATFORMS.forEach((platform) => {
+    const input = $id(`tmpl_${platform}`);
+    if (!input) return;
+    const key = `BaekjoonHub_dirTemplate_${platform}`;
+    const value = input.value.trim();
+    if (value) {
+      chrome.storage.local.set({ [key]: value });
+    } else {
+      chrome.storage.local.remove(key);
+    }
+  });
+}
+
+function resetTemplateSettings() {
+  TEMPLATE_PLATFORMS.forEach((platform) => {
+    const input = $id(`tmpl_${platform}`);
+    if (input) input.value = '';
+    const key = `BaekjoonHub_dirTemplate_${platform}`;
+    chrome.storage.local.remove(key);
+    updateTemplatePreview(platform);
+  });
+}
+
+TEMPLATE_PLATFORMS.forEach((platform) => {
+  const input = $id(`tmpl_${platform}`);
+  if (input) {
+    input.addEventListener('input', () => updateTemplatePreview(platform));
+  }
+});
+
+$id('tmpl_save').addEventListener('click', () => {
+  saveTemplateSettings();
+  const successEl = $id('success');
+  successEl.textContent = 'Directory template saved.';
+  successEl.hidden = false;
+  setTimeout(() => { successEl.hidden = true; }, 2000);
+});
+
+$id('tmpl_reset').addEventListener('click', () => {
+  resetTemplateSettings();
+});
+
 /* Initialize i18n, theme, and detect mode type */
 I18N.init(() => {
   initTheme();
@@ -378,6 +463,7 @@ I18N.init(() => {
 
       $id('hook_mode').classList.add('hidden');
       $id('commit_mode').classList.remove('hidden');
+      loadTemplateSettings();
     } else {
       $id('hook_mode').classList.remove('hidden');
       $id('commit_mode').classList.add('hidden');

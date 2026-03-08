@@ -45,6 +45,7 @@ function markUploadedCSS(branches, directory) {
 function markUploadFailedCSS() {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
+  if (!elem) return;
   elem.className = 'markuploadfailed';
 }
 

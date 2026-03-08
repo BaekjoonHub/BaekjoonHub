@@ -55,7 +55,7 @@ async function beginUpload(parsedData) {
 
     const {
       // 시험 uid
-      examSequence,
+      examId,
       // 시험 uid와 연계된 퀴즈 uid
       quizNumber,
       // 커밋 메시지
@@ -84,7 +84,7 @@ async function beginUpload(parsedData) {
     log('cachedSHA', cachedSHA, 'calcSHA', calcSHA);
     if (cachedSHA == calcSHA) {
       markUploadedCSS(stats.branches, directory);
-      console.log(`현재 제출번호를 업로드한 기록이 있습니다. examSequence: ${examSequence}, quizNumber: ${quizNumber}`);
+      console.log(`현재 제출번호를 업로드한 기록이 있습니다. examId: ${examId}, quizNumber: ${quizNumber}`);
       return;
     }
     /* 신규 제출 번호라면 새롭게 커밋  */

@@ -158,10 +158,15 @@ async function uploadExamplesFromProblemPage(samples) {
   const solvedJson = await getSolvedACById(problemId);
   const title = solvedJson.titleKo;
   const level = bj_level[solvedJson.level];
-  const directory = await getDirNameByOrgOption(
-    `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-    ''
-  );
+  const directory = await buildDirectory('baekjoon', {
+    platform: '백준',
+    level: level.replace(/ .*/, ''),
+    levelFull: level,
+    id: problemId,
+    title: convertSingleCharToDoubleChar(title),
+    language: '',
+    _defaultDir: `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+  });
   const commitMessage = `[${level}] Title: ${title} - 예제 입출력 -BaekjoonHub`;
 
   const git = new GitHub(hook, token);

@@ -56,6 +56,9 @@ const I18N = (() => {
 
       // welcome
       'welcome.saveExamples': 'Save example I/O',
+      'welcome.dirTemplate.title': 'Directory Path Template',
+      'welcome.dirTemplate.reset': 'Reset',
+      'welcome.dirTemplate.save': 'Save',
     },
     ko: {
       // welcome.html
@@ -113,6 +116,9 @@ const I18N = (() => {
 
       // welcome
       'welcome.saveExamples': '예제 입출력 저장',
+      'welcome.dirTemplate.title': '저장 경로 템플릿',
+      'welcome.dirTemplate.reset': '초기화',
+      'welcome.dirTemplate.save': '저장',
     },
   };
 
