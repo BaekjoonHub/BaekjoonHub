@@ -3,6 +3,36 @@
   모든 해당 파일의 모든 함수는 findData()를 통해 호출됩니다.
 */
 
+function parseSampleData(doc = document) {
+  const samples = [];
+  let i = 1;
+  while (true) {
+    const inputContainer = doc.querySelector(`#sample-input-${i}`);
+    const outputContainer = doc.querySelector(`#sample-output-${i}`);
+    if (!inputContainer && !outputContainer) break;
+    const inputEl = inputContainer?.tagName === 'PRE' ? inputContainer : inputContainer?.querySelector('pre');
+    const outputEl = outputContainer?.tagName === 'PRE' ? outputContainer : outputContainer?.querySelector('pre');
+    samples.push({
+      input: inputEl ? inputEl.innerText : '',
+      output: outputEl ? outputEl.innerText : '',
+    });
+    i++;
+  }
+  return samples;
+}
+
+function samplesToFileEntries(samples) {
+  if (samples.length === 0) return [];
+  const entries = [];
+  const useNumber = samples.length > 1;
+  samples.forEach((sample, idx) => {
+    const suffix = useNumber ? (idx + 1) : '';
+    entries.push({ filename: `input${suffix}.txt`, content: sample.input });
+    entries.push({ filename: `output${suffix}.txt`, content: sample.output });
+  });
+  return entries;
+}
+
 /*
   bojData를 초기화하는 함수로 문제 요약과 코드를 파싱합니다.
 
@@ -45,7 +75,7 @@ async function findData(data) {
 async function makeDetailMessageAndReadme(data) {
   const { problemId, submissionId, result, title, level, problem_tags,
     problem_description, problem_input, problem_output, submissionTime,
-    code, language, memory, runtime } = data;
+    code, language, memory, runtime, samples } = data;
   const score = parseNumberFromString(result);
   const directory = await getDirNameByOrgOption(
     `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
@@ -76,7 +106,8 @@ async function makeDetailMessageAndReadme(data) {
     fileName,
     message,
     readme,
-    code
+    code,
+    samples
   };
 }
 
@@ -190,10 +221,11 @@ function parseProblemDescription(doc = document) {
   const problem_description = unescapeHtml(doc.getElementById('problem_description').innerHTML.trim());
   const problem_input = doc.getElementById('problem_input')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
   const problem_output = doc.getElementById('problem_output')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
+  const samples = parseSampleData(doc);
   if (problemId && problem_description) {
     log(`문제번호 ${problemId}의 내용을 저장합니다.`);
-    updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output});
-    return { problemId, problem_description, problem_input, problem_output};
+    updateProblemsFromStats({ problemId, problem_description, problem_input, problem_output, samples});
+    return { problemId, problem_description, problem_input, problem_output, samples};
   }
   return {};
 }
@@ -258,8 +290,8 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
         const title = solvedJson.titleKo;
         const level = bj_level[solvedJson.level];
 
-        const { problem_description, problem_input, problem_output } = description;
-        return { problemId, submissionId, title, level, code, problem_description, problem_input, problem_output, problem_tags };
+        const { problem_description, problem_input, problem_output, samples } = description;
+        return { problemId, submissionId, title, level, code, problem_description, problem_input, problem_output, problem_tags, samples: samples || [] };
       })
       .catch((err) => {
         console.log('error ocurred: ', err);

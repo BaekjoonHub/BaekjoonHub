@@ -167,6 +167,10 @@ async function getModeType() {
   return await getObjectFromLocalStorage('mode_type');
 }
 
+async function getSaveExamplesOption() {
+  return (await getObjectFromLocalStorage('bjhSaveExamples')) === true;
+}
+
 async function saveToken(token) {
   return await saveObjectInLocalStorage({ BaekjoonHub_token: token });
 }

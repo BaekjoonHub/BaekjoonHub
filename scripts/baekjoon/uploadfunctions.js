@@ -16,7 +16,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     return;
   }
   try {
-    return await upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb);
+    return await upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb, bojData.samples);
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);
@@ -63,11 +63,19 @@ async function uploadAllSolvedProblem() {
     const bojDatas = datas.filter((d) => !isNull(d));
 
     // 4. Blob 생성 (asyncPool(2) 병렬 제어)
+    const saveExamples = await getSaveExamplesOption();
     await asyncPool(2, bojDatas, async (bojData) => {
       if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
         const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`);
         const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`);
         tree_items.push(source, readme);
+        if (saveExamples && bojData.samples && bojData.samples.length > 0) {
+          const fileEntries = samplesToFileEntries(bojData.samples);
+          for (const entry of fileEntries) {
+            const blob = await git.createBlob(entry.content, `${bojData.directory}/${entry.filename}`);
+            tree_items.push(blob);
+          }
+        }
       }
       incMultiLoader(1);
     });
@@ -101,7 +109,7 @@ async function uploadAllSolvedProblem() {
  * @param {string} commitMessage - 커밋 메시지
  * @param {function} cb - 콜백 함수 (ex. 업로드 후 로딩 아이콘 처리 등)
  */
-async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
+async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb, samples) {
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
   const stats = await getStats();
@@ -111,16 +119,70 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   const { refSHA, ref } = refData;
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
-  const treeSHA = await git.createTree(refSHA, [source, readme]);
+  const tree_items = [source, readme];
+
+  // 예제 입출력 파일 추가
+  const saveExamples = await getSaveExamplesOption();
+  if (saveExamples && samples && samples.length > 0) {
+    const fileEntries = samplesToFileEntries(samples);
+    for (const entry of fileEntries) {
+      const blob = await git.createBlob(entry.content, `${directory}/${entry.filename}`);
+      tree_items.push(blob);
+    }
+  }
+
+  const treeSHA = await git.createTree(refSHA, tree_items);
   const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
   await git.updateHead(ref, commitSHA);
 
   /* stats의 값을 갱신합니다. */
-  updateObjectDatafromPath(stats.submission, `${hook}/${source.path}`, source.sha);
-  updateObjectDatafromPath(stats.submission, `${hook}/${readme.path}`, readme.sha);
+  tree_items.forEach((item) => {
+    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
+  });
   await saveStats(stats);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);
   }
+}
+
+async function uploadExamplesFromProblemPage(samples) {
+  const token = await getToken();
+  const hook = await getHook();
+  if (isNull(token) || isNull(hook)) {
+    console.error('token or hook is null', token, hook);
+    return;
+  }
+  const { problemId } = parseProblemDescription();
+  if (!problemId) throw new Error('문제 번호를 파싱할 수 없습니다.');
+  const solvedJson = await getSolvedACById(problemId);
+  const title = solvedJson.titleKo;
+  const level = bj_level[solvedJson.level];
+  const directory = await getDirNameByOrgOption(
+    `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+    ''
+  );
+  const commitMessage = `[${level}] Title: ${title} - 예제 입출력 -BaekjoonHub`;
+
+  const git = new GitHub(hook, token);
+  const stats = await getStats();
+  const default_branch = await git.getDefaultBranchOnRepo();
+  stats.branches[hook] = default_branch;
+  const { refSHA, ref } = await git.getReference(default_branch);
+
+  const fileEntries = samplesToFileEntries(samples);
+  const tree_items = [];
+  for (const entry of fileEntries) {
+    const blob = await git.createBlob(entry.content, `${directory}/${entry.filename}`);
+    tree_items.push(blob);
+  }
+
+  const treeSHA = await git.createTree(refSHA, tree_items);
+  const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
+  await git.updateHead(ref, commitSHA);
+
+  tree_items.forEach((item) => {
+    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
+  });
+  await saveStats(stats);
 }

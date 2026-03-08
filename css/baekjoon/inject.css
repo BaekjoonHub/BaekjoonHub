@@ -194,3 +194,33 @@
   font-family:'Roboto';
   color:white;
 }
+
+.bjh-save-examples-btn {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #0078c3;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.bjh-save-examples-btn:hover {
+  background-color: #005a94;
+}
+
+.bjh-save-examples-btn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.bjh-save-examples-btn.success {
+  background-color: #78b13f;
+}
+
+.bjh-save-examples-btn.fail {
+  background-color: #d9534f;
+}
