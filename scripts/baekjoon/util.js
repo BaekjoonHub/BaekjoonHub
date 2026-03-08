@@ -28,6 +28,7 @@ function startUpload() {
 function markUploadedCSS(branches, directory) {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
+  if (!elem) return;
   elem.className = 'markuploaded';
   const uploadedUrl = "https://github.com/" +
               Object.keys(branches)[0] + "/tree/" + 

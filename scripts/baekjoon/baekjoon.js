@@ -41,16 +41,12 @@ function startLoader() {
           seenPending = true;
           return;
         }
-        if (isAccepted && !seenPending) {
-          // 이력 페이지: 첫 폴링부터 바로 맞았습니다 → 업로드 스킵
-          stopLoader();
-          console.log('이력 페이지에서 이미 채점된 제출을 감지했습니다. 업로드를 건너뜁니다.');
-          return;
-        }
-        // 제출 직후: 채점 중 → 맞았습니다 전이 감지
         stopLoader();
-        console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
-        startUpload();
+        if (seenPending) {
+          console.log('풀이가 맞았습니다. 업로드를 시작합니다.');
+          startUpload();
+        }
+        // !seenPending: 이력 페이지 or 재시도. beginUpload()의 SHA 체크가 중복 처리.
         const bojData = await findData();
         await beginUpload(bojData);
       }
