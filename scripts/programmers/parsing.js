@@ -95,3 +95,149 @@ async function makeData(origin) {
     + `> 출처: 프로그래머스 코딩 테스트 연습, https://school.programmers.co.kr/learn/challenges`;
   return { problemId, directory, message, fileName, readme, code };
 }
+
+/**
+ * stats에서 이미 업로드된 프로그래머스 문제 ID를 추출합니다.
+ */
+function extractUploadedProblemIdsForProgrammers(stats, hook) {
+  const uploadedIds = new Set();
+  if (isNull(stats) || isNull(stats.submission) || isNull(hook)) return uploadedIds;
+
+  const parts = hook.split('/');
+  if (parts.length < 2) return uploadedIds;
+  const owner = parts[0];
+  const repo = parts[1];
+
+  const ownerObj = stats.submission[owner];
+  if (isNull(ownerObj)) return uploadedIds;
+  const repoObj = ownerObj[repo];
+  if (isNull(repoObj)) return uploadedIds;
+
+  function extractFromNode(node) {
+    if (isNull(node)) return;
+    for (const key of Object.keys(node)) {
+      const match = key.match(/^(\d+)/);
+      if (match) {
+        uploadedIds.add(match[1]);
+      }
+    }
+  }
+
+  // 직접 모드: submission[owner][repo]["프로그래머스"]["12345.제목"]
+  if (!isNull(repoObj['프로그래머스'])) {
+    extractFromNode(repoObj['프로그래머스']);
+  }
+
+  // language 모드: submission[owner][repo][lang]["프로그래머스"]["12345.제목"]
+  for (const key of Object.keys(repoObj)) {
+    if (key === '프로그래머스') continue;
+    const langNode = repoObj[key];
+    if (!isNull(langNode) && typeof langNode === 'object' && !isNull(langNode['프로그래머스'])) {
+      extractFromNode(langNode['프로그래머스']);
+    }
+  }
+
+  return uploadedIds;
+}
+
+/**
+ * 프로그래머스 풀이 목록 페이지에서 모든 풀이 완료된 문제를 파싱합니다.
+ */
+async function findAllSolvedProblems() {
+  const problems = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(`/learn/challenges?statuses=solved&page=${page}`);
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const rows = doc.querySelectorAll('table tbody tr');
+    if (rows.length === 0) break;
+    for (const row of rows) {
+      const link = row.querySelector('td a[href*="/learn/courses/30/lessons/"]');
+      if (!link) continue;
+      const href = link.getAttribute('href');
+      const problemId = href.match(/lessons\/(\d+)/)?.[1];
+      const title = link.textContent.trim();
+      const levelEl = row.querySelector('td .level-badge, td span[class*="level"]');
+      const level = levelEl ? levelEl.textContent.trim().replace('Lv.', 'lv') : 'lv0';
+      if (problemId) {
+        problems.push({ problemId, title, level });
+      }
+    }
+    // Check if there's a next page
+    const nextBtn = doc.querySelector('a[rel="next"], .pagination .next:not(.disabled)');
+    if (!nextBtn) break;
+    page++;
+  }
+  return problems;
+}
+
+/**
+ * 개별 문제 페이지에서 코드와 메타데이터를 가져옵니다.
+ */
+async function fetchProblemCodeAndData(problemInfo) {
+  const { problemId, title, level } = problemInfo;
+  try {
+    const res = await fetch(`/learn/courses/30/lessons/${problemId}`);
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    // Extract code from textarea#code
+    const codeEl = doc.querySelector('textarea#code');
+    const code = codeEl ? codeEl.value : '';
+    if (!code) return null;
+
+    // Extract language extension from editor tab
+    const langTab = doc.querySelector('div.editor ul li.nav-item a, .editor .nav-item a');
+    const language_extension = langTab ? langTab.textContent.trim().split('.').pop() : 'txt';
+
+    // Extract problem description
+    const descEl = doc.querySelector('div.guide-section-description > div.markdown');
+    const problem_description = descEl ? descEl.innerHTML : '';
+
+    // Extract division from breadcrumb
+    const breadcrumb = doc.querySelector('ol.breadcrumb');
+    const division = breadcrumb
+      ? [...breadcrumb.querySelectorAll('li')]
+          .filter((x) => !x.classList.contains('active'))
+          .map((x) => x.textContent.trim())
+          .map((x) => convertSingleCharToDoubleChar(x))
+          .filter((x) => x)
+          .join('/')
+      : '코딩테스트 연습';
+
+    // Extract language name for org option
+    const langBtnEl = doc.querySelector('div#tour7 > button, .language-select button');
+    const language = langBtnEl ? langBtnEl.textContent.trim() : language_extension;
+
+    const link = `https://school.programmers.co.kr/learn/courses/30/lessons/${problemId}`;
+
+    return await makeDataForBulkUpload({ link, problemId, level, title, problem_description, division, language_extension, code, language });
+  } catch (e) {
+    console.error(`Failed to fetch problem ${problemId}:`, e);
+    return null;
+  }
+}
+
+/**
+ * 일괄 업로드용 데이터를 생성합니다.
+ */
+async function makeDataForBulkUpload(origin) {
+  const { problem_description, problemId, level, division, language_extension, title, code, language, link } = origin;
+  const directory = await getDirNameByOrgOption(`프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, language);
+  const levelWithLv = `${level}`.includes('lv') ? level : `lv${level}`.replace('lv', 'level ');
+  const message = `[${levelWithLv}] Title: ${title} -BaekjoonHub`;
+  const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
+  const dateInfo = getDateString(new Date(Date.now()));
+  const readme =
+    `# [${levelWithLv}] ${title} - ${problemId} \n\n`
+    + `[문제 링크](${link}) \n\n`
+    + `### 구분\n\n`
+    + `${division.replace('/', ' > ')}\n\n`
+    + `### 제출 일자\n\n`
+    + `${dateInfo}\n\n`
+    + `### 문제 설명\n\n`
+    + `${problem_description}\n\n`
+    + `> 출처: 프로그래머스 코딩 테스트 연습, https://school.programmers.co.kr/learn/challenges`;
+  return { problemId, directory, message, fileName, readme, code };
+}

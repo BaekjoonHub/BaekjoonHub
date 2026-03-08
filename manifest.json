@@ -3,7 +3,7 @@
   "name": "백준허브(BaekjoonHub)",
   "description": "Automatically integrate your BOJ submissions to GitHub",
   "homepage_url": "https://github.com/BaekjoonHub/BaekjoonHub",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "author": "flaxinger",
   "action": {
     "default_icon": "assets/thumbnail.png",
@@ -84,6 +84,7 @@
         "scripts/authorize.js",
         "scripts/storage.js",
         "scripts/enable.js",
+        "scripts/baekjoon/statusicons.js",
         "scripts/baekjoon/variables.js",
         "scripts/baekjoon/storage.js",
         "scripts/baekjoon/parsing.js",

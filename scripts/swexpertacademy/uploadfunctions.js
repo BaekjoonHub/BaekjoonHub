@@ -60,3 +60,61 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
     cb(stats.branches, directory);
   }
 }
+
+/**
+ * SWEA에서 맞은 문제 전체를 GitHub에 일괄 업로드합니다.
+ */
+async function uploadAllSolvedProblemSWEA() {
+  const tree_items = [];
+  try {
+    // 1. GitHub tree 동기화
+    const stats = await updateLocalStorageStats();
+    const hook = await getHook();
+    const token = await getToken();
+    const git = new GitHub(hook, token);
+    const default_branch = stats.branches[hook];
+    const { refSHA, ref } = await git.getReference(default_branch);
+
+    // 2. 풀이 완료 문제 목록 파싱 & 이미 업로드된 문제 스킵
+    const solvedProblems = await findAllSolvedProblemsSWEA();
+    const uploadedIds = extractUploadedProblemIdsForSWEA(stats, hook);
+    const newList = solvedProblems.filter((item) => !uploadedIds.has(String(item.problemId)));
+
+    if (newList.length === 0) {
+      MultiloaderUpToDate();
+      return null;
+    }
+
+    // 3. 문제 데이터 파싱 (asyncPool(2) 병렬 제어)
+    const { submission } = stats;
+    setMultiLoaderDenom(newList.length);
+    const datas = await asyncPool(2, newList, fetchSWEASubmissionCode);
+    const bojDatas = datas.filter((d) => !isNull(d));
+
+    // 4. Blob 생성 (asyncPool(2) 병렬 제어)
+    await asyncPool(2, bojDatas, async (bojData) => {
+      if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
+        const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`);
+        const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`);
+        tree_items.push(source, readme);
+      }
+      incMultiLoader(1);
+    });
+
+    // 5. 단일 커밋으로 일괄 업로드
+    if (tree_items.length !== 0) {
+      const treeSHA = await git.createTree(refSHA, tree_items);
+      const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeSHA, refSHA);
+      await git.updateHead(ref, commitSHA);
+      MultiloaderSuccess();
+      tree_items.forEach((item) => {
+        updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
+      });
+      await saveStats(stats);
+    } else {
+      MultiloaderUpToDate();
+    }
+  } catch (error) {
+    console.error('전체 코드 업로드 실패', error);
+  }
+}

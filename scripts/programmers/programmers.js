@@ -12,6 +12,31 @@ const currentUrl = window.location.href;
 // 프로그래머스 연습 문제 주소임을 확인하고, 맞다면 로더를 실행
 if (currentUrl.includes('/learn/courses/30') && currentUrl.includes('lessons')) startLoader();
 
+if (currentUrl.includes('/learn/challenges')) {
+  (async () => {
+    const enable = await checkEnable();
+    if (!enable) return;
+    const stats = await getStats();
+    if (isNull(stats)) return;
+    if (stats.version !== getVersion()) {
+      await versionUpdate();
+    }
+    // SPA이므로 div.total이 렌더링될 때까지 대기
+    const waitForElement = (selector, timeout = 10000) => new Promise((resolve) => {
+      const el = document.querySelector(selector);
+      if (el) return resolve(el);
+      const observer = new MutationObserver(() => {
+        const el = document.querySelector(selector);
+        if (el) { observer.disconnect(); resolve(el); }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => { observer.disconnect(); resolve(null); }, timeout);
+    });
+    await waitForElement('div.total div.bookmark');
+    insertUploadAllButton();
+  })();
+}
+
 function startLoader() {
   loader = setInterval(async () => {
     // 기능 Off시 작동하지 않도록 함

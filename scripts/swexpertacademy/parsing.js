@@ -107,3 +107,228 @@ async function makeData(origin) {
     + `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
   return { problemId, directory, message, fileName, readme, code };
 }
+
+/**
+ * stats에서 이미 업로드된 SWEA 문제 ID를 추출합니다.
+ */
+function extractUploadedProblemIdsForSWEA(stats, hook) {
+  const uploadedIds = new Set();
+  if (isNull(stats) || isNull(stats.submission) || isNull(hook)) return uploadedIds;
+
+  const parts = hook.split('/');
+  if (parts.length < 2) return uploadedIds;
+  const owner = parts[0];
+  const repo = parts[1];
+
+  const ownerObj = stats.submission[owner];
+  if (isNull(ownerObj)) return uploadedIds;
+  const repoObj = ownerObj[repo];
+  if (isNull(repoObj)) return uploadedIds;
+
+  function extractFromNode(node) {
+    if (isNull(node)) return;
+    for (const key of Object.keys(node)) {
+      const match = key.match(/^(\d+)/);
+      if (match) {
+        uploadedIds.add(match[1]);
+      }
+    }
+  }
+
+  // 직접 모드: submission[owner][repo]["SWEA"]["1234.제목"]
+  if (!isNull(repoObj['SWEA'])) {
+    extractFromNode(repoObj['SWEA']);
+  }
+
+  // language 모드: submission[owner][repo][lang]["SWEA"]["1234.제목"]
+  for (const key of Object.keys(repoObj)) {
+    if (key === 'SWEA') continue;
+    const langNode = repoObj[key];
+    if (!isNull(langNode) && typeof langNode === 'object' && !isNull(langNode['SWEA'])) {
+      extractFromNode(langNode['SWEA']);
+    }
+  }
+
+  return uploadedIds;
+}
+
+/**
+ * SWEA userCode.do 페이지에서 모든 풀이 완료된 문제를 파싱합니다.
+ * userCode.do 페이지는 로그인한 사용자의 코드 목록을 보여주며,
+ * AJAX로 페이지네이션된 테이블을 가져옵니다.
+ */
+async function findAllSolvedProblemsSWEA() {
+  const problems = [];
+  // userCode.do 페이지의 테이블에서 문제 목록을 추출
+  const rows = document.querySelectorAll('table tbody tr, .problem_list tbody tr, .code_list tbody tr');
+  for (const row of rows) {
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 3) continue;
+    // 상태 확인 - "풀이중"이 아닌 완료된 항목만
+    const statusCell = cells[cells.length - 1];
+    const status = statusCell ? statusCell.textContent.trim() : '';
+    if (status.includes('풀이중')) continue;
+
+    // 문제번호와 제목 추출
+    const linkEl = row.querySelector('a[href*="contestProbId"], a[href*="problemDetail"]');
+    if (!linkEl) continue;
+    const href = linkEl.getAttribute('href') || '';
+    const contestProbIdMatch = href.match(/contestProbId=(\d+)/);
+    const contestProbId = contestProbIdMatch ? contestProbIdMatch[1] : '';
+
+    const problemIdEl = cells[0];
+    const problemId = problemIdEl ? problemIdEl.textContent.trim() : '';
+    const title = linkEl.textContent.trim();
+
+    // 레벨 추출
+    const levelEl = row.querySelector('.badge, span[class*="level"]');
+    const level = levelEl ? levelEl.textContent.trim() : (cells[2] ? cells[2].textContent.trim() : 'Unrated');
+
+    if (problemId && contestProbId) {
+      problems.push({ problemId, contestProbId, title, level });
+    }
+  }
+
+  // 페이지네이션 처리 - 다음 페이지가 있으면 fetch로 가져옴
+  const paginationLinks = document.querySelectorAll('.pagination a, .paging a');
+  const visitedPages = new Set(['1']);
+  for (const pageLink of paginationLinks) {
+    const pageHref = pageLink.getAttribute('href') || pageLink.getAttribute('onclick') || '';
+    const pageMatch = pageHref.match(/(\d+)/);
+    if (!pageMatch || visitedPages.has(pageMatch[1])) continue;
+    visitedPages.add(pageMatch[1]);
+
+    try {
+      const userId = new URLSearchParams(window.location.search).get('userId');
+      const res = await fetch(`/main/userpage/code/userCode.do?userId=${userId}&pageNo=${pageMatch[1]}`);
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const pageRows = doc.querySelectorAll('table tbody tr, .problem_list tbody tr, .code_list tbody tr');
+      for (const row of pageRows) {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 3) continue;
+        const statusCell = cells[cells.length - 1];
+        const status = statusCell ? statusCell.textContent.trim() : '';
+        if (status.includes('풀이중')) continue;
+
+        const linkEl = row.querySelector('a[href*="contestProbId"], a[href*="problemDetail"]');
+        if (!linkEl) continue;
+        const href = linkEl.getAttribute('href') || '';
+        const contestProbIdMatch = href.match(/contestProbId=(\d+)/);
+        const contestProbId = contestProbIdMatch ? contestProbIdMatch[1] : '';
+
+        const problemIdEl = cells[0];
+        const problemId = problemIdEl ? problemIdEl.textContent.trim() : '';
+        const title = linkEl.textContent.trim();
+
+        const levelEl = row.querySelector('.badge, span[class*="level"]');
+        const level = levelEl ? levelEl.textContent.trim() : (cells[2] ? cells[2].textContent.trim() : 'Unrated');
+
+        if (problemId && contestProbId) {
+          problems.push({ problemId, contestProbId, title, level });
+        }
+      }
+    } catch (e) {
+      console.error(`Failed to fetch page ${pageMatch[1]}:`, e);
+    }
+  }
+
+  return problems;
+}
+
+/**
+ * SWEA 제출 이력에서 Pass된 코드를 가져옵니다.
+ */
+async function fetchSWEASubmissionCode(problemInfo) {
+  const { problemId, contestProbId, title, level } = problemInfo;
+  try {
+    // Step 1: 제출 이력 페이지에서 Pass된 제출 찾기
+    const historyRes = await fetch(`/main/code/problem/problemSubmitHistory.do?contestProbId=${contestProbId}`);
+    const historyHtml = await historyRes.text();
+    const historyDoc = new DOMParser().parseFromString(historyHtml, 'text/html');
+
+    // Pass된 제출 행 찾기
+    const historyRows = historyDoc.querySelectorAll('table tbody tr');
+    let passRow = null;
+    for (const row of historyRows) {
+      const resultCell = row.querySelector('td.pass, td .pass, td');
+      if (resultCell && resultCell.textContent.trim().toLowerCase().includes('pass')) {
+        passRow = row;
+        break;
+      }
+    }
+    if (!passRow) return null;
+
+    // 코드 보기 링크에서 solutionId 추출
+    const codeLink = passRow.querySelector('a[href*="problemSubmitDetail"], a[onclick*="problemSubmitDetail"]');
+    let detailUrl = '';
+    if (codeLink) {
+      const onclick = codeLink.getAttribute('onclick') || '';
+      const hrefAttr = codeLink.getAttribute('href') || '';
+      if (onclick) {
+        // onclick에서 파라미터 추출
+        const params = onclick.match(/\(([^)]+)\)/);
+        if (params) detailUrl = `/main/code/problem/problemSubmitDetail.do?${params[1]}`;
+        else detailUrl = hrefAttr;
+      } else {
+        detailUrl = hrefAttr;
+      }
+    }
+
+    if (!detailUrl) return null;
+
+    // Step 2: 코드 상세 페이지에서 소스코드 추출
+    const detailRes = await fetch(detailUrl);
+    const detailHtml = await detailRes.text();
+    const detailDoc = new DOMParser().parseFromString(detailHtml, 'text/html');
+
+    // 코드 블록에서 소스코드 추출
+    const codeEl = detailDoc.querySelector('pre code, .code-viewer pre, textarea#source, #textSource, pre.code');
+    const code = codeEl ? codeEl.textContent : '';
+    if (!code) return null;
+
+    // 메타데이터 추출
+    const infoEls = detailDoc.querySelectorAll('.info li span, .submit_info span');
+    const languageRaw = infoEls[0] ? infoEls[0].textContent.trim() : 'C++';
+    const memory = infoEls[1] ? infoEls[1].textContent.trim().toUpperCase() : '';
+    const runtime = infoEls[2] ? infoEls[2].textContent.trim() : '';
+    const length = infoEls[3] ? infoEls[3].textContent.trim() : '';
+
+    const language = (languageRaw === languageRaw.toUpperCase())
+      ? languageRaw.substring(0, 1) + languageRaw.substring(1).toLowerCase()
+      : languageRaw;
+    const extension = languages[languageRaw.toLowerCase()] || 'txt';
+
+    const link = `https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=${contestProbId}`;
+
+    return await makeDataForBulkUploadSWEA({
+      link, problemId, level, title, extension, code, runtime, memory, length, language
+    });
+  } catch (e) {
+    console.error(`Failed to fetch SWEA problem ${problemId}:`, e);
+    return null;
+  }
+}
+
+/**
+ * SWEA 일괄 업로드용 데이터를 생성합니다.
+ */
+async function makeDataForBulkUploadSWEA(origin) {
+  const { link, problemId, level, extension, title, runtime, memory, code, length, language } = origin;
+  const directory = await getDirNameByOrgOption(`SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, language);
+  const message = `[${level}] Title: ${title} -BaekjoonHub`;
+  const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
+  const dateInfo = getDateString(new Date(Date.now()));
+  const readme =
+    `# [${level}] ${title} - ${problemId} \n\n`
+    + `[문제 링크](${link}) \n\n`
+    + `### 성능 요약\n\n`
+    + `메모리: ${memory}, `
+    + `시간: ${runtime}, `
+    + `코드길이: ${length} Bytes\n\n`
+    + `### 제출 일자\n\n`
+    + `${dateInfo}\n\n`
+    + `\n\n`
+    + `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
+  return { problemId, directory, message, fileName, readme, code };
+}
