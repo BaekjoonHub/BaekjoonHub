@@ -92,6 +92,62 @@
             data-i18n="welcome.requestFeature">Request a feature!</a>
         </div>
       </div>
+
+      <details class="tmpl-details mt-4">
+        <summary class="tmpl-summary">
+          <span data-i18n="welcome.dirTemplate.title">Directory Path Template</span>
+          <span class="tmpl-chevron"></span>
+        </summary>
+
+        <div class="card tmpl-card">
+          <div class="tmpl-var-list">
+            <code class="var-badge">platform</code>
+            <code class="var-badge">level</code>
+            <code class="var-badge">id</code>
+            <code class="var-badge">title</code>
+            <code class="var-badge">language</code>
+          </div>
+
+          <div class="tmpl-group">
+            <div class="tmpl-label-row">
+              <label>백준</label>
+              <span class="tmpl-extra">+ <code>levelFull</code></span>
+            </div>
+            <input id="tmpl_baekjoon" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
+            <p class="tmpl-preview" id="tmpl_preview_baekjoon"></p>
+          </div>
+
+          <div class="tmpl-group">
+            <div class="tmpl-label-row">
+              <label>프로그래머스</label>
+            </div>
+            <input id="tmpl_programmers" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
+            <p class="tmpl-preview" id="tmpl_preview_programmers"></p>
+          </div>
+
+          <div class="tmpl-group">
+            <div class="tmpl-label-row">
+              <label>SWEA</label>
+            </div>
+            <input id="tmpl_swea" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
+            <p class="tmpl-preview" id="tmpl_preview_swea"></p>
+          </div>
+
+          <div class="tmpl-group">
+            <div class="tmpl-label-row">
+              <label>구름레벨</label>
+              <span class="tmpl-extra">+ <code>examId</code></span>
+            </div>
+            <input id="tmpl_goormlevel" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
+            <p class="tmpl-preview" id="tmpl_preview_goormlevel"></p>
+          </div>
+
+          <div class="tmpl-actions">
+            <button id="tmpl_reset" class="btn-control btn-sm" data-i18n="welcome.dirTemplate.reset">Reset</button>
+            <button id="tmpl_save" class="btn-primary btn-sm" data-i18n="welcome.dirTemplate.save">Save</button>
+          </div>
+        </div>
+      </details>
     </div>
 
     <!-- GitHub Star link -->

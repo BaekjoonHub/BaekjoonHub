@@ -89,7 +89,14 @@ async function makeData(origin) {
   * C++ 같은 경우에는 문자가 그대로 유지됩니다.
   * */
   const lang = (language === language.toUpperCase()) ? language.substring(0, 1) + language.substring(1).toLowerCase() : language
-  const directory = await getDirNameByOrgOption(`SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, lang);
+  const directory = await buildDirectory('swea', {
+    platform: 'SWEA',
+    level,
+    id: problemId,
+    title: convertSingleCharToDoubleChar(title),
+    language: lang,
+    _defaultDir: `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+  });
   const message = `[${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
   const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
@@ -315,7 +322,14 @@ async function fetchSWEASubmissionCode(problemInfo) {
  */
 async function makeDataForBulkUploadSWEA(origin) {
   const { link, problemId, level, extension, title, runtime, memory, code, length, language } = origin;
-  const directory = await getDirNameByOrgOption(`SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`, language);
+  const directory = await buildDirectory('swea', {
+    platform: 'SWEA',
+    level,
+    id: problemId,
+    title: convertSingleCharToDoubleChar(title),
+    language,
+    _defaultDir: `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
+  });
   const message = `[${level}] Title: ${title} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
   const dateInfo = getDateString(new Date(Date.now()));

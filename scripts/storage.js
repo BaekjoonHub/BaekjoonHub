@@ -281,6 +281,32 @@ async function getDirNameByOrgOption(dirName, language) {
   return dirName;
 }
 
+// CSP-safe 템플릿 치환 (eval/new Function 미사용)
+function applyDirectoryTemplate(template, variables) {
+  return template.replace(/\$\{(\w+)\}/g, (match, key) => {
+    return variables.hasOwnProperty(key) ? variables[key] : '';
+  });
+}
+
+// 플랫폼별 템플릿 저장/조회
+async function getDirectoryTemplate(platform) {
+  const key = `BaekjoonHub_dirTemplate_${platform}`;
+  return await getObjectFromLocalStorage(key);
+}
+
+async function saveDirectoryTemplate(platform, template) {
+  const key = `BaekjoonHub_dirTemplate_${platform}`;
+  return await saveObjectInLocalStorage({ [key]: template });
+}
+
+async function buildDirectory(platform, variables) {
+  const template = await getDirectoryTemplate(platform);
+  if (template) {
+    return applyDirectoryTemplate(template, variables);
+  }
+  return getDirNameByOrgOption(variables._defaultDir, variables.language);
+}
+
 
 /**
  * @deprecated

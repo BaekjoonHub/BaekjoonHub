@@ -12,7 +12,7 @@ async function parseData() {
 
   const pathnameList = pathname.split('/');
 
-  const examSequence = Number(pathnameList[2]) || 0;
+  const examId = Number(pathnameList[2]) || 0;
   const quizNumber = Number(pathnameList[5]) || 0;
   const difficultyLabel = document.querySelector('span[role=text] > span').innerHTML;
   const difficulty = difficultyLabels[difficultyLabel];
@@ -71,7 +71,7 @@ async function parseData() {
     // 문제 링크
     link,
     // 시험 uid
-    examSequence,
+    examId,
     // 시험 uid와 연계된 퀴즈 uid
     quizNumber,
     // 난이도
@@ -91,7 +91,7 @@ async function parseData() {
 
 /**
  * @typedef MakeDataReturnType
- * @prop {number} examSequence 시험 sequence
+ * @prop {number} examId 시험 sequence
  * @prop {number} quizNumber 퀴즈 number
  * @prop {string} directory 레포에 기록될 폴더명
  * @prop {string} message 커밋 메시지
@@ -108,7 +108,7 @@ async function makeData({
   // 문제 링크
   link,
   // 시험 uid
-  examSequence,
+  examId,
   // 시험 uid와 연계된 퀴즈 uid
   quizNumber,
   // 난이도
@@ -125,13 +125,21 @@ async function makeData({
   runtime,
 }) {
   const languageExtension = languages[language.toLowerCase()];
-  const directory = await getDirNameByOrgOption(`goormlevel/${examSequence}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`, language);
+  const directory = await buildDirectory('goormlevel', {
+    platform: 'goormlevel',
+    level: difficulty,
+    examId,
+    id: quizNumber,
+    title: convertSingleCharToDoubleChar(title),
+    language,
+    _defaultDir: `goormlevel/${examId}/${quizNumber}. ${convertSingleCharToDoubleChar(title)}`,
+  });
   const message = `[난이도 ${difficulty}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${languageExtension}`;
   const dateInfo = getDateString(new Date(Date.now()));
   // prettier-ignore
   const readme =
-    `# ${title} - ${examSequence}/${quizNumber} \n\n`
+    `# ${title} - ${examId}/${quizNumber} \n\n`
     + `[문제 링크](${link}) \n\n`
     + `### 성능 요약\n\n`
     + `메모리: ${memory}, `
@@ -139,5 +147,5 @@ async function makeData({
     + `### 제출 일자\n\n`
     + `${dateInfo}\n\n`
 
-  return { examSequence, quizNumber, directory, message, fileName, readme, code };
+  return { examId, quizNumber, directory, message, fileName, readme, code };
 }
