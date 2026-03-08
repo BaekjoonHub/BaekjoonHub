@@ -89,6 +89,19 @@
   cursor: default;
 }
 
+.bjh-uploaded-icon {
+  display: inline-block;
+  transform: rotate(45deg);
+  height: 8px;
+  width: 4px;
+  border-bottom: 2px solid #78b13f;
+  border-right: 2px solid #78b13f;
+  margin-left: 4px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
 .BJH_button_wrap {
   display: inline-block;
 }

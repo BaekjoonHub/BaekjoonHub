@@ -8,3 +8,9 @@ const languages = {
   'python': 'py',
   'java': 'java'
 };
+
+const multiloader = {
+  wrap: null,
+  nom: null,
+  denom: null,
+};

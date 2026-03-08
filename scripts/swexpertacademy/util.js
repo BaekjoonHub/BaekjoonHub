@@ -82,3 +82,73 @@ function getDateString(date){
 
   return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
 }
+
+/**
+ * 유저 코드 목록 페이지에 "전체제출 업로드" 버튼을 삽입합니다.
+ */
+function insertUploadAllButton() {
+  const header = document.querySelector('h4.club_box_tit');
+  if (isNull(header)) return;
+  const btn = document.createElement('button');
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:3px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" fill="currentColor"/></svg>전체제출 업로드';
+  btn.className = 'BJH_uploadall_btn';
+  btn.style.cssText = 'cursor:pointer;margin-left:10px;padding:2px 8px;background:transparent;color:#2e2e2e;border:1px solid #ccc;border-radius:3px;font-size:13px;font-weight:400;vertical-align:middle;line-height:22px;';
+  btn.addEventListener('click', () => {
+    if (confirm('GitHub에 전체 제출을 업로드하시겠습니까?')) {
+      insertMultiLoader();
+      uploadAllSolvedProblemSWEA();
+    }
+  });
+  header.appendChild(btn);
+}
+
+/**
+ * 전체 업로드 진행률 표시 DOM을 생성합니다.
+ */
+function insertMultiLoader() {
+  const btn = document.querySelector('.BJH_uploadall_btn');
+  const parent = btn ? btn.parentElement : document.body;
+  const wrap = document.createElement('span');
+  wrap.className = 'BJH_loading_wrap';
+  wrap.style.cssText = 'margin-left:10px;font-size:13px;vertical-align:middle;';
+  const nom = document.createElement('span');
+  nom.className = 'BJH_loading_number';
+  nom.textContent = '0';
+  const slash = document.createTextNode(' / ');
+  const denom = document.createElement('span');
+  denom.className = 'BJH_loading_number';
+  denom.textContent = '0';
+  wrap.appendChild(nom);
+  wrap.appendChild(slash);
+  wrap.appendChild(denom);
+  if (btn) btn.after(wrap);
+  else parent.appendChild(wrap);
+  multiloader.wrap = wrap;
+  multiloader.nom = nom;
+  multiloader.denom = denom;
+}
+
+function setMultiLoaderDenom(num) {
+  if (!isNull(multiloader.denom)) {
+    multiloader.denom.textContent = String(num);
+  }
+}
+
+function incMultiLoader(num) {
+  if (!isNull(multiloader.nom)) {
+    multiloader.nom.textContent = String(Number(multiloader.nom.textContent) + num);
+  }
+}
+
+function MultiloaderUpToDate() {
+  if (!isNull(multiloader.wrap)) {
+    multiloader.wrap.textContent = 'Up To Date';
+  }
+}
+
+function MultiloaderSuccess() {
+  if (!isNull(multiloader.wrap)) {
+    multiloader.wrap.textContent = 'SUCCESS';
+    setTimeout(() => location.reload(), 3000);
+  }
+}

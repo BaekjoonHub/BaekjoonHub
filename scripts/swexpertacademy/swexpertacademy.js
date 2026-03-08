@@ -13,6 +13,19 @@ const currentUrl = window.location.href;
 if (currentUrl.includes('/main/solvingProblem/solvingProblem.do') && document.querySelector('header > h1 > span').textContent === '모의 테스트') startLoader();
 else if (currentUrl.includes('/main/code/problem/problemSolver.do') && currentUrl.includes('extension=BaekjoonHub')) parseAndUpload();
 
+if (currentUrl.includes('/main/userpage/code/userCode.do')) {
+  (async () => {
+    const enable = await checkEnable();
+    if (!enable) return;
+    const stats = await getStats();
+    if (isNull(stats)) return;
+    if (stats.version !== getVersion()) {
+      await versionUpdate();
+    }
+    insertUploadAllButton();
+  })();
+}
+
 function parseAndUpload() {
   //async wrapper
   (async () => {
