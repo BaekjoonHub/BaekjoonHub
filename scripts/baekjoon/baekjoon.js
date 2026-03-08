@@ -15,7 +15,10 @@ log(currentUrl);
 const username = findUsername();
 if (!isNull(username)) {
   if (['status', `user_id=${username}`, 'problem_id', 'from_mine=1'].every((key) => currentUrl.includes(key))) startLoader();
-  else if (currentUrl.match(/\.net\/problem\/\d+/) !== null) parseProblemDescription();
+  else if (currentUrl.match(/\.net\/problem\/\d+/) !== null) {
+    parseProblemDescription();
+    injectSaveExamplesButton();
+  }
   else if (currentUrl.includes('.net/user')) {
     getStats().then((stats) => {
       if (!isEmpty(stats.version) && stats.version === getVersion()) {
@@ -169,6 +172,35 @@ function injectManualUploadButtons(currentUsername) {
     });
     resultCell.appendChild(btn);
   }
+}
+
+async function injectSaveExamplesButton() {
+  const enabled = await getSaveExamplesOption();
+  if (!enabled) return;
+  const samples = parseSampleData(document);
+  if (samples.length === 0) return;
+  const anchor = document.getElementById('sampleinput1') || document.querySelector('#sample-input-1')?.parentElement;
+  if (!anchor) return;
+  const btn = document.createElement('button');
+  btn.className = 'bjh-save-examples-btn';
+  btn.textContent = '예제 업로드';
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.remove('success', 'fail');
+    btn.textContent = '업로드 중...';
+    try {
+      await uploadExamplesFromProblemPage(samples);
+      btn.classList.add('success');
+      btn.textContent = '업로드 완료';
+    } catch (e) {
+      console.error('예제 업로드 실패:', e);
+      btn.classList.add('fail');
+      btn.textContent = '업로드 실패';
+      btn.disabled = false;
+    }
+  });
+  anchor.parentElement.insertBefore(btn, anchor);
 }
 
 async function versionUpdate() {

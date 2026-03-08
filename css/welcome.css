@@ -1,60 +1,274 @@
+/* === Reset & Base === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  background-color: #363636 !important;
-  padding: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* === Light mode (default) === */
+body {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+/* === Dark mode === */
+html.dark body {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+/* === Layout === */
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 16px;
+}
+
+.hidden { display: none !important; }
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.mt-6 { margin-top: 24px; }
+.mb-12 { margin-bottom: 48px; }
+
+.space-y-6 > * + * { margin-top: 24px; }
+
+/* === Logo === */
+.logo-font {
+  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
+  font-size: clamp(3.5rem, 10vw, 5rem);
+  font-weight: 700;
+  margin-bottom: 8px;
   text-align: center;
-  transition: background-color 0.75s ease;
-  font-family: 'Helvetica Neue', 'Lucida Grande', sans-serif;
 }
 
-#title {
-  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
-  font-size: 5em;
-  font-weight: bold;
-  margin-bottom: 0px;
-  margin-top: 10px;
+.text-brand { color: #0078c3; }
+
+.subtitle {
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+html.dark .subtitle { color: #9ca3af; }
+
+/* === Top Controls (Language + Theme) === */
+.top-controls {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.caption {
-  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
-  font-size: 1.5em;
-  font-weight: normal !important;
-  margin-top: 3px !important;
-  margin-bottom: 0px;
+.btn-control {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
-#error {
-  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
-  font-weight: normal !important;
-  color: red !important;
-  margin-bottom: 0px;
+.btn-control:hover { background: #f3f4f6; }
+
+html.dark .btn-control {
+  border-color: #4b5563;
+  background: #1f2937;
+  color: #e5e7eb;
+}
+html.dark .btn-control:hover { background: #374151; }
+
+/* === Messages === */
+.msg {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-#success {
-  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
-  font-size: 1.1em;
-  font-weight: normal !important;
-  color: green !important;
-  margin-bottom: 0px;
+.msg a { font-weight: 500; }
+
+.msg-error {
+  background: #fef2f2;
+  color: #dc2626;
+}
+html.dark .msg-error {
+  background: rgba(127, 29, 29, 0.2);
+  color: #f87171;
 }
 
-#unlink {
-  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
-  font-size: 1.1em;
-  font-weight: normal !important;
-  color: green !important;
-  margin-bottom: 0px;
+.msg-success {
+  background: #f0fdf4;
+  color: #16a34a;
+  text-align: center;
+}
+html.dark .msg-success {
+  background: rgba(20, 83, 45, 0.2);
+  color: #4ade80;
 }
 
-p {
-  color: white !important;
+.msg-success a,
+.msg-error a {
+  color: inherit;
+  text-decoration: underline;
 }
-.onboarding {
-  font-family: sans-serif;
-  border-top: solid white 1px;
+
+/* === Unlink === */
+.unlink-area {
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+}
+html.dark .unlink-area { color: #9ca3af; }
+
+.link-brand {
+  color: #0078c3;
+  cursor: pointer;
   font-weight: 500;
-  font-size: medium;
+  text-decoration: none;
+}
+.link-brand:hover { text-decoration: underline; }
+
+/* === Card === */
+.card {
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+}
+html.dark .card {
+  background: #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
 }
 
-a {
-  color: white !important;
+@media (min-width: 640px) {
+  .card { padding: 32px; }
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* === Form === */
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus {
+  border-color: #0078c3;
+  box-shadow: 0 0 0 3px rgba(0, 120, 195, 0.15);
+}
+
+html.dark .form-input {
+  border-color: #4b5563;
+  background: #374151;
+  color: #f9fafb;
+}
+html.dark .form-input:focus {
+  border-color: #0078c3;
+  box-shadow: 0 0 0 3px rgba(0, 120, 195, 0.25);
+}
+
+/* === Buttons === */
+.btn-primary {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background: #0078c3;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-primary:hover { background: #005f9e; }
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* === Token status === */
+.token-status {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.token-status.status-ok { color: #16a34a; }
+.token-status.status-err { color: #dc2626; }
+
+html.dark .token-status.status-ok { color: #4ade80; }
+html.dark .token-status.status-err { color: #f87171; }
+
+/* === Checkbox label === */
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
   cursor: pointer;
 }
+html.dark .checkbox-label { color: #9ca3af; }
+
+/* === Muted text === */
+.muted-text {
+  color: #6b7280;
+}
+html.dark .muted-text { color: #9ca3af; }
+
+.muted-text .text-lg {
+  font-size: 1.125rem;
+}
+.muted-text .font-semibold {
+  font-weight: 600;
+}
+.muted-text .text-sm {
+  font-size: 0.875rem;
+}
+
+/* === Footer === */
+.footer-link {
+  margin-top: 64px;
+  text-align: center;
+}
+
+.link-muted {
+  font-size: 14px;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.link-muted:hover { color: #0078c3; }
+
+html.dark .link-muted { color: #6b7280; }
+html.dark .link-muted:hover { color: #0078c3; }
+
+.star-logo-name { color: #374151; }
+html.dark .star-logo-name { color: #f9fafb; }

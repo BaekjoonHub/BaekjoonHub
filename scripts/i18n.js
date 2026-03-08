@@ -13,7 +13,7 @@ const I18N = (() => {
       'welcome.getStartedBtn': 'Get Started',
       'welcome.wantMore': 'Want more features?',
       'welcome.requestFeature': 'Request a feature!',
-      'welcome.starOnGithub': 'Star <span style="color: white">Baekjoon</span><span style="color: #0078c3 !important">Hub</span> on GitHub',
+      'welcome.starOnGithub': 'Star <span class="star-logo-name">Baekjoon</span><span class="text-brand">Hub</span> on GitHub',
       'welcome.unlinkText': 'Linked the wrong repo?',
       'welcome.unlinkAction': 'Unlink',
 
@@ -23,11 +23,11 @@ const I18N = (() => {
       'welcome.error.creating401': 'Error creating ${name} - Unauthorized access to repo. Try again later!',
       'welcome.error.creating403': 'Error creating ${name} - Forbidden access to repository. Try again later!',
       'welcome.error.creating422': 'Error creating ${name} - Unprocessable Entity. Repository may have already been created. Try Linking instead (select 2nd option).',
-      'welcome.success.created': 'Successfully created <a target="blank" href="${url}">${name}</a>.<br/>Start <a href="https://www.acmicpc.net/">BOJ</a>!<br/>',
+      'welcome.success.created': 'Successfully created <a target="blank" href="${url}">${name}</a>.<br/>Start solving on <a href="https://www.acmicpc.net/">BOJ</a> · <a href="https://school.programmers.co.kr/">Programmers</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://level.goorm.io/">Goorm</a>!',
       'welcome.error.linking301': 'Error linking <a target="blank" href="https://github.com/${name}">${name}</a> to BaekjoonHub. <br> This repository has been moved permanently. Try creating a new one.',
       'welcome.error.linking403': 'Error linking <a target="blank" href="https://github.com/${name}">${name}</a> to BaekjoonHub. <br> Forbidden action. Please make sure you have the right access to this repository.',
       'welcome.error.linking404': 'Error linking <a target="blank" href="https://github.com/${name}">${name}</a> to BaekjoonHub. <br> Resource not found. Make sure you enter the right repository name.',
-      'welcome.success.linked': 'Successfully linked <a target="blank" href="${url}">${name}</a> to BaekjoonHub.<br/>Start <a href="https://www.acmicpc.net/">BOJ</a> now!<br/>',
+      'welcome.success.linked': 'Successfully linked <a target="blank" href="${url}">${name}</a> to BaekjoonHub.<br/>Start solving on <a href="https://www.acmicpc.net/">BOJ</a> · <a href="https://school.programmers.co.kr/">Programmers</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://level.goorm.io/">Goorm</a>!',
       'welcome.error.noOption': 'No option selected - Pick an option from dropdown menu below that best suits you!',
       'welcome.error.noRepoName': 'No repository name added - Enter the name of your repository!',
       'welcome.attempting': 'Attempting to create Hook... Please wait.',
@@ -53,6 +53,9 @@ const I18N = (() => {
 
       // popup.js dynamic messages
       'popup.yourRepo': 'Your Repo:',
+
+      // welcome
+      'welcome.saveExamples': 'Save example I/O',
     },
     ko: {
       // welcome.html
@@ -67,7 +70,7 @@ const I18N = (() => {
       'welcome.getStartedBtn': '시작하기',
       'welcome.wantMore': '더 필요한 기능이 있나요?',
       'welcome.requestFeature': '여기서 요청해주세요!',
-      'welcome.starOnGithub': 'GitHub에서 <span style="color: white">Baekjoon</span><span style="color: #0078c3 !important">Hub</span>에 Star\u2B50 한 번 부탁드려요',
+      'welcome.starOnGithub': 'GitHub에서 <span class="star-logo-name">Baekjoon</span><span class="text-brand">Hub</span>에 Star\u2B50 한 번 부탁드려요',
       'welcome.unlinkText': '다른 저장소로 바꾸고 싶으신가요?',
       'welcome.unlinkAction': '연결 해제',
 
@@ -77,11 +80,11 @@ const I18N = (() => {
       'welcome.error.creating401': '${name} 저장소에 접근할 권한이 없어요. 잠시 후 다시 시도해주세요!',
       'welcome.error.creating403': '${name} 저장소에 접근이 거부됐어요. 잠시 후 다시 시도해주세요!',
       'welcome.error.creating422': '${name} 저장소가 이미 있는 것 같아요. "내 저장소 연결하기"를 선택해보세요.',
-      'welcome.success.created': '<a target="blank" href="${url}">${name}</a> 저장소가 만들어졌어요!<br/><a href="https://www.acmicpc.net/">백준</a>에서 문제를 풀어보세요!<br/>',
+      'welcome.success.created': '<a target="blank" href="${url}">${name}</a> 저장소가 만들어졌어요!<br/><a href="https://www.acmicpc.net/">백준</a> · <a href="https://school.programmers.co.kr/">프로그래머스</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://level.goorm.io/">구름</a>에서 문제를 풀어보세요!',
       'welcome.error.linking301': '<a target="blank" href="https://github.com/${name}">${name}</a> 연결에 실패했어요. <br> 저장소가 다른 곳으로 이동된 것 같아요. 새로 만들어보세요.',
       'welcome.error.linking403': '<a target="blank" href="https://github.com/${name}">${name}</a> 연결에 실패했어요. <br> 이 저장소에 대한 접근 권한이 있는지 확인해주세요.',
       'welcome.error.linking404': '<a target="blank" href="https://github.com/${name}">${name}</a> 연결에 실패했어요. <br> 저장소를 찾을 수 없어요. 이름을 다시 확인해주세요.',
-      'welcome.success.linked': '<a target="blank" href="${url}">${name}</a> 저장소가 연결됐어요!<br/><a href="https://www.acmicpc.net/">백준</a>에서 문제를 풀어보세요!<br/>',
+      'welcome.success.linked': '<a target="blank" href="${url}">${name}</a> 저장소가 연결됐어요!<br/><a href="https://www.acmicpc.net/">백준</a> · <a href="https://school.programmers.co.kr/">프로그래머스</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://level.goorm.io/">구름</a>에서 문제를 풀어보세요!',
       'welcome.error.noOption': '위에서 옵션을 하나 선택해주세요!',
       'welcome.error.noRepoName': '저장소 이름을 입력해주세요!',
       'welcome.attempting': '저장소 연결 중... 잠시만 기다려주세요.',
@@ -107,6 +110,9 @@ const I18N = (() => {
 
       // popup.js dynamic messages
       'popup.yourRepo': '연결된 저장소:',
+
+      // welcome
+      'welcome.saveExamples': '예제 입출력 저장',
     },
   };
 

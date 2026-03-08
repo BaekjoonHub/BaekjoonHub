@@ -1,12 +1,12 @@
 const REPO_DESCRIPTION = 'This is an auto push repository for Baekjoon Online Judge created with [BaekjoonHub](https://github.com/BaekjoonHub/BaekjoonHub).';
 
-const option = () => {
-  return $('#type').val();
-};
+const $ = (sel) => document.querySelector(sel);
+const $id = (id) => document.getElementById(id);
+
+const option = () => $id('type').value;
 
 const repositoryName = () => {
-  const input = $('#name').val().trim();
-  // GitHub URL이 입력된 경우 레포 이름만 추출
+  const input = $id('name').value.trim();
   const match = input.match(/^https?:\/\/github\.com\/[^/]+\/([^/]+)/);
   if (match) {
     return match[1].replace(/\.git$/, '');
@@ -15,71 +15,64 @@ const repositoryName = () => {
 };
 
 /* Status codes for creating of repo */
-
 const statusCode = (res, status, name) => {
+  const errorEl = $id('error');
+  const successEl = $id('success');
+  const unlinkEl = $id('unlink');
+
   switch (status) {
     case 304:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.creating304', { name }, 'text');
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.creating304', { name }, 'text');
+      errorEl.hidden = false;
       break;
-
     case 400:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.creating400', { name }, 'text');
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.creating400', { name }, 'text');
+      errorEl.hidden = false;
       break;
-
     case 401:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.creating401', { name }, 'text');
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.creating401', { name }, 'text');
+      errorEl.hidden = false;
       break;
-
     case 403:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.creating403', { name }, 'text');
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.creating403', { name }, 'text');
+      errorEl.hidden = false;
       break;
-
     case 422:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.creating422', { name }, 'text');
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.creating422', { name }, 'text');
+      errorEl.hidden = false;
       break;
-
     default:
-      /* Change mode type to commit */
       chrome.storage.local.set({ mode_type: 'commit' }, () => {
-        $('#error').hide();
-        I18N.bind(document.getElementById('success'), 'welcome.success.created', { url: res.html_url, name });
-        $('#success').show();
-        $('#unlink').show();
-        /* Show new layout */
-        document.getElementById('hook_mode').style.display = 'none';
-        document.getElementById('commit_mode').style.display = 'inherit';
+        errorEl.hidden = true;
+        I18N.bind(successEl, 'welcome.success.created', { url: res.html_url, name });
+        successEl.hidden = false;
+        unlinkEl.hidden = false;
+        $id('hook_mode').classList.add('hidden');
+        $id('commit_mode').classList.remove('hidden');
       });
-      /* Set Repo Hook */
       chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
         console.log('Successfully set new repo hook');
       });
-
       break;
   }
 };
 
 const createRepo = (token, name) => {
   const AUTHENTICATION_URL = 'https://api.github.com/user/repos';
-  let data = {
+  const data = JSON.stringify({
     name,
     private: true,
     auto_init: true,
     description: REPO_DESCRIPTION,
-  };
-  data = JSON.stringify(data);
+  });
 
   const xhr = new XMLHttpRequest();
-  xhr.addEventListener('readystatechange', function() {
+  xhr.addEventListener('readystatechange', function () {
     if (xhr.readyState === 4) {
       statusCode(JSON.parse(xhr.responseText), xhr.status, name);
     }
@@ -98,46 +91,40 @@ const createRepo = (token, name) => {
 
 /* Status codes for linking of repo */
 const linkStatusCode = (status, name) => {
+  const errorEl = $id('error');
+  const successEl = $id('success');
+  const unlinkEl = $id('unlink');
   let bool = false;
+
   switch (status) {
     case 301:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.linking301', { name });
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.linking301', { name });
+      errorEl.hidden = false;
       break;
-
     case 403:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.linking403', { name });
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.linking403', { name });
+      errorEl.hidden = false;
       break;
-
     case 404:
-      $('#success').hide();
-      I18N.bind(document.getElementById('error'), 'welcome.error.linking404', { name });
-      $('#error').show();
+      successEl.hidden = true;
+      I18N.bind(errorEl, 'welcome.error.linking404', { name });
+      errorEl.hidden = false;
       break;
-
     default:
       bool = true;
       break;
   }
-  $('#unlink').show();
+  unlinkEl.hidden = false;
   return bool;
 };
 
-/* 
-    Method for linking hook with an existing repository 
-    Steps:
-    1. Check if existing repository exists and the user has write access to it.
-    2. Link Hook to it (chrome Storage).
-*/
-/** 빈 레포(커밋 없음)에 초기 README.md 커밋을 생성합니다. */
+/** Initialize empty repo with README.md */
 const initializeEmptyRepoWelcome = async (token, hook, branch) => {
   const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' };
   const repoName = hook.split('/')[1];
   const readmeContent = btoa(unescape(encodeURIComponent(`# ${repoName}\n${REPO_DESCRIPTION}\n`)));
-  // Contents API — 빈 레포에서도 안정적으로 동작
   const res = await fetch(`https://api.github.com/repos/${hook}/contents/README.md`, {
     method: 'PUT', headers, body: JSON.stringify({ message: 'Initial commit - BaekjoonHub', content: readmeContent, branch }),
   });
@@ -149,30 +136,26 @@ const initializeEmptyRepoWelcome = async (token, hook, branch) => {
 
 const linkRepo = (token, name) => {
   const AUTHENTICATION_URL = `https://api.github.com/repos/${name}`;
+  const errorEl = $id('error');
+  const successEl = $id('success');
+  const unlinkEl = $id('unlink');
 
   const xhr = new XMLHttpRequest();
-  xhr.addEventListener('readystatechange', async function() {
+  xhr.addEventListener('readystatechange', async function () {
     if (xhr.readyState === 4) {
       const res = JSON.parse(xhr.responseText);
       const bool = linkStatusCode(xhr.status, name);
       if (xhr.status === 200) {
-        // BUG FIX
         if (!bool) {
-          // unable to gain access to repo in commit mode. Must switch to hook mode.
-          /* Set mode type to hook */
           chrome.storage.local.set({ mode_type: 'hook' }, () => {
             console.log(`Error linking ${name} to BaekjoonHub`);
           });
-          /* Set Repo Hook to NONE */
           chrome.storage.local.set({ BaekjoonHub_hook: null }, () => {
             console.log('Defaulted repo hook to NONE');
           });
-
-          /* Hide accordingly */
-          document.getElementById('hook_mode').style.display = 'inherit';
-          document.getElementById('commit_mode').style.display = 'none';
+          $id('hook_mode').classList.remove('hidden');
+          $id('commit_mode').classList.add('hidden');
         } else {
-          // 빈 레포인 경우 초기 커밋 생성 (size === 0이면 빈 레포)
           if (res.size === 0) {
             try {
               await initializeEmptyRepoWelcome(token, res.full_name, res.default_branch);
@@ -182,15 +165,12 @@ const linkRepo = (token, name) => {
             }
           }
 
-          /* Change mode type to commit */
-          /* Save repo url to chrome storage */
           chrome.storage.local.set({ mode_type: 'commit', repo: res.html_url }, () => {
-            $('#error').hide();
-            I18N.bind(document.getElementById('success'), 'welcome.success.linked', { url: res.html_url, name });
-            $('#success').show();
-            $('#unlink').show();
+            errorEl.hidden = true;
+            I18N.bind(successEl, 'welcome.success.linked', { url: res.html_url, name });
+            successEl.hidden = false;
+            unlinkEl.hidden = false;
           });
-          /* Set Repo Hook */
 
           stats = {};
           stats.version = chrome.runtime.getManifest().version;
@@ -199,14 +179,12 @@ const linkRepo = (token, name) => {
 
           chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
             console.log('Successfully set new repo hook');
-            /* Get problems solved count */
             chrome.storage.local.get('stats', (psolved) => {
               const { stats } = psolved;
             });
           });
-          /* Hide accordingly */
-          document.getElementById('hook_mode').style.display = 'none';
-          document.getElementById('commit_mode').style.display = 'inherit';
+          $id('hook_mode').classList.add('hidden');
+          $id('commit_mode').classList.remove('hidden');
         }
       }
     }
@@ -219,74 +197,85 @@ const linkRepo = (token, name) => {
 };
 
 const unlinkRepo = () => {
-  /* Set mode type to hook */
   chrome.storage.local.set({ mode_type: 'hook' }, () => {
-    console.log(`Unlinking repo`);
+    console.log('Unlinking repo');
   });
-  /* Set Repo Hook to NONE */
   chrome.storage.local.set({ BaekjoonHub_hook: null }, () => {
     console.log('Defaulted repo hook to NONE');
   });
-
-  /*프로그래밍 언어별 폴더 정리 옵션 세션 저장 초기화*/
-  chrome.storage.local.set({ BaekjoonHub_disOption: "platform" }, () => {
+  chrome.storage.local.set({ BaekjoonHub_disOption: 'platform' }, () => {
     console.log('DisOption Reset');
   });
-
-  /* Hide accordingly */
-  document.getElementById('hook_mode').style.display = 'inherit';
-  document.getElementById('commit_mode').style.display = 'none';
+  $id('hook_mode').classList.remove('hidden');
+  $id('commit_mode').classList.add('hidden');
 };
 
-/* Check for value of select tag, Get Started disabled by default */
-
-$('#type').on('change', function() {
-  const valueSelected = this.value;
-  if (valueSelected) {
-    $('#hook_button').attr('disabled', false);
+/* --- Dark/Light theme --- */
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    $id('theme_icon_light').classList.remove('hidden');
+    $id('theme_icon_dark').classList.add('hidden');
   } else {
-    $('#hook_button').attr('disabled', true);
+    document.documentElement.classList.remove('dark');
+    $id('theme_icon_light').classList.add('hidden');
+    $id('theme_icon_dark').classList.remove('hidden');
   }
+}
+
+function initTheme() {
+  chrome.storage.local.get('bjh_theme', (data) => {
+    let theme = data.bjh_theme;
+    if (!theme) {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    applyTheme(theme);
+  });
+}
+
+$id('theme_toggle').addEventListener('click', () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  const newTheme = isDark ? 'light' : 'dark';
+  applyTheme(newTheme);
+  chrome.storage.local.set({ bjh_theme: newTheme });
 });
 
-$('#hook_button').on('click', () => {
-  /* on click should generate: 1) option 2) repository name */
-  if (!option()) {
-    I18N.bind(document.getElementById('error'), 'welcome.error.noOption', null, 'text');
-    $('#error').show();
-  } else if (!repositoryName()) {
-    I18N.bind(document.getElementById('error'), 'welcome.error.noRepoName', null, 'text');
-    $('#name').focus();
-    $('#error').show();
-  } else {
-    $('#error').hide();
-    I18N.bind(document.getElementById('success'), 'welcome.attempting', null, 'text');
-    $('#success').show();
+/* --- Event listeners --- */
+$id('type').addEventListener('change', function () {
+  $id('hook_button').disabled = !this.value;
+});
 
-    /* 
-      Perform processing
-      - step 1: Check if current stage === hook.
-      - step 2: store repo name as repoName in chrome storage.
-      - step 3: if (1), POST request to repoName (iff option = create new repo) ; else display error message.
-      - step 4: if proceed from 3, hide hook_mode and display commit_mode (show stats e.g: files pushed/questions-solved/leaderboard)
-    */
+$id('hook_button').addEventListener('click', () => {
+  const errorEl = $id('error');
+  const successEl = $id('success');
+
+  if (!option()) {
+    I18N.bind(errorEl, 'welcome.error.noOption', null, 'text');
+    errorEl.hidden = false;
+  } else if (!repositoryName()) {
+    I18N.bind(errorEl, 'welcome.error.noRepoName', null, 'text');
+    $id('name').focus();
+    errorEl.hidden = false;
+  } else {
+    errorEl.hidden = true;
+    I18N.bind(successEl, 'welcome.attempting', null, 'text');
+    successEl.hidden = false;
+
     chrome.storage.local.get('BaekjoonHub_token', (data) => {
       const token = data.BaekjoonHub_token;
       if (token === null || token === undefined) {
-        /* Not authorized yet. */
-        I18N.bind(document.getElementById('error'), 'welcome.error.auth', null, 'text');
-        $('#error').show();
-        $('#success').hide();
+        I18N.bind(errorEl, 'welcome.error.auth', null, 'text');
+        errorEl.hidden = false;
+        successEl.hidden = true;
       } else if (option() === 'new') {
         createRepo(token, repositoryName());
       } else {
         chrome.storage.local.get('BaekjoonHub_username', (data2) => {
           const username = data2.BaekjoonHub_username;
           if (!username) {
-            /* Improper authorization. */
-            I18N.bind(document.getElementById('error'), 'welcome.error.improperAuth', null, 'text');
-            $('#error').show();
-            $('#success').hide();
+            I18N.bind(errorEl, 'welcome.error.improperAuth', null, 'text');
+            errorEl.hidden = false;
+            successEl.hidden = true;
           } else {
             linkRepo(token, `${username}/${repositoryName()}`, false);
           }
@@ -295,32 +284,33 @@ $('#hook_button').on('click', () => {
     });
   }
 
-  /*프로그래밍 언어별 폴더 정리 옵션 세션 저장*/
-  let org_option = $('#org_option').val();
+  const org_option = $id('org_option').value;
   chrome.storage.local.set({ BaekjoonHub_OrgOption: org_option }, () => {
     console.log(`Set Organize by ${org_option}`);
   });
 });
 
-$('#name').on('input', function () {
-  if ($(this).val().trim()) {
-    $('#type').val('link');
-    $('#hook_button').attr('disabled', false);
+$id('name').addEventListener('input', function () {
+  if (this.value.trim()) {
+    $id('type').value = 'link';
+    $id('hook_button').disabled = false;
   }
 });
 
-$('#unlink a').on('click', () => {
+$id('unlink').querySelector('a').addEventListener('click', () => {
   unlinkRepo();
-  $('#unlink').hide();
-  I18N.bind(document.getElementById('success'), 'welcome.success.unlinked', null, 'text');
+  $id('unlink').hidden = true;
+  I18N.bind($id('success'), 'welcome.success.unlinked', null, 'text');
 });
 
-$('#token_refresh_button').on('click', () => {
+$id('token_refresh_button').addEventListener('click', () => {
+  const tokenStatusEl = $id('token_status');
   chrome.storage.local.get('BaekjoonHub_token', (data) => {
     const token = data.BaekjoonHub_token;
     if (!token) {
-      I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.notFound', null, 'text');
-      $('#token_status').css('color', '#ff6b6b').show();
+      I18N.bind(tokenStatusEl, 'welcome.tokenStatus.notFound', null, 'text');
+      tokenStatusEl.className = 'token-status status-err';
+      tokenStatusEl.hidden = false;
       return;
     }
     fetch('https://api.github.com/user', {
@@ -328,64 +318,69 @@ $('#token_refresh_button').on('click', () => {
     })
       .then((res) => {
         if (res.ok) {
-          I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.valid', null, 'text');
-          $('#token_status').css('color', '#51cf66').show();
+          I18N.bind(tokenStatusEl, 'welcome.tokenStatus.valid', null, 'text');
+          tokenStatusEl.className = 'token-status status-ok';
         } else {
-          I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.expired');
-          $('#token_status').css('color', '#ff6b6b').show();
+          I18N.bind(tokenStatusEl, 'welcome.tokenStatus.expired');
+          tokenStatusEl.className = 'token-status status-err';
         }
+        tokenStatusEl.hidden = false;
       })
       .catch(() => {
-        I18N.bind(document.getElementById('token_status'), 'welcome.tokenStatus.error', null, 'text');
-        $('#token_status').css('color', '#ff6b6b').show();
+        I18N.bind(tokenStatusEl, 'welcome.tokenStatus.error', null, 'text');
+        tokenStatusEl.className = 'token-status status-err';
+        tokenStatusEl.hidden = false;
       });
   });
 });
 
-/* Initialize i18n and detect mode type */
-I18N.init(() => {
-
-chrome.storage.local.get('mode_type', (data) => {
-  const mode = data.mode_type;
-
-  if (mode && mode === 'commit') {
-    /* Check if still access to repo */
-    chrome.storage.local.get('BaekjoonHub_token', (data2) => {
-      const token = data2.BaekjoonHub_token;
-      if (token === null || token === undefined) {
-        /* Not authorized yet. */
-        I18N.bind(document.getElementById('error'), 'welcome.error.authTopRight', null, 'text');
-        $('#error').show();
-        $('#success').hide();
-        /* Hide accordingly */
-        document.getElementById('hook_mode').style.display = 'inherit';
-        document.getElementById('commit_mode').style.display = 'none';
-      } else {
-        /* Get access to repo */
-        chrome.storage.local.get('BaekjoonHub_hook', (repoName) => {
-          const hook = repoName.BaekjoonHub_hook;
-          if (!hook) {
-            /* Not authorized yet. */
-            I18N.bind(document.getElementById('error'), 'welcome.error.improperAuthTopRight', null, 'text');
-            $('#error').show();
-            $('#success').hide();
-            /* Hide accordingly */
-            document.getElementById('hook_mode').style.display = 'inherit';
-            document.getElementById('commit_mode').style.display = 'none';
-          } else {
-            /* Username exists, at least in storage. Confirm this */
-            linkRepo(token, hook);
-          }
-        });
-      }
-    });
-
-    document.getElementById('hook_mode').style.display = 'none';
-    document.getElementById('commit_mode').style.display = 'inherit';
-  } else {
-    document.getElementById('hook_mode').style.display = 'inherit';
-    document.getElementById('commit_mode').style.display = 'none';
-  }
+/* Save examples toggle */
+chrome.storage.local.get('bjhSaveExamples', (data) => {
+  $id('examplesBox').checked = data.bjhSaveExamples === true;
+});
+$id('examplesBox').addEventListener('click', () => {
+  chrome.storage.local.set({ bjhSaveExamples: $id('examplesBox').checked });
 });
 
-}); /* end I18N.init callback */
+/* Initialize i18n, theme, and detect mode type */
+I18N.init(() => {
+  initTheme();
+
+  chrome.storage.local.get('mode_type', (data) => {
+    const mode = data.mode_type;
+    const errorEl = $id('error');
+    const successEl = $id('success');
+
+    if (mode && mode === 'commit') {
+      chrome.storage.local.get('BaekjoonHub_token', (data2) => {
+        const token = data2.BaekjoonHub_token;
+        if (token === null || token === undefined) {
+          I18N.bind(errorEl, 'welcome.error.authTopRight', null, 'text');
+          errorEl.hidden = false;
+          successEl.hidden = true;
+          $id('hook_mode').classList.remove('hidden');
+          $id('commit_mode').classList.add('hidden');
+        } else {
+          chrome.storage.local.get('BaekjoonHub_hook', (repoName) => {
+            const hook = repoName.BaekjoonHub_hook;
+            if (!hook) {
+              I18N.bind(errorEl, 'welcome.error.improperAuthTopRight', null, 'text');
+              errorEl.hidden = false;
+              successEl.hidden = true;
+              $id('hook_mode').classList.remove('hidden');
+              $id('commit_mode').classList.add('hidden');
+            } else {
+              linkRepo(token, hook);
+            }
+          });
+        }
+      });
+
+      $id('hook_mode').classList.add('hidden');
+      $id('commit_mode').classList.remove('hidden');
+    } else {
+      $id('hook_mode').classList.remove('hidden');
+      $id('commit_mode').classList.add('hidden');
+    }
+  });
+});

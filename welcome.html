@@ -1,93 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html class="dark">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="css/welcome.css" />
-  <script src="/library/jquery-3.3.1.min.js"></script>
-
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet" />
-  <script src="/library/semantic.min.js"></script>
 </head>
 
-<body>
-<div class="ui grid container">
-  <div class="sixteen wide center aligned column">
-    <br />
-    <p class="caption" style="font-size: 9em">
-      Bae<span style="color: #0078c3">/&lt</span>joonHub<span style="color: #0078c3">></span></p>
-    <p class="caption" data-i18n="welcome.subtitle">Automatically sync your code from Baekjoon to GitHub</p>
-    <button id="lang_toggle" style="position:fixed;top:16px;right:16px;z-index:999;padding:6px 14px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;font-size:14px;">한국어</button>
-    <br /><br /><br /><br /><br /><br /><br /><br />
-    <p hidden id="error"></p>
-    <p hidden id="success"></p>
-    <p hidden id="unlink"><br/><span data-i18n="welcome.unlinkText">Linked the wrong repo?</span> <a data-i18n="welcome.unlinkAction">Unlink</a>.</p>
-  </div>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen transition-colors">
+  <div class="container">
 
-  <!-- Create Hook -->
-  <div style="display: none" id="hook_mode" class="ui grid container">
-    <div class="six wide column">
-      <p class="caption ui large header center aligned" data-i18n="welcome.getStarted.title">To get started with BaekjoonHub</p>
+    <!-- Top-right controls: Language + Theme toggle -->
+    <div class="top-controls">
+      <button id="lang_toggle" class="btn-control">한국어</button>
+      <button id="theme_toggle" class="btn-control" title="Toggle theme">
+        <span id="theme_icon_light" class="hidden">&#9728;</span>
+        <span id="theme_icon_dark" class="hidden">&#9790;</span>
+      </button>
     </div>
-    <div class="four wide left aligned column">
-      <div class="ui form">
-        <div class="field">
-          <select id="type">
+
+    <!-- Logo / Title -->
+    <div class="text-center mb-12">
+      <h1 class="logo-font">
+        Bae<span class="text-brand">/&lt;</span>joonHub<span class="text-brand">></span>
+      </h1>
+      <p class="subtitle" data-i18n="welcome.subtitle">Automatically sync your code from Baekjoon to GitHub</p>
+    </div>
+
+    <!-- Error message -->
+    <div hidden id="error" class="msg msg-error"></div>
+
+    <!-- Success message -->
+    <div hidden id="success" class="msg msg-success"></div>
+
+    <!-- Unlink -->
+    <p hidden id="unlink" class="unlink-area">
+      <span data-i18n="welcome.unlinkText">Linked the wrong repo?</span>
+      <a class="link-brand" data-i18n="welcome.unlinkAction">Unlink</a>.
+    </p>
+
+    <!-- Hook Mode: Setup form -->
+    <div id="hook_mode" class="hidden">
+      <div class="card">
+        <h2 class="card-title" data-i18n="welcome.getStarted.title">To get started with BaekjoonHub</h2>
+
+        <div class="form-stack">
+          <!-- Option select -->
+          <select id="type" class="form-input">
             <option value="" data-i18n="welcome.pickOption">Pick an Option</option>
             <option value="new" data-i18n="welcome.createRepo">Create a new Private Repository</option>
             <option value="link" data-i18n="welcome.linkRepo">Link an Existing Repository</option>
           </select>
-        </div>
 
-        <!-- 프로그래밍 언어별 폴더 정리 옵션 -->
-        <div class="field">
-          <select id="org_option">
-            <!-- 플랫폼별 정렬 -->
+          <!-- Organize option -->
+          <select id="org_option" class="form-input">
             <option value="platform" data-i18n="welcome.organizeByPlatform">Organize by Platform</option>
-            <!-- 언어별 정렬 -->
             <option value="language" data-i18n="welcome.organizeByLanguage">Organize by Language</option>
           </select>
+
+          <!-- Repository name -->
+          <input autocomplete="off" id="name" class="form-input"
+            placeholder="Repository Name" data-i18n-placeholder="welcome.repoNamePlaceholder" type="text" />
+        </div>
+
+        <!-- Get Started button -->
+        <div class="text-right mt-6">
+          <button id="hook_button" disabled class="btn-primary"
+            data-i18n="welcome.getStartedBtn">Get Started</button>
         </div>
       </div>
     </div>
 
-    <div class="six wide column">
-      <div class="ui form">
-        <div class="field">
-          <input autocomplete="off" id="name" placeholder="Repository Name" data-i18n-placeholder="welcome.repoNamePlaceholder" type="text" />
+    <!-- Commit Mode: Connected state -->
+    <div id="commit_mode" class="hidden">
+      <div class="text-center space-y-6">
+        <button id="token_refresh_button" class="btn-primary"
+          data-i18n="welcome.refreshToken">Refresh GitHub Token</button>
+
+        <p hidden id="token_status" class="token-status"></p>
+
+        <div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="examplesBox" />
+            <span data-i18n="welcome.saveExamples">Save example I/O</span>
+          </label>
+        </div>
+
+        <div class="muted-text">
+          <p class="text-lg font-semibold" data-i18n="welcome.wantMore">Want more features?</p>
+          <a class="link-brand text-sm" target="_blank"
+            href="https://github.com/BaekjoonHub/BaekjoonHub/issues"
+            data-i18n="welcome.requestFeature">Request a feature!</a>
         </div>
       </div>
     </div>
 
-    <div class="sixteen wide right aligned column">
-      <br />
-      <button id="hook_button" disabled class="positive ui button" data-i18n="welcome.getStartedBtn">Get Started</button>
+    <!-- GitHub Star link -->
+    <div class="footer-link">
+      <a class="link-muted" target="_blank"
+        href="https://github.com/BaekjoonHub/BaekjoonHub"
+        data-i18n-html="welcome.starOnGithub">Star
+        <span>Baekjoon</span><span class="text-brand">Hub</span> on GitHub</a>
     </div>
+
   </div>
 
-  <!-- Show stats -->
-  <div style="display: none" id="commit_mode" class="ui grid container">
-    <div class="wide center aligned column">
-      <br /><br /><br />
-      <button id="token_refresh_button" class="ui blue button" data-i18n="welcome.refreshToken">Refresh GitHub Token</button>
-      <p hidden id="token_status" style="margin-top: 10px;"></p>
-      <br /><br />
-      <div class="ui inverted large header"><span data-i18n="welcome.wantMore">Want more features?</span>
-        <br /><a style="color: aqua !important; font-size: 0.8em" target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub/issues" data-i18n="welcome.requestFeature">Request
-          a feature!</a></div>
-    </div>
-  </div>
-
-  <!-- Rate on GitHub -->
-  <div class="sixteen wide center aligned column">
-    <br /><br /><br /><br /><br />
-    <div class="ui inverted small header">
-      <a style="color: rgb(226, 243, 243) !important" target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub" data-i18n-html="welcome.starOnGithub">Star
-        <span style="color: white">Baekjoon</span><span style="color: #0078c3 !important">Hub</span> on GitHub</a>
-    </div>
-  </div>
-</div>
-
-<script src="scripts/i18n.js"></script>
-<script type="text/javascript" src="welcome.js"></script>
+  <script src="scripts/i18n.js"></script>
+  <script type="text/javascript" src="welcome.js"></script>
 </body>
 </html>
