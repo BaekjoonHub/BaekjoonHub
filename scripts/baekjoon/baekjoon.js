@@ -16,6 +16,7 @@ const username = findUsername();
 if (!isNull(username)) {
   if (['status', `user_id=${username}`, 'problem_id', 'from_mine=1'].every((key) => currentUrl.includes(key))) startLoader();
   else if (currentUrl.match(/\.net\/problem\/\d+/) !== null) parseProblemDescription();
+  if (currentUrl.includes('/status')) injectManualUploadButtons(username);
 }
 
 /* 제출 직후에는 결과가 "기다리는 중/채점 중" → "맞았습니다"로 전이됨.
@@ -94,6 +95,68 @@ async function beginUpload(bojData) {
     }
     /* 신규 제출 번호라면 새롭게 커밋  */
     await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
+  }
+}
+
+/* 수동 업로드 큐 (동기적 처리) */
+const manualUploadQueue = [];
+let isManualUploading = false;
+
+async function processManualUploadQueue() {
+  if (isManualUploading || manualUploadQueue.length === 0) return;
+  isManualUploading = true;
+  while (manualUploadQueue.length > 0) {
+    const { data, button } = manualUploadQueue.shift();
+    button.classList.remove('bjh-upload-icon');
+    button.classList.add('BaekjoonHub_progress');
+    button.title = '업로드 중...';
+    try {
+      const bojData = await findData(data);
+      if (isNotEmpty(bojData)) {
+        await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
+        button.classList.remove('BaekjoonHub_progress');
+        button.classList.add('bjh-upload-success');
+        button.title = '업로드 완료';
+      } else {
+        button.classList.remove('BaekjoonHub_progress');
+        button.classList.add('bjh-upload-fail');
+        button.title = '데이터 파싱 실패';
+      }
+    } catch (e) {
+      console.error('Manual upload failed:', e);
+      button.classList.remove('BaekjoonHub_progress');
+      button.classList.add('bjh-upload-fail');
+      button.title = '업로드 실패: ' + e.message;
+    }
+  }
+  isManualUploading = false;
+}
+
+function injectManualUploadButtons(currentUsername) {
+  if (!isExistResultTable()) return;
+  const table = findFromResultTable();
+  if (isEmpty(table)) return;
+  for (const row of table) {
+    const isAccepted = row.resultCategory === RESULT_CATEGORY.RESULT_ACCEPTED ||
+                       row.resultCategory === RESULT_CATEGORY.RESULT_PARTIALLY_ACCEPTED;
+    if (!isAccepted) continue;
+    if (row.username !== currentUsername) continue;
+    const rowEl = document.getElementById(row.elementId);
+    if (!rowEl) continue;
+    const resultCell = rowEl.querySelector('[data-color]')?.closest('td');
+    if (!resultCell) continue;
+    if (resultCell.querySelector('.bjh-manual-upload-btn')) continue;
+    const btn = document.createElement('button');
+    btn.className = 'bjh-manual-upload-btn bjh-upload-icon';
+    btn.title = 'GitHub에 업로드';
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (btn.classList.contains('BaekjoonHub_progress') || btn.classList.contains('bjh-upload-success')) return;
+      manualUploadQueue.push({ data: row, button: btn });
+      processManualUploadQueue();
+    });
+    resultCell.appendChild(btn);
   }
 }
 
