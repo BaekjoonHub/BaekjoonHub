@@ -3,7 +3,7 @@
  */
 function startUpload() {
   let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  if (elem !== undefined) {
+  if (!elem) {
     elem = document.createElement('span');
     elem.id = 'BaekjoonHub_progress_anchor_element';
     elem.className = 'runcode-wrapper__8rXm';
@@ -44,7 +44,7 @@ function markUploadedCSS(branches, directory) {
 function markUploadFailedCSS() {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
-  elem.className = 'markuploadfailed';
+  if (elem) elem.className = 'markuploadfailed';
 }
 
 /**
