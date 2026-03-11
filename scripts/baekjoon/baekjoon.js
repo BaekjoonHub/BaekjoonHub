@@ -84,7 +84,7 @@ function toastThenStopLoader(toastMessage, errorMessage){
 async function beginUpload(bojData) {
   bojData = preProcessEmptyObj(bojData);
   log('bojData', bojData);
-  if (isNotEmpty(bojData)) {
+  if (!isNull(bojData) && isNotEmpty(bojData.code) && isNotEmpty(bojData.readme) && isNotEmpty(bojData.directory)) {
     const stats = await getStats();
     const hook = await getHook();
 
