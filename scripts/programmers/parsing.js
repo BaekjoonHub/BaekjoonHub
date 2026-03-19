@@ -155,26 +155,18 @@ async function findAllSolvedProblems() {
   const problems = [];
   let page = 1;
   while (true) {
-    const res = await fetch(`/learn/challenges?statuses=solved&page=${page}`);
-    const html = await res.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const rows = doc.querySelectorAll('table tbody tr');
-    if (rows.length === 0) break;
-    for (const row of rows) {
-      const link = row.querySelector('td a[href*="/learn/courses/30/lessons/"]');
-      if (!link) continue;
-      const href = link.getAttribute('href');
-      const problemId = href.match(/lessons\/(\d+)/)?.[1];
-      const title = link.textContent.trim();
-      const levelEl = row.querySelector('td .level-badge, td span[class*="level"]');
-      const level = levelEl ? levelEl.textContent.trim().replace('Lv.', 'lv') : 'lv0';
-      if (problemId) {
-        problems.push({ problemId, title, level });
-      }
+    const res = await fetch(`/api/v2/school/challenges/?perPage=100&statuses[]=solved&order=acceptance_desc&search=&page=${page}`);
+    if (!res.ok) break;
+    const data = await res.json();
+    if (!data.result || data.result.length === 0) break;
+    for (const item of data.result) {
+      problems.push({
+        problemId: String(item.id),
+        title: item.title,
+        level: `lv${item.level}`,
+      });
     }
-    // Check if there's a next page
-    const nextBtn = doc.querySelector('a[rel="next"], .pagination .next:not(.disabled)');
-    if (!nextBtn) break;
+    if (page >= data.totalPages) break;
     page++;
   }
   return problems;
