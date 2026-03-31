@@ -208,3 +208,24 @@ async function getTree(hook, token) {
       return data.tree;
     });
 }
+
+/** get a file from the repository
+ * @see https://docs.github.com/en/rest/repos/contents#get-repository-content
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @param {string} path - the file path
+ * @return {Promise} - the promise for the file object or null if not found
+ */
+async function getFile(hook, token, path) {
+  return fetch(`https://api.github.com/repos/${hook}/contents/${path}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+    },
+  })
+    .then((res) => {
+      if (res.status === 404) return null; // 파일이 존재하지 않는 경우
+      return handleGitHubResponse(res);
+    });
+}

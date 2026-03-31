@@ -82,7 +82,18 @@ async function beginUpload(parsedData) {
     const cachedSHA = await getStatsSHAfromPath(`${hook}/${directory}/${fileName}`);
     const calcSHA = calculateBlobSHA(code);
     log('cachedSHA', cachedSHA, 'calcSHA', calcSHA);
-    if (cachedSHA == calcSHA) {
+
+    if (isNull(cachedSHA)) {
+      /* 로컬 캐시가 없는 경우 원격 저장소에서 파일 존재 여부 실시간 확인 */
+      const remoteFile = await getFile(hook, token, `${directory}/${fileName}`);
+      if (remoteFile && remoteFile.sha === calcSHA) {
+        markUploadedCSS(stats.branches, directory);
+        console.log('원격 저장소에 동일한 파일이 존재하여 업로드를 건너뜁니다.');
+        return;
+      }
+      /* GitHub에서 파일이 삭제되거나 없는 경우, 새 업로드로 처리 */
+      console.log('캐시된 SHA가 없습니다. 새로 업로드합니다.');
+    } else if (cachedSHA == calcSHA) {
       markUploadedCSS(stats.branches, directory);
       console.log(`현재 제출번호를 업로드한 기록이 있습니다. examId: ${examId}, quizNumber: ${quizNumber}`);
       return;
