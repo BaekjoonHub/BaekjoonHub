@@ -10,13 +10,14 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   const { refSHA, ref } = refData;
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
-  const treeSHA = await git.createTree(refSHA, [source, readme]);
-  const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
+  const treeData = await git.createTree(refSHA, [source, readme]);
+  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
   await git.updateHead(ref, commitSHA);
 
   /* stats의 값을 갱신합니다. */
-  updateObjectDatafromPath(stats.submission, `${hook}/${source.path}`, source.sha);
-  updateObjectDatafromPath(stats.submission, `${hook}/${readme.path}`, readme.sha);
+  treeData.tree.forEach((item) => {
+    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
+  });
   await saveStats(stats);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
