@@ -52,6 +52,7 @@
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/seungwone"><img src="https://avatars.githubusercontent.com/u/109544413?v=4?s=100" width="100px;" alt="Seungwon Lee"/><br /><sub><b>Seungwon Lee</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=seungwone" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/K-DaHee"><img src="https://avatars.githubusercontent.com/u/168415314?v=4?s=100" width="100px;" alt="김다희"/><br /><sub><b>김다희</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=K-DaHee" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
