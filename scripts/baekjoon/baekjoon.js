@@ -74,7 +74,7 @@ function stopLoader() {
   loader = null;
 }
 
-function toastThenStopLoader(toastMessage, errorMessage){
+function toastThenStopLoader(toastMessage, errorMessage) {
   Toast.raiseToast(toastMessage)
   stopLoader()
   throw new Error(errorMessage)
@@ -87,6 +87,7 @@ async function beginUpload(bojData) {
   if (!isNull(bojData) && isNotEmpty(bojData.code) && isNotEmpty(bojData.readme) && isNotEmpty(bojData.directory)) {
     const stats = await getStats();
     const hook = await getHook();
+    const token = await getToken();
 
     const currentVersion = stats.version;
     /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
@@ -100,6 +101,13 @@ async function beginUpload(bojData) {
     log('cachedSHA', cachedSHA, 'calcSHA', calcSHA)
 
     if (isNull(cachedSHA)) {
+      /* 로컬 캐시가 없는 경우 원격 저장소에서 파일 존재 여부 실시간 확인 */
+      const remoteFile = await getFile(hook, token, `${bojData.directory}/${bojData.fileName}`);
+      if (remoteFile && remoteFile.sha === calcSHA) {
+        markUploadedCSS(stats.branches, bojData.directory);
+        console.log('원격 저장소에 동일한 파일이 존재하여 업로드를 건너뜁니다.');
+        return;
+      }
       /* GitHub에서 파일이 삭제된 경우, 새 업로드로 처리 */
       console.log('캐시된 SHA가 없습니다. 새로 업로드합니다.');
     } else if (cachedSHA == calcSHA) {
@@ -152,7 +160,7 @@ function injectManualUploadButtons(currentUsername) {
   if (isEmpty(table)) return;
   for (const row of table) {
     const isAccepted = row.resultCategory === RESULT_CATEGORY.RESULT_ACCEPTED ||
-                       row.resultCategory === RESULT_CATEGORY.RESULT_PARTIALLY_ACCEPTED;
+      row.resultCategory === RESULT_CATEGORY.RESULT_PARTIALLY_ACCEPTED;
     if (!isAccepted) continue;
     if (row.username !== currentUsername) continue;
     const rowEl = document.getElementById(row.elementId);
