@@ -62,31 +62,44 @@ async function uploadAllSolvedProblem() {
     const datas = await findDatas(newList);
     const bojDatas = datas.filter((d) => !isNull(d));
 
-    // 4. Blob 생성 (asyncPool(2) 병렬 제어)
+    // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
     const saveExamples = await getSaveExamplesOption();
-    await asyncPool(2, bojDatas, async (bojData) => {
+    for (const bojData of bojDatas) {
       if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
-        const source = await git.createBlob(bojData.code, `${bojData.directory}/${bojData.fileName}`);
-        const readme = await git.createBlob(bojData.readme, `${bojData.directory}/README.md`);
-        tree_items.push(source, readme);
+        tree_items.push({
+          path: `${bojData.directory}/${bojData.fileName}`,
+          mode: '100644',
+          type: 'blob',
+          content: bojData.code,
+        });
+        tree_items.push({
+          path: `${bojData.directory}/README.md`,
+          mode: '100644',
+          type: 'blob',
+          content: bojData.readme,
+        });
         if (saveExamples && bojData.samples && bojData.samples.length > 0) {
           const fileEntries = samplesToFileEntries(bojData.samples);
           for (const entry of fileEntries) {
-            const blob = await git.createBlob(entry.content, `${bojData.directory}/${entry.filename}`);
-            tree_items.push(blob);
+            tree_items.push({
+              path: `${bojData.directory}/${entry.filename}`,
+              mode: '100644',
+              type: 'blob',
+              content: entry.content,
+            });
           }
         }
       }
       incMultiLoader(1);
-    });
+    }
 
     // 5. 단일 커밋으로 일괄 업로드
     if (tree_items.length !== 0) {
-      const treeSHA = await git.createTree(refSHA, tree_items);
-      const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeSHA, refSHA);
+      const treeData = await git.createTree(refSHA, tree_items);
+      const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
       await git.updateHead(ref, commitSHA);
       MultiloaderSuccess();
-      tree_items.forEach((item) => {
+      treeData.tree.forEach((item) => {
         updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
       });
       await saveStats(stats);
@@ -131,12 +144,12 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
     }
   }
 
-  const treeSHA = await git.createTree(refSHA, tree_items);
-  const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
+  const treeData = await git.createTree(refSHA, tree_items);
+  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
   await git.updateHead(ref, commitSHA);
 
   /* stats의 값을 갱신합니다. */
-  tree_items.forEach((item) => {
+  treeData.tree.forEach((item) => {
     updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
   });
   await saveStats(stats);
@@ -182,11 +195,11 @@ async function uploadExamplesFromProblemPage(samples) {
     tree_items.push(blob);
   }
 
-  const treeSHA = await git.createTree(refSHA, tree_items);
-  const commitSHA = await git.createCommit(commitMessage, treeSHA, refSHA);
+  const treeData = await git.createTree(refSHA, tree_items);
+  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
   await git.updateHead(ref, commitSHA);
 
-  tree_items.forEach((item) => {
+  treeData.tree.forEach((item) => {
     updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
   });
   await saveStats(stats);

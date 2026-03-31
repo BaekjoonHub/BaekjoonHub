@@ -144,10 +144,7 @@ async function createTree(hook, token, refSHA, tree_items) {
     body: JSON.stringify({ tree: tree_items, base_tree: refSHA }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
   })
-    .then(handleGitHubResponse)
-    .then((data) => {
-      return data.sha;
-    });
+    .then(handleGitHubResponse);
 }
 
 /** create a commit in git
