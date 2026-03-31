@@ -71,6 +71,7 @@ async function beginUpload(parsedData) {
     } = parsedData;
     const stats = await getStats();
     const hook = await getHook();
+    const token = await getToken();
 
     const currentVersion = stats.version;
     /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
