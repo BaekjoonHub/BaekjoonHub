@@ -310,12 +310,14 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
  * 맞은 문제 목록에 대해 문제 정보와 제출 코드를 병렬로 파싱하여 반환합니다.
  * asyncPool(2)로 동시 요청을 제한하고, TTL 캐시를 활용합니다.
  * @param {Array} datas - findUniqueResultTableListByUsername()의 결과
+ * @param {Function} [onProgress] - 각 아이템 파싱 완료 시 호출. 진행률 UI 갱신에 사용.
  * @returns {Promise<Array>}
  */
-async function findDatas(datas) {
+async function findDatas(datas, onProgress) {
   datas = datas.filter((data) => !isNaN(Number(data.problemId)) && Number(data.problemId) >= 1000);
   const enriched = await asyncPool(2, datas, async (data) => {
     const info = await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId);
+    if (typeof onProgress === 'function') onProgress(data, info);
     return { ...data, ...info };
   });
   const results = [];
@@ -402,10 +404,17 @@ async function findUniqueResultTableListByUsername(username) {
 async function findResultTableListByUsername(username) {
   const result = [];
   let doc = await findHtmlDocumentByUrl(`https://www.acmicpc.net/status?user_id=${username}&result_id=4`);
+  if (doc.getElementById('status-table') === null) {
+    throw new Error('status-table을 찾을 수 없습니다. 로그인/백준 페이지 상태를 확인해 주세요.');
+  }
   let next_page = doc.getElementById('next_page');
   do {
     result.push(...parsingResultTableList(doc));
-    if (next_page !== null) doc = await findHtmlDocumentByUrl(next_page.getAttribute('href'));
+    if (next_page !== null) {
+      const href = next_page.getAttribute('href');
+      const nextUrl = new URL(href, location.origin).toString();
+      doc = await findHtmlDocumentByUrl(nextUrl);
+    }
   } while ((next_page = doc.getElementById('next_page')) !== null);
   result.push(...parsingResultTableList(doc));
 
@@ -418,12 +427,11 @@ async function findResultTableListByUsername(username) {
  * @returns html document
  */
 async function findHtmlDocumentByUrl(url) {
-  return fetch(url, { method: 'GET' })
-    .then((html) => html.text())
-    .then((text) => {
-      const parser = new DOMParser();
-      return parser.parseFromString(text, 'text/html');
-    });
+  const res = await fetch(url, { method: 'GET' });
+  if (!res.ok) throw new Error(`백준 요청 실패 (${res.status}) ${url}`);
+  const text = await res.text();
+  const parser = new DOMParser();
+  return parser.parseFromString(text, 'text/html');
 }
 
 /**
