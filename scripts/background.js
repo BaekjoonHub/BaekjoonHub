@@ -1,10 +1,35 @@
 /**
- * solvedac 문제 데이터를 파싱해오는 함수.
+ * solvedac 문제 데이터를 파싱해오는 함수. 429(Too Many Requests)를 만나면
+ * 지수 backoff 후 재시도한다. 모든 재시도가 실패하면 null 반환.
  * @param {int} problemId
  */
 async function SolvedApiCall(problemId) {
-  return fetch(`https://solved.ac/api/v3/problem/show?problemId=${problemId}`, { method: 'GET' })
-    .then((query) => query.json());
+  const url = `https://solved.ac/api/v3/problem/show?problemId=${problemId}`;
+  const maxRetries = 4;
+  let lastErr = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, { method: 'GET' });
+      if (res.status === 429) {
+        // Respect Retry-After 또는 지수 backoff (1s, 2s, 4s, 8s)
+        const retryAfter = Number(res.headers.get('Retry-After'));
+        const waitMs = (Number.isFinite(retryAfter) && retryAfter > 0)
+          ? retryAfter * 1000
+          : 1000 * Math.pow(2, attempt);
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+      if (!res.ok) {
+        throw new Error(`solved.ac ${res.status}`);
+      }
+      return await res.json();
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+    }
+  }
+  console.warn('SolvedApiCall failed after retries', problemId, lastErr);
+  return null;
 }
 
 function handleMessage(request, sender, sendResponse) {

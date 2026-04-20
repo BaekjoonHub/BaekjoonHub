@@ -46,9 +46,20 @@ async function uploadAllSolvedProblem() {
 
     // 2. 맞은 문제 목록 파싱 & 이미 업로드된 문제 스킵
     const username = findUsername();
-    if (isEmpty(username)) return;
+    if (isEmpty(username)) {
+      MultiloaderFail('로그인 정보를 확인할 수 없습니다.');
+      Toast.raiseToast('로그인 상태를 확인한 뒤 다시 시도해 주세요.');
+      return;
+    }
     const list = await findUniqueResultTableListByUsername(username);
-    const uploadedIds = extractUploadedProblemIds(stats, hook);
+    if (list.length === 0) {
+      MultiloaderFail('맞은 제출 내역을 찾지 못했습니다. 백준 페이지 상태를 확인해 주세요.');
+      Toast.raiseToast('맞은 제출 내역을 찾지 못했습니다. 백준 페이지 상태를 확인해 주세요.');
+      return;
+    }
+    // TODO: 자동 검수 임시 분기 — ?bjhForceAll=1 이면 dedup을 건너뜀. 복구 시 제거.
+    const forceAll = new URLSearchParams(location.search).get('bjhForceAll') === '1';
+    const uploadedIds = forceAll ? new Set() : extractUploadedProblemIds(stats, hook);
     const newList = list.filter((item) => !uploadedIds.has(String(item.problemId)));
 
     if (newList.length === 0) {
@@ -59,7 +70,7 @@ async function uploadAllSolvedProblem() {
     // 3. 문제 데이터 파싱 (TTL 캐시 활용, asyncPool(2) 병렬 제어)
     const { submission } = stats;
     setMultiLoaderDenom(newList.length);
-    const datas = await findDatas(newList);
+    const datas = await findDatas(newList, () => incMultiLoader(1));
     const bojDatas = datas.filter((d) => !isNull(d));
 
     // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
@@ -90,7 +101,6 @@ async function uploadAllSolvedProblem() {
           }
         }
       }
-      incMultiLoader(1);
     }
 
     // 5. 단일 커밋으로 일괄 업로드
@@ -108,6 +118,9 @@ async function uploadAllSolvedProblem() {
     }
   } catch (error) {
     console.error('전체 코드 업로드 실패', error);
+    const msg = error?.message || String(error);
+    MultiloaderFail(msg);
+    Toast.raiseToast(`전체 업로드 실패: ${msg}`);
   }
 }
 

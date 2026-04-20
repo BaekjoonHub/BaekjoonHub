@@ -164,6 +164,10 @@
   display: inline-block;
 }
 
+.BJH_multiloader_fail {
+  color: #eb3b5a;
+}
+
 .toast-notification *{
   margin:0;
   padding:0;

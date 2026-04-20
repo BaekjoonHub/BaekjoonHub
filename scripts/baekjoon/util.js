@@ -151,33 +151,41 @@ function insertUploadAllButton() {
 
 /**
  * 전체 업로드 진행률 표시 DOM을 생성합니다.
+ * denom 설정 전까지는 "준비 중…" 표시 — "0 / 0" 이 오류로 오해되던 현상 방지.
  */
 function insertMultiLoader() {
   const navTabs = document.querySelector('ul.nav.nav-tabs');
   if (isNull(navTabs)) return;
   const wrap = document.createElement('li');
   wrap.className = 'BJH_loading_wrap';
-  const nom = document.createElement('span');
-  nom.className = 'BJH_loading_number';
-  nom.textContent = '0';
-  const slash = document.createTextNode(' / ');
-  const denom = document.createElement('span');
-  denom.className = 'BJH_loading_number';
-  denom.textContent = '0';
-  wrap.appendChild(nom);
-  wrap.appendChild(slash);
-  wrap.appendChild(denom);
+  wrap.textContent = '준비 중…';
   navTabs.appendChild(wrap);
   multiloader.wrap = wrap;
-  multiloader.nom = nom;
-  multiloader.denom = denom;
+  multiloader.nom = null;
+  multiloader.denom = null;
 }
 
 /**
  * 전체 업로드 전체 개수를 설정합니다.
+ * 최초 호출 시 "준비 중…"을 "0 / N" 마크업으로 교체하며 nom/denom 핸들을 부여합니다.
  */
 function setMultiLoaderDenom(num) {
-  if (!isNull(multiloader.denom)) {
+  if (isNull(multiloader.wrap)) return;
+  if (isNull(multiloader.denom)) {
+    multiloader.wrap.textContent = '';
+    const nom = document.createElement('span');
+    nom.className = 'BJH_loading_number';
+    nom.textContent = '0';
+    const slash = document.createTextNode(' / ');
+    const denom = document.createElement('span');
+    denom.className = 'BJH_loading_number';
+    denom.textContent = String(num);
+    multiloader.wrap.appendChild(nom);
+    multiloader.wrap.appendChild(slash);
+    multiloader.wrap.appendChild(denom);
+    multiloader.nom = nom;
+    multiloader.denom = denom;
+  } else {
     multiloader.denom.textContent = String(num);
   }
 }
@@ -207,6 +215,20 @@ function MultiloaderSuccess() {
   if (!isNull(multiloader.wrap)) {
     multiloader.wrap.textContent = 'SUCCESS';
     setTimeout(() => location.reload(), 3000);
+  }
+}
+
+/**
+ * 전체 업로드 실패를 표시합니다. 사용자가 원인을 확인할 수 있도록
+ * 로더를 'FAILED'로 바꾸고, 상세 메시지를 title 속성에 담습니다.
+ */
+function MultiloaderFail(message) {
+  if (!isNull(multiloader.wrap)) {
+    multiloader.wrap.textContent = 'FAILED';
+    multiloader.wrap.classList.add('BJH_multiloader_fail');
+    if (!isEmpty(message)) {
+      multiloader.wrap.setAttribute('title', message);
+    }
   }
 }
 
