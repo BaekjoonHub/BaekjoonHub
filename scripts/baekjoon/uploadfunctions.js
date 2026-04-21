@@ -73,6 +73,15 @@ async function uploadAllSolvedProblem() {
     const datas = await findDatas(newList, () => incMultiLoader(1));
     const bojDatas = datas.filter((d) => !isNull(d));
 
+    const failedCount = newList.length - bojDatas.length;
+    if (failedCount > 0) {
+      Toast.raiseToast(`일부 문제(${failedCount}개) 파싱 실패: solved.ac 응답 지연일 수 있으니 잠시 후 다시 시도해 주세요.`);
+    }
+    if (bojDatas.length === 0) {
+      MultiloaderFail('모든 문제 파싱에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
     // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
     const saveExamples = await getSaveExamplesOption();
     for (const bojData of bojDatas) {
