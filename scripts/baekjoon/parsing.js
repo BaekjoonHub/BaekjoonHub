@@ -75,7 +75,7 @@ async function findData(data) {
 async function makeDetailMessageAndReadme(data) {
   const { problemId, submissionId, result, title, level, problem_tags,
     problem_description, problem_input, problem_output, submissionTime,
-    code, language, memory, runtime, samples } = data;
+    code, language, memory, runtime, samples, deleted } = data;
   const score = parseNumberFromString(result);
   const directory = await buildDirectory('baekjoon', {
     platform: '백준',
@@ -99,12 +99,19 @@ async function makeDetailMessageAndReadme(data) {
     + `메모리: ${memory} KB, `
     + `시간: ${runtime} ms\n\n`
     + `### 분류\n\n`
-    + `${category || "Empty"}\n\n` + (!!problem_description ? ''
-    + `### 제출 일자\n\n`
-    + `${dateInfo}\n\n`
-      + `### 문제 설명\n\n${problem_description}\n\n`
-      + `### 입력 \n\n ${problem_input}\n\n`
-      + `### 출력 \n\n ${problem_output}\n\n` : '');
+    + `${category || "Empty"}\n\n`
+    + (deleted
+        ? `### 안내\n\n`
+          + `이 문제는 출제자에 의해 삭제되었거나 비공개 상태로 전환되어 설명을 가져올 수 없습니다.\n\n`
+          + `### 제출 일자\n\n${dateInfo}\n\n`
+        : (!!problem_description
+            ? ''
+              + `### 제출 일자\n\n`
+              + `${dateInfo}\n\n`
+              + `### 문제 설명\n\n${problem_description}\n\n`
+              + `### 입력 \n\n ${problem_input}\n\n`
+              + `### 출력 \n\n ${problem_output}\n\n`
+            : ''));
   // prettier-ignore-end
   return {
     directory,
@@ -221,9 +228,11 @@ function findFromResultTable() {
     - 백준 문제 카테고리: category
 */
 function parseProblemDescription(doc = document) {
-  convertImageTagAbsoluteURL(doc.getElementById('problem_description')); //이미지에 상대 경로가 있을 수 있으므로 이미지 경로를 절대 경로로 전환 합니다.
-  const problemId = doc.getElementsByTagName('title')[0].textContent.split(':')[0].replace(/[^0-9]/, '');
-  const problem_description = unescapeHtml(doc.getElementById('problem_description').innerHTML.trim());
+  const descEl = doc.getElementById('problem_description');
+  if (isNull(descEl)) return {};
+  convertImageTagAbsoluteURL(descEl); //이미지에 상대 경로가 있을 수 있으므로 이미지 경로를 절대 경로로 전환 합니다.
+  const problemId = doc.getElementsByTagName('title')[0]?.textContent?.split(':')[0]?.replace(/[^0-9]/, '') || '';
+  const problem_description = unescapeHtml(descEl.innerHTML.trim());
   const problem_input = doc.getElementById('problem_input')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
   const problem_output = doc.getElementById('problem_output')?.innerHTML.trim?.().unescapeHtml?.() || 'Empty'; // eslint-disable-line
   const samples = parseSampleData(doc);
@@ -236,12 +245,22 @@ function parseProblemDescription(doc = document) {
 }
 
 async function fetchProblemDescriptionById(problemId) {
-  return fetch(`https://www.acmicpc.net/problem/${problemId}`)
-    .then((res) => res.text())
-    .then((html) => {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      return parseProblemDescription(doc);
-    });
+  const res = await fetch(`https://www.acmicpc.net/problem/${problemId}`);
+  if (!res.ok) {
+    // 404 = 출제자가 삭제했거나 비공개 처리된 문제. 제출 이력엔 남아있어 업로드 대상에 포함되지만
+    // 설명 페이지는 가져올 수 없다. 소스코드는 보존하고 README에 안내를 남기도록 placeholder 반환.
+    return {
+      problemId: String(problemId),
+      deleted: true,
+      problem_description: '',
+      problem_input: '',
+      problem_output: '',
+      samples: [],
+    };
+  }
+  const html = await res.text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return parseProblemDescription(doc);
 }
 
 async function fetchSubmitCodeById(submissionId) {
@@ -257,7 +276,9 @@ async function getProblemDescriptionById(problemId) {
   let problem = await getProblemFromStats(problemId);
   if (isNull(problem)) {
     problem = await fetchProblemDescriptionById(problemId);
-    updateProblemsFromStats(problem); // not await
+    if (problem && problem.problemId && problem.problem_description) {
+      updateProblemsFromStats(problem); // not await
+    }
   }
   return problem;
 }
@@ -288,22 +309,27 @@ async function getSolvedACById(problemId) {
  */
 async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
   log('in find with promise');
-  if (!isNull(problemId) && !isNull(submissionId)) {
-    return Promise.all([getProblemDescriptionById(problemId), getSubmitCodeById(submissionId), getSolvedACById(problemId)])
-      .then(([description, code, solvedJson]) => {
-        const problem_tags = solvedJson.tags.flatMap((tag) => tag.displayNames).filter((tag) => tag.language === 'ko').map((tag) => tag.name);
-        const title = solvedJson.titleKo;
-        const level = bj_level[solvedJson.level];
+  if (isNull(problemId) || isNull(submissionId)) return null;
+  const [description, code, solvedJson] = await Promise.all([
+    getProblemDescriptionById(problemId),
+    getSubmitCodeById(submissionId),
+    getSolvedACById(problemId),
+  ]);
+  // solved.ac 응답이 없어도(429 지속 실패, service worker 재기동 등) 업로드는 진행되도록 fallback.
+  const safeSolved = solvedJson || {};
+  const problem_tags = Array.isArray(safeSolved.tags)
+    ? safeSolved.tags.flatMap((tag) => tag.displayNames).filter((tag) => tag.language === 'ko').map((tag) => tag.name)
+    : [];
+  const title = safeSolved.titleKo || `문제 ${problemId}`;
+  const level = bj_level[safeSolved.level] || bj_level[0];
 
-        const { problem_description, problem_input, problem_output, samples } = description;
-        return { problemId, submissionId, title, level, code, problem_description, problem_input, problem_output, problem_tags, samples: samples || [] };
-      })
-      .catch((err) => {
-        console.log('error ocurred: ', err);
-        uploadState.uploading = false;
-        markUploadFailedCSS();
-      });
-  }
+  const { problem_description, problem_input, problem_output, samples, deleted } = description || {};
+  return {
+    problemId, submissionId, title, level, code,
+    problem_description, problem_input, problem_output, problem_tags,
+    samples: samples || [],
+    deleted: Boolean(deleted),
+  };
 }
 
 /**
@@ -315,15 +341,32 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
  */
 async function findDatas(datas, onProgress) {
   datas = datas.filter((data) => !isNaN(Number(data.problemId)) && Number(data.problemId) >= 1000);
+  // 개별 아이템 파싱이 실패해도 전체 업로드가 중단되지 않도록 실패분은 null로 마킹하고 상위에서 필터링한다.
   const enriched = await asyncPool(2, datas, async (data) => {
-    const info = await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId);
-    if (typeof onProgress === 'function') onProgress(data, info);
-    return { ...data, ...info };
+    try {
+      const info = await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId);
+      if (typeof onProgress === 'function') onProgress(data, info);
+      if (isNull(info)) return null;
+      return { ...data, ...info };
+    } catch (err) {
+      console.warn('문제 파싱 실패', data?.problemId, err);
+      if (typeof onProgress === 'function') onProgress(data, null);
+      return null;
+    }
   });
   const results = [];
   for (const data of enriched) {
-    const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
-    results.push({ ...data, ...detail });
+    if (isNull(data)) {
+      results.push(null);
+      continue;
+    }
+    try {
+      const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
+      results.push({ ...data, ...detail });
+    } catch (err) {
+      console.warn('README/디렉토리 생성 실패', data?.problemId, err);
+      results.push(null);
+    }
   }
   return results;
 }
