@@ -67,6 +67,7 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
  */
 async function uploadAllSolvedProblemSWEA() {
   const tree_items = [];
+  const zip = new JSZip();
   try {
     // 1. GitHub tree 동기화
     const stats = await updateLocalStorageStats();
@@ -95,6 +96,10 @@ async function uploadAllSolvedProblemSWEA() {
     // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
     for (const bojData of bojDatas) {
       if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
+        zip
+          .folder(bojData.directory)
+          .file(bojData.fileName, bojData.code)
+          .file('README.md', bojData.readme);
         tree_items.push({
           path: `${bojData.directory}/${bojData.fileName}`,
           mode: '100644',
@@ -126,5 +131,10 @@ async function uploadAllSolvedProblemSWEA() {
     }
   } catch (error) {
     console.error('전체 코드 업로드 실패', error);
+    // zip 파일로 폴백
+    const zipped = await zip.generateAsync({ type: 'blob' });
+    const filename = `swexpertacademy_backup_${Date.now()}.zip`;
+    saveAs(zipped, filename);
+    Toast.raiseToast(`전체 업로드 실패: ${msg}. 데이터를 zip 파일로 다운로드했습니다.`);
   }
 }
