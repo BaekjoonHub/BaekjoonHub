@@ -138,11 +138,22 @@ async function uploadAllSolvedProblem() {
     console.error('전체 코드 업로드 실패', error);
     const msg = error?.message || String(error);
     MultiloaderFail(msg);
-    // zip 파일로 폴백
-    const zipped = await zip.generateAsync({ type: 'blob' });
-    const filename = `baekjoon_backup_${Date.now()}.zip`;
-    saveAs(zipped, filename);
-    Toast.raiseToast(`전체 업로드 실패: ${msg}. 데이터를 zip 파일로 다운로드했습니다.`);
+
+    // 토큰 만료(재인증으로 해결) 또는 트리 적재 이전 단계 실패(빈 ZIP)인 경우 폴백 스킵
+    const isTokenExpired = error?.name === 'TokenExpiredError';
+    const hasZipContent = Object.keys(zip.files).length > 0;
+    if (!isTokenExpired && hasZipContent) {
+      try {
+        const zipped = await zip.generateAsync({ type: 'blob' });
+        const filename = `baekjoon_backup_${Date.now()}.zip`;
+        saveAs(zipped, filename);
+        Toast.raiseToast(`전체 업로드 실패: ${msg}. 데이터를 zip 파일로 다운로드했습니다.`);
+        return;
+      } catch (zipError) {
+        console.error('ZIP 폴백 생성 실패', zipError);
+      }
+    }
+    Toast.raiseToast(`전체 업로드 실패: ${msg}`);
   }
 }
 
