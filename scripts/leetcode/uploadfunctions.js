@@ -17,6 +17,7 @@ async function uploadOneSolveProblemOnGit(lcData, cb) {
       lcData.fileName,
       lcData.message,
       cb,
+      lcData.samples,
     );
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
@@ -30,7 +31,7 @@ async function uploadOneSolveProblemOnGit(lcData, cb) {
   }
 }
 
-async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
+async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb, samples) {
   const git = new GitHub(hook, token);
   const stats = await getStats();
   const default_branch = await git.getDefaultBranchOnRepo();
@@ -39,6 +40,16 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   const source = await git.createBlob(sourceText, `${directory}/${filename}`);
   const readme = await git.createBlob(readmeText, `${directory}/README.md`);
   const tree_items = [source, readme];
+
+  // 예제 저장 옵션이 켜져 있으면 input{N}.txt를 함께 추가 (LeetCode는 출력은 미제공)
+  const saveExamples = await getSaveExamplesOption();
+  if (saveExamples && Array.isArray(samples) && samples.length > 0) {
+    const entries = samplesToFileEntries(samples);
+    for (const entry of entries) {
+      const blob = await git.createBlob(entry.content, `${directory}/${entry.filename}`);
+      tree_items.push(blob);
+    }
+  }
 
   const treeData = await git.createTree(refSHA, tree_items);
   const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
@@ -145,6 +156,7 @@ async function uploadAllSolvedProblem(username) {
   });
 
   const uploadedIds = extractUploadedProblemIdsForLeetCode(stats, hook);
+  const saveExamples = await getSaveExamplesOption();
   for (const lcData of lcDatas) {
     if (isNull(lcData) || isEmpty(lcData.code) || isEmpty(lcData.readme)) continue;
     if (uploadedIds.has(String(lcData.problemId))) {
@@ -159,6 +171,15 @@ async function uploadAllSolvedProblem(username) {
       path: `${lcData.directory}/README.md`,
       mode: '100644', type: 'blob', content: lcData.readme,
     });
+    if (saveExamples && Array.isArray(lcData.samples) && lcData.samples.length > 0) {
+      const entries = samplesToFileEntries(lcData.samples);
+      for (const entry of entries) {
+        tree_items.push({
+          path: `${lcData.directory}/${entry.filename}`,
+          mode: '100644', type: 'blob', content: entry.content,
+        });
+      }
+    }
   }
 
   if (tree_items.length === 0) {
