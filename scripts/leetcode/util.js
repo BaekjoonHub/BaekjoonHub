@@ -110,3 +110,100 @@ function removeManualUploadButton() {
   const btn = document.getElementById('bjh-lc-manual-upload');
   if (btn) btn.remove();
 }
+
+/**
+ * 프로필 페이지 진입 시 좌측 하단에 "전체 제출 업로드" 버튼을 부착한다.
+ * 클릭하면 onUpload(username) 콜백을 실행하고, 진행 상태는 multiloader DOM에 표기된다.
+ */
+function insertUploadAllButton(username, onUpload) {
+  const existing = document.getElementById('bjh-lc-upload-all');
+  if (existing && existing.dataset.user === String(username)) return;
+  if (existing) existing.remove();
+
+  const btn = document.createElement('button');
+  btn.id = 'bjh-lc-upload-all';
+  btn.className = 'bjh-lc-upload-all-btn';
+  btn.dataset.user = String(username);
+  btn.textContent = '전체 제출 업로드';
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    if (!confirm('GitHub에 최근 Accepted 제출들을 일괄 업로드하시겠습니까?\n(LeetCode API 한계상 최근 약 50건만 조회됩니다.)')) return;
+    btn.disabled = true;
+    btn.classList.remove('success', 'fail');
+    insertMultiLoader();
+    try {
+      await onUpload(username);
+      btn.classList.add('success');
+    } catch (e) {
+      console.error('LeetCode 전체 업로드 실패:', e);
+      btn.classList.add('fail');
+      MultiloaderFail(e?.message || String(e));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  document.body.appendChild(btn);
+}
+
+function removeUploadAllButton() {
+  const btn = document.getElementById('bjh-lc-upload-all');
+  if (btn) btn.remove();
+  const ml = document.getElementById('bjh-lc-multiloader');
+  if (ml) ml.remove();
+  multiloader.wrap = null;
+  multiloader.nom = null;
+  multiloader.denom = null;
+}
+
+function insertMultiLoader() {
+  const old = document.getElementById('bjh-lc-multiloader');
+  if (old) old.remove();
+  const wrap = document.createElement('div');
+  wrap.id = 'bjh-lc-multiloader';
+  wrap.className = 'bjh-lc-multiloader';
+  wrap.textContent = '준비 중…';
+  document.body.appendChild(wrap);
+  multiloader.wrap = wrap;
+  multiloader.nom = null;
+  multiloader.denom = null;
+}
+
+function setMultiLoaderDenom(num) {
+  if (isNull(multiloader.wrap)) return;
+  if (isNull(multiloader.denom)) {
+    multiloader.wrap.textContent = '';
+    const nom = document.createElement('span');
+    nom.className = 'bjh-lc-multiloader-num';
+    nom.textContent = '0';
+    const denom = document.createElement('span');
+    denom.className = 'bjh-lc-multiloader-num';
+    denom.textContent = String(num);
+    multiloader.wrap.appendChild(nom);
+    multiloader.wrap.appendChild(document.createTextNode(' / '));
+    multiloader.wrap.appendChild(denom);
+    multiloader.nom = nom;
+    multiloader.denom = denom;
+  } else {
+    multiloader.denom.textContent = String(num);
+  }
+}
+
+function incMultiLoader(n) {
+  if (isNull(multiloader.nom)) return;
+  multiloader.nom.textContent = String(Number(multiloader.nom.textContent) + n);
+}
+
+function MultiloaderUpToDate() {
+  if (!isNull(multiloader.wrap)) multiloader.wrap.textContent = 'Up To Date';
+}
+
+function MultiloaderSuccess() {
+  if (!isNull(multiloader.wrap)) multiloader.wrap.textContent = 'SUCCESS';
+}
+
+function MultiloaderFail(message) {
+  if (isNull(multiloader.wrap)) return;
+  multiloader.wrap.textContent = 'FAILED';
+  multiloader.wrap.classList.add('bjh-lc-multiloader-fail');
+  if (!isEmpty(message)) multiloader.wrap.setAttribute('title', message);
+}

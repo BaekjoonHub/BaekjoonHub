@@ -102,3 +102,76 @@ async function versionUpdate() {
   stats.version = getVersion();
   await saveStats(stats);
 }
+
+/**
+ * LeetCode 프로필에서 최근 Accepted 제출들을 단일 GitHub 커밋으로 일괄 업로드한다.
+ * - LeetCode `recentAcSubmissionList`는 limit이 작으므로(약 50건) "최근 Accepted 동기화" 의미.
+ * - stats.submission 트리에 이미 존재하는 problemId는 스킵.
+ * - 진행률은 multiloader DOM으로 노출.
+ */
+async function uploadAllSolvedProblem(username) {
+  const tree_items = [];
+  const stats = await updateLocalStorageStats();
+  const hook = await getHook();
+  const token = await getToken();
+  if (isNull(hook) || isNull(token)) {
+    MultiloaderFail('GitHub 연결 정보가 없습니다.');
+    return;
+  }
+
+  const git = new GitHub(hook, token);
+  const default_branch = stats.branches[hook] || (await git.getDefaultBranchOnRepo());
+  stats.branches[hook] = default_branch;
+  const { refSHA, ref } = await git.getReference(default_branch);
+
+  const list = await fetchRecentAcSubmissions(username, 50);
+  if (list.length === 0) {
+    MultiloaderUpToDate();
+    return;
+  }
+
+  setMultiLoaderDenom(list.length);
+
+  const lcDatas = await asyncPool(2, list, async (item) => {
+    try {
+      const lcData = await buildLeetCodeData(item.id);
+      incMultiLoader(1);
+      return lcData;
+    } catch (e) {
+      console.warn('LeetCode 빌드 실패', item?.titleSlug, e);
+      incMultiLoader(1);
+      return null;
+    }
+  });
+
+  const uploadedIds = extractUploadedProblemIdsForLeetCode(stats, hook);
+  for (const lcData of lcDatas) {
+    if (isNull(lcData) || isEmpty(lcData.code) || isEmpty(lcData.readme)) continue;
+    if (uploadedIds.has(String(lcData.problemId))) {
+      log('이미 업로드된 LeetCode 문제 스킵:', lcData.problemId);
+      continue;
+    }
+    tree_items.push({
+      path: `${lcData.directory}/${lcData.fileName}`,
+      mode: '100644', type: 'blob', content: lcData.code,
+    });
+    tree_items.push({
+      path: `${lcData.directory}/README.md`,
+      mode: '100644', type: 'blob', content: lcData.readme,
+    });
+  }
+
+  if (tree_items.length === 0) {
+    MultiloaderUpToDate();
+    return;
+  }
+
+  const treeData = await git.createTree(refSHA, tree_items);
+  const commitSHA = await git.createCommit('LeetCode 전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
+  await git.updateHead(ref, commitSHA);
+  treeData.tree.forEach((item) => {
+    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
+  });
+  await saveStats(stats);
+  MultiloaderSuccess();
+}

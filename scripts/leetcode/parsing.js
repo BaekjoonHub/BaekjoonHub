@@ -23,6 +23,15 @@ const LC_QUERY_SUBMISSION_LIST = `query submissionList($offset: Int!, $limit: In
   }
 }`;
 
+const LC_QUERY_RECENT_AC_SUBMISSIONS = `query recentAcSubmissions($username: String!, $limit: Int!) {
+  recentAcSubmissionList(username: $username, limit: $limit) {
+    id
+    title
+    titleSlug
+    timestamp
+  }
+}`;
+
 const LC_QUERY_SUBMISSION_DETAILS = `query submissionDetails($submissionId: Int!) {
   submissionDetails(submissionId: $submissionId) {
     runtime
@@ -170,4 +179,72 @@ async function buildLeetCodeData(submissionId) {
     message,
     readme,
   };
+}
+
+/**
+ * 사용자명으로 최근 Accepted 제출 목록을 가져온다 (LeetCode가 limit를 비교적 작게 캡함).
+ * 같은 문제에 대해 여러 번 통과했다면 가장 최근 것 하나만 남긴다.
+ */
+async function fetchRecentAcSubmissions(username, limit = 50) {
+  const data = await lcGraphql(LC_QUERY_RECENT_AC_SUBMISSIONS, { username, limit });
+  const list = data?.recentAcSubmissionList || [];
+  const seen = new Set();
+  const unique = [];
+  for (const item of list) {
+    if (!item?.titleSlug || seen.has(item.titleSlug)) continue;
+    seen.add(item.titleSlug);
+    unique.push(item);
+  }
+  return unique;
+}
+
+/**
+ * stats.submission 트리에서 이미 업로드된 LeetCode 문제 ID 집합을 추출한다.
+ * 디렉터리 키의 선두 숫자(예: "1. Two Sum")를 problemId로 본다.
+ * 백준 모듈의 extractUploadedProblemIds와 동일 컨셉.
+ */
+function extractUploadedProblemIdsForLeetCode(stats, hook) {
+  const ids = new Set();
+  if (isNull(stats) || isNull(stats.submission) || isNull(hook)) return ids;
+  const [owner, repo] = hook.split('/');
+  if (!owner || !repo) return ids;
+  const root = stats.submission?.[owner]?.[repo];
+  if (isNull(root)) return ids;
+
+  const visit = (node) => {
+    if (isNull(node) || typeof node !== 'object') return;
+    for (const [key, value] of Object.entries(node)) {
+      const m = key.match(/^(\d+)/);
+      if (m) ids.add(m[1]);
+      visit(value);
+    }
+  };
+  // platform 모드: <hook>/LeetCode/...
+  visit(root.LeetCode);
+  // language 모드: <hook>/<lang>/LeetCode/...
+  for (const [k, v] of Object.entries(root)) {
+    if (k === 'LeetCode' || isNull(v) || typeof v !== 'object') continue;
+    visit(v.LeetCode);
+  }
+  return ids;
+}
+
+/**
+ * LeetCode의 exampleTestcaseList는 입력 문자열만 제공하므로 input{N}.txt만 작성한다.
+ * 출력이 비어있는 경우 output 파일은 생성하지 않는다.
+ */
+function samplesToFileEntries(samples) {
+  if (!Array.isArray(samples) || samples.length === 0) return [];
+  const entries = [];
+  const useNumber = samples.length > 1;
+  samples.forEach((sample, idx) => {
+    const suffix = useNumber ? (idx + 1) : '';
+    if (sample?.input != null && sample.input !== '') {
+      entries.push({ filename: `input${suffix}.txt`, content: String(sample.input) });
+    }
+    if (sample?.output != null && sample.output !== '') {
+      entries.push({ filename: `output${suffix}.txt`, content: String(sample.output) });
+    }
+  });
+  return entries;
 }

@@ -26,6 +26,20 @@ function refreshPageHandlers() {
   stopPoller();
   hookSubmitButton();
   syncManualUploadButton();
+  syncUploadAllButton();
+}
+
+function syncUploadAllButton() {
+  const m = location.pathname.match(/^\/u\/([^/]+)\/?$/);
+  if (!m) {
+    removeUploadAllButton();
+    return;
+  }
+  const username = decodeURIComponent(m[1]);
+  insertUploadAllButton(username, async (uname) => {
+    if (!(await checkEnable())) throw new Error('확장이 비활성화되어 있습니다.');
+    return uploadAllSolvedProblem(uname);
+  });
 }
 
 function syncManualUploadButton() {
