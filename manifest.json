@@ -39,7 +39,8 @@
     "https://api.github.com/",
     "https://swexpertacademy.com/",
     "https://solved.ac/api/v3/*",
-    "https://level.goorm.io/"
+    "https://level.goorm.io/",
+    "https://leetcode.com/"
   ],
   "web_accessible_resources": [
     {
@@ -163,6 +164,29 @@
         "scripts/goormlevel/parsing.js",
         "scripts/goormlevel/uploadfunctions.js",
         "scripts/goormlevel/goormlevel.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://leetcode.com/*"
+      ],
+      "css": [
+        "css/leetcode/inject.css"
+      ],
+      "js": [
+        "library/sha1.min.js",
+        "scripts/toast.js",
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js",
+        "scripts/storage.js",
+        "scripts/enable.js",
+        "scripts/leetcode/variables.js",
+        "scripts/leetcode/parsing.js",
+        "scripts/leetcode/util.js",
+        "scripts/leetcode/uploadfunctions.js",
+        "scripts/leetcode/leetcode.js"
       ],
       "run_at": "document_idle"
     }

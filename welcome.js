@@ -343,13 +343,14 @@ $id('examplesBox').addEventListener('click', () => {
 });
 
 /* === Directory Template Settings === */
-const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea', 'goormlevel'];
+const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea', 'goormlevel', 'leetcode'];
 
 const TEMPLATE_PREVIEW_VARS = {
   baekjoon:    { platform: '백준', level: 'Gold', levelFull: 'Gold V', id: '1000', title: 'A＋B', language: 'Python' },
   programmers: { platform: '프로그래머스', level: 'lv2', id: '12345', title: '타겟 넘버', language: 'JavaScript' },
   swea:        { platform: 'SWEA', level: 'D4', id: '1234', title: '문제제목', language: 'Java' },
   goormlevel:  { platform: 'goormlevel', level: '보통', examId: '12345', id: '54321', title: '문제제목', language: 'Python' },
+  leetcode:    { platform: 'LeetCode', level: 'Medium', id: '1', title: 'Two Sum', slug: 'two-sum', language: 'Python3' },
 };
 
 const TEMPLATE_DEFAULTS = {
@@ -357,6 +358,7 @@ const TEMPLATE_DEFAULTS = {
   programmers: '${platform}/${level}/${id}. ${title}',
   swea:        '${platform}/${level}/${id}. ${title}',
   goormlevel:  '${platform}/${level}/${id}. ${title}',
+  leetcode:    '${platform}/${level}/${id}. ${title}',
 };
 
 function updateTemplatePreview(platform) {

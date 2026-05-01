@@ -197,7 +197,7 @@ async function updateStatsSHAfromPath(path, sha) {
 function updateObjectDatafromPath(obj, path, data) {
   let current = obj;
   // split path into array and filter out empty strings
-  const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
+  const pathArray = _leetcodeDifficultyRemoveFilter(_swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path)))))
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -221,7 +221,7 @@ async function getStatsSHAfromPath(path) {
 
 function getObjectDatafromPath(obj, path) {
   let current = obj;
-  const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
+  const pathArray = _leetcodeDifficultyRemoveFilter(_swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path)))))
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -351,4 +351,15 @@ function _baekjoonSpaceRemoverFilter(path) {
  */
 function _swexpertacademyRankRemoveFilter(path) {
   return path.replace(/\/D([0-8]+)\//g, '/');
+}
+
+/**
+ * @deprecated
+ * LeetCode 난이도(Easy/Medium/Hard) 경로를 제거하여 난이도가 변경되어도
+ * 같은 문제가 중복 업로드되지 않도록 한다 (다른 플랫폼 필터들과 동일한 목적).
+ * @param {string} path
+ * @returns {string}
+ */
+function _leetcodeDifficultyRemoveFilter(path) {
+  return path.replace(/\/(Easy|Medium|Hard)\//g, '/');
 }
