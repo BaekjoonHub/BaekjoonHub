@@ -14,13 +14,35 @@ const SUBMIT_BUTTON_SELECTOR = 'button[data-e2e-locator="console-submit-button"]
     return;
   }
 
-  hookSubmitButton();
-  observeUrlChange(() => {
-    // SPA 이동 시 새 페이지의 버튼에 다시 후크
-    stopPoller();
-    hookSubmitButton();
-  });
+  refreshPageHandlers();
+  observeUrlChange(refreshPageHandlers);
 })();
+
+/**
+ * 현재 URL에 맞춰 제출 버튼 후크와 수동 업로드 버튼 부착을 갱신한다.
+ * SPA 이동 시 진행 중이던 폴링은 중단하고, 적합한 페이지에서만 UI를 노출한다.
+ */
+function refreshPageHandlers() {
+  stopPoller();
+  hookSubmitButton();
+  syncManualUploadButton();
+}
+
+function syncManualUploadButton() {
+  const m = location.pathname.match(/\/problems\/[^/]+\/submissions\/(\d+)\/?$/);
+  if (!m) {
+    removeManualUploadButton();
+    return;
+  }
+  const submissionId = m[1];
+  injectManualUploadButton(submissionId, async (sid) => {
+    if (!(await checkEnable())) {
+      throw new Error('확장이 비활성화되어 있습니다.');
+    }
+    const lcData = await buildLeetCodeData(sid);
+    await beginUpload(lcData);
+  });
+}
 
 /**
  * 페이지 내 제출 버튼에 클릭 리스너를 부착한다.

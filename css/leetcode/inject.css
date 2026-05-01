@@ -40,6 +40,26 @@
   border-right: 3px solid #78b13f;
 }
 
+.bjh-lc-manual-upload-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  padding: 10px 16px;
+  background-color: #0078c3;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.bjh-lc-manual-upload-btn:hover { background-color: #005a94; }
+.bjh-lc-manual-upload-btn:disabled { cursor: default; opacity: 0.7; }
+.bjh-lc-manual-upload-btn.success { background-color: #78b13f; }
+.bjh-lc-manual-upload-btn.fail { background-color: #d9534f; }
+
 .toast-notification *{ margin: 0; padding: 0; }
 .toast-notification {
   min-width: 150px;

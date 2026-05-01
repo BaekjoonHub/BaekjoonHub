@@ -71,3 +71,42 @@ function observeUrlChange(cb) {
   // SPA가 history를 거치지 않고 DOM만 갈아끼우는 경우 대비
   new MutationObserver(fire).observe(document.body, { childList: true, subtree: true });
 }
+
+/**
+ * 제출 상세 페이지에서 표시되는 수동 업로드 버튼을 페이지 우측 하단에 부착한다.
+ * 같은 submissionId로 중복 부착되지 않도록 가드한다.
+ * URL이 바뀔 때(다른 submissionId로 이동 또는 다른 페이지) {@link removeManualUploadButton}로 제거.
+ */
+function injectManualUploadButton(submissionId, onUpload) {
+  const existing = document.getElementById('bjh-lc-manual-upload');
+  if (existing && existing.dataset.sid === String(submissionId)) return;
+  if (existing) existing.remove();
+
+  const btn = document.createElement('button');
+  btn.id = 'bjh-lc-manual-upload';
+  btn.className = 'bjh-lc-manual-upload-btn';
+  btn.dataset.sid = String(submissionId);
+  btn.textContent = 'GitHub에 업로드';
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.remove('success', 'fail');
+    btn.textContent = '업로드 중...';
+    try {
+      await onUpload(submissionId);
+      btn.classList.add('success');
+      btn.textContent = '업로드 완료';
+    } catch (e) {
+      console.error('LeetCode 수동 업로드 실패:', e);
+      btn.classList.add('fail');
+      btn.textContent = '업로드 실패';
+      btn.disabled = false;
+    }
+  });
+  document.body.appendChild(btn);
+}
+
+function removeManualUploadButton() {
+  const btn = document.getElementById('bjh-lc-manual-upload');
+  if (btn) btn.remove();
+}
