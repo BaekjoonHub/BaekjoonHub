@@ -19,6 +19,90 @@ function updateTextSourceEvent() {
   document.documentElement.removeAttribute('onreset');
 }
 
+/**
+ * 여러 개의 selector 후보를 순서대로 시도해 가장 먼저 매칭되는 요소를 반환합니다.
+ * SWEA DOM 구조 변경에 대비해 절대 경로 selector 대신 fallback 체인을 사용합니다.
+ * @param {string[]} selectors - 시도할 selector 목록 (우선순위 순)
+ * @param {ParentNode} [root=document] - 탐색 기준 노드
+ * @returns {Element|null}
+ */
+function querySelectorFallback(selectors, root = document) {
+  for (const selector of selectors) {
+    try {
+      const el = root.querySelector(selector);
+      if (!isNull(el)) return el;
+    } catch (e) {
+      /* 유효하지 않은 selector는 무시 */
+    }
+  }
+  return null;
+}
+
+/** 요소의 텍스트를 안전하게 추출합니다. null이면 빈 문자열을 반환합니다. */
+function safeText(el) {
+  return isNull(el) ? '' : (el.textContent || el.innerText || '').trim();
+}
+
+/** 조회 중인(검색창) 닉네임을 추출합니다. */
+function getSearchedNickname() {
+  const el = querySelectorFallback(['#searchinput', 'input[name="searchinput"]', 'input#searchinput']);
+  return (el?.value || '').trim();
+}
+
+/** 문제 번호를 여러 fallback으로 추출합니다. */
+function parseProblemId() {
+  // 1. 문제 박스 내 순수 문제번호 p (problem_title 클래스 제외)
+  let text = safeText(querySelectorFallback([
+    'div.problem_box > p:not(.problem_title)',
+    'body > div.container > div.container.sub > div > div.problem_box > p',
+  ]));
+  // 2. h3 ("1234. 제목 D2") 형태에서 추출
+  if (isEmpty(text)) {
+    text = safeText(querySelectorFallback(['div.problem_box > h3', 'div.problem_box h3']));
+  }
+  return text.split('.')[0].replace(/[^0-9]/g, '').trim();
+}
+
+/** contestProbId를 히든 input 우선, 없으면 URL 파라미터에서 추출합니다. */
+function parseContestProbId() {
+  const inputs = [...document.querySelectorAll('#contestProbId, input[name="contestProbId"]')];
+  for (let i = inputs.length - 1; i >= 0; i--) {
+    const v = (inputs[i].value || '').trim();
+    if (v) return v;
+  }
+  return (new URLSearchParams(window.location.search).get('contestProbId') || '').trim();
+}
+
+/** 제출 정보(언어/메모리/실행시간/코드길이)를 info 박스에서 추출합니다. */
+function parseSubmissionInfo(infoBox) {
+  let items = [...infoBox.querySelectorAll('ul > li')];
+  if (items.length === 0) items = [...infoBox.querySelectorAll('li')];
+  const pick = (li) => {
+    if (isNull(li)) return '';
+    return safeText(li.querySelector('span')) || safeText(li);
+  };
+  return {
+    language: pick(items[0]),
+    memory: pick(items[1]).toUpperCase(),
+    runtime: pick(items[2]),
+    length: pick(items[3]),
+  };
+}
+
+/** 제출 일시를 날짜 패턴 매칭으로 추출합니다. */
+function parseSubmissionTime() {
+  const datePattern = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?/;
+  const candidates = [
+    querySelectorFallback(['.smt_txt > dd', '.smt_txt dd', '.smt_txt']),
+    querySelectorFallback(['div.problem_box', '#problemForm']),
+  ];
+  for (const el of candidates) {
+    const m = safeText(el).match(datePattern);
+    if (m) return m[0];
+  }
+  return '';
+}
+
 /*
   문제 요약과 코드를 파싱합니다.
   - directory : 레포에 기록될 폴더명
@@ -28,51 +112,80 @@ function updateTextSourceEvent() {
   - code : 소스코드 내용
 */
 async function parseData() {
-  const nickname = document.querySelector('#searchinput').value;
+  const searchedNickname = getSearchedNickname();
+  const myNickname = getNickname();
+  log('SWEA 파싱 시작 - 로그인 유저:', myNickname, '조회 유저:', searchedNickname);
 
-  log('사용자 로그인 정보 및 유무 체크', nickname, document.querySelector('#problemForm div.info'));
-  // 검색하는 유저 정보와 로그인한 유저의 닉네임이 같은지 체크
-  // PASS를 맞은 기록 유무 체크
-  if (getNickname() !== nickname) return;
-  if (isNull(document.querySelector('#problemForm div.info'))) return;
+  // 검색 중인 유저와 로그인 유저가 다르면 업로드하지 않음
+  // (둘 중 하나라도 비어 있으면 selector 변동 가능성을 고려해 검사를 통과시킴)
+  if (myNickname && searchedNickname && myNickname !== searchedNickname) {
+    log('로그인 유저와 조회 유저가 달라 업로드를 건너뜁니다.');
+    return;
+  }
+
+  // 제출 정보(언어/메모리/시간/코드길이) 영역
+  const infoBox = querySelectorFallback(['#problemForm div.info', 'div.problem_box div.info', 'div.info']);
+  if (isNull(infoBox)) {
+    console.error('[BaekjoonHub] SWEA 제출 정보 영역(div.info)을 찾지 못했습니다. SWEA DOM 구조 변경 가능성이 있습니다.');
+    return;
+  }
 
   log('결과 데이터 파싱 시작');
 
-  const title = document
-    .querySelector('div.problem_box > p.problem_title')
-    .innerText.replace(/ D[0-9]$/, '')
+  // 문제 제목
+  const titleEl = querySelectorFallback(['div.problem_box > p.problem_title', 'div.problem_box p.problem_title', '.problem_title']);
+  let title = safeText(titleEl)
+    .replace(/ D[0-9]$/, '')
     .replace(/^[^.]*/, '')
-    .substr(1)
+    .replace(/^\./, '')
     .trim();
+  if (isEmpty(title)) {
+    // fallback: h3 ("1234. 제목 D2")에서 제목만 추출
+    title = safeText(querySelectorFallback(['div.problem_box > h3', 'div.problem_box h3']))
+      .replace(/ D[0-9]$/, '')
+      .replace(/^[^.]*\.?/, '')
+      .trim();
+  }
+
   // 레벨
-  const level = document.querySelector('div.problem_box > p.problem_title > span.badge')?.textContent || 'Unrated';
+  const level = safeText(querySelectorFallback([
+    'div.problem_box > p.problem_title > span.badge',
+    'div.problem_box p.problem_title span.badge',
+    'div.problem_box .badge',
+  ])) || 'Unrated';
+
   // 문제번호
-  const problemId = document.querySelector('body > div.container > div.container.sub > div > div.problem_box > p').innerText.split('.')[0].trim();
+  const problemId = parseProblemId();
   // 문제 콘테스트 인덱스
-  const contestProbId = [...document.querySelectorAll('#contestProbId')].slice(-1)[0].value;
+  const contestProbId = parseContestProbId();
+  if (isEmpty(problemId) || isEmpty(contestProbId)) {
+    console.error('[BaekjoonHub] SWEA 문제 번호/contestProbId 파싱에 실패했습니다.', { problemId, contestProbId });
+    return;
+  }
   // 문제 링크
   const link = `${window.location.origin}/main/code/problem/problemDetail.do?contestProbId=${contestProbId}`;
 
-  // 문제 언어, 메모리, 시간소요
-  const language = document.querySelector('#problemForm div.info > ul > li:nth-child(1) > span:nth-child(1)').textContent.trim();
-  const memory = document.querySelector('#problemForm div.info > ul > li:nth-child(2) > span:nth-child(1)').textContent.trim().toUpperCase();
-  const runtime = document.querySelector('#problemForm div.info > ul > li:nth-child(3) > span:nth-child(1)').textContent.trim();
-  const length = document.querySelector('#problemForm div.info > ul > li:nth-child(4) > span:nth-child(1)').textContent.trim();
+  // 문제 언어, 메모리, 시간소요, 코드길이
+  const { language, memory, runtime, length } = parseSubmissionInfo(infoBox);
+  if (isEmpty(language)) {
+    console.error('[BaekjoonHub] SWEA 제출 언어 파싱에 실패했습니다.');
+    return;
+  }
 
   // 확장자명
   const extension = languages[language.toLowerCase()];
 
   // 제출날짜
-  const submissionTime = document.querySelector('.smt_txt > dd').textContent.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/g)[0];
-  // 로컬스토리지에서 기존 코드에 대한 정보를 불러올 수 없다면 코드 디테일 창으로 이동 후 제출하도록 이동
-  const data = await getProblemData(problemId);
+  const submissionTime = parseSubmissionTime();
+
+  // 로컬스토리지에서 제출 코드를 불러옴 (problemId 우선, 실패 시 contestProbId로 조회)
+  let data = await getProblemData(problemId);
+  if (isNull(data?.code)) {
+    data = await getProblemDataByContestProbId(contestProbId);
+  }
   log('data', data);
   if (isNull(data?.code)) {
-    // 기존 문제 데이터를 로컬스토리지에 저장하고 코드 보기 페이지로 이동
-    // await updateProblemData(problemId, { level, contestProbId, link, language, memory, runtime, length, extension });
-    // const contestHistoryId = document.querySelector('div.box-list > div > div > span > a').href.replace(/^.*'(.*)'.*$/, '$1');
-    // window.location.href = `${window.location.origin}/main/solvingProblem/solvingProblem.do?contestProbId=${contestProbId}`;
-    console.error('소스코드 데이터가 없습니다.');
+    console.error('[BaekjoonHub] 저장된 SWEA 소스코드 데이터가 없습니다.', { problemId, contestProbId });
     return;
   }
   const code = data.code;
@@ -99,7 +212,7 @@ async function makeData(origin) {
   });
   const message = `[${level}] Title: ${title}, Time: ${runtime}, Memory: ${memory} -BaekjoonHub`;
   const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
-  const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
+  const dateInfo = isEmpty(submissionTime) ? getDateString(new Date(Date.now())) : submissionTime;
   // prettier-ignore
   const readme =
     `# [${level}] ${title} - ${problemId} \n\n`
