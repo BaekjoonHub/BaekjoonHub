@@ -220,6 +220,8 @@ async function getStatsSHAfromPath(path) {
 }
 
 function getObjectDatafromPath(obj, path) {
+  // path/obj가 비어 있으면(예: hook 미설정) 경로 필터에서 예외가 발생하므로 안전하게 null 반환
+  if (isNull(obj) || isNull(path)) return null;
   let current = obj;
   const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
     .split('/')

@@ -29,8 +29,12 @@ if (currentUrl.includes('/main/userpage/code/userCode.do')) {
 function parseAndUpload() {
   //async wrapper
   (async () => {
-    const bojData = await parseData();
-    await beginUpload(bojData);
+    try {
+      const bojData = await parseData();
+      await beginUpload(bojData);
+    } catch (error) {
+      console.error('[BaekjoonHub] SWEA 파싱/업로드 중 오류가 발생했습니다.', error);
+    }
   })();
 }
 function startLoader() {
@@ -72,11 +76,24 @@ function stopLoader() {
 /* 파싱 직후 실행되는 함수 */
 async function beginUpload(bojData) {
   log('bojData', bojData);
-  startUpload();
+  /* 파싱 결과가 유효할 때만 로딩 UI를 띄우고 업로드를 진행한다.
+     파싱 실패 시 로딩 UI 없이 조용히 종료한다 (프로그래머스와 동일한 동작). */
   if (isNotEmpty(bojData)) {
+    startUpload();
     const stats = await getStats();
     const hook = await getHook();
     const token = await getToken();
+
+    /* GitHub 저장소(hook)/토큰/stats가 준비되지 않은 경우 크래시 대신 실패로 처리한다. */
+    if (isNull(hook) || isNull(token) || isNull(stats)) {
+      console.error('[BaekjoonHub] GitHub 저장소(hook)/토큰/stats가 준비되지 않아 업로드를 진행할 수 없습니다.', {
+        hasHook: !isNull(hook),
+        hasToken: !isNull(token),
+        hasStats: !isNull(stats),
+      });
+      markUploadFailedCSS();
+      return;
+    }
 
     const currentVersion = stats.version;
     /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
@@ -106,6 +123,8 @@ async function beginUpload(bojData) {
     }
     /* 신규 제출 번호라면 새롭게 커밋  */
     await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
+  } else {
+    console.error('[BaekjoonHub] SWEA 파싱 결과가 비어 있어 업로드를 진행하지 않습니다.');
   }
 }
 

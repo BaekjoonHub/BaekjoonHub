@@ -49,3 +49,21 @@ async function updateProblemData(problemId, obj) {
 async function getProblemData(problemId) {
   return getObjectFromLocalStorage('swea').then((data) => data?.[problemId]);
 }
+
+/**
+ * contestProbId로 저장된 문제 데이터를 조회합니다.
+ * problemId selector가 변동되어 키 조회에 실패하는 경우의 fallback으로 사용합니다.
+ * @param {string} contestProbId 문제 콘테스트 인덱스
+ * @returns {object|undefined} 문제 내 데이터
+ */
+async function getProblemDataByContestProbId(contestProbId) {
+  if (isEmpty(contestProbId)) return undefined;
+  return getObjectFromLocalStorage('swea').then((data) => {
+    if (isNull(data)) return undefined;
+    for (const key of Object.keys(data)) {
+      const value = data[key];
+      if (!isNull(value) && String(value.contestProbId) === String(contestProbId)) return value;
+    }
+    return undefined;
+  });
+}
