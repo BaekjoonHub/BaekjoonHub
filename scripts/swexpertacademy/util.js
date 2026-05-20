@@ -2,20 +2,26 @@
  * 로딩 버튼 추가
  */
 function startUpload() {
+  // getElementById는 미존재 시 null을 반환하므로 isNull로 체크해야 한다.
   let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  if (elem !== undefined) {
+  if (isNull(elem)) {
     elem = document.createElement('span');
     elem.id = 'BaekjoonHub_progress_anchor_element';
     // elem.className = 'runcode-wrapper__8rXm';
     // elem.style = 'margin-left: 10px;padding-top: 0px;';
   }
   elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
-  const target = document.querySelector('div.box-list > div.box-list-inner > div.right_answer > span.btn_right');
+  const target = document.querySelector('div.box-list > div.box-list-inner > div.right_answer > span.btn_right')
+    || document.querySelector('div.box-list div.right_answer span.btn_right')
+    || document.querySelector('div.right_answer span.btn_right')
+    || document.querySelector('div.box-list-inner');
   if (!isNull(target)) {
     target.prepend(elem);
+    // 로딩 UI를 실제로 삽입한 경우에만 카운트다운을 시작한다.
+    startUploadCountDown();
+  } else {
+    console.error('[BaekjoonHub] SWEA 업로드 로딩 UI를 삽입할 위치를 찾지 못했습니다.');
   }
-  // start the countdown
-  startUploadCountDown();
 }
 /**
  * 업로드 완료 아이콘 표시 및 링크 생성
@@ -27,6 +33,7 @@ function startUpload() {
 function markUploadedCSS(branches, directory) {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
+  if (isNull(elem)) return;
   elem.className = 'markuploaded';
   const uploadedUrl = "https://github.com/" +
               Object.keys(branches)[0] + "/tree/" + 
@@ -43,6 +50,7 @@ function markUploadedCSS(branches, directory) {
 function markUploadFailedCSS() {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
+  if (isNull(elem)) return;
   elem.className = 'markuploadfailed';
 }
 
@@ -63,7 +71,12 @@ function startUploadCountDown() {
  * @returns {string} 유저 닉네임이며 없을 시에 null을 반환
  */
 function getNickname() {
-  return document.querySelector('#Beginner')?.innerText || document.querySelector('header > div > span.name')?.innerText || '';
+  const el = document.querySelector('#Beginner')
+    || document.querySelector('header > div > span.name')
+    || document.querySelector('header span.name')
+    || document.querySelector('header .name')
+    || document.querySelector('.user_info .name');
+  return (el?.innerText || '').trim();
 }
 
 /**
