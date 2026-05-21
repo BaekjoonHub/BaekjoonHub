@@ -163,7 +163,7 @@ async function findAllSolvedProblems() {
       problems.push({
         problemId: String(item.id),
         title: item.title,
-        level: `lv${item.level}`,
+        level: String(item.level),
       });
     }
     if (page >= data.totalPages) break;
