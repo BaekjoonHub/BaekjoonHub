@@ -329,7 +329,7 @@ function _baekjoonRankRemoverFilter(path) {
  * @returns {string} - 레벨과 관련된 경로를 제거한 문자열
  */
 function _programmersRankRemoverFilter(path) {
-  return path.replace(/\/(lv[0-9]|unrated)\//g, '/');
+  return path.replace(/\/(lv?[0-9]|unrated)\//g, '/');
 }
 
 /**
