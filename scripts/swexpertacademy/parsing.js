@@ -38,9 +38,13 @@ function querySelectorFallback(selectors, root = document) {
   return null;
 }
 
-/** 요소의 텍스트를 안전하게 추출합니다. null이면 빈 문자열을 반환합니다. */
+/**
+ * 요소의 텍스트를 안전하게 추출합니다. null이면 빈 문자열을 반환합니다.
+ * textContent 는 자식 노드 사이의 HTML 포맷팅 공백(개행/탭)을 그대로 포함하므로,
+ * \s+ 를 단일 스페이스로 정규화해 경로/파일명 오염을 막습니다.
+ */
 function safeText(el) {
-  return isNull(el) ? '' : (el.textContent || el.innerText || '').trim();
+  return isNull(el) ? '' : (el.textContent || el.innerText || '').replace(/\s+/g, ' ').trim();
 }
 
 /** 조회 중인(검색창) 닉네임을 추출합니다. */
@@ -132,18 +136,24 @@ async function parseData() {
 
   log('결과 데이터 파싱 시작');
 
-  // 문제 제목
+  // 문제 제목 - badge(레벨) 자식을 함께 읽으면 "제목\n\t\tD2" 처럼 오염되므로
+  // 노드를 clone 한 뒤 badge 를 제거하고 textContent 를 사용한다.
   const titleEl = querySelectorFallback(['div.problem_box > p.problem_title', 'div.problem_box p.problem_title', '.problem_title']);
-  let title = safeText(titleEl)
-    .replace(/ D[0-9]$/, '')
-    .replace(/^[^.]*/, '')
-    .replace(/^\./, '')
+  let rawTitle = '';
+  if (!isNull(titleEl)) {
+    const clone = titleEl.cloneNode(true);
+    clone.querySelectorAll('.badge, span.badge').forEach((b) => b.remove());
+    rawTitle = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+  let title = rawTitle
+    .replace(/^[^.]*\.?\s*/, '') // "1859. " 제거
+    .replace(/\s+D[0-9]$/i, '')  // 혹시 남은 " D2" 접미사 제거 (방어적)
     .trim();
   if (isEmpty(title)) {
     // fallback: h3 ("1234. 제목 D2")에서 제목만 추출
     title = safeText(querySelectorFallback(['div.problem_box > h3', 'div.problem_box h3']))
-      .replace(/ D[0-9]$/, '')
-      .replace(/^[^.]*\.?/, '')
+      .replace(/\s+D[0-9]$/i, '')
+      .replace(/^[^.]*\.?\s*/, '')
       .trim();
   }
 
@@ -298,7 +308,7 @@ async function findAllSolvedProblemsSWEA() {
 
     const problemIdEl = cells[0];
     const problemId = problemIdEl ? problemIdEl.textContent.trim() : '';
-    const title = linkEl.textContent.trim();
+    const title = (linkEl.textContent || '').replace(/\s+/g, ' ').trim();
 
     // 레벨 추출
     const levelEl = row.querySelector('.badge, span[class*="level"]');
@@ -339,7 +349,7 @@ async function findAllSolvedProblemsSWEA() {
 
         const problemIdEl = cells[0];
         const problemId = problemIdEl ? problemIdEl.textContent.trim() : '';
-        const title = linkEl.textContent.trim();
+        const title = (linkEl.textContent || '').replace(/\s+/g, ' ').trim();
 
         const levelEl = row.querySelector('.badge, span[class*="level"]');
         const level = levelEl ? levelEl.textContent.trim() : (cells[2] ? cells[2].textContent.trim() : 'Unrated');
