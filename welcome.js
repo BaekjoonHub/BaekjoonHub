@@ -120,17 +120,43 @@ const linkStatusCode = (status, name) => {
   return bool;
 };
 
-/** Initialize empty repo with README.md */
+/**
+ * 빈 레포에 README.md 를 생성한다.
+ *
+ * 호출 측의 `res.size === 0` 만으로는 빈 레포 판정이 불안정하다. GitHub API 의
+ * `repo.size` 는 비동기 통계라 `auto_init: true` 로 생성된 직후의 레포는 README 가
+ * 이미 있어도 한동안 0 으로 응답한다. 그 윈도 안에 이 함수가 호출되면 이미 존재하는
+ * README 에 sha 없이 PUT 하여 422 가 떨어지고, `console.error(..., err)` 로 객체를
+ * 그대로 두 번째 인자에 넘기면 Chrome 확장 오류 패널이 toString 직렬화하여
+ * `Failed to initialize empty repo: [object Object]` 가 누적된다 (#341).
+ *
+ * 1차로 README 가 실제로 있는지 GET 으로 확인하고, 없을 때만 PUT 한다. probe ~ PUT
+ * 사이의 동시 생성 race 로 떨어지는 422 도 무시한다.
+ */
 const initializeEmptyRepoWelcome = async (token, hook, branch) => {
   const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' };
+  const probeUrl = `https://api.github.com/repos/${hook}/contents/README.md?ref=${encodeURIComponent(branch)}`;
+  const probe = await fetch(probeUrl, { headers });
+  if (probe.ok) {
+    // README 이미 존재 — 초기화 불필요.
+    return;
+  }
+  if (probe.status !== 404) {
+    const probeErr = await probe.json().catch(() => ({}));
+    console.error('Failed to probe README before empty-repo init:', probeErr.message || JSON.stringify(probeErr));
+    return;
+  }
+
   const repoName = hook.split('/')[1];
   const readmeContent = btoa(unescape(encodeURIComponent(`# ${repoName}\n${REPO_DESCRIPTION}\n`)));
   const res = await fetch(`https://api.github.com/repos/${hook}/contents/README.md`, {
     method: 'PUT', headers, body: JSON.stringify({ message: 'Initial commit - BaekjoonHub', content: readmeContent, branch }),
   });
   if (!res.ok) {
-    const err = await res.json();
-    console.error('Failed to initialize empty repo:', err);
+    const err = await res.json().catch(() => ({}));
+    // probe ~ PUT 사이의 동시 생성 race 로 이미 README 가 만들어진 경우(422 "sha wasn't supplied") 는 noop.
+    if (res.status === 422 && /sha/i.test(err.message || '')) return;
+    console.error('Failed to initialize empty repo:', err.message || JSON.stringify(err));
   }
 };
 
