@@ -9,8 +9,13 @@ let loader;
 
 const currentUrl = window.location.href;
 
+// 헤더가 아직 렌더되지 않았거나 DOM 구조가 변경된 경우 querySelector가 null을 반환할 수 있으므로
+// 옵셔널 체이닝으로 가드한다. (가드가 없으면 .textContent 접근 시 TypeError가 최상위에서 던져져
+// content script 전체가 중단되고, 이후 problemSolver.do 업로드 분기까지 실행되지 못한다.)
+const isSweaMockTest = () => document.querySelector('header > h1 > span')?.textContent?.trim() === '모의 테스트';
+
 // SWEA 연습 문제 주소임을 확인하고, 맞는 파서를 실행
-if (currentUrl.includes('/main/solvingProblem/solvingProblem.do') && document.querySelector('header > h1 > span').textContent === '모의 테스트') startLoader();
+if (currentUrl.includes('/main/solvingProblem/solvingProblem.do') && isSweaMockTest()) startLoader();
 else if (currentUrl.includes('/main/code/problem/problemSolver.do') && currentUrl.includes('extension=BaekjoonHub')) parseAndUpload();
 
 if (currentUrl.includes('/main/userpage/code/userCode.do')) {
