@@ -382,7 +382,7 @@ const TEMPLATE_DEFAULTS = {
   baekjoon:    '${platform}/${level}/${id}. ${title}',
   programmers: '${platform}/${level}/${id}. ${title}',
   swea:        '${platform}/${level}/${id}. ${title}',
-  goormlevel:  '${platform}/${level}/${id}. ${title}',
+  goormlevel:  '${platform}/${examId}/${id}. ${title}',
 };
 
 function updateTemplatePreview(platform) {
