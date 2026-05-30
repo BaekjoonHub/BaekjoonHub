@@ -197,7 +197,7 @@ async function updateStatsSHAfromPath(path, sha) {
 function updateObjectDatafromPath(obj, path, data) {
   let current = obj;
   // split path into array and filter out empty strings
-  const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
+  const pathArray = normalizePath(path)
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -223,7 +223,7 @@ function getObjectDatafromPath(obj, path) {
   // path/obj가 비어 있으면(예: hook 미설정) 경로 필터에서 예외가 발생하므로 안전하게 null 반환
   if (isNull(obj) || isNull(path)) return null;
   let current = obj;
-  const pathArray = _swexpertacademyRankRemoveFilter(_baekjoonSpaceRemoverFilter(_programmersRankRemoverFilter(_baekjoonRankRemoverFilter(path))))
+  const pathArray = normalizePath(path)
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
@@ -307,50 +307,4 @@ async function buildDirectory(platform, variables) {
     return applyDirectoryTemplate(template, variables);
   }
   return getDirNameByOrgOption(variables._defaultDir, variables.language);
-}
-
-
-/**
- * @deprecated
- * level과 관련된 경로를 지우는 임의의 함수 (문제 level이 변경되는 경우 중복된 업로드 파일이 생성됨을 방지하기 위한 목적)
- * ex) _owner/_repo/백준/Gold/1000.테스트/테스트.cpp -> _owner/_repo/백준/1000.테스트/테스트.cpp
- *     _owner/_repo/백준/Silver/1234.테스트/테스트.cpp -> _owner/_repo/백준/1234.테스트/테스트.cpp
- * @param {string} path - 파일의 경로 문자열
- * @returns {string} - 레벨과 관련된 경로를 제거한 문자열
- */
-function _baekjoonRankRemoverFilter(path) {
-  return path.replace(/\/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)\//g, '/');
-}
-
-/**
- * @deprecated
- * level과 관련된 경로를 지우는 임의의 함수 (문제 level이 변경되는 경우 중복된 업로드 파일이 생성됨을 방지하기 위한 목적)
- * @param {string} path - 파일의 경로 문자열
- * @returns {string} - 레벨과 관련된 경로를 제거한 문자열
- */
-function _programmersRankRemoverFilter(path) {
-  return path.replace(/\/((?:lv)?[0-9]|unrated)\//g, '/');
-}
-
-/**
- * @deprecated
- * 경로에 존재하는 공백을 제거하는 임의의 함수 (기존의 업로드한 문제들이 이중으로 업로드 되는 오류를 방지)
- * ex) _owner/_repo/백준/1000. 테스트/테스트.cpp -> _owner/_repo/백준/1000.테스트/테스트.cpp
- *     _owner/_repo/백준/1234.%20테스트/테스트.cpp -> _owner/_repo/백준/1234.테스트/테스트.cpp
- *     _owner/_repo/백준/1234.테스트/테%E2%80%85스%E2%80%85트.cpp -> _owner/_repo/백준/1234.테스트/테스트.cpp
- * @param {string} path - 파일의 경로 문자열
- * @returns {string} - 공백과 관련된 값을 제거한 문자열
- */
-function _baekjoonSpaceRemoverFilter(path) {
-  return path.replace(/( | |&nbsp|&#160|&#8197|%E2%80%85|%20)/g, '');
-}
-
-/**
- * @deprecated
- * 경로에 존재하는 레벨과 관련된 경로를 지우는 임의의 함수 (문제 level이 변경되는 경우 중복된 업로드 파일이 생성됨을 방지하기 위한 목적)
- * @param {string} path - 파일의 경로 문자열
- * @returns {string} - 레벨과 관련된 경로를 제거한 문자열
- */
-function _swexpertacademyRankRemoveFilter(path) {
-  return path.replace(/\/D([0-8]+)\//g, '/');
 }
