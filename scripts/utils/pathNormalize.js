@@ -13,22 +13,26 @@
 
 /**
  * 백준 티어 폴더(Gold/Silver/...)를 경로에서 제거합니다.
- * 문제의 난이도가 바뀌어도 동일 경로로 매칭되어 중복 업로드를 방지하기 위함입니다.
- * ex) _owner/_repo/백준/Gold/1000.테스트/테스트.cpp -> _owner/_repo/백준/1000.테스트/테스트.cpp
+ * 세부 티어 접미사(로마숫자 I~V, 예: "Silver V")도 함께 제거하여,
+ * `${levelFull}` 템플릿 사용자의 난이도/세부등급이 바뀌어도 동일 경로로 매칭되어 중복 업로드를 방지합니다.
+ * 구분자는 일반 공백(U+0020)과 제목 단어 구분자 U+2005를 모두 허용합니다.
+ * ex) _owner/_repo/백준/Gold/1000.테스트/테스트.cpp    -> _owner/_repo/백준/1000.테스트/테스트.cpp
+ * ex) _owner/_repo/백준/Silver V/1000.테스트/테스트.cpp -> _owner/_repo/백준/1000.테스트/테스트.cpp
  * @param {string} path - 파일의 경로 문자열
- * @returns {string} 티어 폴더를 제거한 문자열
+ * @returns {string} 티어(및 세부 티어) 폴더를 제거한 문자열
  */
 function removeBaekjoonRank(path) {
-  return path.replace(/\/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)\//g, '/');
+  return path.replace(/\/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)([ \u2005](I{1,3}|IV|V))?\//g, '/');
 }
 
 /**
- * 프로그래머스 레벨 폴더(0~9, lv0~lv9, unrated)를 경로에서 제거합니다.
+ * 프로그래머스 레벨 폴더(0~9, lv0~lv9, Lv.0~Lv.9, unrated)를 경로에서 제거합니다.
+ * `Lv.N` 표기(대문자 L·점)도 제거하여 레벨 표기가 바뀌어도 동일 경로로 매칭됩니다.
  * @param {string} path - 파일의 경로 문자열
  * @returns {string} 레벨 폴더를 제거한 문자열
  */
 function removeProgrammersRank(path) {
-  return path.replace(/\/((?:lv)?[0-9]|unrated)\//g, '/');
+  return path.replace(/\/([Ll]v\.[0-9]|(?:lv)?[0-9]|unrated)\//g, '/');
 }
 
 /**
