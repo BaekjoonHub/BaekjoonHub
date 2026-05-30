@@ -9,9 +9,12 @@ behavior in `scripts/storage.js`.
   the space filter is preserved). This is the reference implementation the differential
   test compares against. Do not hand-edit.
 
-- **`realPaths.txt`** — repo-relative paths harvested from ~99 recently-updated public
-  BaekjoonHub-generated repositories, covering all four platforms (백준 / 프로그래머스 /
-  SWEA / goormlevel) with ≥30 cases each, plus edge cases: `백준/새싹`, sub-leveled tiers
+- **`realPaths.txt`** — repo-relative paths harvested from recently-updated public
+  BaekjoonHub-generated repositories: ~99 repos sampled via the GitHub tree API, plus the
+  full path tree of [`oneplast/ProgrammersCT`](https://github.com/oneplast/ProgrammersCT).
+  Covers all four platforms (백준 / 프로그래머스 / SWEA / goormlevel) with ≥30 cases each —
+  **2,733 unique paths** in total. Includes real-world edge cases: user-created `백준/새싹`
+  folders (a user/legacy folder, *not* an official solved.ac tier), sub-leveled tiers
   (`Silver V`), `프로그래머스/Lv.1`, goorm `examId` folders (bare multi-digit), SWEA
-  fullwidth titles, and date-template folders. Used to confirm `normalizePath` is unchanged
-  on real-world data.
+  fullwidth titles (`A＋B`), and date-template folders. Used to confirm `normalizePath`
+  is unchanged on real-world data.
