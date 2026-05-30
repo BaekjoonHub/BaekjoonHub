@@ -1,0 +1,10 @@
+{
+  "name": "baekjoonhub",
+  "version": "1.4.16",
+  "description": "Chrome extension that auto-pushes BOJ/Programmers/SWEA/goorm submissions to GitHub",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
