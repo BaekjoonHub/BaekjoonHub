@@ -5,16 +5,25 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { normalizePath, removeBaekjoonRank, removeProgrammersRank, removeSpaces, removeSwexpertacademyRank } = require('../scripts/utils/pathNormalize.js');
+const { normalizePath, normalizeLanguageName, removeBaekjoonRank, removeProgrammersRank, removeSpaces, removeSwexpertacademyRank, unifyPythonFolder } = require('../scripts/utils/pathNormalize.js');
 const { originalNormalize } = require('./fixtures/originalFilters.cjs');
 
 const U = String.fromCodePoint(0x2005); // FOUR-PER-EM SPACE (real title separator)
 
-// 의도된 dedup 수정 대상(동작 변경 O): 백준 세부 티어("Silver V" 등) / 프로그래머스 "Lv.N".
-// 이 패턴에 해당하는 경로만 원본과 달라지며(랭크 스트립), 나머지는 전부 원본과 바이트 동일(무회귀)해야 한다.
+// 의도된 dedup 수정 대상(동작 변경 O): 백준 세부 티어("Silver V" 등) / 프로그래머스 "Lv.N" /
+// 파이썬 계열 언어 폴더(#346: Python3, PyPy3 등 — 표준형 'Python' 은 무변경이므로 비대상).
+// 이 패턴에 해당하는 경로만 원본과 달라지며, 나머지는 전부 원본과 바이트 동일(무회귀)해야 한다.
 const SUBTIER_RE = new RegExp('/(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)[ \\u2005](I{1,3}|IV|V)/');
 const LVDOT_RE = /\/[Ll]v\.[0-9]\//;
-const isDedupFix = (p) => SUBTIER_RE.test(p) || LVDOT_RE.test(p);
+// #346 판정 오라클 — 구현(unifyPythonFolder)과 독립된 재선언(SUBTIER_RE 관행: 구현 회귀 시 파리티 망이 잡도록).
+// 규칙 미러: hook(처음 두 세그먼트)과 파일명(마지막 세그먼트)은 제외, 세그먼트 전체가 파이썬 계열이며
+// 표준형 'Python' 이 아닐 때만 수렴 대상. 체인에서 removeSpaces 이후에 적용되므로 공백 제거 형태로 판정.
+const PYSEG_RE = /^(python|pypy)[0-9.]*$/i;
+const isPySegToConverge = (seg) => PYSEG_RE.test(seg) && seg !== 'Python';
+const isPythonFolderFix = (p) => removeSpaces(p).split('/').slice(2, -1).some(isPySegToConverge);
+const isDedupFix = (p) => SUBTIER_RE.test(p) || LVDOT_RE.test(p) || isPythonFolderFix(p);
+// 수렴 후 키에 비표준 파이썬 세그먼트가 남아 있으면 안 된다(#346 사후 단언).
+const hasStrandedPySegment = (key) => key.split('/').slice(2, -1).some(isPySegToConverge);
 
 /* ------------------------------------------------------------------ *
  * 1) DIFFERENTIAL PARITY — 새 모듈 출력이 기존(storage.js) 출력과 완전히 동일한가
@@ -63,6 +72,8 @@ describe('differential parity over real harvested paths', () => {
       const strandedTier = /(Unrated|Silver|Bronze|Gold|Platinum|Diamond|Ruby|Master)(I{1,3}|IV|V)\//.test(got);
       const strandedLv = /[Ll]v\.[0-9]/.test(got);
       if (strandedTier || strandedLv) wrong.push({ p, got, why: 'stranded rank' });
+      // 3) 파이썬 계열 언어 폴더가 정확히 'Python' 으로 수렴했어야 한다 (#346)
+      if (hasStrandedPySegment(got)) wrong.push({ p, got, why: 'stranded python segment' });
     }
     assert.equal(wrong.length, 0, `unexpected fix results:\n${wrong.slice(0, 10).map((m) => JSON.stringify(m)).join('\n')}`);
   });
@@ -98,6 +109,10 @@ describe('differential parity over generated combinatorial corpus', () => {
     for (const id of goormIds) corpus.push(`goormlevel/${id}/1.${U}${t}/${t}.py`);
     corpus.push(`260420/9012.${U}${t}/${t}.py`); // date-template folder
     corpus.push(`MySQL/프로그래머스/1/131112.${U}${t}/${t}.sql`); // language-grouped
+    corpus.push(`owner/repo/Python3/프로그래머스/1/131112.${U}${t}/${t}.py`); // 구 언어 폴더(#346 수렴 대상)
+    corpus.push(`owner/repo/PyPy3/백준/Gold/1000.${U}${t}/${t}.py`); // 구 언어 폴더(#346 수렴 대상)
+    corpus.push(`owner/repo/Python/SWEA/D3/1234.${U}${t}/${t}.py`); // 표준형 언어 폴더(무변경, 파리티 유지)
+    corpus.push(`python3/algo/백준/Gold/1000.${U}${t}/${t}.py`); // hook 이 파이썬 계열 이름(무변경, 파리티 유지)
   }
 
   test(`generated NON-fix paths match the original; sub-tier/Lv.N paths get stripped`, () => {
@@ -213,6 +228,60 @@ describe('removeSwexpertacademyRank', () => {
   });
 });
 
+describe('normalizeLanguageName — 파이썬 계열 표준화 (#346)', () => {
+  const toPython = [
+    'Python', 'python', 'PYTHON', // 케이싱 변형 (SWEA 원시 표기 포함)
+    'Python3', 'python3', 'Python 3', 'Python 2', 'Python2', 'Python 3.8', // 버전 표기 (프로그래머스/백준)
+    'PyPy', 'PyPy2', 'PyPy3', 'pypy3', 'PYPY3', // PyPy 계열도 Python 으로 수렴
+    `Python${U}3`, // U+2005 구분자 방어
+  ];
+  for (const lang of toPython) {
+    test(`'${lang.replace(U, '\\u2005')}' -> 'Python'`, () => {
+      assert.equal(normalizeLanguageName(lang), 'Python');
+    });
+  }
+  const unchanged = ['Java', 'C++', 'C', 'C#', 'JavaScript', 'Kotlin', 'MySQL', 'Swift', 'Go', 'Ruby', 'Pythonic', ''];
+  for (const lang of unchanged) {
+    test(`'${lang}' 무변경`, () => {
+      assert.equal(normalizeLanguageName(lang), lang);
+    });
+  }
+  test('비문자열 입력은 그대로 통과 (buildDirectory 방어)', () => {
+    assert.equal(normalizeLanguageName(undefined), undefined);
+    assert.equal(normalizeLanguageName(null), null);
+  });
+});
+
+describe('unifyPythonFolder — 캐시 키 언어 폴더 수렴 (#346)', () => {
+  test('구 파이썬 계열 폴더 세그먼트를 Python 으로 치환', () => {
+    assert.equal(unifyPythonFolder('owner/repo/Python3/프로그래머스/x'), 'owner/repo/Python/프로그래머스/x');
+    assert.equal(unifyPythonFolder('owner/repo/PyPy3/백준/x'), 'owner/repo/Python/백준/x');
+    assert.equal(unifyPythonFolder('owner/repo/pypy/백준/x'), 'owner/repo/Python/백준/x');
+  });
+  test('표준형/비파이썬 폴더는 무변경', () => {
+    assert.equal(unifyPythonFolder('owner/repo/Python/프로그래머스/x'), 'owner/repo/Python/프로그래머스/x');
+    assert.equal(unifyPythonFolder('owner/repo/MySQL/프로그래머스/x'), 'owner/repo/MySQL/프로그래머스/x');
+    assert.equal(unifyPythonFolder('owner/repo/Java/백준/x'), 'owner/repo/Java/백준/x');
+  });
+  test('hook(owner/repo) 두 세그먼트는 파이썬 계열 이름이어도 건드리지 않음 — raw hook 조회와 어긋나면 안 됨', () => {
+    assert.equal(unifyPythonFolder('python3/algo/백준/1000.제목/x.py'), 'python3/algo/백준/1000.제목/x.py');
+    assert.equal(unifyPythonFolder('owner/python3/백준/1000.제목/x.py'), 'owner/python3/백준/1000.제목/x.py');
+    assert.equal(unifyPythonFolder('owner/python3/Python3/프로그래머스/x'), 'owner/python3/Python/프로그래머스/x'); // 언어 폴더만 수렴
+    assert.equal(unifyPythonFolder('owner/repo'), 'owner/repo'); // bare hook (getStatsSHAfromPath(hook))
+  });
+  test('파이썬 계열 세그먼트가 연속되어도 전부 수렴 — 구분자 비소비(lookahead)', () => {
+    assert.equal(unifyPythonFolder('owner/repo/PyPy3/Python3/x'), 'owner/repo/Python/Python/x');
+  });
+  test('세그먼트 전체 일치가 아니면 오매칭하지 않음 (제목 폴더 가드)', () => {
+    assert.equal(unifyPythonFolder('owner/repo/백준/1000.Python3풀이/x.py'), 'owner/repo/백준/1000.Python3풀이/x.py');
+    assert.equal(unifyPythonFolder('owner/repo/Python3풀이/x.py'), 'owner/repo/Python3풀이/x.py');
+    assert.equal(unifyPythonFolder('owner/repo/Pythonic/x.py'), 'owner/repo/Pythonic/x.py');
+  });
+  test('마지막 세그먼트(파일명)는 절대 건드리지 않음', () => {
+    assert.equal(unifyPythonFolder('owner/repo/백준/1000.제목/Python3.py'), 'owner/repo/백준/1000.제목/Python3.py');
+  });
+});
+
 /* ------------------------------------------------------------------ *
  * 5) Invariants
  * ------------------------------------------------------------------ */
@@ -244,6 +313,30 @@ describe('dedup invariants', () => {
       normalizePath(`프로그래머스/1/12345. 제목/sol.py`),
     );
   });
+  test('구 Python3 폴더 업로드와 신 Python 폴더 업로드가 같은 키로 수렴 (#346 수정)', () => {
+    assert.equal(
+      normalizePath(`owner/repo/Python3/프로그래머스/1/12345. 제목/sol.py`),
+      normalizePath(`owner/repo/Python/프로그래머스/1/12345. 제목/sol.py`),
+    );
+  });
+  test('백준 PyPy3 폴더도 Python 키로 수렴 — 티어 스트립과 결합 (#346 수정)', () => {
+    assert.equal(
+      normalizePath(`owner/repo/PyPy3/백준/Gold/1000. 제목/제목.py`),
+      normalizePath(`owner/repo/Python/백준/1000. 제목/제목.py`),
+    );
+  });
+  test("공백 포함 'Python 3' 폴더도 수렴 — removeSpaces 이후 적용 순서 보장 (#346)", () => {
+    assert.equal(
+      normalizePath(`owner/repo/Python 3/백준/1000. 제목/제목.py`),
+      normalizePath(`owner/repo/Python/백준/1000. 제목/제목.py`),
+    );
+  });
+  test('다른 언어 폴더는 서로 구분 유지 — Java 키 != Python 키 (#346 과매칭 가드)', () => {
+    assert.notEqual(
+      normalizePath(`owner/repo/Java/백준/1000. 제목/sol.txt`),
+      normalizePath(`owner/repo/Python/백준/1000. 제목/sol.txt`),
+    );
+  });
 });
 
 /* ------------------------------------------------------------------ *
@@ -255,19 +348,24 @@ describe('dedup invariants', () => {
 describe('custom directory templates', () => {
   // scripts/storage.js applyDirectoryTemplate 의 미러
   const applyTemplate = (tmpl, vars) => tmpl.replace(/\$\{(\w+)\}/g, (m, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? vars[k] : ''));
+  // scripts/storage.js buildDirectory 의 언어 표준화(#346) 미러 — 실제 export 를 사용해 표류를 방지
+  const normVars = (v) => (typeof v.language === 'string' ? { ...v, language: normalizeLanguageName(v.language) } : v);
   const VARS = {
     baekjoon: { platform: '백준', level: 'Gold', levelFull: 'Gold V', id: '1000', title: 'A＋B', language: 'Python', ext: 'py' },
     programmers: { platform: '프로그래머스', level: '2', id: '12345', title: `타겟${U}넘버`, language: 'JavaScript', ext: 'js' },
+    // 프로그래머스 원시 표기(Python3)가 buildDirectory 에서 표준화되는 경로의 미러 (#346)
+    programmersPy: { platform: '프로그래머스', level: '2', id: '12345', title: `타겟${U}넘버`, language: 'Python3', ext: 'py' },
     swea: { platform: 'SWEA', level: 'D4', id: '1234', title: '문제제목', language: 'Java', ext: 'java' },
     goormlevel: { platform: 'goormlevel', level: '3', examId: '159695', id: '54321', title: `문제${U}제목`, language: 'Python', ext: 'py' },
   };
-  const render = (plat, tmpl) => { const v = VARS[plat]; return `owner/repo/${applyTemplate(tmpl, v)}/${v.title}.${v.ext}`; };
+  const render = (plat, tmpl) => { const v = normVars(VARS[plat]); return `owner/repo/${applyTemplate(tmpl, v)}/${v.title}.${v.ext}`; };
 
   const cases = [
     ['baekjoon', '${platform}/${levelFull}/${id}. ${title}', 'owner/repo/백준/1000.A＋B/A＋B.py'], // Gold V 세부 티어 스트립(#344)
     ['programmers', '${title}', 'owner/repo/타겟넘버/타겟넘버.js'],
     ['baekjoon', '${id}/${title}', 'owner/repo/1000/A＋B/A＋B.py'],
     ['programmers', 'solutions/${language}/${platform}/${level}/${id}. ${title}', 'owner/repo/solutions/JavaScript/프로그래머스/12345.타겟넘버/타겟넘버.js'],
+    ['programmersPy', 'solutions/${language}/${platform}/${level}/${id}. ${title}', 'owner/repo/solutions/Python/프로그래머스/12345.타겟넘버/타겟넘버.py'], // 원시 'Python3' 이 표준화됨(#346)
     ['goormlevel', '${platform}/${examId}/${id}. ${title}', 'owner/repo/goormlevel/159695/54321.문제제목/문제제목.py'],
     ['goormlevel', '${platform}/${level}/${id}. ${title}', 'owner/repo/goormlevel/54321.문제제목/문제제목.py'],
     ['swea', '${level}-${id}_${title}', 'owner/repo/D4-1234_문제제목/문제제목.java'],

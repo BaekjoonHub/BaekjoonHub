@@ -62,15 +62,20 @@ class GitHub {
     return createCommit(this.hook, this.token, message, treeSHA, refSHA);
   }
 
-  async updateHead(ref, commitSHA) {
-    // hook, token, commitSHA, force = true)
-    log('GitHub updateHead', 'ref:', ref, 'commitSHA:', commitSHA);
-    return updateHead(this.hook, this.token, ref, commitSHA, true);
+  async updateHead(ref, commitSHA, force = true) {
+    // hook, token, commitSHA, force
+    log('GitHub updateHead', 'ref:', ref, 'commitSHA:', commitSHA, 'force:', force);
+    return updateHead(this.hook, this.token, ref, commitSHA, force);
   }
 
   async getTree() {
     // hook, token
     return getTree(this.hook, this.token);
+  }
+
+  async getTreeWithTruncation(ref = 'HEAD') {
+    // hook, token, ref
+    return getTreeWithTruncation(this.hook, this.token, ref);
   }
 }
 
@@ -203,6 +208,26 @@ async function getTree(hook, token) {
     .then(handleGitHubResponse)
     .then((data) => {
       return data.tree;
+    });
+}
+
+/** get a tree recursively at a specific commit/ref, preserving the truncated flag.
+ * recursive 응답은 10만 항목/7MB 초과 시 truncated:true 와 함께 불완전한 배열이 오므로,
+ * 트리 내용을 근거로 레포에 쓰기를 수행하는 소비자(마이그레이션 등)는 이 함수를 사용해야 한다.
+ * @see https://docs.github.com/en/rest/git/trees#get-a-tree
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @param {string} ref - commit SHA or ref name (default: HEAD)
+ * @return {Promise<{tree: Array, truncated: boolean}>}
+ */
+async function getTreeWithTruncation(hook, token, ref = 'HEAD') {
+  return fetch(`https://api.github.com/repos/${hook}/git/trees/${ref}?recursive=1`, {
+    method: 'GET',
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+  })
+    .then(handleGitHubResponse)
+    .then((data) => {
+      return { tree: data.tree, truncated: data.truncated === true };
     });
 }
 
