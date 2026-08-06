@@ -201,7 +201,10 @@ function updateObjectDatafromPath(obj, path, data) {
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
-    if (isNull(current[path])) {
+    // 정규화 수렴으로 파일 sha(문자열)와 하위 경로가 같은 키를 공유할 수 있다
+    // (예: 루트에 'Python' 이름의 파일 + Python3/ 폴더 키 수렴 — #346).
+    // 비객체 중간 노드는 디렉토리로 대체해 재구축이 중단되지 않게 한다.
+    if (isNull(current[path]) || typeof current[path] !== 'object') {
       current[path] = {};
     }
     current = current[path];
@@ -240,6 +243,14 @@ async function updateLocalStorageStats() {
   const hook = await getHook();
   const token = await getToken();
   const git = new GitHub(hook, token);
+  // #346 마이그레이션: 언어별 정리 모드의 구 파이썬 폴더(Python3/PyPy3 등)를 Python/ 으로 통합.
+  // 재구축 전에 수행해 이후 getTree 가 통합된 경로를 읽게 한다. 실패(보호 브랜치·경합 등)해도 재구축은
+  // 계속하며, 완료 플래그는 표준 상태가 확인된 재구축에서만 기록되므로 그때까지 재구축마다 재검사한다.
+  try {
+    await runLanguageFolderMigrationIfNeeded(git, hook);
+  } catch (e) {
+    log('language folder migration failed (will retry on next stats rebuild)', e);
+  }
   const stats = await getStats();
   const tree_items = [];
   try {
@@ -302,6 +313,11 @@ async function saveDirectoryTemplate(platform, template) {
 }
 
 async function buildDirectory(platform, variables) {
+  // 언어 폴더명 표준화(#346): 플랫폼별 원시 표기(Python3/PyPy3 등)를 'Python' 으로 통일.
+  // 템플릿의 ${language} 와 언어별 정리(getDirNameByOrgOption) 두 분기 모두에 적용된다.
+  if (typeof variables.language === 'string') {
+    variables = { ...variables, language: normalizeLanguageName(variables.language) };
+  }
   const template = await getDirectoryTemplate(platform);
   if (template) {
     return applyDirectoryTemplate(template, variables);
