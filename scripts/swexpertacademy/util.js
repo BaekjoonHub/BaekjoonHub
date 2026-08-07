@@ -55,7 +55,8 @@ function markUploadFailedCSS() {
 }
 
 /**
- * 총 실행시간이 10초를 초과한다면 실패로 간주합니다.
+ * 총 실행시간이 20초를 초과한다면 실패로 간주합니다.
+ * (느린 네트워크에서 업로드가 실제로는 성공하는데 실패 아이콘이 표시되던 오탐을 줄이기 위해 10초 → 20초)
  */
 function startUploadCountDown() {
   uploadState.uploading = true;
@@ -63,7 +64,7 @@ function startUploadCountDown() {
     if (uploadState.uploading === true) {
       markUploadFailedCSS();
     }
-  }, 10000);
+  }, 20000);
 }
 
 /**

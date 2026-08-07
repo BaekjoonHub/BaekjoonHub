@@ -303,7 +303,8 @@ async function findAllSolvedProblemsSWEA() {
     const linkEl = row.querySelector('a[href*="contestProbId"], a[href*="problemDetail"]');
     if (!linkEl) continue;
     const href = linkEl.getAttribute('href') || '';
-    const contestProbIdMatch = href.match(/contestProbId=(\d+)/);
+    // SWEA contestProbId는 "AV5QSEhaA5sDFAUq" 같은 영숫자 형식 (숫자 전용 \d+ 는 매칭 실패)
+    const contestProbIdMatch = href.match(/contestProbId=([A-Za-z0-9]+)/);
     const contestProbId = contestProbIdMatch ? contestProbIdMatch[1] : '';
 
     const problemIdEl = cells[0];
@@ -344,7 +345,8 @@ async function findAllSolvedProblemsSWEA() {
         const linkEl = row.querySelector('a[href*="contestProbId"], a[href*="problemDetail"]');
         if (!linkEl) continue;
         const href = linkEl.getAttribute('href') || '';
-        const contestProbIdMatch = href.match(/contestProbId=(\d+)/);
+        // SWEA contestProbId는 "AV5QSEhaA5sDFAUq" 같은 영숫자 형식 (숫자 전용 \d+ 는 매칭 실패)
+    const contestProbIdMatch = href.match(/contestProbId=([A-Za-z0-9]+)/);
         const contestProbId = contestProbIdMatch ? contestProbIdMatch[1] : '';
 
         const problemIdEl = cells[0];

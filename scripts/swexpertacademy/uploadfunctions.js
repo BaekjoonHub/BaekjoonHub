@@ -20,6 +20,8 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);
+      // 확정된 실패이므로 20초 워치독을 기다리지 않고 즉시 실패 아이콘을 표시한다.
+      markUploadFailedCSS();
       return;
     }
     throw e;
@@ -41,25 +43,60 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
   const stats = await getStats();
-  const default_branch = await git.getDefaultBranchOnRepo();
+  if (isNull(stats.branches)) stats.branches = {};
+
+  /* default branch는 이전 업로드에서 캐시된 값을 우선 사용해 API 1회를 줄인다.
+     브랜치가 변경/삭제되어 getReference가 실패하면 다시 조회해 1회 재시도한다. */
+  let default_branch = stats.branches?.[hook];
+  let refData;
+  if (isNull(default_branch)) {
+    default_branch = await git.getDefaultBranchOnRepo();
+    refData = await git.getReference(default_branch);
+  } else {
+    try {
+      refData = await git.getReference(default_branch);
+    } catch (e) {
+      if (e.name === 'TokenExpiredError') throw e;
+      default_branch = await git.getDefaultBranchOnRepo();
+      refData = await git.getReference(default_branch);
+    }
+  }
   stats.branches[hook] = default_branch;
-  const refData = await git.getReference(default_branch);
   const { refSHA, ref } = refData;
-  const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
-  const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
-  const treeData = await git.createTree(refSHA, [source, readme]);
+
+  /* blob 생성 API 2회 대신 tree에 content를 직접 전달한다 (전체 업로드 경로와 동일 방식).
+     결과적으로 업로드 1건당 GitHub API 호출은 7회 → 4회(캐시 미스 시 5회)로 줄어든다. */
+  const treeData = await git.createTree(refSHA, [
+    { path: `${directory}/${filename}`, mode: '100644', type: 'blob', content: sourceText },
+    { path: `${directory}/README.md`, mode: '100644', type: 'blob', content: readmeText },
+  ]);
   const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
   await git.updateHead(ref, commitSHA);
 
-  /* stats의 값을 갱신합니다. */
-  treeData.tree.forEach((item) => {
-    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
-  });
+  /* stats의 값을 갱신합니다.
+     createTree 응답의 tree는 루트 트리의 최상위 항목만 담고 있어 파일 단위 캐시가 되지 않으므로
+     (최상위 디렉토리 키를 문자열 sha로 덮어써 기존 캐시를 파괴하는 부작용도 있었음),
+     업로드한 두 파일의 blob sha를 로컬에서 계산해 정확히 기록한다.
+     이 덕분에 같은 문제 재제출 시 원격 조회 없이 즉시 스킵된다. */
+  updateObjectDatafromPath(stats.submission, `${hook}/${directory}/${filename}`, calculateBlobSHA(sourceText));
+  updateObjectDatafromPath(stats.submission, `${hook}/${directory}/README.md`, calculateBlobSHA(readmeText));
   await saveStats(stats);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);
   }
+
+  /* default branch가 '기존의 다른 브랜치'로 전환된 경우에는 캐시된 브랜치의 getReference가
+     계속 성공하므로 위의 재시도 경로로는 감지되지 않는다. 업로드 완료 후(지연 경로 밖)
+     백그라운드로 재검증해, 전환이 있었더라도 잘못된 브랜치 커밋을 최대 1회로 한정한다. */
+  git.getDefaultBranchOnRepo().then(async (live) => {
+    if (live !== default_branch) {
+      const s = await getStats();
+      if (isNull(s.branches)) s.branches = {};
+      s.branches[hook] = live;
+      await saveStats(s);
+    }
+  }).catch(() => {});
 }
 
 /**
@@ -87,10 +124,10 @@ async function uploadAllSolvedProblemSWEA() {
       return null;
     }
 
-    // 3. 문제 데이터 파싱 (asyncPool(2) 병렬 제어)
+    // 3. 문제 데이터 파싱 (asyncPool(4) 병렬 제어 — 문제당 2회 fetch이므로 브라우저 host 제한(6) 안에서 처리량 확보)
     const { submission } = stats;
     setMultiLoaderDenom(newList.length);
-    const datas = await asyncPool(2, newList, fetchSWEASubmissionCode);
+    const datas = await asyncPool(4, newList, fetchSWEASubmissionCode);
     const bojDatas = datas.filter((d) => !isNull(d));
 
     // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
@@ -122,8 +159,10 @@ async function uploadAllSolvedProblemSWEA() {
       const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
       await git.updateHead(ref, commitSHA);
       MultiloaderSuccess();
-      treeData.tree.forEach((item) => {
-        updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
+      /* createTree 응답 tree는 루트 최상위 항목만 담으므로(파일 단위 캐시 불가·기존 캐시 파괴),
+         업로드한 각 파일의 blob sha를 로컬에서 계산해 정확히 기록한다. */
+      tree_items.forEach((item) => {
+        updateObjectDatafromPath(submission, `${hook}/${item.path}`, calculateBlobSHA(item.content));
       });
       await saveStats(stats);
     } else {
