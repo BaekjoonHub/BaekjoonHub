@@ -48,33 +48,33 @@ function safeText(el) {
 }
 
 /** 조회 중인(검색창) 닉네임을 추출합니다. */
-function getSearchedNickname() {
-  const el = querySelectorFallback(['#searchinput', 'input[name="searchinput"]', 'input#searchinput']);
+function getSearchedNickname(root = document) {
+  const el = querySelectorFallback(['#searchinput', 'input[name="searchinput"]', 'input#searchinput'], root);
   return (el?.value || '').trim();
 }
 
 /** 문제 번호를 여러 fallback으로 추출합니다. */
-function parseProblemId() {
+function parseProblemId(root = document) {
   // 1. 문제 박스 내 순수 문제번호 p (problem_title 클래스 제외)
   let text = safeText(querySelectorFallback([
     'div.problem_box > p:not(.problem_title)',
     'body > div.container > div.container.sub > div > div.problem_box > p',
-  ]));
+  ], root));
   // 2. h3 ("1234. 제목 D2") 형태에서 추출
   if (isEmpty(text)) {
-    text = safeText(querySelectorFallback(['div.problem_box > h3', 'div.problem_box h3']));
+    text = safeText(querySelectorFallback(['div.problem_box > h3', 'div.problem_box h3'], root));
   }
   return text.split('.')[0].replace(/[^0-9]/g, '').trim();
 }
 
-/** contestProbId를 히든 input 우선, 없으면 URL 파라미터에서 추출합니다. */
-function parseContestProbId() {
-  const inputs = [...document.querySelectorAll('#contestProbId, input[name="contestProbId"]')];
+/** contestProbId를 히든 input 우선, 없으면 URL 쿼리 스트링에서 추출합니다. */
+function parseContestProbId(root = document, search = window.location.search) {
+  const inputs = [...root.querySelectorAll('#contestProbId, input[name="contestProbId"]')];
   for (let i = inputs.length - 1; i >= 0; i--) {
     const v = (inputs[i].value || '').trim();
     if (v) return v;
   }
-  return (new URLSearchParams(window.location.search).get('contestProbId') || '').trim();
+  return (new URLSearchParams(search).get('contestProbId') || '').trim();
 }
 
 /** 제출 정보(언어/메모리/실행시간/코드길이)를 info 박스에서 추출합니다. */
@@ -94,11 +94,11 @@ function parseSubmissionInfo(infoBox) {
 }
 
 /** 제출 일시를 날짜 패턴 매칭으로 추출합니다. */
-function parseSubmissionTime() {
+function parseSubmissionTime(root = document) {
   const datePattern = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?/;
   const candidates = [
-    querySelectorFallback(['.smt_txt > dd', '.smt_txt dd', '.smt_txt']),
-    querySelectorFallback(['div.problem_box', '#problemForm']),
+    querySelectorFallback(['.smt_txt > dd', '.smt_txt dd', '.smt_txt'], root),
+    querySelectorFallback(['div.problem_box', '#problemForm'], root),
   ];
   for (const el of candidates) {
     const m = safeText(el).match(datePattern);
@@ -114,9 +114,12 @@ function parseSubmissionTime() {
   - fileName : 파일명
   - readme : README.md에 작성할 내용
   - code : 소스코드 내용
+  @param {ParentNode} [root=document] - 파싱 기준 문서. 결과 페이지를 fetch하여
+    DOMParser로 파싱한 문서를 넘기면 페이지 이동 없이 제자리 업로드가 가능하다.
+  @param {string} [search=window.location.search] - contestProbId fallback용 쿼리 스트링
 */
-async function parseData() {
-  const searchedNickname = getSearchedNickname();
+async function parseData(root = document, search = window.location.search) {
+  const searchedNickname = getSearchedNickname(root);
   const myNickname = getNickname();
   log('SWEA 파싱 시작 - 로그인 유저:', myNickname, '조회 유저:', searchedNickname);
 
@@ -128,7 +131,7 @@ async function parseData() {
   }
 
   // 제출 정보(언어/메모리/시간/코드길이) 영역
-  const infoBox = querySelectorFallback(['#problemForm div.info', 'div.problem_box div.info', 'div.info']);
+  const infoBox = querySelectorFallback(['#problemForm div.info', 'div.problem_box div.info', 'div.info'], root);
   if (isNull(infoBox)) {
     console.error('[BaekjoonHub] SWEA 제출 정보 영역(div.info)을 찾지 못했습니다. SWEA DOM 구조 변경 가능성이 있습니다.');
     return;
@@ -138,7 +141,7 @@ async function parseData() {
 
   // 문제 제목 - badge(레벨) 자식을 함께 읽으면 "제목\n\t\tD2" 처럼 오염되므로
   // 노드를 clone 한 뒤 badge 를 제거하고 textContent 를 사용한다.
-  const titleEl = querySelectorFallback(['div.problem_box > p.problem_title', 'div.problem_box p.problem_title', '.problem_title']);
+  const titleEl = querySelectorFallback(['div.problem_box > p.problem_title', 'div.problem_box p.problem_title', '.problem_title'], root);
   let rawTitle = '';
   if (!isNull(titleEl)) {
     const clone = titleEl.cloneNode(true);
@@ -151,7 +154,7 @@ async function parseData() {
     .trim();
   if (isEmpty(title)) {
     // fallback: h3 ("1234. 제목 D2")에서 제목만 추출
-    title = safeText(querySelectorFallback(['div.problem_box > h3', 'div.problem_box h3']))
+    title = safeText(querySelectorFallback(['div.problem_box > h3', 'div.problem_box h3'], root))
       .replace(/\s+D[0-9]$/i, '')
       .replace(/^[^.]*\.?\s*/, '')
       .trim();
@@ -162,12 +165,12 @@ async function parseData() {
     'div.problem_box > p.problem_title > span.badge',
     'div.problem_box p.problem_title span.badge',
     'div.problem_box .badge',
-  ])) || 'Unrated';
+  ], root)) || 'Unrated';
 
   // 문제번호
-  const problemId = parseProblemId();
+  const problemId = parseProblemId(root);
   // 문제 콘테스트 인덱스
-  const contestProbId = parseContestProbId();
+  const contestProbId = parseContestProbId(root, search);
   if (isEmpty(problemId) || isEmpty(contestProbId)) {
     console.error('[BaekjoonHub] SWEA 문제 번호/contestProbId 파싱에 실패했습니다.', { problemId, contestProbId });
     return;
@@ -186,7 +189,7 @@ async function parseData() {
   const extension = languages[language.toLowerCase()];
 
   // 제출날짜
-  const submissionTime = parseSubmissionTime();
+  const submissionTime = parseSubmissionTime(root);
 
   // 로컬스토리지에서 제출 코드를 불러옴 (problemId 우선, 실패 시 contestProbId로 조회)
   let data = await getProblemData(problemId);

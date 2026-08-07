@@ -70,13 +70,22 @@ async function handleSolvedResult() {
     const { contestProbId } = await parseCode();
     // 파싱이 성공했을 때만 감지를 종료한다. (실패 시에는 옵저버/폴링을 유지해 재시도)
     stopLoader();
-    // 자동으로 업로드 페이지로 이동
     // prettier-ignore
-    window.location.href = `${window.location.origin}`
+    const solverUrl = `${window.location.origin}`
       + `/main/code/problem/problemSolver.do?`
       + `contestProbId=${contestProbId}&`
       + `nickName=${getNickname()}&`
       + `extension=BaekjoonHub`;
+    // 결과 페이지로 이동하지 않고 현재 화면에서 fetch로 파싱·업로드까지 처리한다.
+    // 데이터 확보에 실패한 경우에만 기존 방식(결과 페이지 이동)으로 폴백한다.
+    const handled = await tryUploadInPlace(solverUrl);
+    if (!handled) {
+      window.location.href = solverUrl;
+      return;
+    }
+    // 제자리 처리 후에는 페이지가 유지되므로, 결과 팝업이 닫히면 감지를 재무장해
+    // 같은 화면에서의 재제출도 이어서 처리한다. (동일 코드 재제출은 SHA dedup이 스킵)
+    rearmAfterPopupClose();
   } catch (error) {
     // 파싱 실패 시 옵저버/폴링이 살아 있는 상태에서 플래그만 되돌려 다음 감지 때 재시도한다.
     // DOM이 영구적으로 깨진 경우 2초마다 무한 재시도하는 것을 막기 위해 상한을 둔다.
@@ -85,6 +94,61 @@ async function handleSolvedResult() {
     if (parseFailCount >= 5) stopLoader();
     console.error('[BaekjoonHub] SWEA 코드 파싱에 실패했습니다.', error);
   }
+}
+
+/**
+ * 결과 페이지(problemSolver.do)로 이동하지 않고, 해당 페이지 HTML을 fetch하여
+ * 현재 화면에서 파싱·업로드까지 처리합니다. (전체 업로드 경로와 동일한 fetch 방식)
+ * - 성공/업로드 단계 실패: true 반환 (진행 상태는 우하단 고정 배지로 표시.
+ *   업로드 단계 오류는 페이지를 이동해도 동일하게 실패하므로 폴백하지 않는다)
+ * - 데이터 확보(fetch/파싱) 실패: false 반환 → 호출부가 기존 내비게이션 방식으로 폴백
+ * @param {string} solverUrl - 결과 페이지 URL (extension=BaekjoonHub 파라미터 포함)
+ * @returns {Promise<boolean>}
+ */
+async function tryUploadInPlace(solverUrl) {
+  let bojData;
+  try {
+    const res = await fetch(solverUrl, { credentials: 'same-origin' });
+    if (!res.ok) {
+      console.error(`[BaekjoonHub] 결과 페이지 fetch 실패(${res.status}) — 페이지 이동 방식으로 폴백합니다.`);
+      return false;
+    }
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    bojData = await parseData(doc, new URL(solverUrl).search);
+  } catch (error) {
+    console.error('[BaekjoonHub] 결과 페이지 fetch/파싱 실패 — 페이지 이동 방식으로 폴백합니다.', error);
+    return false;
+  }
+  if (!isNotEmpty(bojData)) {
+    // 파싱 결과가 비어 있는 경우(닉네임 불일치·DOM 변경 등) 기존 방식으로 폴백해
+    // 실제 결과 페이지에서 한 번 더 시도할 기회를 준다.
+    return false;
+  }
+  try {
+    await beginUpload(bojData);
+  } catch (error) {
+    console.error('[BaekjoonHub] 제자리 업로드 중 오류가 발생했습니다.', error);
+    markUploadFailedCSS();
+  }
+  return true;
+}
+
+/**
+ * 결과 팝업이 닫힌 뒤 감지를 재무장합니다.
+ * 팝업이 떠 있는 동안 바로 재무장하면 같은 'pass입니다' 텍스트로 즉시 재트리거되어
+ * 루프가 되므로, popup_layer 의 show 클래스가 사라진 것을 확인한 뒤 되돌린다.
+ */
+function rearmAfterPopupClose() {
+  const rearm = setInterval(() => {
+    if (!chrome.runtime?.id) { clearInterval(rearm); return; }
+    if (!document.querySelector('div.popup_layer.show')) {
+      clearInterval(rearm);
+      passHandled = false;
+      parseFailCount = 0;
+      if (isNull(loader)) startLoader();
+    }
+  }, 500);
 }
 
 function startLoader() {

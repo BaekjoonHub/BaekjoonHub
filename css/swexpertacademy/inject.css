@@ -2,6 +2,24 @@
   margin-right: 20px !important;
 }
 
+/* 제자리 업로드(페이지 이동 없이 처리) 시 우하단 고정 진행 배지 */
+#BaekjoonHub_progress_anchor_element.BJH_fixed_badge {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2147483000;
+  width: 48px;
+  height: 48px;
+  margin-right: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 .BaekjoonHub_progress {
   display: inline-block;
   pointer-events: none;

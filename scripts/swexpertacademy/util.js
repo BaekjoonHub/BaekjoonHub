@@ -17,11 +17,13 @@ function startUpload() {
     || document.querySelector('div.box-list-inner');
   if (!isNull(target)) {
     target.prepend(elem);
-    // 로딩 UI를 실제로 삽입한 경우에만 카운트다운을 시작한다.
-    startUploadCountDown();
   } else {
-    console.error('[BaekjoonHub] SWEA 업로드 로딩 UI를 삽입할 위치를 찾지 못했습니다.');
+    /* 결과 페이지 DOM이 없는 화면(제자리 업로드: solvingProblem.do 등)에서는
+       우하단 고정 배지로 진행 상태를 표시한다. */
+    elem.classList.add('BJH_fixed_badge');
+    document.body.appendChild(elem);
   }
+  startUploadCountDown();
 }
 /**
  * 업로드 완료 아이콘 표시 및 링크 생성
@@ -36,12 +38,19 @@ function markUploadedCSS(branches, directory) {
   if (isNull(elem)) return;
   elem.className = 'markuploaded';
   const uploadedUrl = "https://github.com/" +
-              Object.keys(branches)[0] + "/tree/" + 
+              Object.keys(branches)[0] + "/tree/" +
               branches[Object.keys(branches)[0]] + "/" + directory;
-  elem.addEventListener("click", function() {
-    window.location.href = uploadedUrl;
+  /* 고정 배지(제자리 업로드)에서는 내부 글리프(~13x24px)가 아니라 48px 원 전체가
+     클릭 타깃이 되도록 anchor 에 리스너를 건다. 새 탭으로 열어 현재 화면을 유지한다. */
+  const anchor = document.getElementById('BaekjoonHub_progress_anchor_element');
+  const isFixedBadge = !isNull(anchor) && anchor.classList.contains('BJH_fixed_badge');
+  const clickTarget = isFixedBadge ? anchor : elem;
+  clickTarget.addEventListener("click", function() {
+    if (isFixedBadge) window.open(uploadedUrl, '_blank');
+    else window.location.href = uploadedUrl;
   });
-  elem.style.cursor = "pointer";
+  clickTarget.style.cursor = "pointer";
+  scheduleFixedBadgeRemoval();
 }
 
 /**
@@ -52,6 +61,24 @@ function markUploadFailedCSS() {
   const elem = document.getElementById('BaekjoonHub_progress_elem');
   if (isNull(elem)) return;
   elem.className = 'markuploadfailed';
+  scheduleFixedBadgeRemoval();
+}
+
+/**
+ * 제자리 업로드의 우하단 고정 배지가 화면을 계속 가리지 않도록,
+ * 최종 상태(✓/✗) 표시 후 일정 시간이 지나면 제거합니다.
+ * (결과 페이지의 인라인 아이콘에는 영향 없음. 새 제출로 업로드가 다시
+ * 진행 중인 경우에는 제거하지 않는다.)
+ */
+function scheduleFixedBadgeRemoval(delayMs = 20000) {
+  const anchor = document.getElementById('BaekjoonHub_progress_anchor_element');
+  if (isNull(anchor) || !anchor.classList.contains('BJH_fixed_badge')) return;
+  setTimeout(() => {
+    const cur = document.getElementById('BaekjoonHub_progress_anchor_element');
+    if (!isNull(cur) && cur.classList.contains('BJH_fixed_badge') && uploadState.uploading !== true) {
+      cur.remove();
+    }
+  }, delayMs);
 }
 
 /**
