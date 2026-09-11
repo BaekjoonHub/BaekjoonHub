@@ -292,7 +292,9 @@ async function makeData({
   // 평균 실행 시간
   runtime,
 }) {
-  const languageExtension = languages[language.toLowerCase()];
+  /* 구름LEVEL 은 드롭다운의 29개 언어가 전부 버전 표기('Java 14')라 맵 직접 조회가 전부 undefined 였고,
+     그대로 템플릿에 박혀 `제목.undefined` 가 올라갔다. 버전을 떼고 정확히 일치할 때만 채택한다. */
+  const languageExtension = resolveLanguageExtension(languages, language);
   const directory = await buildDirectory('goormlevel', {
     platform: 'goormlevel',
     level: difficulty,

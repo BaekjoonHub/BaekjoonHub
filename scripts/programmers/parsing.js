@@ -38,7 +38,9 @@ async function parseData() {
     .reduce((a, b) => `${a}/${b}`);
   const title = document.querySelector('.algorithm-title .challenge-title').textContent.replace(/\\n/g, '').trim();
   const problem_description = document.querySelector('div.guide-section-description > div.markdown').innerHTML;
-  const language_extension = document.querySelector('div.editor > ul > li.nav-item > a').innerText.split('.')[1];
+  /* `split('.')[1]` 은 탭 라벨에 점이 없으면 undefined 라 `제목.undefined` 가 올라갔다
+     (실제 사례: 프로그래머스 SQL 문제). 대량 업로드 경로와 같은 헬퍼로 통일한다. */
+  const language_extension = extensionFromFileLabel(document.querySelector('div.editor > ul > li.nav-item > a').innerText);
   const codeTextarea = document.querySelector('textarea#code');
   const codeMirrorEl = document.querySelector('.CodeMirror');
   const fillBlankInputs = document.querySelectorAll('input[name^="input_code"]');
@@ -189,7 +191,7 @@ async function fetchProblemCodeAndData(problemInfo) {
 
     // Extract language extension from editor tab
     const langTab = doc.querySelector('div.editor ul li.nav-item a, .editor .nav-item a');
-    const language_extension = langTab ? langTab.textContent.trim().split('.').pop() : 'txt';
+    const language_extension = extensionFromFileLabel(langTab ? langTab.textContent : '');
 
     // Extract problem description
     const descEl = doc.querySelector('div.guide-section-description > div.markdown');

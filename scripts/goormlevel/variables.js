@@ -34,7 +34,6 @@ const languages = /** @type {const} */ ({
     "objective-c": "m",
     "r": "r",
     "rust": "rs",
-    "cobol": "cbl",
     "clojure": "clj",
     "smalltalk": "st",
     "dart": "dart",

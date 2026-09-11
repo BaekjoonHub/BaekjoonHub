@@ -186,7 +186,9 @@ async function parseData(root = document, search = window.location.search) {
   }
 
   // 확장자명
-  const extension = languages[language.toLowerCase()];
+  /* 맵에 없는 언어면 undefined 가 파일명에 박히므로(`제목.undefined`) 공용 헬퍼로 해석한다.
+     대량 업로드 경로(makeDataForBulkUploadSWEA)는 이미 `|| 'txt'` 를 쓰고 있어 동작을 맞춘 것이다. */
+  const extension = resolveLanguageExtension(languages, language);
 
   // 제출날짜
   const submissionTime = parseSubmissionTime(root);
@@ -432,7 +434,7 @@ async function fetchSWEASubmissionCode(problemInfo) {
     const language = (languageRaw === languageRaw.toUpperCase())
       ? languageRaw.substring(0, 1) + languageRaw.substring(1).toLowerCase()
       : languageRaw;
-    const extension = languages[languageRaw.toLowerCase()] || 'txt';
+    const extension = resolveLanguageExtension(languages, languageRaw);
 
     const link = `https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=${contestProbId}`;
 
