@@ -9,6 +9,12 @@ const debug = false;
 */
 let loader;
 
+/* 정답 1회당 1번만 처리하기 위한 플래그. 파싱 실패 시에만 되돌려 다음 tick 에 재시도한다. */
+let solveHandled = false;
+/* DOM 이 영구적으로 깨진 경우 2초마다 무한 재시도하지 않도록 상한을 둔다. */
+let parseFailCount = 0;
+const GOORM_MAX_PARSE_RETRY = 5;
+
 const currentPathname = window.location.pathname;
 
 // 구름 LEVEL 연습 문제 주소임을 확인하고, 맞다면 로더를 실행
@@ -16,25 +22,60 @@ if (/^\/exam\/\d+\/[^\/]+\/quiz\/1$/.test(currentPathname)) startLoader();
 
 function startLoader() {
   loader = setInterval(async () => {
+    /* 확장 컨텍스트가 무효화(업데이트/재설치/리로드)된 경우 감지를 중단한다. */
+    if (!chrome.runtime?.id) {
+      stopLoader();
+      return;
+    }
     // 기능 Off시 작동하지 않도록 함
     const enable = await checkEnable();
-    if (!enable) stopLoader();
-    // 제출 후 채점하기 결과가 성공적으로 나왔다면 코드를 파싱하고, 업로드를 시작한다
-    else if (getSolvedResult()) {
-      log('정답이 나왔습니다. 업로드를 시작합니다.');
+    if (!enable) {
       stopLoader();
-      try {
-        const parsedData = await parseData();
-        await beginUpload(parsedData);
-      } catch (error) {
-        log(error);
+      return;
+    }
+    // 제출 후 채점하기 결과가 성공적으로 나왔다면 코드를 파싱하고, 업로드를 시작한다
+    if (solveHandled || !getSolvedResult()) return;
+    solveHandled = true;
+    log('정답이 나왔습니다. 업로드를 시작합니다.');
+
+    /* #349: 파싱 실패도 화면에 보이도록 스피너를 parseData() "앞" 에서 띄운다.
+       10초를 넘기면 startUploadCountDown 이 markUploadFailedCSS 로 빨간 X 를 표시한다.
+       (scripts/baekjoon/baekjoon.js 와 같은 순서이며, 여태 goorm 만 예외였다) */
+    startUpload();
+
+    let parsedData;
+    try {
+      parsedData = await parseData();
+    } catch (error) {
+      /* #349: 과거 goorm DOM 변경이 전부 "업로드 안 됨 + 콘솔 무출력" 으로 끝났다.
+         debug=false 라 log() 가 no-op 이었기 때문이다. 파싱 실패는 언제나 console.error 로 남긴다. */
+      console.error('[BaekjoonHub] 구름LEVEL 문제 정보 파싱에 실패했습니다. goorm DOM 구조가 변경되었을 가능성이 높습니다.', error);
+      markUploadFailedCSS();
+      /* 폴링을 유지한 채 플래그만 되돌려 다음 tick 에 재시도한다(렌더링 지연 대응). */
+      solveHandled = false;
+      parseFailCount += 1;
+      if (parseFailCount >= GOORM_MAX_PARSE_RETRY) {
+        console.error(`[BaekjoonHub] 구름LEVEL 파싱이 ${GOORM_MAX_PARSE_RETRY}회 연속 실패하여 감지를 중단합니다. 페이지를 새로고침하면 다시 시도합니다.`);
+        stopLoader();
       }
+      return;
+    }
+
+    /* 파싱이 성공했을 때만 감지를 종료한다. */
+    stopLoader();
+    try {
+      await beginUpload(parsedData);
+    } catch (error) {
+      /* 업로드 실패는 재시도하지 않는다 — 2초 폴링으로 GitHub API 를 반복 호출하면 rate limit 을 태운다. */
+      console.error('[BaekjoonHub] 구름LEVEL GitHub 업로드 중 오류가 발생했습니다.', error);
+      markUploadFailedCSS();
     }
   }, 2000);
 }
 
 function stopLoader() {
   clearInterval(loader);
+  loader = null;
 }
 
 function getSolvedResult() {
@@ -51,8 +92,6 @@ function getSolvedResult() {
 async function beginUpload(parsedData) {
   log('parsedData', parsedData);
   if (isNotEmpty(parsedData)) {
-    startUpload();
-
     const {
       // 시험 uid
       examId,
@@ -101,6 +140,12 @@ async function beginUpload(parsedData) {
     }
     /* 신규 제출 번호라면 새롭게 커밋  */
     await uploadOneSolveProblemOnGit({ code, readme, directory, fileName, message }, markUploadedCSS);
+  } else {
+    /* #349: parseData 는 성공했지만 코드/제목 등이 비어 있는 경우.
+       isNotEmpty 가 조용히 false 를 반환하고 끝나던 경로는 사용자에게 파싱 실패와 똑같은 증상이므로
+       반드시 표면화한다. (대표 원인: 언어 탭과 에디터 인덱스가 어긋나 code 가 빈 문자열) */
+    console.error('[BaekjoonHub] 구름LEVEL 파싱 결과가 비어 있어 업로드하지 않습니다. 에디터/언어 탭 선택 상태를 확인해주세요.', parsedData);
+    markUploadFailedCSS();
   }
 }
 

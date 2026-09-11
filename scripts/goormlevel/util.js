@@ -5,23 +5,23 @@
  */
 function startUpload() {
   /**
-   * goormlevel에는 항상 해당 elem이 없음
-   * loader나 check DOM 관리하기 위한 DOM
+   * goormlevel 에는 확장이 심는 anchor 가 처음엔 없으므로 직접 만든다.
+   * #349: 기존 코드는 getElementById 의 반환값을 undefined 와 비교했는데 실제 반환값은 null 이라
+   * 분기가 항상 참이었다. 파싱 실패 재시도가 생긴 뒤로는 그 때문에 anchor 가 중복 생성되므로 바로잡는다.
    */
-  let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  if (elem !== undefined) {
-    /** goormlevel에서는 항상 해당 조건문을 실행함 */
-    elem = document.createElement('span');
-    elem.id = 'BaekjoonHub_progress_anchor_element';
-    elem.className = 'runcode-wrapper__8rXm';
-    elem.style = 'margin-left: 10px;padding-top: 0px;';
+  let anchor = document.getElementById('BaekjoonHub_progress_anchor_element');
+  if (isNull(anchor)) {
+    anchor = document.createElement('span');
+    anchor.id = 'BaekjoonHub_progress_anchor_element';
+    anchor.className = 'runcode-wrapper__8rXm';
+    anchor.style = 'margin-left: 10px;padding-top: 0px;';
   }
-  elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
+  anchor.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
 
   /** 정답을 맞추면 렌더링되는 target element */
   const target = [...document.querySelectorAll('#FrameBody div > p[class] > span')].find(($element) => $element.textContent === '정답입니다.');
-  if (!isNull(target)) {
-    target.append(elem);
+  if (isNull(anchor.parentElement) && !isNull(target)) {
+    target.append(anchor);
   }
   // start the countdown
   startUploadCountDown();
@@ -36,7 +36,11 @@ function startUpload() {
  */
 function markUploadedCSS(branches, directory) {
   uploadState.uploading = false;
+  clearTimeout(uploadState.countdown);
   const elem = document.getElementById('BaekjoonHub_progress_elem');
+  /* #349: startUpload 가 anchor 를 붙일 자리를 찾지 못했다면 elem 이 없다.
+     여기서 TypeError 가 나면 그 예외마저 조용히 삼켜지므로 반드시 가드한다. */
+  if (isNull(elem)) return;
   elem.className = 'markuploaded';
   const uploadedUrl = 'https://github.com/' + Object.keys(branches)[0] + '/tree/' + branches[Object.keys(branches)[0]] + '/' + directory;
   elem.addEventListener('click', function () {
@@ -50,7 +54,11 @@ function markUploadedCSS(branches, directory) {
  */
 function markUploadFailedCSS() {
   uploadState.uploading = false;
+  clearTimeout(uploadState.countdown);
   const elem = document.getElementById('BaekjoonHub_progress_elem');
+  /* #349: 이 함수는 이제 startUpload() 보다 먼저 호출될 수 있다(파싱 실패 경로).
+     elem 이 없다고 여기서 터지면 다시 무음 실패가 되므로 조용히 반환한다. */
+  if (isNull(elem)) return;
   elem.className = 'markuploadfailed';
 }
 
