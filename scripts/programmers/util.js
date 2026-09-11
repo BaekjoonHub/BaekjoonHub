@@ -28,6 +28,10 @@ function startUpload() {
 function markUploadedCSS(branches, directory) {
   uploadState.uploading = false;
   const elem = document.getElementById('BaekjoonHub_progress_elem');
+  /* 업로드 도중 결과 모달이 닫혀 아이콘이 사라진 경우(재제출을 허용한 뒤로 흔해짐) 크래시를 막는다.
+     이 함수는 커밋이 성공한 뒤에 실행되는 콜백이므로, 여기서 TypeError가 나면
+     이미 성공한 커밋이 실패한 것처럼 보이게 된다. */
+  if (isNull(elem)) return;
   elem.className = 'markuploaded';
   const uploadedUrl = "https://github.com/" +
               Object.keys(branches)[0] + "/tree/" + 
@@ -48,15 +52,20 @@ function markUploadFailedCSS() {
 }
 
 /**
- * 총 실행시간이 10초를 초과한다면 실패로 간주합니다.
+ * 총 실행시간이 20초를 초과한다면 실패로 간주합니다.
+ * (느린 네트워크에서 업로드가 실제로는 성공하는데 실패 아이콘이 표시되던 오탐을 줄이기 위해 10초 -> 20초.
+ *  프로그래머스 단일 업로드는 GitHub API 왕복이 7회이고, 캐시가 없으면 저장소 전체 tree 조회까지 더해진다.)
  */
 function startUploadCountDown() {
+  /* 재제출로 업로드가 다시 시작되는 경우, 이전 시도의 워치독이 남아 있으면
+     진행 중인 새 시도를 실패로 덮어쓰므로 먼저 해제한다. (clearTimeout(undefined)는 no-op) */
+  clearTimeout(uploadState.countdown);
   uploadState.uploading = true;
   uploadState.countdown = setTimeout(() => {
     if (uploadState.uploading === true) {
       markUploadFailedCSS();
     }
-  }, 10000);
+  }, 20000);
 }
 
 /**

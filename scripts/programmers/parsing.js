@@ -26,10 +26,12 @@ function reconstructFillBlankCode(node) {
 }
 
 async function parseData() {
-  const link = document.querySelector('head > meta[name$=url]').content.replace(/\?.*/g, '').trim();
   const lessonEl = document.querySelector('.lesson-content') || document.querySelector('[data-lesson-id]');
   const problemId = lessonEl.getAttribute('data-lesson-id');
   const level = lessonEl.getAttribute('data-challenge-level');
+  /* 레슨 페이지의 og:url / twitter:url 은 모두 사이트 루트(https://programmers.co.kr/)를 가리키므로
+     문제 링크로 쓸 수 없다. 전체 업로드 경로(fetchProblemCodeAndData)와 동일하게 문제 번호로 구성한다. */
+  const link = `https://school.programmers.co.kr/learn/courses/30/lessons/${problemId}`;
   const division = [...document.querySelector('ol.breadcrumb').childNodes]
     .filter((x) => x.className !== 'active')
     .map((x) => x.innerText)
@@ -74,7 +76,7 @@ async function parseData() {
 }
 
 async function makeData(origin) {
-  const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code, language } = origin;
+  const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code, language, link } = origin;
   const directory = await buildDirectory('programmers', {
     platform: '프로그래머스',
     level,
