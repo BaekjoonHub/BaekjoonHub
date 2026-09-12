@@ -68,6 +68,34 @@ function handleMessage(request, sender, sendResponse) {
   } else if (request && request.sender == "baekjoon" && request.task == "SolvedApiCall") {
     SolvedApiCall(request.problemId).then((res) => sendResponse(res));
     //sendResponse(SolvedApiCall(request.problemId))
+  } else if (request && request.task === 'checkGithubAuth') {
+    /* Validate GitHub token here, in the background context, so the raw token
+       never has to be loaded into the popup's DOM/JS scope (which renders
+       untrusted-ish hook text) — reduces the token's exposure to popup XSS. */
+    chrome.storage.local.get('BaekjoonHub_token', (data) => {
+      const token = data.BaekjoonHub_token;
+      if (!token) {
+        sendResponse({ authenticated: false });
+        return;
+      }
+      const xhr = new XMLHttpRequest();
+      xhr.addEventListener('readystatechange', function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            sendResponse({ authenticated: true });
+          } else if (xhr.status === 401) {
+            chrome.storage.local.set({ BaekjoonHub_token: null }, () => {
+              sendResponse({ authenticated: false });
+            });
+          } else {
+            sendResponse({ authenticated: false });
+          }
+        }
+      });
+      xhr.open('GET', 'https://api.github.com/user', true);
+      xhr.setRequestHeader('Authorization', `token ${token}`);
+      xhr.send();
+    });
   }
   return true;
 }
