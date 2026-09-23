@@ -213,6 +213,29 @@ function updateObjectDatafromPath(obj, path, data) {
 }
 
 /**
+ * createTree 에 넘긴 tree 항목으로 submission 캐시를 갱신합니다.
+ *
+ * createTree 응답의 `tree` 는 base_tree 와 합쳐진 새 트리의 "루트 한 단계" 목록이다
+ * (README.md, 백준, 프로그래머스 …). 그것으로 캐시를 갱신하면 최상위 폴더 노드가 tree SHA 문자열로
+ * 덮여 해당 레포의 캐시가 통째로 무너진다(e686e20 회귀). 그래서 우리가 올린 항목만 기록한다.
+ * - createBlob 으로 만든 항목은 GitHub 가 돌려준 sha 를 그대로 쓰고,
+ * - content 를 직접 넣은 항목(전체 업로드)은 git blob SHA 를 로컬에서 계산한다(GitHub 의 blob SHA 와 같다).
+ * - 파일(blob)이 아닌 항목(type 'tree' 등)은 캐시 대상이 아니므로 건너뛴다.
+ * @param {object} submission - stats.submission
+ * @param {string} hook - 'owner/repo'
+ * @param {Array<{path: string, type?: string, sha?: string, content?: string}>} treeItems - createTree 에 넘긴 항목
+ */
+function recordTreeItemsInStats(submission, hook, treeItems) {
+  treeItems.forEach((item) => {
+    if (!isNull(item.type) && item.type !== 'blob') return;
+    let sha = item.sha;
+    if (isNull(sha) && typeof item.content === 'string') sha = calculateBlobSHA(item.content);
+    if (isNull(sha)) return;
+    updateObjectDatafromPath(submission, `${hook}/${item.path}`, sha);
+  });
+}
+
+/**
  * get stats from path recursively
  * @param {string} path - path to file
  * @returns {Promise<string>} - sha of file
@@ -230,7 +253,9 @@ function getObjectDatafromPath(obj, path) {
     .split('/')
     .filter((p) => p !== '');
   for (const path of pathArray.slice(0, -1)) {
-    if (isNull(current[path])) {
+    // 폴더 자리에 문자열(sha)이 있으면 그 아래 경로는 캐시에 없는 것이다.
+    // (e686e20 회귀로 무너진 캐시에서 '0' 같은 세그먼트가 sha 문자열의 글자를 집어오지 않게 한다)
+    if (isNull(current[path]) || typeof current[path] !== 'object') {
       return null;
     }
     current = current[path];

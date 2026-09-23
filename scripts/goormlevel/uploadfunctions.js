@@ -14,10 +14,8 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
   await git.updateHead(ref, commitSHA);
 
-  /* stats의 값을 갱신합니다. */
-  treeData.tree.forEach((item) => {
-    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
-  });
+  /* stats의 값을 갱신합니다. (treeData.tree 는 루트 목록이라 쓰면 캐시가 무너진다 — recordTreeItemsInStats 참고) */
+  recordTreeItemsInStats(stats.submission, hook, [source, readme]);
   await saveStats(stats);
   // 콜백 함수 실행
   if (typeof cb === 'function') {

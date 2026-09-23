@@ -127,9 +127,7 @@ async function uploadAllSolvedProblem() {
       const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
       await git.updateHead(ref, commitSHA);
       MultiloaderSuccess();
-      treeData.tree.forEach((item) => {
-        updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
-      });
+      recordTreeItemsInStats(submission, hook, tree_items);
       await saveStats(stats);
     } else {
       MultiloaderUpToDate();
@@ -194,10 +192,8 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
   await git.updateHead(ref, commitSHA);
 
-  /* stats의 값을 갱신합니다. */
-  treeData.tree.forEach((item) => {
-    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
-  });
+  /* stats의 값을 갱신합니다. (treeData.tree 는 루트 목록이라 쓰면 캐시가 무너진다 — recordTreeItemsInStats 참고) */
+  recordTreeItemsInStats(stats.submission, hook, tree_items);
   await saveStats(stats);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
@@ -245,8 +241,6 @@ async function uploadExamplesFromProblemPage(samples) {
   const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
   await git.updateHead(ref, commitSHA);
 
-  treeData.tree.forEach((item) => {
-    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
-  });
+  recordTreeItemsInStats(stats.submission, hook, tree_items);
   await saveStats(stats);
 }

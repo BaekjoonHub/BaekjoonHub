@@ -121,9 +121,7 @@ async function uploadAllSolvedProblemProgrammers() {
       const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
       await git.updateHead(ref, commitSHA);
       MultiloaderSuccess();
-      treeData.tree.forEach((item) => {
-        updateObjectDatafromPath(submission, `${hook}/${item.path}`, item.sha);
-      });
+      recordTreeItemsInStats(submission, hook, tree_items);
       await saveStats(stats);
     } else {
       MultiloaderUpToDate();
