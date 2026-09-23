@@ -1,12 +1,12 @@
 // Set to true to enable console log
 const debug = false;
 
-/* 
+/*
   문제 제출 맞음 여부를 확인하는 함수
   2초마다 문제를 파싱하여 확인하고, 결과 모달이 닫히면 감지를 재무장해 재제출도 처리한다
 */
 let loader;
-let passHandled = false; // 같은 결과 모달로 중복 트리거되는 것을 막는 플래그
+let passHandled = false; // 지금 떠 있는 결과 모달을 이미 처리했는지 (모달 1회당 한 번만 처리)
 let handleCount = 0; // 한 페이지 로드에서의 처리 횟수 (비정상 재트리거 폭주 방지)
 
 const MAX_HANDLE_COUNT = 30;
@@ -44,8 +44,6 @@ if (currentUrl.includes('/learn/challenges')) {
 /* 결과 모달에 '정답'이 표시된 경우, 모달 1회당 한 번만 실행되는 핸들러 */
 async function handleSolvedResult() {
   if (passHandled) return;
-  // 업로드가 진행 중이면 중복 실행하지 않는다 (passHandled에 이은 2차 방어선)
-  if (uploadState.uploading) return;
   // 결과 모달이 실제로 화면에 떠 있고, 그 안에 '정답'이 표시된 경우에만 처리한다
   if (!isResultModalOpen() || !getSolvedResult().includes('정답')) return;
   // 여기까지 모두 동기 코드이므로, 아래 플래그가 세워지기 전에 다음 tick이 끼어들 수 없다
@@ -56,20 +54,55 @@ async function handleSolvedResult() {
     stopLoader();
     return;
   }
+  /* 재무장은 업로드가 끝났는지가 아니라 "이 모달이 닫혔는지" 만 본다.
+     업로드 완료 뒤에 재무장하면, 느린 업로드 도중(20초 워치독의 빨간 체크 이후 등) 모달을 닫고
+     재제출한 결과가 앞 업로드가 끝날 때까지 감지되지 않고 그대로 사라진다.
+     (동일 코드 재제출은 beginUpload의 SHA 비교에서 스킵되므로 중복 커밋은 생기지 않는다) */
+  rearmAfterModalClose();
   log('정답이 나왔습니다. 업로드를 시작합니다.');
-  try {
-    const bojData = await parseData();
-    await beginUpload(bojData);
-  } catch (error) {
-    console.error('[BaekjoonHub] 프로그래머스 파싱/업로드 중 오류가 발생했습니다.', error);
-    // 확정된 실패이므로 워치독을 기다리지 않고 즉시 실패 아이콘을 표시한다.
-    // (로딩 아이콘이 아직 삽입되지 않은 경우에는 안전하게 no-op)
-    markUploadFailedCSS();
-  } finally {
-    /* 성공/스킵/실패 어느 결과였든 모달이 닫히면 감지를 재무장해, 같은 화면에서의 재제출도 처리한다.
-       (동일 코드 재제출은 beginUpload의 SHA 비교에서 스킵되므로 중복 커밋은 생기지 않는다) */
-    rearmAfterModalClose();
-  }
+  const attempt = startUpload();
+  /* 파싱은 감지 즉시 시작한다. 이 시점의 에디터 코드와 채점 결과가 방금 정답을 받은 제출이며,
+     업로드는 앞 업로드 뒤에 줄을 서더라도 이 데이터로 진행한다.
+     줄은 파싱이 끝나기를 기다리지 않고 지금 선다. 파싱이 늦어지는 사이 다음 제출이 먼저 줄을 서면
+     커밋 순서가 뒤집혀 이전 코드가 최신 코드를 덮는다. */
+  const parsed = parseData().then(
+    (bojData) => ({ bojData }),
+    (error) => {
+      console.error('[BaekjoonHub] 프로그래머스 파싱 중 오류가 발생했습니다.', error);
+      // 확정된 실패이므로 앞 업로드나 워치독을 기다리지 않고 즉시 실패 아이콘을 표시한다.
+      markUploadFailedCSS(attempt);
+      return null;
+    },
+  );
+  await enqueueUpload(parsed, attempt);
+}
+
+/**
+ * 업로드를 앞선 업로드 뒤에 줄 세웁니다.
+ * updateHead 가 force 로 ref 를 갱신하므로, 두 업로드가 같은 부모 커밋에서 동시에 진행되면 나중 PATCH 가
+ * 앞 커밋을 브랜치 이력에서 지운다. 그래서 한 번에 하나씩만 실행한다.
+ * 반환된 Promise 는 reject 되지 않는다 — 앞 업로드의 실패가 뒤 업로드를 막지 않게 하기 위함이다.
+ * @param {Promise<({bojData: object}|null)>} parsed - 파싱 결과. 파싱에 실패했으면(이미 실패로 표시됨) null
+ * @param {{elem: HTMLElement, done: boolean, countdown: (number|null)}} attempt - startUpload 가 돌려준 시도
+ * @returns {Promise<void>}
+ */
+function enqueueUpload(parsed, attempt) {
+  const run = uploadState.queue.then(async () => {
+    const result = await parsed;
+    if (isNull(result)) return;
+    /* 워치독은 줄을 기다린 시간이 아니라 이 업로드가 실제로 걸린 시간만 잰다.
+       감지 시점부터 재면 느린 앞 업로드 뒤에서 기다리기만 한 시도가 빨간 체크로 표시된다. */
+    startUploadCountDown(attempt);
+    try {
+      await beginUpload(result.bojData, attempt);
+    } catch (error) {
+      console.error('[BaekjoonHub] 프로그래머스 업로드 중 오류가 발생했습니다.', error);
+      // 확정된 실패이므로 워치독을 기다리지 않고 즉시 실패 아이콘을 표시한다.
+      markUploadFailedCSS(attempt);
+    }
+  });
+  uploadState.queue = run;
+  return run;
 }
 
 /**
@@ -140,12 +173,10 @@ function isResultModalOpen() {
   return !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
 }
 
-/* 파싱 직후 실행되는 함수 */
-async function beginUpload(bojData) {
+/* 파싱 직후 실행되는 함수 (enqueueUpload 가 한 번에 하나씩 호출한다) */
+async function beginUpload(bojData, attempt) {
   log('bojData', bojData);
   if (isNotEmpty(bojData)) {
-    startUpload();
-
     const stats = await getStats();
     const hook = await getHook();
     const token = await getToken();
@@ -165,19 +196,22 @@ async function beginUpload(bojData) {
       /* 로컬 캐시가 없는 경우 원격 저장소에서 파일 존재 여부 실시간 확인 */
       const remoteFile = await getFile(hook, token, `${bojData.directory}/${bojData.fileName}`);
       if (remoteFile && remoteFile.sha === calcSHA) {
-        markUploadedCSS(stats.branches, bojData.directory);
+        markUploadedCSS(stats.branches, bojData.directory, attempt);
         console.log('원격 저장소에 동일한 파일이 존재하여 업로드를 건너뜁니다.');
         return;
       }
       /* GitHub에서 파일이 삭제되거나 없는 경우, 새 업로드로 처리 */
       console.log('캐시된 SHA가 없습니다. 새로 업로드합니다.');
     } else if (cachedSHA == calcSHA) {
-      markUploadedCSS(stats.branches, bojData.directory);
+      markUploadedCSS(stats.branches, bojData.directory, attempt);
       console.log(`현재 제출번호를 업로드한 기록이 있습니다. problemIdID ${bojData.problemId}`);
       return;
     }
     /* 신규 제출 번호라면 새롭게 커밋  */
-    await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
+    await uploadOneSolveProblemOnGit(bojData, (branches, directory) => markUploadedCSS(branches, directory, attempt));
+  } else {
+    console.error('[BaekjoonHub] 프로그래머스 파싱 결과가 비어 있어 업로드하지 않습니다.', bojData);
+    markUploadFailedCSS(attempt);
   }
 }
 

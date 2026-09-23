@@ -1,40 +1,51 @@
 /**
- * 로딩 버튼 추가
+ * 결과 모달 footer 에 로딩 아이콘을 넣고, 이번 업로드 시도(attempt)를 반환합니다.
+ * 아이콘 갱신은 모두 attempt.elem 을 통해서만 한다. 재제출로 시도가 겹칠 때(앞 업로드가 아직 진행 중인데
+ * 다음 정답이 나온 경우) 앞 시도의 완료 콜백이 getElementById 로 새 시도의 아이콘을 찾아 덮어쓰지 않게 하기 위함이다.
+ * 워치독은 여기서 켜지 않는다. 앞 업로드 뒤에서 줄을 기다리는 동안은 로딩 아이콘을 유지하고,
+ * 이 시도의 업로드가 실제로 시작될 때 enqueueUpload 가 startUploadCountDown 을 호출한다.
+ * @returns {{elem: HTMLElement, done: boolean, countdown: (number|null)}}
  */
 function startUpload() {
-  let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  if (!elem) {
-    elem = document.createElement('span');
-    elem.id = 'BaekjoonHub_progress_anchor_element';
-    elem.className = 'runcode-wrapper__8rXm';
-    elem.style = 'margin-left: 10px;padding-top: 0px;';
-  }
-  elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
+  /* 이전 시도의 아이콘은 떼어낸다. 떼어낸 요소는 이전 attempt 가 계속 붙잡고 있으므로,
+     그 시도가 나중에 끝나도 새 모달의 아이콘에는 영향이 없다. */
+  const prevAnchor = document.getElementById('BaekjoonHub_progress_anchor_element');
+  if (!isNull(prevAnchor)) prevAnchor.remove();
+  const anchor = document.createElement('span');
+  anchor.id = 'BaekjoonHub_progress_anchor_element';
+  anchor.className = 'runcode-wrapper__8rXm';
+  anchor.style = 'margin-left: 10px;padding-top: 0px;';
+  const elem = document.createElement('div');
+  elem.id = 'BaekjoonHub_progress_elem';
+  elem.className = 'BaekjoonHub_progress';
+  anchor.appendChild(elem);
   const target = document.querySelector('#modal-dialog > div.modal-dialog > div.modal-content > div.modal-footer');
   if (!isNull(target)) {
-    target.prepend(elem);
+    target.prepend(anchor);
   }
-  // start the countdown
-  startUploadCountDown();
+  return { elem, done: false, countdown: null };
 }
 
 /**
  * 업로드 완료 아이콘 표시 및 링크 생성
  * @param {object} branches - 브랜치 정보 ('userName/repositoryName': 'branchName')
  * @param {string} directory - 디렉토리 정보 ('백준/Gold/1. 문제이름')
+ * @param {{elem: HTMLElement, done: boolean, countdown: (number|null)}} attempt - startUpload 가 돌려준 시도
  * 1. 업로드 완료 아이콘을 표시합니다.
  * 2. 아이콘 클릭 시 업로드된 GitHub 링크로 이동하는 이벤트 리스너를 등록합니다.
  */
-function markUploadedCSS(branches, directory) {
-  uploadState.uploading = false;
-  const elem = document.getElementById('BaekjoonHub_progress_elem');
-  /* 업로드 도중 결과 모달이 닫혀 아이콘이 사라진 경우(재제출을 허용한 뒤로 흔해짐) 크래시를 막는다.
+function markUploadedCSS(branches, directory, attempt) {
+  if (isNull(attempt)) return;
+  attempt.done = true;
+  clearTimeout(attempt.countdown);
+  const elem = attempt.elem;
+  /* 업로드 도중 결과 모달이 닫혀 아이콘이 사라진 경우 크래시를 막는다.
      이 함수는 커밋이 성공한 뒤에 실행되는 콜백이므로, 여기서 TypeError가 나면
      이미 성공한 커밋이 실패한 것처럼 보이게 된다. */
   if (isNull(elem)) return;
   elem.className = 'markuploaded';
   const uploadedUrl = "https://github.com/" +
-              Object.keys(branches)[0] + "/tree/" + 
+              Object.keys(branches)[0] + "/tree/" +
               branches[Object.keys(branches)[0]] + "/" + directory;
   elem.addEventListener("click", function() {
     window.location.href = uploadedUrl;
@@ -44,26 +55,28 @@ function markUploadedCSS(branches, directory) {
 
 /**
  * 업로드 실패 아이콘 표시
+ * 워치독이 띄운 실패는 "아직 끝나지 않음" 이라는 잠정 판정이므로 done 을 세우지 않는다.
+ * 그 업로드가 뒤늦게 성공하면 markUploadedCSS 가 같은 아이콘을 완료로 바꾼다.
+ * @param {{elem: HTMLElement, done: boolean, countdown: (number|null)}} attempt - startUpload 가 돌려준 시도
  */
-function markUploadFailedCSS() {
-  uploadState.uploading = false;
-  const elem = document.getElementById('BaekjoonHub_progress_elem');
-  if (elem) elem.className = 'markuploadfailed';
+function markUploadFailedCSS(attempt) {
+  if (isNull(attempt) || attempt.done) return;
+  clearTimeout(attempt.countdown);
+  if (!isNull(attempt.elem)) attempt.elem.className = 'markuploadfailed';
 }
 
 /**
- * 총 실행시간이 20초를 초과한다면 실패로 간주합니다.
+ * 업로드 시작 후 20초를 초과한다면 실패로 간주합니다. (앞 업로드 뒤에서 줄을 기다린 시간은 포함하지 않는다)
  * (느린 네트워크에서 업로드가 실제로는 성공하는데 실패 아이콘이 표시되던 오탐을 줄이기 위해 10초 -> 20초.
  *  프로그래머스 단일 업로드는 GitHub API 왕복이 7회이고, 캐시가 없으면 저장소 전체 tree 조회까지 더해진다.)
+ * 워치독은 시도마다 따로 둔다. 한 시도의 워치독이 다른 시도의 아이콘을 실패로 덮어쓰지 않는다.
+ * @param {{elem: HTMLElement, done: boolean, countdown: (number|null)}} attempt
  */
-function startUploadCountDown() {
-  /* 재제출로 업로드가 다시 시작되는 경우, 이전 시도의 워치독이 남아 있으면
-     진행 중인 새 시도를 실패로 덮어쓰므로 먼저 해제한다. (clearTimeout(undefined)는 no-op) */
-  clearTimeout(uploadState.countdown);
-  uploadState.uploading = true;
-  uploadState.countdown = setTimeout(() => {
-    if (uploadState.uploading === true) {
-      markUploadFailedCSS();
+function startUploadCountDown(attempt) {
+  clearTimeout(attempt.countdown);
+  attempt.countdown = setTimeout(() => {
+    if (!attempt.done) {
+      markUploadFailedCSS(attempt);
     }
   }, 20000);
 }
