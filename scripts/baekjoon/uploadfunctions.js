@@ -44,7 +44,8 @@ async function uploadAllSolvedProblem() {
     const token = await getToken();
     const git = new GitHub(hook, token);
     const default_branch = stats.branches[hook];
-    const { refSHA, ref } = await git.getReference(default_branch);
+    // 브랜치가 없으면 오래 걸리는 파싱 전에 멈춘다. 커밋의 부모는 커밋 직전에 다시 읽는다(commitTreeItems).
+    await git.getReference(default_branch);
 
     // 2. 맞은 문제 목록 파싱 & 이미 업로드된 문제 스킵
     const username = findUsername();
@@ -70,7 +71,6 @@ async function uploadAllSolvedProblem() {
     }
 
     // 3. 문제 데이터 파싱 (TTL 캐시 활용, asyncPool(2) 병렬 제어)
-    const { submission } = stats;
     setMultiLoaderDenom(newList.length);
     const datas = await findDatas(newList, () => incMultiLoader(1));
     const bojDatas = datas.filter((d) => !isNull(d));
@@ -123,12 +123,11 @@ async function uploadAllSolvedProblem() {
 
     // 5. 단일 커밋으로 일괄 업로드
     if (tree_items.length !== 0) {
-      const treeData = await git.createTree(refSHA, tree_items);
-      const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
-      await git.updateHead(ref, commitSHA);
+      /* 파싱에 수 분이 걸리므로 그 사이 다른 탭의 커밋이 올라갔을 수 있다. 부모는 커밋 직전에 읽고,
+         브랜치는 fast-forward 로만 옮긴다(예전에는 파싱 전에 읽은 ref 로 force 갱신해 그 사이 커밋을 지웠다). */
+      await git.commitTreeItems(default_branch, tree_items, '전체 코드 업로드 -BaekjoonHub');
       MultiloaderSuccess();
-      recordTreeItemsInStats(submission, hook, tree_items);
-      await saveStats(stats);
+      await recordUploadInStats(hook, default_branch, tree_items);
     } else {
       MultiloaderUpToDate();
     }
@@ -169,11 +168,7 @@ async function uploadAllSolvedProblem() {
 async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb, samples) {
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
-  const stats = await getStats();
   const default_branch = await git.getDefaultBranchOnRepo();
-  stats.branches[hook] = default_branch;
-  const refData = await git.getReference(default_branch);
-  const { refSHA, ref } = refData;
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
   const tree_items = [source, readme];
@@ -188,13 +183,12 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
     }
   }
 
-  const treeData = await git.createTree(refSHA, tree_items);
-  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
-  await git.updateHead(ref, commitSHA);
+  // 브랜치는 fast-forward 로만 옮긴다 — 다른 탭이 그 사이 커밋했으면 그 위에 다시 커밋한다 (commitTreeItems 참고)
+  await git.commitTreeItems(default_branch, tree_items, commitMessage);
 
-  /* stats의 값을 갱신합니다. (treeData.tree 는 루트 목록이라 쓰면 캐시가 무너진다 — recordTreeItemsInStats 참고) */
-  recordTreeItemsInStats(stats.submission, hook, tree_items);
-  await saveStats(stats);
+  /* stats의 값을 갱신합니다. 올린 항목만 기록하고(createTree 응답의 tree 는 루트 목록이라 쓰면 캐시가 무너진다),
+     저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다. */
+  const stats = await recordUploadInStats(hook, default_branch, tree_items);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);
@@ -225,10 +219,7 @@ async function uploadExamplesFromProblemPage(samples) {
   const commitMessage = `[${level}] Title: ${title} - 예제 입출력 -BaekjoonHub`;
 
   const git = new GitHub(hook, token);
-  const stats = await getStats();
   const default_branch = await git.getDefaultBranchOnRepo();
-  stats.branches[hook] = default_branch;
-  const { refSHA, ref } = await git.getReference(default_branch);
 
   const fileEntries = samplesToFileEntries(samples);
   const tree_items = [];
@@ -237,10 +228,7 @@ async function uploadExamplesFromProblemPage(samples) {
     tree_items.push(blob);
   }
 
-  const treeData = await git.createTree(refSHA, tree_items);
-  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
-  await git.updateHead(ref, commitSHA);
+  await git.commitTreeItems(default_branch, tree_items, commitMessage);
 
-  recordTreeItemsInStats(stats.submission, hook, tree_items);
-  await saveStats(stats);
+  await recordUploadInStats(hook, default_branch, tree_items);
 }

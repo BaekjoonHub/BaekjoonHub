@@ -40,21 +40,14 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
 async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
-  const stats = await getStats();
   const default_branch = await git.getDefaultBranchOnRepo();
-  stats.branches[hook] = default_branch;
-  const refData = await git.getReference(default_branch);
-  const { refSHA, ref } = refData;
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
-  const treeData = await git.createTree(refSHA, [source, readme]);
-  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
-  await git.updateHead(ref, commitSHA);
+  // 브랜치는 fast-forward 로만 옮긴다 — 다른 탭이 그 사이 커밋했으면 그 위에 다시 커밋한다 (commitTreeItems 참고)
+  await git.commitTreeItems(default_branch, [source, readme], commitMessage);
 
-  /* stats의 값을 갱신합니다. */
-  updateObjectDatafromPath(stats.submission, `${hook}/${source.path}`, source.sha);
-  updateObjectDatafromPath(stats.submission, `${hook}/${readme.path}`, readme.sha);
-  await saveStats(stats);
+  /* stats의 값을 갱신합니다. (저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다) */
+  const stats = await recordUploadInStats(hook, default_branch, [source, readme]);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);
@@ -74,7 +67,8 @@ async function uploadAllSolvedProblemProgrammers() {
     const token = await getToken();
     const git = new GitHub(hook, token);
     const default_branch = stats.branches[hook];
-    const { refSHA, ref } = await git.getReference(default_branch);
+    // 브랜치가 없으면 오래 걸리는 파싱 전에 멈춘다. 커밋의 부모는 커밋 직전에 다시 읽는다(commitTreeItems).
+    await git.getReference(default_branch);
 
     // 2. 풀이 완료 문제 목록 파싱 & 이미 업로드된 문제 스킵
     const solvedProblems = await findAllSolvedProblems();
@@ -87,7 +81,6 @@ async function uploadAllSolvedProblemProgrammers() {
     }
 
     // 3. 문제 데이터 파싱 (asyncPool(2) 병렬 제어)
-    const { submission } = stats;
     setMultiLoaderDenom(newList.length);
     const datas = await asyncPool(2, newList, fetchProblemCodeAndData);
     const bojDatas = datas.filter((d) => !isNull(d));
@@ -117,12 +110,11 @@ async function uploadAllSolvedProblemProgrammers() {
 
     // 5. 단일 커밋으로 일괄 업로드
     if (tree_items.length !== 0) {
-      const treeData = await git.createTree(refSHA, tree_items);
-      const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
-      await git.updateHead(ref, commitSHA);
+      /* 파싱에 수 분이 걸리므로 그 사이 다른 탭의 커밋이 올라갔을 수 있다. 부모는 커밋 직전에 읽고,
+         브랜치는 fast-forward 로만 옮긴다(예전에는 파싱 전에 읽은 ref 로 force 갱신해 그 사이 커밋을 지웠다). */
+      await git.commitTreeItems(default_branch, tree_items, '전체 코드 업로드 -BaekjoonHub');
       MultiloaderSuccess();
-      recordTreeItemsInStats(submission, hook, tree_items);
-      await saveStats(stats);
+      await recordUploadInStats(hook, default_branch, tree_items);
     } else {
       MultiloaderUpToDate();
     }

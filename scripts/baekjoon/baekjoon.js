@@ -19,15 +19,13 @@ if (!isNull(username)) {
     parseProblemDescription();
     injectSaveExamplesButton();
   }
-  else if (currentUrl.includes('.net/user')) {
-    getStats().then((stats) => {
-      if (!isEmpty(stats.version) && stats.version === getVersion()) {
-        if (findUsernameOnUserInfoPage() === username) {
-          insertUploadAllButton();
-        }
-      } else {
-        versionUpdate();
-      }
+  else if (currentUrl.includes('.net/user') && findUsernameOnUserInfoPage() === username) {
+    /* 자기 프로필에서만 캐시를 재구축하고 전체 업로드 버튼을 붙인다(프로그래머스·SWEA 와 같은 순서).
+       재구축은 레포 파일 목록을 읽지 못하면(토큰 만료 등) 버전을 기록하지 않아 다음 방문에 다시 시도하므로,
+       남의 프로필을 볼 때마다 GitHub 요청이 나가지 않게 한다. */
+    getStats().then(async (stats) => {
+      if (isEmpty(stats?.version) || stats.version !== getVersion()) await versionUpdate();
+      insertUploadAllButton();
     });
   }
   if (currentUrl.includes('/status')) injectManualUploadButtons(username);
@@ -213,9 +211,8 @@ async function injectSaveExamplesButton() {
 
 async function versionUpdate() {
   log('start versionUpdate');
-  const stats = await updateLocalStorageStats();
-  // update version.
-  stats.version = getVersion();
-  await saveStats(stats);
+  /* 버전은 재구축과 같은 저장에 기록한다(레포 파일 목록을 읽지 못했으면 기록하지 않아 다음에 다시 재구축한다).
+     재구축 결과를 받아 버전을 붙여 다시 저장하면, 그 사이 다른 탭이 남긴 업로드 기록을 덮는다. */
+  const stats = await updateLocalStorageStats({ version: getVersion() });
   log('stats updated.', stats);
 }

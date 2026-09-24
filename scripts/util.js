@@ -172,16 +172,32 @@ function convertSingleCharToDoubleChar(text) {
 }
 
 /**
- * base64로 문자열을 base64로 인코딩하여 반환합니다.
+ * 문자열의 UTF-8 바이트를 base64로 인코딩하여 반환합니다.
+ * TextEncoder 는 외톨이 서러게이트를 U+FFFD 로 인코딩한다(calculateBlobSHA 와 같은 바이트).
+ * 예전 구현(encodeURIComponent)은 외톨이 서러게이트에서 URIError 를 던져 업로드 전체가 실패했다.
  * @param {string} str - base64로 인코딩할 문자열
  * @returns {string} - base64로 인코딩된 문자열
  */
 function b64EncodeUnicode(str) {
-  return btoa(
-    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
-      return String.fromCharCode(`0x${p1}`);
-    }),
-  );
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  // String.fromCharCode 인자 개수 제한을 넘지 않도록 나눠서 변환한다
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
+/**
+ * 짝이 맞지 않는 UTF-16 서러게이트(외톨이 서러게이트)를 U+FFFD 로 바꾼 문자열을 반환합니다.
+ * (String.prototype.toWellFormed 와 같다.) GitHub 는 JSON 문자열 속 외톨이 서러게이트를 '?' 로 저장하므로,
+ * 업로드하는 문자열과 calculateBlobSHA 가 해시하는 바이트(TextEncoder, U+FFFD)를 맞추려면 먼저 정규화해야 한다.
+ * @param {string} str
+ * @returns {string}
+ */
+function toWellFormedText(str) {
+  if (typeof str.toWellFormed === 'function') return str.toWellFormed();
+  return str.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '�');
 }
 
 /**
@@ -252,11 +268,20 @@ function filter(arr, conditions) {
 }
 
 /** calculate github blob file SHA
+ * git 은 `blob <바이트 수>\0<바이트>` 의 SHA-1 을 쓴다. 헤더의 크기와 해시하는 바이트가 모두 UTF-8(TextEncoder)
+ * 기준이어야 한다. 예전에는 크기(Blob)와 해시(js-sha1 의 문자열 인코딩)가 서로 다른 방식으로 인코딩해,
+ * 외톨이 서러게이트가 섞이면 크기와 본문이 어긋난 SHA 가 나왔다.
  * @param {string} content - file content
  * @returns {string} - SHA hash
  */
 function calculateBlobSHA(content) {
-  return sha1(`blob ${new Blob([content]).size}\0${content}`);
+  const encoder = new TextEncoder();
+  const body = encoder.encode(content);
+  const header = encoder.encode(`blob ${body.length}\0`);
+  const bytes = new Uint8Array(header.length + body.length);
+  bytes.set(header, 0);
+  bytes.set(body, header.length);
+  return sha1(bytes);
 }
 
 /**

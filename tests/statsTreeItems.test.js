@@ -17,15 +17,31 @@ const { normalizePath } = require('../scripts/utils/pathNormalize.js');
 
 const ROOT = path.join(__dirname, '..');
 const HOOK = 'tester/algorithm';
+const isNullish = (value) => value === null || value === undefined;
 
-function loadStorageJs() {
+/**
+ * @param {Map<string, any>} [store] - 주면 chrome.storage.local 을 이 Map 으로 흉내 낸다(값은 JSON 으로 복제해
+ *   실제 storage 처럼 읽을 때마다 새 객체가 나온다). 없으면 get/set 이 아무 일도 하지 않는다.
+ */
+function loadStorageJs(store = null) {
   const noop = () => {};
+  const clone = (value) => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
+  const local = isNullish(store)
+    ? { get: noop, set: noop }
+    : {
+        get: (key, cb) => setImmediate(() => cb({ [key]: clone(store.get(key)) })),
+        set: (obj, cb) => setImmediate(() => { for (const [k, v] of Object.entries(obj)) store.set(k, clone(v)); if (cb) cb(); }),
+      };
+  // storage.js 는 로드될 때 sync→local 동기화와 stats 기본값 저장을 한다. 동기화는 끝난 것으로 둔다.
+  if (!isNullish(store) && !store.has('isSync')) store.set('isSync', true);
   const sandbox = {
     console,
-    Blob,
+    TextEncoder,
+    btoa,
     chrome: {
+      runtime: { getManifest: () => ({ version: '1.4.20' }) },
       storage: {
-        local: { get: noop, set: noop },
+        local,
         sync: { get: noop, set: noop },
       },
     },
@@ -39,6 +55,11 @@ function loadStorageJs() {
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts', 'util.js'), 'utf8'), sandbox, { filename: 'util.js' });
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts', 'storage.js'), 'utf8'), sandbox, { filename: 'storage.js' });
   return sandbox;
+}
+
+/** storage.js 가 로드될 때 시작한 비동기 초기화(stats 기본값 저장)가 끝나기를 기다린다 */
+async function settle() {
+  for (let i = 0; i < 20; i += 1) await new Promise((resolve) => setImmediate(resolve));
 }
 
 /** git hash-object 와 같은 방식으로 계산한 blob SHA (독립 구현) */
@@ -86,6 +107,8 @@ describe('recordTreeItemsInStats — 업로드한 항목만 캐시에 기록', (
       '﻿public class Main {}\n',
       '// emoji \u{1F600} 4byte\n',
       '',
+      // 외톨이 서러게이트: 업로드 경로(createTree/createBlob)가 U+FFFD 로 정규화해 보내므로 그 바이트의 SHA 여야 한다
+      'a\uD800b\n',
     ];
     for (const code of codes) {
       const submission = {};
@@ -126,5 +149,52 @@ describe('업로드 함수 소스 가드', () => {
       const code = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
       assert.doesNotMatch(code, /\btreeData\.tree\b/, `${path.relative(ROOT, file)}: recordTreeItemsInStats 에 올린 항목을 넘겨야 한다`);
     }
+  });
+});
+
+describe('recordUploadInStats — 저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다', () => {
+  test('업로드가 도는 사이 다른 탭이 남긴 캐시가 살아남는다', async () => {
+    const store = new Map();
+    const sandbox = loadStorageJs(store);
+    await settle();
+    const initial = { version: '1.4.20', branches: { [HOOK]: 'main' }, submission: existingSubmission(sandbox) };
+    store.set('stats', initial);
+
+    // 예전 전체 업로드는 시작할 때 읽은 stats 를 수 분 뒤 통째로 저장해, 그 사이 다른 탭이 올린 문제의 캐시를 지웠다
+    const staleAtStart = await sandbox.getStats();
+    const otherTab = await sandbox.getStats();
+    sandbox.updateObjectDatafromPath(otherTab.submission, `${HOOK}/goormlevel/1/1. 다른 탭/다른 탭.py`, 'sha-other-tab');
+    await sandbox.saveStats(otherTab);
+
+    const saved = await sandbox.recordUploadInStats(HOOK, 'main', [
+      { path: '프로그래머스/2/2. 이번 업로드/이번 업로드.py', mode: '100644', type: 'blob', sha: 'sha-mine' },
+    ]);
+    const persisted = store.get('stats');
+    const read = (p) => sandbox.getObjectDatafromPath(persisted.submission, `${HOOK}/${p}`);
+    assert.equal(read('goormlevel/1/1. 다른 탭/다른 탭.py'), 'sha-other-tab');
+    assert.equal(read('프로그래머스/2/2. 이번 업로드/이번 업로드.py'), 'sha-mine');
+    assert.equal(read('백준/Bronze/1000. A＋B/A＋B.py'), 'sha-boj');
+    assert.equal(persisted.version, '1.4.20');
+    assert.equal(sandbox.getObjectDatafromPath(saved.submission, `${HOOK}/goormlevel/1/1. 다른 탭/다른 탭.py`), 'sha-other-tab', '반환값도 저장한 최신 stats 다');
+    assert.equal(sandbox.getObjectDatafromPath(staleAtStart.submission, `${HOOK}/goormlevel/1/1. 다른 탭/다른 탭.py`), null);
+  });
+
+  test('stats 가 비어 있어도 submission/branches 를 만들어 기록한다', async () => {
+    const store = new Map();
+    const sandbox = loadStorageJs(store);
+    await settle();
+    store.delete('stats');
+    await sandbox.recordUploadInStats(HOOK, 'master', [{ path: 'a/b.py', mode: '100644', type: 'blob', content: 'x\n' }]);
+    const persisted = store.get('stats');
+    assert.deepEqual(persisted.branches, { [HOOK]: 'master' });
+    assert.equal(sandbox.getObjectDatafromPath(persisted.submission, `${HOOK}/a/b.py`), gitBlobSHA('x\n'));
+  });
+
+  test('branch 를 모르면 기존 브랜치 기록을 지우지 않는다', async () => {
+    const store = new Map([['stats', { version: '1.4.20', branches: { [HOOK]: 'main' }, submission: {} }]]);
+    const sandbox = loadStorageJs(store);
+    await settle();
+    await sandbox.recordUploadInStats(HOOK, undefined, []);
+    assert.deepEqual(store.get('stats').branches, { [HOOK]: 'main' });
   });
 });

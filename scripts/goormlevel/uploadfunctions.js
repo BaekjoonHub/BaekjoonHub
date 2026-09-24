@@ -3,20 +3,15 @@
 async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
-  const stats = await getStats();
   const default_branch = await git.getDefaultBranchOnRepo();
-  stats.branches[hook] = default_branch;
-  const refData = await git.getReference(default_branch);
-  const { refSHA, ref } = refData;
   const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
   const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
-  const treeData = await git.createTree(refSHA, [source, readme]);
-  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
-  await git.updateHead(ref, commitSHA);
+  // 브랜치는 fast-forward 로만 옮긴다 — 다른 탭이 그 사이 커밋했으면 그 위에 다시 커밋한다 (commitTreeItems 참고)
+  await git.commitTreeItems(default_branch, [source, readme], commitMessage);
 
-  /* stats의 값을 갱신합니다. (treeData.tree 는 루트 목록이라 쓰면 캐시가 무너진다 — recordTreeItemsInStats 참고) */
-  recordTreeItemsInStats(stats.submission, hook, [source, readme]);
-  await saveStats(stats);
+  /* stats의 값을 갱신합니다. 올린 항목만 기록하고(createTree 응답의 tree 는 루트 목록이라 쓰면 캐시가 무너진다),
+     저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다. */
+  const stats = await recordUploadInStats(hook, default_branch, [source, readme]);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);

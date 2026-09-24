@@ -236,6 +236,25 @@ function recordTreeItemsInStats(submission, hook, treeItems) {
 }
 
 /**
+ * 커밋이 끝난 뒤 이번 업로드 항목을 submission 캐시에 기록하고 저장합니다.
+ * 업로드를 시작할 때 읽어 둔 stats 를 그대로 저장하면, 업로드가 진행되는 동안 다른 탭(다른 플랫폼 포함)이
+ * 저장한 기록을 덮어쓴다(전체 업로드는 수 분이 걸린다). 그래서 저장 직전에 다시 읽고 그 위에 이번 항목만 더한다.
+ * @param {string} hook - 'owner/repo'
+ * @param {string} branch - 커밋한 브랜치 (stats.branches 갱신용, 없으면 그대로 둔다)
+ * @param {Array<{path: string, type?: string, sha?: string, content?: string}>} treeItems - 커밋한 tree 항목
+ * @returns {Promise<object>} 저장한 stats
+ */
+async function recordUploadInStats(hook, branch, treeItems) {
+  const stats = (await getStats()) || {};
+  if (isNull(stats.submission)) stats.submission = {};
+  if (isNull(stats.branches)) stats.branches = {};
+  if (!isNull(branch)) stats.branches[hook] = branch;
+  recordTreeItemsInStats(stats.submission, hook, treeItems);
+  await saveStats(stats);
+  return stats;
+}
+
+/**
  * get stats from path recursively
  * @param {string} path - path to file
  * @returns {Promise<string>} - sha of file
@@ -263,10 +282,28 @@ function getObjectDatafromPath(obj, path) {
   return current[pathArray.pop()];
 }
 
-/* github repo에 있는 모든 파일 목록을 가져와서 stats 갱신 */
-async function updateLocalStorageStats() {
+/**
+ * github repo에 있는 모든 파일 목록을 가져와서 stats 갱신
+ *
+ * - 트리를 읽지 못하면(타임아웃·네트워크·5xx) 기존 submission 캐시를 그대로 둔다. 예전에는 모든 실패를 빈 레포로
+ *   보고 캐시를 비워 저장해, 전체 업로드가 이미 올린 문제를 전부 다시 파싱·커밋했다. 빈 레포(409)와 레포 없음(404)만
+ *   빈 트리로 본다.
+ * - 네트워크 작업이 끝난 뒤 stats 를 다시 읽고, 그 사이 다른 탭이 기록한 항목(recordUploadInStats)은 살린다.
+ *   트리는 조회 시점의 상태라, 조회 뒤에 다른 탭이 올린 파일의 SHA 를 옛 값으로 되돌리면 안 된다.
+ * @param {{version?: string}} [options] - version: 재구축에 성공했을 때 같은 저장에 함께 기록할 버전
+ *   (실패하면 기록하지 않아 다음 업로드에서 다시 재구축한다)
+ * @returns {Promise<object>} 저장한 stats
+ */
+async function updateLocalStorageStats({ version = null } = {}) {
   const hook = await getHook();
   const token = await getToken();
+  // 연결된 레포나 토큰이 없으면 읽을 것이 없다. 요청을 보내지 않고, 버전도 기록하지 않아 연결한 뒤 재구축한다.
+  if (isNull(hook) || isNull(token)) {
+    const current = (await getStats()) || {};
+    if (isNull(current.submission)) current.submission = {};
+    if (isNull(current.branches)) current.branches = {};
+    return current;
+  }
   const git = new GitHub(hook, token);
   // #346 마이그레이션: 언어별 정리 모드의 구 파이썬 폴더(Python3/PyPy3 등)를 Python/ 으로 통합.
   // 재구축 전에 수행해 이후 getTree 가 통합된 경로를 읽게 한다. 실패(보호 브랜치·경합 등)해도 재구축은
@@ -276,35 +313,69 @@ async function updateLocalStorageStats() {
   } catch (e) {
     log('language folder migration failed (will retry on next stats rebuild)', e);
   }
-  const stats = await getStats();
-  const tree_items = [];
+  // 트리 조회 직전의 캐시. 조회 뒤 달라진 항목이 다른 탭의 기록이다.
+  const before = flattenSubmission((await getStats())?.submission);
+  let tree_items = null; // null: 트리를 읽지 못함
   try {
     const tree = await git.getTree();
-    if (Array.isArray(tree)) {
-      tree.forEach((item) => {
-        if (item.type === 'blob') {
-          tree_items.push(item);
-        }
-      });
-    }
+    tree_items = Array.isArray(tree) ? tree.filter((item) => item.type === 'blob') : [];
   } catch (e) {
-    // 빈 레포(커밋 없음)인 경우 tree가 없으므로 무시
-    log('getTree failed (empty repo?)', e);
+    if (isEmptyRepoError(e)) {
+      tree_items = [];
+    } else {
+      console.error('[BaekjoonHub] 레포 파일 목록을 가져오지 못해 업로드 기록 캐시를 그대로 둡니다. 다음 업로드에서 다시 시도합니다.', e);
+    }
   }
-  // GitHub tree 기반으로 submission 캐시를 재구축 (삭제된 파일 정리)
-  stats.submission = {};
-  tree_items.forEach((item) => {
-    updateObjectDatafromPath(stats.submission, `${hook}/${item.path}`, item.sha);
-  });
+  let default_branch = null;
   try {
-    const default_branch = await git.getDefaultBranchOnRepo();
-    stats.branches[hook] = default_branch;
+    default_branch = await git.getDefaultBranchOnRepo();
   } catch (e) {
     log('getDefaultBranchOnRepo failed', e);
   }
+
+  const stats = (await getStats()) || {};
+  if (isNull(stats.submission)) stats.submission = {};
+  if (isNull(stats.branches)) stats.branches = {};
+  if (!isNull(tree_items)) {
+    // GitHub tree 기반으로 submission 캐시를 재구축 (삭제된 파일 정리)
+    const rebuilt = {};
+    tree_items.forEach((item) => {
+      updateObjectDatafromPath(rebuilt, `${hook}/${item.path}`, item.sha);
+    });
+    flattenSubmission(stats.submission).forEach((sha, path) => {
+      if (before.get(path) !== sha) updateObjectDatafromPath(rebuilt, path, sha);
+    });
+    stats.submission = rebuilt;
+    if (!isNull(version)) stats.version = version;
+  }
+  if (!isNull(default_branch)) stats.branches[hook] = default_branch;
   await saveStats(stats);
   log('update stats', stats);
   return stats;
+}
+
+/** 트리 조회 실패가 "레포에 커밋이 없음/레포 없음" 이라 빈 트리로 봐도 되는지 */
+function isEmptyRepoError(error) {
+  return error instanceof GitHubApiError && !(error instanceof GitHubTimeoutError) && (error.status === 409 || error.status === 404);
+}
+
+/**
+ * 중첩된 submission 캐시를 '경로 → sha' 목록으로 폅니다.
+ * @param {object} submission
+ * @returns {Map<string, string>}
+ */
+function flattenSubmission(submission) {
+  const out = new Map();
+  const walk = (node, prefix) => {
+    if (isNull(node) || typeof node !== 'object') return;
+    Object.entries(node).forEach(([key, value]) => {
+      const path = prefix === '' ? key : `${prefix}/${key}`;
+      if (typeof value === 'string') out.set(path, value);
+      else walk(value, path);
+    });
+  };
+  walk(submission, '');
+  return out;
 }
 
 /**

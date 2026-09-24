@@ -78,9 +78,10 @@ async function handleSolvedResult() {
 }
 
 /**
- * 업로드를 앞선 업로드 뒤에 줄 세웁니다.
- * updateHead 가 force 로 ref 를 갱신하므로, 두 업로드가 같은 부모 커밋에서 동시에 진행되면 나중 PATCH 가
- * 앞 커밋을 브랜치 이력에서 지운다. 그래서 한 번에 하나씩만 실행한다.
+ * 업로드를 앞선 업로드 뒤에 줄 세웁니다. 한 탭에서는 한 번에 하나씩만 실행한다.
+ * 커밋 자체는 fast-forward 로만 반영되어(commitTreeItems) 겹쳐도 이력이 지워지지 않지만, 줄을 세우면
+ * 커밋 순서가 감지 순서를 따르고, 뒤 업로드가 앞 업로드의 캐시 기록(같은 코드 재제출 스킵)을 읽을 수 있다.
+ * 멈춘 요청은 githubRequest 의 제한 시간에서 끊기므로 줄이 영원히 막히지 않는다.
  * 반환된 Promise 는 reject 되지 않는다 — 앞 업로드의 실패가 뒤 업로드를 막지 않게 하기 위함이다.
  * @param {Promise<({bojData: object}|null)>} parsed - 파싱 결과. 파싱에 실패했으면(이미 실패로 표시됨) null
  * @param {{elem: HTMLElement, done: boolean, countdown: (number|null)}} attempt - startUpload 가 돌려준 시도
@@ -217,10 +218,9 @@ async function beginUpload(bojData, attempt) {
 
 async function versionUpdate() {
   log('start versionUpdate');
-  const stats = await updateLocalStorageStats();
-  // update version.
-  stats.version = getVersion();
-  await saveStats(stats);
+  /* 버전은 재구축과 같은 저장에 기록한다(레포 파일 목록을 읽지 못했으면 기록하지 않아 다음에 다시 재구축한다).
+     재구축 결과를 받아 버전을 붙여 다시 저장하면, 그 사이 다른 탭이 남긴 업로드 기록을 덮는다. */
+  const stats = await updateLocalStorageStats({ version: getVersion() });
   log('stats updated.', stats);
 }
 

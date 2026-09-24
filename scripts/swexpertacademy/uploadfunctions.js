@@ -42,45 +42,32 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
 async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
-  const stats = await getStats();
-  if (isNull(stats.branches)) stats.branches = {};
-
-  /* default branch는 이전 업로드에서 캐시된 값을 우선 사용해 API 1회를 줄인다.
-     브랜치가 변경/삭제되어 getReference가 실패하면 다시 조회해 1회 재시도한다. */
-  let default_branch = stats.branches?.[hook];
-  let refData;
-  if (isNull(default_branch)) {
-    default_branch = await git.getDefaultBranchOnRepo();
-    refData = await git.getReference(default_branch);
-  } else {
-    try {
-      refData = await git.getReference(default_branch);
-    } catch (e) {
-      if (e.name === 'TokenExpiredError') throw e;
-      default_branch = await git.getDefaultBranchOnRepo();
-      refData = await git.getReference(default_branch);
-    }
-  }
-  stats.branches[hook] = default_branch;
-  const { refSHA, ref } = refData;
+  const cachedStats = await getStats();
 
   /* blob 생성 API 2회 대신 tree에 content를 직접 전달한다 (전체 업로드 경로와 동일 방식).
-     결과적으로 업로드 1건당 GitHub API 호출은 7회 → 4회(캐시 미스 시 5회)로 줄어든다. */
-  const treeData = await git.createTree(refSHA, [
+     브랜치는 fast-forward 로만 옮긴다 — 다른 탭이 그 사이 커밋했으면 그 위에 다시 커밋한다 (commitTreeItems 참고). */
+  const tree_items = [
     { path: `${directory}/${filename}`, mode: '100644', type: 'blob', content: sourceText },
     { path: `${directory}/README.md`, mode: '100644', type: 'blob', content: readmeText },
-  ]);
-  const commitSHA = await git.createCommit(commitMessage, treeData.sha, refSHA);
-  await git.updateHead(ref, commitSHA);
+  ];
 
-  /* stats의 값을 갱신합니다.
-     createTree 응답의 tree는 루트 트리의 최상위 항목만 담고 있어 파일 단위 캐시가 되지 않으므로
-     (최상위 디렉토리 키를 문자열 sha로 덮어써 기존 캐시를 파괴하는 부작용도 있었음),
-     업로드한 두 파일의 blob sha를 로컬에서 계산해 정확히 기록한다.
-     이 덕분에 같은 문제 재제출 시 원격 조회 없이 즉시 스킵된다. */
-  updateObjectDatafromPath(stats.submission, `${hook}/${directory}/${filename}`, calculateBlobSHA(sourceText));
-  updateObjectDatafromPath(stats.submission, `${hook}/${directory}/README.md`, calculateBlobSHA(readmeText));
-  await saveStats(stats);
+  /* default branch는 이전 업로드에서 캐시된 값을 우선 사용해 API 1회를 줄인다.
+     캐시된 브랜치가 변경/삭제되어 ref 조회가 404 로 실패하면 기본 브랜치를 다시 조회해 1회 재시도한다. */
+  const cachedBranch = cachedStats?.branches?.[hook];
+  let default_branch = isNull(cachedBranch) ? await git.getDefaultBranchOnRepo() : cachedBranch;
+  try {
+    await git.commitTreeItems(default_branch, tree_items, commitMessage);
+  } catch (e) {
+    if (isNull(cachedBranch) || e.name === 'TokenExpiredError' || !(e instanceof GitHubApiError && e.status === 404)) throw e;
+    const liveBranch = await git.getDefaultBranchOnRepo();
+    if (liveBranch === default_branch) throw e;
+    default_branch = liveBranch;
+    await git.commitTreeItems(default_branch, tree_items, commitMessage);
+  }
+
+  /* stats의 값을 갱신합니다. 업로드한 두 파일의 blob sha를 로컬에서 계산해 기록하므로(recordTreeItemsInStats)
+     같은 문제 재제출 시 원격 조회 없이 즉시 스킵된다. 저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다. */
+  const stats = await recordUploadInStats(hook, default_branch, tree_items);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);
@@ -112,7 +99,8 @@ async function uploadAllSolvedProblemSWEA() {
     const token = await getToken();
     const git = new GitHub(hook, token);
     const default_branch = stats.branches[hook];
-    const { refSHA, ref } = await git.getReference(default_branch);
+    // 브랜치가 없으면 오래 걸리는 파싱 전에 멈춘다. 커밋의 부모는 커밋 직전에 다시 읽는다(commitTreeItems).
+    await git.getReference(default_branch);
 
     // 2. 풀이 완료 문제 목록 파싱 & 이미 업로드된 문제 스킵
     const solvedProblems = await findAllSolvedProblemsSWEA();
@@ -125,7 +113,6 @@ async function uploadAllSolvedProblemSWEA() {
     }
 
     // 3. 문제 데이터 파싱 (asyncPool(4) 병렬 제어 — 문제당 2회 fetch이므로 브라우저 host 제한(6) 안에서 처리량 확보)
-    const { submission } = stats;
     setMultiLoaderDenom(newList.length);
     const datas = await asyncPool(4, newList, fetchSWEASubmissionCode);
     const bojDatas = datas.filter((d) => !isNull(d));
@@ -155,16 +142,12 @@ async function uploadAllSolvedProblemSWEA() {
 
     // 5. 단일 커밋으로 일괄 업로드
     if (tree_items.length !== 0) {
-      const treeData = await git.createTree(refSHA, tree_items);
-      const commitSHA = await git.createCommit('전체 코드 업로드 -BaekjoonHub', treeData.sha, refSHA);
-      await git.updateHead(ref, commitSHA);
+      /* 파싱에 수 분이 걸리므로 그 사이 다른 탭의 커밋이 올라갔을 수 있다. 부모는 커밋 직전에 읽고,
+         브랜치는 fast-forward 로만 옮긴다(예전에는 파싱 전에 읽은 ref 로 force 갱신해 그 사이 커밋을 지웠다). */
+      await git.commitTreeItems(default_branch, tree_items, '전체 코드 업로드 -BaekjoonHub');
       MultiloaderSuccess();
-      /* createTree 응답 tree는 루트 최상위 항목만 담으므로(파일 단위 캐시 불가·기존 캐시 파괴),
-         업로드한 각 파일의 blob sha를 로컬에서 계산해 정확히 기록한다. */
-      tree_items.forEach((item) => {
-        updateObjectDatafromPath(submission, `${hook}/${item.path}`, calculateBlobSHA(item.content));
-      });
-      await saveStats(stats);
+      /* 업로드한 각 파일의 blob sha를 로컬에서 계산해 기록한다(createTree 응답의 tree 는 루트 목록이라 쓸 수 없다). */
+      await recordUploadInStats(hook, default_branch, tree_items);
     } else {
       MultiloaderUpToDate();
     }

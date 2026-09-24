@@ -280,9 +280,8 @@ async function beginUpload(bojData) {
 
 async function versionUpdate() {
   log('start versionUpdate');
-  const stats = await updateLocalStorageStats();
-  // update version.
-  stats.version = getVersion();
-  await saveStats(stats);
+  /* 버전은 재구축과 같은 저장에 기록한다(레포 파일 목록을 읽지 못했으면 기록하지 않아 다음에 다시 재구축한다).
+     재구축 결과를 받아 버전을 붙여 다시 저장하면, 그 사이 다른 탭이 남긴 업로드 기록을 덮는다. */
+  const stats = await updateLocalStorageStats({ version: getVersion() });
   log('stats updated.', stats);
 }
