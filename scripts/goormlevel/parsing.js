@@ -167,21 +167,11 @@ function buildGoormCommitMessage({ difficulty, title, runtime, memory }) {
 }
 
 /**
- *
- * @returns {ReturnType<makeData>}
+ * 에디터에서 지금 선택된 언어와 그 언어 에디터의 코드를 읽습니다.
+ * 제출 버튼을 누를 때(goormlevel.js 의 captureSubmittedCode)와, 그 기록이 없을 때 parseData 가 부른다.
+ * @returns {{language: string, code: string}} 에디터를 찾지 못하면 code 는 빈 문자열
  */
-async function parseData() {
-  const { href: link, pathname } = window.location;
-
-  const pathnameList = pathname.split('/');
-
-  const examId = Number(pathnameList[2]) || 0;
-  const quizNumber = Number(pathnameList[5]) || 0;
-  const difficulty = parseDifficulty(document);
-
-  const titlePrefix = 'title-';
-  const title = document.querySelector(`div[aria-label^="${titlePrefix}"]`).ariaLabel.replace(titlePrefix, '');
-
+function readGoormEditor() {
   /*프로그래밍 언어별 폴더 정리 옵션을 위한 언어 값 가져오기*/
   const currentLanguage = document.querySelector('.Tour__selectLang button').textContent.trim();
 
@@ -211,8 +201,36 @@ async function parseData() {
           .map((line) => line.textContent)
           .join("\n")
       : "";
+  return { language: currentLanguage, code };
+}
 
-  const $dataList = [...document.querySelectorAll('.tab-content .tab-pane.active table tbody tr')].filter(($element) => $element.childNodes[1].textContent === 'PASS');
+/**
+ * 현재 문제 페이지와 채점 결과에서 업로드할 데이터를 만듭니다.
+ * @param {HTMLElement|null} [resultBlock] - 처리 중인 채점 결과 블록(getResultBlock). 없으면 활성 탭 패널 전체의 표를 읽는다.
+ * @param {{language: string, code: string}|null} [submitted] - 제출 버튼을 누른 순간의 언어·코드. 없으면 지금 에디터를 읽는다.
+ *   채점을 기다리는 동안 코드를 고쳐도 채점받은 코드를 올리기 위함이다.
+ * @returns {ReturnType<makeData>}
+ */
+async function parseData(resultBlock = null, submitted = null) {
+  const { href: link, pathname } = window.location;
+
+  const pathnameList = pathname.split('/');
+
+  const examId = Number(pathnameList[2]) || 0;
+  const quizNumber = Number(pathnameList[5]) || 0;
+  const difficulty = parseDifficulty(document);
+
+  const titlePrefix = 'title-';
+  const title = document.querySelector(`div[aria-label^="${titlePrefix}"]`).ariaLabel.replace(titlePrefix, '');
+
+  const { language: currentLanguage, code } = isNull(submitted) ? readGoormEditor() : submitted;
+
+  /* 제출할 때마다 결과 블록이 쌓이므로, 처리 중인 결과의 블록이 주어지면 그 블록의 표만 읽는다.
+     (패널 전체를 읽으면 이전 제출의 행까지 실행 시간·메모리 평균에 섞인다) */
+  const $rows = isNull(resultBlock)
+    ? document.querySelectorAll('.tab-content .tab-pane.active table tbody tr')
+    : resultBlock.querySelectorAll('table tbody tr');
+  const $dataList = [...$rows].filter(($element) => $element.childNodes[1].textContent === 'PASS');
   const { memory, runtime } = $dataList
     .map(($element) => {
       const memory = Number($element.childNodes[5].textContent.trim());

@@ -2,12 +2,14 @@
 
 /* 포함된 변수는 다음과 같습니다. 
     languages: goormlevel에서 제공하는 프로그래밍 언어에 맞는 file extension
-    uploadState: 현재 업로드 중인지를 저장하는 boolean입니다.
+    uploadState: 업로드 진행 상태입니다.
     difficultyLabels: 문제의 난이도를 숫자로 매핑하는 상수입니다.
 */
 
-/* state of upload for progress */
-const uploadState = /** @type {const} */ ({ uploading: false });
+/* 업로드 진행 상태.
+   queue: 마지막으로 줄 세운 업로드의 Promise. 한 탭의 업로드는 감지 순서대로 한 번에 하나씩 실행한다
+   (goormlevel.js 의 enqueueUpload 참고). */
+const uploadState = { queue: Promise.resolve() };
 
 // prettier-ignore
 /**
