@@ -189,8 +189,9 @@ async function beginUpload(bojData, attempt) {
     }
 
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    cachedSHA = await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`)
-    calcSHA = calculateBlobSHA(bojData.code)
+    /* 선언 없이 대입하면 전역 변수가 되어, 겹쳐 실행되는 다른 업로드가 비교 도중 값을 바꿀 수 있다 */
+    const cachedSHA = await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`);
+    const calcSHA = calculateBlobSHA(bojData.code);
     log('cachedSHA', cachedSHA, 'calcSHA', calcSHA)
 
     if (isNull(cachedSHA)) {
