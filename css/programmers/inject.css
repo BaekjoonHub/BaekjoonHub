@@ -98,3 +98,33 @@
 .BJH_loading_number {
   display: inline-block;
 }
+
+/* 토스트 알림 (scripts/toast.js). 사이트 스타일과 겹치지 않도록 하위 선택자는 .toast-notification 아래로 한정하고,
+   사이트 헤더·모달 위에 보이도록 z-index 를 높게 둔다. */
+.toast-notification * {
+  margin: 0;
+  padding: 0;
+}
+
+.toast-notification {
+  min-width: 150px;
+  height: auto;
+  border-radius: 10px !important;
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  bottom: 50px;
+  margin: 50px;
+  padding: 10px;
+  right: 20px;
+  position: fixed;
+  z-index: 2147483000;
+  display: flex;
+}
+
+.toast-notification:hover {
+  cursor: pointer;
+}
+
+.toast-notification .message-container {
+  width: 100%;
+  color: white;
+}
