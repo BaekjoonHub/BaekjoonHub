@@ -9,6 +9,8 @@ let loader;
 let passObserver;
 let passHandled = false;
 let parseFailCount = 0;
+let solvedUploadPromise = null;
+let popupClosePending = false;
 
 const currentUrl = window.location.href;
 
@@ -20,6 +22,7 @@ const isSweaMockTest = () => document.querySelector('header > h1 > span')?.textC
 // SWEA 연습 문제 주소임을 확인하고, 맞는 파서를 실행
 // run_at: document_end 로 주입되므로, 헤더 미렌더 등 드문 경우엔 load 시점에 한 번 더 확인한다.
 if (currentUrl.includes('/main/solvingProblem/solvingProblem.do')) {
+  document.addEventListener('click', waitForSolvedUploadBeforeClose, true);
   if (isSweaMockTest()) startLoader();
   else window.addEventListener('load', () => { if (isNull(loader) && isSweaMockTest()) startLoader(); });
 } else if (currentUrl.includes('/main/code/problem/problemSolver.do') && currentUrl.includes('extension=BaekjoonHub')) parseAndUpload();
@@ -56,12 +59,35 @@ function parseAndUpload() {
 }
 
 /* 결과 팝업(pass) 감지 시 1회만 실행되는 공통 핸들러 */
-async function handleSolvedResult() {
-  if (passHandled) return;
+function handleSolvedResult() {
+  if (passHandled) return solvedUploadPromise;
   // 확장 컨텍스트가 무효화된 경우 감지 중단
   if (!chrome.runtime?.id) { stopLoader(); return; }
   if (!getSolvedResult().includes('pass입니다')) return;
   passHandled = true;
+  solvedUploadPromise = uploadSolvedResult().finally(() => { solvedUploadPromise = null; });
+  return solvedUploadPromise;
+}
+
+// SWEA의 Pass 확인/닫기는 폼을 다시 제출하므로, 업로드 중 페이지 이동을 늦춘다.
+async function waitForSolvedUploadBeforeClose(event) {
+  const button = event.target.closest?.('div.popup_layer.show .btn_center a, div.popup_layer.show .btn_close');
+  if (!button || !solvedUploadPromise || !getSolvedResult().includes('pass입니다')) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  if (popupClosePending) return;
+  popupClosePending = true;
+  try {
+    await solvedUploadPromise;
+  } catch (error) {
+    console.error('[BaekjoonHub] SWEA 결과창 종료 대기 중 업로드 오류', error);
+  } finally {
+    popupClosePending = false;
+    if (button.isConnected) button.click();
+  }
+}
+
+async function uploadSolvedResult() {
   // 기능 Off시 작동하지 않도록 함
   const enable = await checkEnable();
   if (!enable) { stopLoader(); return; }
