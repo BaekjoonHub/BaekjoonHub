@@ -116,6 +116,9 @@ async function uploadAllSolvedProblemSWEA() {
     setMultiLoaderDenom(newList.length);
     const datas = await asyncPool(4, newList, fetchSWEASubmissionCode);
     const bojDatas = datas.filter((d) => !isNull(d));
+    if (bojDatas.length !== newList.length) {
+      throw new Error(`${newList.length}개 중 ${newList.length - bojDatas.length}개 코드 조회에 실패했습니다. 브라우저 콘솔의 문제 번호를 확인하세요.`);
+    }
 
     // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
     for (const bojData of bojDatas) {

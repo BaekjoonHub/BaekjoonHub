@@ -287,162 +287,110 @@ function extractUploadedProblemIdsForSWEA(stats, hook) {
   return uploadedIds;
 }
 
-/**
- * SWEA userCode.do 페이지에서 모든 풀이 완료된 문제를 파싱합니다.
- * userCode.do 페이지는 로그인한 사용자의 코드 목록을 보여주며,
- * AJAX로 페이지네이션된 테이블을 가져옵니다.
- */
-async function findAllSolvedProblemsSWEA() {
-  const problems = [];
-  // userCode.do 페이지의 테이블에서 문제 목록을 추출
-  const rows = document.querySelectorAll('table tbody tr, .problem_list tbody tr, .code_list tbody tr');
-  for (const row of rows) {
-    const cells = row.querySelectorAll('td');
-    if (cells.length < 3) continue;
-    // 상태 확인 - "풀이중"이 아닌 완료된 항목만
-    const statusCell = cells[cells.length - 1];
-    const status = statusCell ? statusCell.textContent.trim() : '';
-    if (status.includes('풀이중')) continue;
-
-    // 문제번호와 제목 추출
-    const linkEl = row.querySelector('a[href*="contestProbId"], a[href*="problemDetail"]');
-    if (!linkEl) continue;
-    const href = linkEl.getAttribute('href') || '';
-    // SWEA contestProbId는 "AV5QSEhaA5sDFAUq" 같은 영숫자 형식 (숫자 전용 \d+ 는 매칭 실패)
-    const contestProbIdMatch = href.match(/contestProbId=([A-Za-z0-9]+)/);
-    const contestProbId = contestProbIdMatch ? contestProbIdMatch[1] : '';
-
-    const problemIdEl = cells[0];
-    const problemId = problemIdEl ? problemIdEl.textContent.trim() : '';
-    const title = (linkEl.textContent || '').replace(/\s+/g, ' ').trim();
-
-    // 레벨 추출
-    const levelEl = row.querySelector('.badge, span[class*="level"]');
-    const level = levelEl ? levelEl.textContent.trim() : (cells[2] ? cells[2].textContent.trim() : 'Unrated');
-
-    if (problemId && contestProbId) {
-      problems.push({ problemId, contestProbId, title, level });
-    }
-  }
-
-  // 페이지네이션 처리 - 다음 페이지가 있으면 fetch로 가져옴
-  const paginationLinks = document.querySelectorAll('.pagination a, .paging a');
-  const visitedPages = new Set(['1']);
-  for (const pageLink of paginationLinks) {
-    const pageHref = pageLink.getAttribute('href') || pageLink.getAttribute('onclick') || '';
-    const pageMatch = pageHref.match(/(\d+)/);
-    if (!pageMatch || visitedPages.has(pageMatch[1])) continue;
-    visitedPages.add(pageMatch[1]);
-
-    try {
-      const userId = new URLSearchParams(window.location.search).get('userId');
-      const res = await fetch(`/main/userpage/code/userCode.do?userId=${userId}&pageNo=${pageMatch[1]}`);
-      const html = await res.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const pageRows = doc.querySelectorAll('table tbody tr, .problem_list tbody tr, .code_list tbody tr');
-      for (const row of pageRows) {
-        const cells = row.querySelectorAll('td');
-        if (cells.length < 3) continue;
-        const statusCell = cells[cells.length - 1];
-        const status = statusCell ? statusCell.textContent.trim() : '';
-        if (status.includes('풀이중')) continue;
-
-        const linkEl = row.querySelector('a[href*="contestProbId"], a[href*="problemDetail"]');
-        if (!linkEl) continue;
-        const href = linkEl.getAttribute('href') || '';
-        // SWEA contestProbId는 "AV5QSEhaA5sDFAUq" 같은 영숫자 형식 (숫자 전용 \d+ 는 매칭 실패)
-    const contestProbIdMatch = href.match(/contestProbId=([A-Za-z0-9]+)/);
-        const contestProbId = contestProbIdMatch ? contestProbIdMatch[1] : '';
-
-        const problemIdEl = cells[0];
-        const problemId = problemIdEl ? problemIdEl.textContent.trim() : '';
-        const title = (linkEl.textContent || '').replace(/\s+/g, ' ').trim();
-
-        const levelEl = row.querySelector('.badge, span[class*="level"]');
-        const level = levelEl ? levelEl.textContent.trim() : (cells[2] ? cells[2].textContent.trim() : 'Unrated');
-
-        if (problemId && contestProbId) {
-          problems.push({ problemId, contestProbId, title, level });
-        }
-      }
-    } catch (e) {
-      console.error(`Failed to fetch page ${pageMatch[1]}:`, e);
-    }
-  }
-
-  return problems;
+/** 현재 SWEA의 카드형 제출 목록에서 문제 정보를 추출합니다. */
+function parseSolvedProblemCardsSWEA(root) {
+  return [...root.querySelectorAll('#submitProb .widget-box-sub')].map((card) => {
+    const link = card.querySelector('.week_text a[onclick*="fn_move_prob"]');
+    const contestProbId = link?.getAttribute('onclick')?.match(/fn_move_prob\('([^']+)'/)?.[1];
+    const problemId = card.querySelector('.week_num')?.textContent?.replace(/\D/g, '');
+    const title = link?.textContent?.replace(/\s+/g, ' ')?.trim();
+    const level = card.querySelector('.badge')?.textContent?.trim() || 'Unrated';
+    return problemId && contestProbId && title ? { problemId, contestProbId, title, level } : null;
+  }).filter(Boolean);
 }
 
-/**
- * SWEA 제출 이력에서 Pass된 코드를 가져옵니다.
- */
+/** SWEA 마이페이지의 모든 페이지를 읽어 이미 제출한 문제를 모읍니다. */
+async function findAllSolvedProblemsSWEA() {
+  const problems = parseSolvedProblemCardsSWEA(document);
+  const total = Number(document.querySelector('h4.club_box_tit span')?.textContent?.trim());
+  const pageSize = Number(document.querySelector('select[name="rowNum"]')?.value
+    || new URLSearchParams(location.search).get('rowNum') || 20);
+  if (!Number.isFinite(total) || !Number.isFinite(pageSize) || pageSize < 1 || problems.length === 0) {
+    throw new Error('SWEA 제출 목록을 읽지 못했습니다.');
+  }
+  const url = new URL(location.href);
+  // SWEA 페이지 이동은 userCode.do가 아니라 userSubmitProblem.do로 요청한다.
+  url.pathname = '/main/userpage/code/userSubmitProblem.do';
+  const currentPage = Number(url.searchParams.get('pageIndex') || 1);
+  for (let page = 1; page <= Math.ceil(total / pageSize); page += 1) {
+    if (page === currentPage) continue;
+    url.searchParams.set('pageIndex', String(page));
+    url.searchParams.set('rowNum', String(pageSize));
+    const response = await fetch(url.toString(), { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`SWEA 제출 목록 ${page}페이지 조회 실패 (${response.status})`);
+    const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+    problems.push(...parseSolvedProblemCardsSWEA(doc));
+  }
+  const unique = [...new Map(problems.map((problem) => [problem.problemId, problem])).values()];
+  if (unique.length !== total) throw new Error(`SWEA 제출 목록 ${total}개 중 ${unique.length}개만 읽었습니다.`);
+  return unique;
+}
+
+/** SWEA가 실제로 사용하는 카드형 제출 이력에서 내 Pass 기록을 찾습니다. */
+function findMyPassedSubmissionSWEA(root, nickname) {
+  return [...root.querySelectorAll('.problem_smt')].find((card) => {
+    const name = card.querySelector('.club_name .name')?.textContent?.trim();
+    const result = card.querySelector('.info .txt-success')?.textContent?.trim();
+    return name === nickname && result?.toLowerCase() === 'pass';
+  });
+}
+
+/** 제출 이력에서 내 코드를 가져옵니다. */
 async function fetchSWEASubmissionCode(problemInfo) {
   const { problemId, contestProbId, title, level } = problemInfo;
   try {
-    // Step 1: 제출 이력 페이지에서 Pass된 제출 찾기
-    const historyRes = await fetch(`/main/code/problem/problemSubmitHistory.do?contestProbId=${contestProbId}`);
-    const historyHtml = await historyRes.text();
-    const historyDoc = new DOMParser().parseFromString(historyHtml, 'text/html');
-
-    // Pass된 제출 행 찾기
-    const historyRows = historyDoc.querySelectorAll('table tbody tr');
-    let passRow = null;
-    for (const row of historyRows) {
-      const resultCell = row.querySelector('td.pass, td .pass, td');
-      if (resultCell && resultCell.textContent.trim().toLowerCase().includes('pass')) {
-        passRow = row;
-        break;
-      }
-    }
-    if (!passRow) return null;
-
-    // 코드 보기 링크에서 solutionId 추출
-    const codeLink = passRow.querySelector('a[href*="problemSubmitDetail"], a[onclick*="problemSubmitDetail"]');
-    let detailUrl = '';
-    if (codeLink) {
-      const onclick = codeLink.getAttribute('onclick') || '';
-      const hrefAttr = codeLink.getAttribute('href') || '';
-      if (onclick) {
-        // onclick에서 파라미터 추출
-        const params = onclick.match(/\(([^)]+)\)/);
-        if (params) detailUrl = `/main/code/problem/problemSubmitDetail.do?${params[1]}`;
-        else detailUrl = hrefAttr;
-      } else {
-        detailUrl = hrefAttr;
-      }
-    }
-
-    if (!detailUrl) return null;
-
-    // Step 2: 코드 상세 페이지에서 소스코드 추출
-    const detailRes = await fetch(detailUrl);
-    const detailHtml = await detailRes.text();
-    const detailDoc = new DOMParser().parseFromString(detailHtml, 'text/html');
-
-    // 코드 블록에서 소스코드 추출
-    const codeEl = detailDoc.querySelector('pre code, .code-viewer pre, textarea#source, #textSource, pre.code');
-    const code = codeEl ? codeEl.textContent : '';
-    if (!code) return null;
-
-    // 메타데이터 추출
-    const infoEls = detailDoc.querySelectorAll('.info li span, .submit_info span');
-    const languageRaw = infoEls[0] ? infoEls[0].textContent.trim() : 'C++';
-    const memory = infoEls[1] ? infoEls[1].textContent.trim().toUpperCase() : '';
-    const runtime = infoEls[2] ? infoEls[2].textContent.trim() : '';
-    const length = infoEls[3] ? infoEls[3].textContent.trim() : '';
-
-    const language = (languageRaw === languageRaw.toUpperCase())
-      ? languageRaw.substring(0, 1) + languageRaw.substring(1).toLowerCase()
-      : languageRaw;
-    const extension = resolveLanguageExtension(languages, languageRaw);
-
-    const link = `https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=${contestProbId}`;
-
-    return await makeDataForBulkUploadSWEA({
-      link, problemId, level, title, extension, code, runtime, memory, length, language
+    const nickname = getNickname();
+    if (!nickname) throw new Error('SWEA 로그인 닉네임을 찾지 못했습니다.');
+    // 검색창의 제출자 필터와 같은 POST 요청. 전체 제출 목록의 첫 페이지에는
+    // 오래된 내 풀이가 보이지 않을 수 있어 닉네임 검색을 서버에 적용한다.
+    const historyRes = await fetch('/main/code/problem/problemSubmitHistory.do', {
+      method: 'POST', credentials: 'same-origin',
+      body: new URLSearchParams({ contestProbId, nickName: nickname, pageIndex: '1' }),
     });
-  } catch (e) {
-    console.error(`Failed to fetch SWEA problem ${problemId}:`, e);
+    if (!historyRes.ok) throw new Error(`제출 이력 조회 실패 (${historyRes.status})`);
+    const historyDoc = new DOMParser().parseFromString(await historyRes.text(), 'text/html');
+    const card = findMyPassedSubmissionSWEA(historyDoc, nickname);
+    if (!card) throw new Error('내 Pass 제출을 첫 페이지에서 찾지 못했습니다.');
+    const historyId = card.querySelector('a[href*="codeview("]')?.getAttribute('href')?.match(/codeview\('([^']+)'/)?.[1];
+    if (!historyId) throw new Error('코드 보기 ID를 찾지 못했습니다.');
+
+    // SWEA의 codeview()는 contestHistoryId를 담은 form을 POST한다.
+    const body = new URLSearchParams({
+      contestProbId, contestHistoryId: historyId, pageIndex: '1', pageSize: '20', nickName: nickname,
+    });
+    const detailRes = await fetch('/main/code/problem/problemSubmitDetail.do', {
+      method: 'POST', credentials: 'same-origin', body,
+    });
+    if (!detailRes.ok) throw new Error(`코드 상세 조회 실패 (${detailRes.status})`);
+    const detailDoc = new DOMParser().parseFromString(await detailRes.text(), 'text/html');
+    const codeEl = detailDoc.querySelector('pre[class*="brush"], pre code, #textSource, .syntaxhighlighter td.code');
+    let code = codeEl?.matches('.syntaxhighlighter td.code')
+      ? [...codeEl.querySelectorAll('.line')].map((line) => line.textContent.replace(/\u00a0/g, ' ')).join('\n')
+      : codeEl?.textContent;
+    // 서버 응답의 코드 영역은 SyntaxHighlighter가 아직 실행되지 않은 상태다.
+    // 원문 태그 종류가 달라도 code_wrap 내부 텍스트를 읽는다.
+    const codeWrap = detailDoc.querySelector('.code_wrap');
+    if (!code?.trim()) code = codeWrap?.textContent?.replace(/<!\[CDATA\[|\]\]>/g, '');
+    if (!code?.trim()) {
+      console.error('[BaekjoonHub] SWEA 코드 상세 응답 구조', {
+        title: detailDoc.title,
+        hasCodeWrap: !!codeWrap,
+        children: [...(codeWrap?.children || [])].map((el) => ({ tag: el.tagName, className: el.className, id: el.id, textLength: el.textContent?.length })),
+      });
+      throw new Error('코드 원문을 찾지 못했습니다.');
+    }
+    const info = [...card.querySelectorAll('.info li')].map((li) => li.querySelector('span')?.textContent?.trim() || '');
+    const [languageRaw, memory, runtime, length] = info;
+    if (!languageRaw) throw new Error('제출 언어를 찾지 못했습니다.');
+    const language = languageRaw === languageRaw.toUpperCase()
+      ? languageRaw.substring(0, 1) + languageRaw.substring(1).toLowerCase() : languageRaw;
+    const extension = resolveLanguageExtension(languages, languageRaw);
+    const link = `${location.origin}/main/code/problem/problemDetail.do?contestProbId=${encodeURIComponent(contestProbId)}`;
+    return await makeDataForBulkUploadSWEA({
+      link, problemId, level, title, extension, code, runtime, memory, length, language,
+    });
+  } catch (error) {
+    console.error(`[BaekjoonHub] SWEA ${problemId} 코드 조회 실패`, error);
     return null;
   }
 }
