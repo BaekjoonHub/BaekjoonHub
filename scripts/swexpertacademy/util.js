@@ -131,10 +131,13 @@ function insertUploadAllButton() {
   const header = document.querySelector('h4.club_box_tit');
   if (isNull(header)) return;
   const btn = document.createElement('button');
+  // 이 버튼은 SWEA의 searchForm 안에 들어간다. 기본 submit 동작으로 페이지가 새로고침되지 않게 한다.
+  btn.type = 'button';
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:3px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" fill="currentColor"/></svg>전체제출 업로드';
   btn.className = 'BJH_uploadall_btn';
   btn.style.cssText = 'cursor:pointer;margin-left:10px;padding:2px 8px;background:transparent;color:#2e2e2e;border:1px solid #ccc;border-radius:3px;font-size:13px;font-weight:400;vertical-align:middle;line-height:22px;';
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (event) => {
+    event.preventDefault();
     if (confirm('GitHub에 전체 제출을 업로드하시겠습니까?')) {
       insertMultiLoader();
       uploadAllSolvedProblemSWEA();
