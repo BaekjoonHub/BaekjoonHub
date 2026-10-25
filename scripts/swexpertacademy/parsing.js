@@ -321,9 +321,9 @@ async function findAllSolvedProblemsSWEA() {
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
     problems.push(...parseSolvedProblemCardsSWEA(doc));
   }
-  const unique = [...new Map(problems.map((problem) => [problem.problemId, problem])).values()];
-  if (unique.length !== total) throw new Error(`SWEA 제출 목록 ${total}개 중 ${unique.length}개만 읽었습니다.`);
-  return unique;
+  // 같은 문제를 여러 Problem Box에서 제출하면 카드가 여러 개 생기므로, 총개수는 중복 제거 전에 확인한다.
+  if (problems.length !== total) throw new Error(`SWEA 제출 목록 ${total}개 중 ${problems.length}개만 읽었습니다.`);
+  return [...new Map(problems.map((problem) => [problem.problemId, problem])).values()];
 }
 
 /** SWEA가 실제로 사용하는 카드형 제출 이력에서 내 Pass 기록을 찾습니다. */
@@ -335,7 +335,7 @@ function findMyPassedSubmissionSWEA(root, nickname) {
   });
 }
 
-/** 제출 이력에서 내 코드를 가져옵니다. */
+/** 제출 이력에서 내 코드를 가져오고, 성공 / Pass 조회 없음 / 요청·파싱 실패를 구분합니다. */
 async function fetchSWEASubmissionCode(problemInfo) {
   const { problemId, contestProbId, title, level } = problemInfo;
   try {
@@ -350,7 +350,8 @@ async function fetchSWEASubmissionCode(problemInfo) {
     if (!historyRes.ok) throw new Error(`제출 이력 조회 실패 (${historyRes.status})`);
     const historyDoc = new DOMParser().parseFromString(await historyRes.text(), 'text/html');
     const card = findMyPassedSubmissionSWEA(historyDoc, nickname);
-    if (!card) throw new Error('내 Pass 제출을 첫 페이지에서 찾지 못했습니다.');
+    // shortcut: 일반 제출 이력 첫 페이지에서 찾지 못한 Pass(Problem Box 전용 이력 등)는 별도 조회 경로를 지원할 때까지 건너뛴다.
+    if (!card) return { status: 'skipped', problemId };
     const historyId = card.querySelector('a[href*="codeview("]')?.getAttribute('href')?.match(/codeview\('([^']+)'/)?.[1];
     if (!historyId) throw new Error('코드 보기 ID를 찾지 못했습니다.');
 
@@ -363,35 +364,24 @@ async function fetchSWEASubmissionCode(problemInfo) {
     });
     if (!detailRes.ok) throw new Error(`코드 상세 조회 실패 (${detailRes.status})`);
     const detailDoc = new DOMParser().parseFromString(await detailRes.text(), 'text/html');
-    const codeEl = detailDoc.querySelector('pre[class*="brush"], pre code, #textSource, .syntaxhighlighter td.code');
-    let code = codeEl?.matches('.syntaxhighlighter td.code')
-      ? [...codeEl.querySelectorAll('.line')].map((line) => line.textContent.replace(/\u00a0/g, ' ')).join('\n')
-      : codeEl?.textContent;
-    // 서버 응답의 코드 영역은 SyntaxHighlighter가 아직 실행되지 않은 상태다.
-    // 원문 태그 종류가 달라도 code_wrap 내부 텍스트를 읽는다.
-    const codeWrap = detailDoc.querySelector('.code_wrap');
-    if (!code?.trim()) code = codeWrap?.textContent?.replace(/<!\[CDATA\[|\]\]>/g, '');
-    if (!code?.trim()) {
-      console.error('[BaekjoonHub] SWEA 코드 상세 응답 구조', {
-        title: detailDoc.title,
-        hasCodeWrap: !!codeWrap,
-        children: [...(codeWrap?.children || [])].map((el) => ({ tag: el.tagName, className: el.className, id: el.id, textLength: el.textContent?.length })),
-      });
-      throw new Error('코드 원문을 찾지 못했습니다.');
-    }
+    // 서버 응답은 SyntaxHighlighter 실행 전의 textarea이므로 원문을 변환하지 않고 읽는다.
+    const code = detailDoc.querySelector('.code_wrap')?.querySelector('textarea')?.value;
+    if (!code?.trim()) throw new Error('코드 원문을 찾지 못했습니다.');
     const info = [...card.querySelectorAll('.info li')].map((li) => li.querySelector('span')?.textContent?.trim() || '');
-    const [languageRaw, memory, runtime, length] = info;
+    const [languageRaw, memoryRaw, runtime, length] = info;
+    const memory = memoryRaw?.toUpperCase();
     if (!languageRaw) throw new Error('제출 언어를 찾지 못했습니다.');
     const language = languageRaw === languageRaw.toUpperCase()
       ? languageRaw.substring(0, 1) + languageRaw.substring(1).toLowerCase() : languageRaw;
     const extension = resolveLanguageExtension(languages, languageRaw);
     const link = `${location.origin}/main/code/problem/problemDetail.do?contestProbId=${encodeURIComponent(contestProbId)}`;
-    return await makeDataForBulkUploadSWEA({
+    const data = await makeDataForBulkUploadSWEA({
       link, problemId, level, title, extension, code, runtime, memory, length, language,
     });
+    return { status: 'success', data };
   } catch (error) {
     console.error(`[BaekjoonHub] SWEA ${problemId} 코드 조회 실패`, error);
-    return null;
+    return { status: 'failed', problemId };
   }
 }
 

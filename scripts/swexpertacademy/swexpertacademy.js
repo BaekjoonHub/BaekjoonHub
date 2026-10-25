@@ -11,6 +11,8 @@ let passHandled = false;
 let parseFailCount = 0;
 let solvedUploadPromise = null;
 let popupClosePending = false;
+let popupCloseAllowed = false;
+let solverNavigationStarted = false;
 
 const currentUrl = window.location.href;
 
@@ -65,6 +67,8 @@ function handleSolvedResult() {
   if (!chrome.runtime?.id) { stopLoader(); return; }
   if (!getSolvedResult().includes('pass입니다')) return;
   passHandled = true;
+  popupCloseAllowed = false;
+  solverNavigationStarted = false;
   solvedUploadPromise = uploadSolvedResult().finally(() => { solvedUploadPromise = null; });
   return solvedUploadPromise;
 }
@@ -73,17 +77,32 @@ function handleSolvedResult() {
 async function waitForSolvedUploadBeforeClose(event) {
   const button = event.target.closest?.('div.popup_layer.show .btn_center a, div.popup_layer.show .btn_close');
   if (!button || !solvedUploadPromise || !getSolvedResult().includes('pass입니다')) return;
+  if (popupCloseAllowed) {
+    popupClosePending = false;
+    return;
+  }
   event.preventDefault();
   event.stopImmediatePropagation();
   if (popupClosePending) return;
   popupClosePending = true;
+  let notice = Toast.raiseToast('GitHub 업로드를 마무리하는 중입니다. 완료되면 이동합니다.', 10000);
+  // 강제 이동은 진행 중인 업로드를 끊으므로, 10초 뒤에는 사용자가 다시 눌러 이동을 선택할 수 있게 한다.
+  const timer = setTimeout(() => {
+    popupCloseAllowed = true;
+    notice?.element?.remove();
+    notice = Toast.raiseToast('GitHub 업로드가 지연되고 있습니다. 기다리면 완료 후 이동합니다. 지금 이동하려면 확인 또는 닫기를 다시 눌러 주세요. 업로드가 중단될 수 있습니다.', 120000);
+  }, 10000);
   try {
     await solvedUploadPromise;
   } catch (error) {
     console.error('[BaekjoonHub] SWEA 결과창 종료 대기 중 업로드 오류', error);
   } finally {
+    clearTimeout(timer);
+    notice?.element?.remove();
+    const shouldClose = popupClosePending && !solverNavigationStarted;
     popupClosePending = false;
-    if (button.isConnected) button.click();
+    popupCloseAllowed = false;
+    if (shouldClose && button.isConnected) button.click();
   }
 }
 
@@ -107,6 +126,7 @@ async function uploadSolvedResult() {
     const handled = await tryUploadInPlace(solverUrl);
     if (!handled) {
       window.location.href = solverUrl;
+      solverNavigationStarted = true;
       return;
     }
     // 제자리 처리 후에는 페이지가 유지되므로, 결과 팝업이 닫히면 감지를 재무장해

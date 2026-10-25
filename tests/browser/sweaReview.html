@@ -1,0 +1,82 @@
+<!doctype html><meta charset="utf-8"><title>SWEA PR review regression checks</title>
+<link rel="stylesheet" href="/css/swexpertacademy/inject.css">
+<style>body{font:16px/1.7 system-ui;padding:36px;color:#172b4d}#status{font-size:24px}#fixtures{display:none}.popup_layer{border:1px solid #aaa;padding:12px}</style>
+<h1>SWEA PR #352 브라우저 회귀 검증</h1><p id="status">검증 중…</p><ol id="checks"></ol>
+<div id="fixtures"><h4 class="club_box_tit">제출 <span>5</span></h4><select name="rowNum"><option>2</option></select><div id="submitProb"></div></div>
+<script>
+const checks = document.querySelector('#checks');
+function assert(value, message) { if (!value) throw new Error(message); }
+function pass(text) { const li = document.createElement('li'); li.textContent = text; checks.append(li); }
+window.multiloader = { wrap: document.createElement('span'), nom: document.createElement('span'), denom: document.createElement('span') };
+window.log = () => {};
+window.chrome = { runtime: { id: 'local-regression-test' } };
+</script>
+<script src="/scripts/util.js"></script><script src="/scripts/toast.js"></script>
+<script src="/scripts/swexpertacademy/util.js"></script><script src="/scripts/swexpertacademy/parsing.js"></script>
+<script src="/scripts/swexpertacademy/uploadfunctions.js"></script><script src="/scripts/swexpertacademy/swexpertacademy.js"></script>
+<script>
+(async () => {
+  const rawCode = '  if a[b[i]]>0:\n    print("<![CDATA[test]]>")\n';
+  const escapedCode = rawCode.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const detail = `<div class="code_wrap"><textarea class="brush:cpp">${escapedCode}</textarea></div>`;
+  const card = (id) => `<div class="widget-box-sub"><span class="week_num">${id}.</span><div class="week_text"><a onclick="fn_move_prob('contest-${id}','N','CODE')">문제 ${id}</a></div><span class="badge">D2</span></div>`;
+  const pages = [[1959,1989],[1959,2072],[1989]];
+  document.querySelector('#submitProb').innerHTML = pages[1].map(card).join('');
+  const requests = [];
+  window.fetch = async (url, options = {}) => {
+    requests.push({ url, options });
+    if (String(url).includes('userSubmitProblem.do')) {
+      const page = Number(new URL(url).searchParams.get('pageIndex'));
+      return { ok:true, text:async () => `<div id="submitProb">${pages[page-1].map(card).join('')}</div>` };
+    }
+    const id = options.body.get('contestProbId');
+    if (id === 'contest-2072') return { ok:false, status:503 };
+    if (String(url).includes('problemSubmitHistory.do')) {
+      const history = id === 'contest-1989' ? '검색 결과가 없습니다' : `<div class="problem_smt"><div class="club_name"><span class="name">my-user</span></div><div class="info"><span class="txt-success">Pass</span><li><span>PYTHON</span></li><li><span>62,720 kb</span></li><li><span>100 ms</span></li><li><span>50</span></li></div><a href="javascript:codeview('history-123')">코드</a></div>`;
+      return { ok:true, text:async () => history };
+    }
+    return { ok:true, text:async () => detail };
+  };
+  const problems = await findAllSolvedProblemsSWEA();
+  assert(problems.length === 3, 'duplicate count');
+  pass('실제 DOM: 카드 5개를 모두 확인한 뒤 고유 문제 3개로 합침');
+  getNickname = () => 'my-user';
+  window.languages = {};
+  window.resolveLanguageExtension = () => 'py';
+  makeDataForBulkUploadSWEA = async (data) => ({ ...data, directory:`SWEA/D2/${data.problemId}`, fileName:'solution.py', readme:'# solution' });
+  const result = await fetchSWEASubmissionCode(problems.find((p) => p.problemId === '1959'));
+  assert(result.status === 'success', 'code result');
+  assert(result.data.code === rawCode, 'source changed');
+  assert(result.data.memory === '62,720 KB', 'memory unit');
+  pass('실제 DOMParser: textarea의 &gt;를 읽고 중첩 인덱스·CDATA 문자열·공백을 그대로 보존');
+  const committed = [];
+  window.updateLocalStorageStats = async () => ({ branches:{'test/repo':'main'} });
+  window.getHook = async () => 'test/repo'; window.getToken = async () => 'test';
+  window.GitHub = class { async getReference() {} async commitTreeItems(branch, items) { committed.push(items); } };
+  window.JSZip = class { constructor() {this.files={};} folder() {return this;} file() {return this;} };
+  window.recordUploadInStats = async () => {};
+  await uploadAllSolvedProblemSWEA();
+  assert(committed.length === 1 && committed[0].length === 2, 'partial commit');
+  assert(committed[0][0].content === rawCode, 'committed source changed');
+  const report = document.querySelector('.toast-notification').textContent;
+  assert(report.includes('1개 업로드') && report.includes('1989') && report.includes('2072'), 'missing report');
+  pass('혼합 결과: 정상 풀이 1개 커밋 + Pass 없음 1989번·조회 실패 2072번 안내');
+  document.querySelectorAll('.toast-notification').forEach((node) => node.remove());
+  const popup = document.createElement('div'); popup.className = 'popup_layer show';
+  popup.innerHTML = '<div><p class="txt">축하합니다. Pass입니다.</p><div class="btn_center"><a href="#closed">확인</a></div></div>';
+  document.body.append(popup);
+  let finish; let siteClicks = 0;
+  uploadSolvedResult = () => new Promise((resolve) => { finish = resolve; });
+  const button = popup.querySelector('a');
+  button.addEventListener('click', (event) => { event.preventDefault(); siteClicks += 1; });
+  document.addEventListener('click', waitForSolvedUploadBeforeClose, true);
+  const uploading = handleSolvedResult(); button.click(); button.click();
+  assert(siteClicks === 0, 'click escaped capture');
+  assert(document.querySelector('.toast-notification').textContent.includes('마무리'), 'missing pending UI');
+  finish(); await uploading; await Promise.resolve();
+  assert(siteClicks === 1, 'click not replayed once');
+  assert(document.querySelectorAll('.toast-notification').length === 0, 'stale notice');
+  pass('실제 클릭 이벤트: 완료 전 연속 클릭 보류, 안내 표시, 완료 후 사이트 처리 1회');
+  popup.remove(); document.querySelector('#status').textContent = 'PASS — 4개 브라우저 검증 완료';
+})().catch((error) => { document.querySelector('#status').textContent = `FAIL — ${error.stack}`; });
+</script>

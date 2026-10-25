@@ -196,3 +196,14 @@ function MultiloaderSuccess() {
     setTimeout(() => location.reload(), 3000);
   }
 }
+
+function MultiloaderIncomplete(message) {
+  if (!isNull(multiloader.wrap)) {
+    multiloader.wrap.textContent = '일부 제외 — 알림 확인';
+  }
+  // 제외된 문제 번호를 읽을 수 있도록 자동으로 새로고침하지 않는다.
+  const toast = Toast.raiseToast(message, 60000);
+  toast.element.style.maxWidth = '600px';
+  toast.element.style.maxHeight = '60vh';
+  toast.element.style.overflowY = 'auto';
+}
