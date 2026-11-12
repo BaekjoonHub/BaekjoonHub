@@ -59,6 +59,9 @@
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/hunrae15"><img src="https://avatars.githubusercontent.com/u/133328379?v=4?s=100" width="100px;" alt="김훈래"/><br /><sub><b>김훈래</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=hunrae15" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/LeeHojin165"><img src="https://avatars.githubusercontent.com/u/141011143?v=4?s=100" width="100px;" alt="LeeHojin"/><br /><sub><b>LeeHojin</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=LeeHojin165" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lmmh202"><img src="https://avatars.githubusercontent.com/u/106859397?v=4?s=100" width="100px;" alt="lmmh202"/><br /><sub><b>lmmh202</b></sub></a><br /><a href="https://github.com/BaekjoonHub/BaekjoonHub/commits?author=lmmh202" title="Code">💻</a></td>
+    </tr>
   </tbody>
 </table>
 

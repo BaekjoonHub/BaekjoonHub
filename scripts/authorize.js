@@ -13,7 +13,7 @@ const localAuth = {
     this.AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
     this.CLIENT_ID = '975f8d5cf6686dd1faed';
     this.CLIENT_SECRET = '934b2bfc3bb3ad239bc67bdfa81a378b1616dd1e';
-    this.REDIRECT_URL = 'https://github.com/'; // for example, https://github.com
+    this.REDIRECT_URL = 'https://github.com/BaekjoonHub/BaekjoonHub';
     this.SCOPES = ['repo'];
   },
 

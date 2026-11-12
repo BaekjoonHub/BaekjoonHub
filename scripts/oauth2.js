@@ -9,7 +9,9 @@ const oAuth2 = {
     this.AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
     this.CLIENT_ID = '975f8d5cf6686dd1faed';
     this.CLIENT_SECRET = '934b2bfc3bb3ad239bc67bdfa81a378b1616dd1e';
-    this.REDIRECT_URL = 'https://github.com/'; // for example, https://github.com
+    // GitHub 메인(/)은 로그인 상태에서 /feed 로 리다이렉트되며 ?code= 가 사라지므로,
+    // 리다이렉트되지 않는 하위 경로를 콜백으로 사용한다. (등록된 Callback URL https://github.com/ 의 하위 경로여야 함)
+    this.REDIRECT_URL = 'https://github.com/BaekjoonHub/BaekjoonHub';
     this.SCOPES = ['repo'];
   },
 
@@ -19,7 +21,7 @@ const oAuth2 = {
   begin() {
     this.init(); // secure token params.
 
-    let url = `${this.AUTHORIZATION_URL}?client_id=${this.CLIENT_ID}&redirect_uri${this.REDIRECT_URL}&scope=`;
+    let url = `${this.AUTHORIZATION_URL}?client_id=${this.CLIENT_ID}&redirect_uri=${encodeURIComponent(this.REDIRECT_URL)}&scope=`;
 
     for (let i = 0; i < this.SCOPES.length; i += 1) {
       url += this.SCOPES[i];
