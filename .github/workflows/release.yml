@@ -19,7 +19,24 @@ jobs:
 
       - name: 추출 버전 정보
         id: extract_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          # 태그 푸시(또는 태그를 골라 수동 실행)면 태그에서, 브랜치에서 수동 실행하면 manifest.json 에서 버전을 읽는다.
+          # 예전에는 브랜치에서 수동 실행하면 GITHUB_REF(refs/heads/master)가 그대로 버전이 되어 다음 단계의 sed 가 실패했다.
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            version="$(sed -n 's/.*"version": "\(.*\)".*/\1/p' manifest.json)"
+            if [[ -z "$version" ]]; then
+              echo "::error::manifest.json 에서 버전을 읽지 못했습니다."
+              exit 1
+            fi
+            # 이미 릴리즈한 버전이면 멈춘다 (기존 릴리즈의 zip 을 지금 브랜치 내용으로 덮지 않게)
+            if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+              echo "::error::v$version 태그가 이미 있습니다. manifest.json 버전을 올린 뒤 다시 실행하세요."
+              exit 1
+            fi
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: manifest.json 버전 업데이트
         run: |
@@ -46,12 +63,12 @@ jobs:
         run: |
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -z "$PREVIOUS_TAG" ]; then
-            COMMITS=$(git log --pretty=format:"- %s" ${{ github.ref }})
+            COMMITS=$(git log --pretty=format:"- %s" HEAD)
           else
-            COMMITS=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..${{ github.ref }})
+            COMMITS=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD)
           fi
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
-          echo "Release of version ${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_OUTPUT
+          echo "Release of version ${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "Changes in this Release:" >> $GITHUB_OUTPUT
           echo "$COMMITS" >> $GITHUB_OUTPUT
@@ -63,6 +80,8 @@ jobs:
         with:
           files: v${{ steps.extract_version.outputs.version }}.zip
           tag_name: v${{ steps.extract_version.outputs.version }}
+          # 브랜치에서 수동 실행하면 태그가 없으므로, 압축한 커밋에 태그를 만든다 (기본값은 기본 브랜치의 최신 커밋)
+          target_commitish: ${{ github.sha }}
           body: ${{ steps.generate_release_notes.outputs.RELEASE_NOTES }}
 
       - name: Chrome 익스텐션 게시
