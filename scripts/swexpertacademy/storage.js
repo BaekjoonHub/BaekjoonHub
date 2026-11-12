@@ -14,7 +14,7 @@ getObjectFromLocalStorage('swea').then((data) => {
  * @param {object} obj 저장할 추가 내용
  */
 async function updateProblemData(problemId, obj) {
-  return getObjectFromLocalStorage('swea').then((data) => {
+  return getObjectFromLocalStorage('swea').then(async (data) => {
     if (isNull(data)) data = {};
     log('updateProblemData', data);
     log('obj', obj);
@@ -36,7 +36,8 @@ async function updateProblemData(problemId, obj) {
         delete data[key];
       }
     }
-    saveObjectInLocalStorage({ swea: data });
+    // parseCode() 직후 parseData()가 다시 읽으므로 저장 완료를 기다린다.
+    await saveObjectInLocalStorage({ swea: data });
     return data;
   });
 }

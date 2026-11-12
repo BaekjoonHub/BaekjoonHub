@@ -114,8 +114,14 @@ async function uploadAllSolvedProblemSWEA() {
 
     // 3. 문제 데이터 파싱 (asyncPool(4) 병렬 제어 — 문제당 2회 fetch이므로 브라우저 host 제한(6) 안에서 처리량 확보)
     setMultiLoaderDenom(newList.length);
-    const datas = await asyncPool(4, newList, fetchSWEASubmissionCode);
-    const bojDatas = datas.filter((d) => !isNull(d));
+    const results = await asyncPool(4, newList, async (problem) => {
+      const result = await fetchSWEASubmissionCode(problem);
+      incMultiLoader(1);
+      return result;
+    });
+    const bojDatas = results.filter((result) => result.status === 'success').map((result) => result.data);
+    const skippedIds = results.filter((result) => result.status === 'skipped').map((result) => result.problemId);
+    const failedIds = results.filter((result) => result.status === 'failed').map((result) => result.problemId);
 
     // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
     for (const bojData of bojDatas) {
@@ -137,7 +143,6 @@ async function uploadAllSolvedProblemSWEA() {
           content: bojData.readme,
         });
       }
-      incMultiLoader(1);
     }
 
     // 5. 단일 커밋으로 일괄 업로드
@@ -145,9 +150,16 @@ async function uploadAllSolvedProblemSWEA() {
       /* 파싱에 수 분이 걸리므로 그 사이 다른 탭의 커밋이 올라갔을 수 있다. 부모는 커밋 직전에 읽고,
          브랜치는 fast-forward 로만 옮긴다(예전에는 파싱 전에 읽은 ref 로 force 갱신해 그 사이 커밋을 지웠다). */
       await git.commitTreeItems(default_branch, tree_items, '전체 코드 업로드 -BaekjoonHub');
-      MultiloaderSuccess();
       /* 업로드한 각 파일의 blob sha를 로컬에서 계산해 기록한다(createTree 응답의 tree 는 루트 목록이라 쓸 수 없다). */
       await recordUploadInStats(hook, default_branch, tree_items);
+    }
+    if (skippedIds.length || failedIds.length) {
+      const summary = [`전체 업로드: ${tree_items.length / 2}개 업로드`];
+      if (skippedIds.length) summary.push(`Pass 조회 없음으로 건너뜀 ${skippedIds.length}개: ${skippedIds.join(', ')}`);
+      if (failedIds.length) summary.push(`코드 조회 실패 ${failedIds.length}개: ${failedIds.join(', ')}`);
+      MultiloaderIncomplete(summary.join('. '));
+    } else if (tree_items.length !== 0) {
+      MultiloaderSuccess();
     } else {
       MultiloaderUpToDate();
     }

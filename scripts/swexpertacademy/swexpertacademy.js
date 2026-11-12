@@ -9,6 +9,10 @@ let loader;
 let passObserver;
 let passHandled = false;
 let parseFailCount = 0;
+let solvedUploadPromise = null;
+let popupClosePending = false;
+let popupCloseAllowed = false;
+let solverNavigationStarted = false;
 
 const currentUrl = window.location.href;
 
@@ -20,6 +24,7 @@ const isSweaMockTest = () => document.querySelector('header > h1 > span')?.textC
 // SWEA 연습 문제 주소임을 확인하고, 맞는 파서를 실행
 // run_at: document_end 로 주입되므로, 헤더 미렌더 등 드문 경우엔 load 시점에 한 번 더 확인한다.
 if (currentUrl.includes('/main/solvingProblem/solvingProblem.do')) {
+  document.addEventListener('click', waitForSolvedUploadBeforeClose, true);
   if (isSweaMockTest()) startLoader();
   else window.addEventListener('load', () => { if (isNull(loader) && isSweaMockTest()) startLoader(); });
 } else if (currentUrl.includes('/main/code/problem/problemSolver.do') && currentUrl.includes('extension=BaekjoonHub')) parseAndUpload();
@@ -56,12 +61,52 @@ function parseAndUpload() {
 }
 
 /* 결과 팝업(pass) 감지 시 1회만 실행되는 공통 핸들러 */
-async function handleSolvedResult() {
-  if (passHandled) return;
+function handleSolvedResult() {
+  if (passHandled) return solvedUploadPromise;
   // 확장 컨텍스트가 무효화된 경우 감지 중단
   if (!chrome.runtime?.id) { stopLoader(); return; }
   if (!getSolvedResult().includes('pass입니다')) return;
   passHandled = true;
+  popupCloseAllowed = false;
+  solverNavigationStarted = false;
+  solvedUploadPromise = uploadSolvedResult().finally(() => { solvedUploadPromise = null; });
+  return solvedUploadPromise;
+}
+
+// SWEA의 Pass 확인/닫기는 폼을 다시 제출하므로, 업로드 중 페이지 이동을 늦춘다.
+async function waitForSolvedUploadBeforeClose(event) {
+  const button = event.target.closest?.('div.popup_layer.show .btn_center a, div.popup_layer.show .btn_close');
+  if (!button || !solvedUploadPromise || !getSolvedResult().includes('pass입니다')) return;
+  if (popupCloseAllowed) {
+    popupClosePending = false;
+    return;
+  }
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  if (popupClosePending) return;
+  popupClosePending = true;
+  let notice = Toast.raiseToast('GitHub 업로드를 마무리하는 중입니다. 완료되면 이동합니다.', 10000);
+  // 강제 이동은 진행 중인 업로드를 끊으므로, 10초 뒤에는 사용자가 다시 눌러 이동을 선택할 수 있게 한다.
+  const timer = setTimeout(() => {
+    popupCloseAllowed = true;
+    notice?.element?.remove();
+    notice = Toast.raiseToast('GitHub 업로드가 지연되고 있습니다. 기다리면 완료 후 이동합니다. 지금 이동하려면 확인 또는 닫기를 다시 눌러 주세요. 업로드가 중단될 수 있습니다.', 120000);
+  }, 10000);
+  try {
+    await solvedUploadPromise;
+  } catch (error) {
+    console.error('[BaekjoonHub] SWEA 결과창 종료 대기 중 업로드 오류', error);
+  } finally {
+    clearTimeout(timer);
+    notice?.element?.remove();
+    const shouldClose = popupClosePending && !solverNavigationStarted;
+    popupClosePending = false;
+    popupCloseAllowed = false;
+    if (shouldClose && button.isConnected) button.click();
+  }
+}
+
+async function uploadSolvedResult() {
   // 기능 Off시 작동하지 않도록 함
   const enable = await checkEnable();
   if (!enable) { stopLoader(); return; }
@@ -81,6 +126,7 @@ async function handleSolvedResult() {
     const handled = await tryUploadInPlace(solverUrl);
     if (!handled) {
       window.location.href = solverUrl;
+      solverNavigationStarted = true;
       return;
     }
     // 제자리 처리 후에는 페이지가 유지되므로, 결과 팝업이 닫히면 감지를 재무장해
