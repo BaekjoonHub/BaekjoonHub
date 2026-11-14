@@ -368,6 +368,14 @@ $id('examplesBox').addEventListener('click', () => {
   chrome.storage.local.set({ bjhSaveExamples: $id('examplesBox').checked });
 });
 
+/* Keep each different solution of a re-solved problem as a numbered file (off by default) */
+chrome.storage.local.get('bjhKeepSolutionVersions', (data) => {
+  $id('keepVersionsBox').checked = data.bjhKeepSolutionVersions === true;
+});
+$id('keepVersionsBox').addEventListener('click', () => {
+  chrome.storage.local.set({ bjhKeepSolutionVersions: $id('keepVersionsBox').checked });
+});
+
 /* === Directory Template Settings === */
 const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea', 'goormlevel'];
 

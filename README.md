@@ -122,6 +122,7 @@
   <li>"Authorize with GitHub" 버튼을 누르고 인증을 완료하면 Repository 연동 화면이 표시됩니다.</li>
   <li>Repository를 신규로 만들거나 기존에 존재하는 Repository에 연동 가능합니다. (신규 Repository 생성시 visibility 기본값은 private으로 되어있습니다)</li>
   <li>디렉토리 구조를 플랫폼별로 또는 언어별로 하는 옵션이 있습니다.</li>
+  <li>같은 문제를 다시 풀 때 서로 다른 풀이를 <code>이름_002.py</code>, <code>이름_003.py</code> 처럼 번호를 붙여 파일로 모두 남기는 옵션이 있습니다. (설정 화면에서 켤 수 있으며 기본값은 꺼짐, 똑같은 코드는 다시 올리지 않습니다)</li>
   <li>Get Started 버튼을 누르면 링크가 완료됩니다.</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다.</li>
 </ol>

@@ -132,6 +132,11 @@ class GitHub {
     return updateHead(this.hook, this.token, ref, commitSHA, force);
   }
 
+  /** 커밋 또는 브랜치 시점의 디렉토리 안 파일 목록 ([{name, sha}], sha 는 blob SHA). 디렉토리가 없으면 [] */
+  async listDirectory(path, ref) {
+    return listDirectory(this.hook, this.token, path, ref);
+  }
+
   async getTree() {
     // hook, token
     return getTree(this.hook, this.token);
@@ -150,15 +155,20 @@ class GitHub {
    * 예전처럼 force 로 옮기면 그 사이의 커밋이 브랜치 이력에서 사라졌다. 이제는 GitHub 가 갱신을 거절하므로
    * (422 Update is not a fast forward) 최신 ref 를 다시 읽어 그 위에 tree·commit 을 새로 만들고 다시 시도한다.
    * blob 은 ref 와 무관하므로 호출하는 쪽에서 한 번만 만든다.
+   *
+   * treeItems 에 함수를 넘기면 시도마다 "이번 커밋의 부모" 로 호출해 그 위에 올릴 항목을 받는다. 항목이 그 시점의 브랜치
+   * 내용에 달려 있을 때 쓴다(풀이 번호는 부모에 있는 파일로 정한다). null 을 돌려주면 커밋하지 않고 {commitSHA: null} 을 반환한다.
    * @param {string} branch - 브랜치 이름 (예: 'main')
-   * @param {Array<{path: string, mode: string, type: string, sha?: string, content?: string}>} treeItems
+   * @param {Array<{path: string, mode: string, type: string, sha?: string, content?: string}>|function(string): Promise<Array|null>} treeItems
    * @param {string} message - 커밋 메시지
-   * @returns {Promise<{commitSHA: string, parentSHA: string}>}
+   * @returns {Promise<{commitSHA: string|null, parentSHA: string}>}
    */
   async commitTreeItems(branch, treeItems, message) {
     for (let attempt = 1; ; attempt += 1) {
       const { refSHA, ref } = await this.getReference(branch);
-      const treeData = await this.createTree(refSHA, treeItems);
+      const items = typeof treeItems === 'function' ? await treeItems(refSHA) : treeItems;
+      if (items === null) return { commitSHA: null, parentSHA: refSHA };
+      const treeData = await this.createTree(refSHA, items);
       const commitSHA = await this.createCommit(message, treeData.sha, refSHA);
       try {
         await this.updateHead(ref, commitSHA, false);
@@ -312,6 +322,28 @@ async function getTreeWithTruncation(hook, token, ref = 'HEAD') {
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
   }, { timeoutMs: GITHUB_TREE_TIMEOUT_MS });
   return { tree: data.tree, truncated: data.truncated === true };
+}
+
+/** list the files of a directory at a commit/branch
+ * @see https://docs.github.com/en/rest/repos/contents#get-repository-content
+ * 디렉토리면 항목 배열을 돌려주고(항목의 sha 는 blob SHA), 없는 경로는 404 다. 이 API 는 디렉토리당 1,000개까지만 돌려주므로
+ * 그 이상이면 목록이 잘렸을 수 있어 오류로 멈춘다(번호를 잘못 매기느니 업로드하지 않는다).
+ * 경로의 각 조각은 encodeURIComponent 로 인코딩한다(공백·한글·#·+ 가 든 문제 이름).
+ * @param {string} hook - the github repository
+ * @param {string} token - the github token
+ * @param {string} path - the directory path
+ * @param {string} ref - commit SHA or branch name
+ * @return {Promise<Array<{name: string, sha: string}>>} - 파일 항목. 디렉토리가 없으면 []
+ */
+async function listDirectory(hook, token, path, ref) {
+  const encoded = path.split('/').filter((part) => part !== '').map(encodeURIComponent).join('/');
+  const data = await githubRequest(`https://api.github.com/repos/${hook}/contents/${encoded}?ref=${encodeURIComponent(ref)}`, {
+    method: 'GET',
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+  }, { notFoundAsNull: true });
+  if (!Array.isArray(data)) return []; // 없는 경로(404) 이거나 디렉토리가 아닌 경로
+  if (data.length >= 1000) throw new GitHubApiError(`디렉토리 ${path} 의 파일이 1,000개 이상이라 목록을 끝까지 읽을 수 없습니다.`, 0);
+  return data.filter((item) => item.type === 'file').map(({ name, sha }) => ({ name, sha }));
 }
 
 /** get a file from the repository

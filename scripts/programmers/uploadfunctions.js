@@ -41,13 +41,15 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   /* 업로드 후 커밋 */
   const git = new GitHub(hook, token);
   const default_branch = await git.getDefaultBranchOnRepo();
-  const source = await git.createBlob(sourceText, `${directory}/${filename}`); // 소스코드 파일
-  const readme = await git.createBlob(readmeText, `${directory}/README.md`); // readme 파일
+  const source = await createSolutionItem(git, sourceText, `${directory}/${filename}`); // 소스코드 파일
+  const readme = await createSolutionItem(git, readmeText, `${directory}/README.md`); // readme 파일
+  /* 풀이별 파일 보관 옵션이 켜져 있으면 풀이 파일의 경로(이름_002.py …)를 커밋의 부모에서 정한다(utils/solutionVersions.js) */
+  const commit = await prepareSolutionItems(git, directory, filename, sourceText, [source, readme]);
   // 브랜치는 fast-forward 로만 옮긴다 — 다른 탭이 그 사이 커밋했으면 그 위에 다시 커밋한다 (commitTreeItems 참고)
-  await git.commitTreeItems(default_branch, [source, readme], commitMessage);
+  await git.commitTreeItems(default_branch, commit.items, commitMessage);
 
   /* stats의 값을 갱신합니다. (저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다) */
-  const stats = await recordUploadInStats(hook, default_branch, [source, readme]);
+  const stats = await recordUploadInStats(hook, default_branch, commit.committed);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);

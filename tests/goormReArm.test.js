@@ -236,6 +236,7 @@ function loadGoorm({ parseImpl = null, uploadImpl = null, cachedSHA = null, enab
     getHook: async () => HOOK,
     getToken: async () => 'token',
     getStatsSHAfromPath: async (p) => (p === HOOK ? {} : (cache.has(p) ? cache.get(p) : cachedSHA)),
+    getKeepSolutionVersionsOption: async () => false, // 풀이별 파일 보관 옵션(#353)은 꺼짐 — beginUpload 가 읽는다
     updateLocalStorageStats: async () => ({}),
     saveStats: async () => {},
     // scripts/Github.js

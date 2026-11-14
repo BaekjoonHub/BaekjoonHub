@@ -93,6 +93,13 @@ async function beginUpload(bojData) {
       await versionUpdate();
     }
 
+    /* 풀이별 파일 보관 옵션이 켜져 있으면 같은 코드인지도 캐시가 아니라 GitHub 의 파일 목록으로 정한다(utils/solutionVersions.js).
+       같은 코드면 upload 가 커밋 없이 끝나고 완료 표시는 콜백이 한다. */
+    if (await getKeepSolutionVersionsOption()) {
+      await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
+      return;
+    }
+
     /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
     /* 선언 없이 대입하면 전역 변수가 되어, 겹쳐 실행되는 다른 업로드가 비교 도중 값을 바꿀 수 있다 */
     const cachedSHA = await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`);
