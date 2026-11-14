@@ -171,6 +171,11 @@ async function getSaveExamplesOption() {
   return (await getObjectFromLocalStorage('bjhSaveExamples')) === true;
 }
 
+/** 같은 문제를 다시 풀었을 때 서로 다른 풀이를 번호 붙은 파일로 모두 남길지 (기본 꺼짐). 규칙은 utils/solutionVersions.js */
+async function getKeepSolutionVersionsOption() {
+  return (await getObjectFromLocalStorage('bjhKeepSolutionVersions')) === true;
+}
+
 async function saveToken(token) {
   return await saveObjectInLocalStorage({ BaekjoonHub_token: token });
 }

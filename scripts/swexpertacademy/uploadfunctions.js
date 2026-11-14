@@ -55,19 +55,21 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
      캐시된 브랜치가 변경/삭제되어 ref 조회가 404 로 실패하면 기본 브랜치를 다시 조회해 1회 재시도한다. */
   const cachedBranch = cachedStats?.branches?.[hook];
   let default_branch = isNull(cachedBranch) ? await git.getDefaultBranchOnRepo() : cachedBranch;
+  /* 풀이별 파일 보관 옵션이 켜져 있으면 풀이 파일의 경로(이름_002.py …)를 커밋의 부모에서 정한다(utils/solutionVersions.js) */
+  const commit = await prepareSolutionItems(git, directory, filename, sourceText, tree_items);
   try {
-    await git.commitTreeItems(default_branch, tree_items, commitMessage);
+    await git.commitTreeItems(default_branch, commit.items, commitMessage);
   } catch (e) {
     if (isNull(cachedBranch) || e.name === 'TokenExpiredError' || !(e instanceof GitHubApiError && e.status === 404)) throw e;
     const liveBranch = await git.getDefaultBranchOnRepo();
     if (liveBranch === default_branch) throw e;
     default_branch = liveBranch;
-    await git.commitTreeItems(default_branch, tree_items, commitMessage);
+    await git.commitTreeItems(default_branch, commit.items, commitMessage);
   }
 
   /* stats의 값을 갱신합니다. 업로드한 두 파일의 blob sha를 로컬에서 계산해 기록하므로(recordTreeItemsInStats)
      같은 문제 재제출 시 원격 조회 없이 즉시 스킵된다. 저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다. */
-  const stats = await recordUploadInStats(hook, default_branch, tree_items);
+  const stats = await recordUploadInStats(hook, default_branch, commit.committed);
   // 콜백 함수 실행
   if (typeof cb === 'function') {
     cb(stats.branches, directory);

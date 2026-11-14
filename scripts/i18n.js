@@ -56,6 +56,7 @@ const I18N = (() => {
 
       // welcome
       'welcome.saveExamples': 'Save example I/O',
+      'welcome.keepVersions': 'Keep each different solution as a numbered file (_002, _003 ...)',
       'welcome.dirTemplate.title': 'Directory Path Template',
       'welcome.dirTemplate.reset': 'Reset',
       'welcome.dirTemplate.save': 'Save',
@@ -116,6 +117,7 @@ const I18N = (() => {
 
       // welcome
       'welcome.saveExamples': '예제 입출력 저장',
+      'welcome.keepVersions': '다시 푼 문제의 서로 다른 풀이를 번호 붙은 파일로 모두 보관 (_002, _003 ...)',
       'welcome.dirTemplate.title': '저장 경로 템플릿',
       'welcome.dirTemplate.reset': '초기화',
       'welcome.dirTemplate.save': '저장',

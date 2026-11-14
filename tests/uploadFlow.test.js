@@ -111,7 +111,7 @@ function load(server, { stats = null, markUploadFailedCSS = () => {} } = {}) {
   };
   sandbox.window = sandbox;
   vm.createContext(sandbox);
-  for (const file of ['library/sha1.min.js', 'scripts/util.js', 'scripts/Github.js', 'scripts/storage.js', 'scripts/swexpertacademy/uploadfunctions.js']) {
+  for (const file of ['library/sha1.min.js', 'scripts/util.js', 'scripts/Github.js', 'scripts/storage.js', 'scripts/utils/solutionVersions.js', 'scripts/swexpertacademy/uploadfunctions.js']) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), sandbox, { filename: file });
   }
   return { sandbox, store, errors };
