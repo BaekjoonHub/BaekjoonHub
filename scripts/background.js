@@ -1,10 +1,12 @@
+const SOLVED_API = 'https://solved.ac/api/v4';
+
 /**
- * solvedac 문제 데이터를 파싱해오는 함수. 429(Too Many Requests)를 만나면
+ * solved.ac API를 GET으로 부르는 함수. 429(Too Many Requests)를 만나면
  * 지수 backoff 후 재시도한다. 모든 재시도가 실패하면 null 반환.
- * @param {int} problemId
+ * @param {string} path - SOLVED_API 뒤에 붙는 경로 (예: '/problems/1000')
  */
-async function SolvedApiCall(problemId) {
-  const url = `https://solved.ac/api/v3/problem/show?problemId=${problemId}`;
+async function solvedGet(path) {
+  const url = SOLVED_API + path;
   const maxRetries = 4;
   let lastErr = null;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -28,8 +30,45 @@ async function SolvedApiCall(problemId) {
       await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
     }
   }
-  console.warn('SolvedApiCall failed after retries', problemId, lastErr);
+  console.warn('solved.ac request failed after retries', path, lastErr);
   return null;
+}
+
+/**
+ * v4 문제 응답을 content script와 저장된 캐시(stats.solvedac)가 쓰는 v3 모양
+ * (titleKo, level, tags[].displayNames)으로 바꾼다.
+ * @param {Object} problem - GET /problems/{problemId} 응답
+ * @param {Object} tagNames - 태그 key → 한국어 이름. v4 문제 응답의 태그에는 이름이 없다.
+ */
+function toV3Problem(problem, tagNames) {
+  const titles = problem.titles || [];
+  const title = titles.find((t) => t.language === 'ko') || titles.find((t) => t.isOriginal) || titles[0];
+  return {
+    problemId: problem.problemId,
+    titleKo: title?.title,
+    level: problem.level,
+    tags: (problem.tags || []).map((tag) => ({
+      key: tag.key,
+      displayNames: [{ language: 'ko', name: tagNames[tag.key] || tag.key }],
+    })),
+  };
+}
+
+let solvedTagNames = null; // 태그 key → 한국어 이름. 서비스 워커가 살아 있는 동안만 유지한다.
+
+/**
+ * solvedac 문제 데이터를 파싱해오는 함수. 실패하면 null 반환.
+ * @param {int} problemId
+ */
+async function SolvedApiCall(problemId) {
+  const [problem, tagList] = await Promise.all([
+    solvedGet(`/problems/${encodeURIComponent(problemId)}`),
+    solvedTagNames ? null : solvedGet('/tags'),
+  ]);
+  if (Array.isArray(tagList?.tags)) {
+    solvedTagNames = Object.fromEntries(tagList.tags.map((tag) => [tag.key, tag.names?.ko]));
+  }
+  return problem && toV3Problem(problem, solvedTagNames || {});
 }
 
 function handleMessage(request, sender, sendResponse) {
