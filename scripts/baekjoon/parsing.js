@@ -372,24 +372,6 @@ async function findDatas(datas, onProgress) {
 }
 
 /**
- * 문제의 목록을 문제 번호로 한꺼번에 반환합니다.
- * (한번 조회 시 100개씩 나눠서 진행)
- * @param {Array} problemIds
- * @returns {Promise<Array>}
- */
-
-async function fetchProblemInfoByIds(problemIds) {
-  const dividedProblemIds = [];
-  for (let i = 0; i < problemIds.length; i += 100) {
-    dividedProblemIds.push(problemIds.slice(i, i + 100));
-  }
-  return asyncPool(1, dividedProblemIds, async (pids) => {
-    const result = await fetch(`https://solved.ac/api/v3/problem/lookup?problemIds=${pids.join('%2C')}`, { method: 'GET' });
-    return result.json();
-  }).then(results => results.flatMap(result => result));
-}
-
-/**
  * 문제의 상세 정보 목록을 문제 번호 목록으로 한꺼번에 반환합니다.
  * (한번 조회 시 2개씩 병렬로 진행)
  * @param {Array} problemIds
