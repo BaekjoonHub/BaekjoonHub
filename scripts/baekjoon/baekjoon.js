@@ -52,6 +52,7 @@ function startLoader() {
         if (!isAccepted) {
           // 채점 중/기다리는 중 등 비완료 상태를 감지
           seenPending = true;
+          await refreshStuckRow(data);
           return;
         }
         stopLoader();
@@ -70,6 +71,43 @@ function startLoader() {
 function stopLoader() {
   clearInterval(loader);
   loader = null;
+}
+
+/* BOJ 는 채점 결과를 Pusher 이벤트로 화면에 반영한다(status.js 의 display_solution). 이벤트가 오지 않으면 결과 칸이
+   "채점 준비 중" 등에서 멈추고, BOJ 도 이때는 새로고침으로 결과를 확인하라고 안내한다.
+   맨 위 제출이 채점 중인 채 그대로면 같은 페이지를 다시 받아 BOJ 가 갱신하는 칸만 바꿔 넣는다. 그 뒤는 로더가 이어서 처리한다.
+   BOJ 에 부담을 주지 않게 5초 뒤부터 간격을 두 배씩(최대 60초) 늘리며 10번까지만 받는다. */
+const stuckRow = { result: null, since: 0, tries: 0, busy: false };
+
+async function refreshStuckRow(row) {
+  const judging = [RESULT_CATEGORY.RESULT_PENDING, RESULT_CATEGORY.RESULT_PENDING_REJUDGE, RESULT_CATEGORY.RESULT_PREPARE_FOR_JUDGE, RESULT_CATEGORY.RESULT_JUDGING];
+  if (!judging.includes(row.resultCategory)) return;
+  // 화면이 바뀌고 있으면(채점 진행률 등) 실시간 갱신이 살아 있는 것이라 기다린다
+  if (stuckRow.result !== row.result) {
+    stuckRow.result = row.result;
+    stuckRow.since = Date.now();
+    return;
+  }
+  if (stuckRow.busy || stuckRow.tries >= 10) return;
+  if (Date.now() - stuckRow.since < Math.min(5000 * 2 ** stuckRow.tries, 60000)) return;
+  stuckRow.busy = true;
+  stuckRow.tries += 1;
+  try {
+    const fresh = (await findHtmlDocumentByUrl(window.location.href)).getElementById(row.elementId);
+    const current = document.getElementById(row.elementId);
+    // 받는 사이 실시간 갱신이 도착해 로더가 끝났으면(업로드 표시가 결과 칸에 붙어 있다) 건드리지 않는다
+    if (loader === null || !fresh || !current) return;
+    for (const name of ['result', 'memory', 'time', 'judge-platform']) {
+      const from = fresh.querySelector(`td.${name}`);
+      const to = current.querySelector(`td.${name}`);
+      if (from && to) to.innerHTML = from.innerHTML;
+    }
+  } catch (error) {
+    log(error);
+  } finally {
+    stuckRow.since = Date.now();
+    stuckRow.busy = false;
+  }
 }
 
 function toastThenStopLoader(toastMessage, errorMessage) {
