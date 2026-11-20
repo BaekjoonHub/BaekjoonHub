@@ -34,6 +34,7 @@
   ],
   "host_permissions": [
     "https://www.acmicpc.net/",
+    "https://acmicpc.net/",
     "https://school.programmers.co.kr/",
     "https://github.com/",
     "https://api.github.com/",
@@ -70,7 +71,8 @@
     },
     {
       "matches": [
-        "https://www.acmicpc.net/*"
+        "https://www.acmicpc.net/*",
+        "https://acmicpc.net/*"
       ],
       "css": [
         "css/baekjoon/inject.css"

@@ -94,7 +94,7 @@ async function makeDetailMessageAndReadme(data) {
   const dateInfo = submissionTime ?? getDateString(new Date(Date.now()));
   // prettier-ignore-start
   const readme = `# [${level}] ${title} - ${problemId} \n\n`
-    + `[문제 링크](https://www.acmicpc.net/problem/${problemId}) \n\n`
+    + `[문제 링크](https://acmicpc.net/problem/${problemId}) \n\n`
     + `### 성능 요약\n\n`
     + `메모리: ${memory} KB, `
     + `시간: ${runtime} ms\n\n`
@@ -245,7 +245,7 @@ function parseProblemDescription(doc = document) {
 }
 
 async function fetchProblemDescriptionById(problemId) {
-  const res = await fetch(`https://www.acmicpc.net/problem/${problemId}`);
+  const res = await fetch(`/problem/${problemId}`);
   if (!res.ok) {
     // 404 = 출제자가 삭제했거나 비공개 처리된 문제. 제출 이력엔 남아있어 업로드 대상에 포함되지만
     // 설명 페이지는 가져올 수 없다. 소스코드는 보존하고 README에 안내를 남기도록 placeholder 반환.
@@ -264,7 +264,7 @@ async function fetchProblemDescriptionById(problemId) {
 }
 
 async function fetchSubmitCodeById(submissionId) {
-  return fetch(`https://www.acmicpc.net/source/download/${submissionId}`, { method: 'GET' })
+  return fetch(`/source/download/${submissionId}`, { method: 'GET' })
     .then((res) => res.text())
 }
 
@@ -403,7 +403,7 @@ async function fetchSubmissionCodeByIds(submissionIds) {
  * @return Promise<Array<String>>
  */
 async function findResultTableByProblemIdAndUsername(problemId, username) {
-  return fetch(`https://www.acmicpc.net/status?from_mine=1&problem_id=${problemId}&user_id=${username}`, { method: 'GET' })
+  return fetch(`/status?from_mine=1&problem_id=${problemId}&user_id=${username}`, { method: 'GET' })
     .then((html) => html.text())
     .then((text) => {
       const parser = new DOMParser();
@@ -428,7 +428,7 @@ async function findUniqueResultTableListByUsername(username) {
  */
 async function findResultTableListByUsername(username) {
   const result = [];
-  let doc = await findHtmlDocumentByUrl(`https://www.acmicpc.net/status?user_id=${username}&result_id=4`);
+  let doc = await findHtmlDocumentByUrl(`/status?user_id=${username}&result_id=4`);
   if (doc.getElementById('status-table') === null) {
     throw new Error('status-table을 찾을 수 없습니다. 로그인/백준 페이지 상태를 확인해 주세요.');
   }
