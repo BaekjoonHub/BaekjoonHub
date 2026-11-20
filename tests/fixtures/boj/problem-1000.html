@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<title>1000번: A+B</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta charset="utf-8"><meta name="author" content="스타트링크 (Startlink)"><meta name="keywords" content="ACM-ICPC, ICPC, 프로그래밍, 온라인 저지, 정보올림피아드, 코딩, 알고리즘, 대회, 올림피아드, 자료구조"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta property="og:type" content="website"><meta property="og:image" content="https://storage.googleapis.com/gcs-boj-onlinejudgeimages-production/images/boj-og.png"><meta property="og:site_name" content="Baekjoon Online Judge"><meta name="format-detection" content = "telephone=no"><meta name="msapplication-config" content="none"><meta name="pusher-key" content="bb605b8608c52b9605f9"><meta name="pusher-cluster" content="ap3"><meta name="site-help" content="https://help.acmicpc.net"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="manifest" href="/site.webmanifest"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0076c0"><meta name="msapplication-TileColor" content="#00aba9"><meta name="theme-color" content="#ffffff"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css"><link rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/unify/css/style.css?version=2026111301"><link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:400,700|Open+Sans:400,400i,700,700i|Source+Code+Pro&amp;subset=korean" rel="stylesheet"><link rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/css/connect.css?version=2026111301"><link rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/css/result.css?version=2026111301"><link rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/css/label.css?version=2026111301"><link rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/unify/css/custom.css?version=2026111301"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css"><link rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/unify/css/theme-colors/blue.css?version=2026111301"><link rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/css/pace.css"><script>window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.blocklist':['customScripts','customPixels','nonGoogleScripts','nonGooglePixels','nonGoogleIframes']});</script>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-W7KMJHTD');</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.css" /><meta name="username" content="">    
+<link type="text/css" rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/css/problem-print.css" media="print">
+<link type="text/css" rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/css/problem.css?version=2026111301">
+	<link type="text/css" rel="stylesheet" href="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/css/problem-font.css?version=2026111301">
+<meta name="problem-id" content="1000">
+<meta name="user-id" content="">
+
+</head>
+<body >
+    <div class="wrapper">
+        <div class="header no-print"><div class="topbar"><div class="container"><ul class="loginbar pull-right"><li><a href="/register">회원가입</a></li><li class="topbar-devider"></li><li><a href="/login?next=%2Fproblem%2F1000">로그인</a></li></ul></div></div><div class="navbar navbar-default mega-menu" role="navigation"><div class="container"><div class="navbar-header"><button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse"><span class="sr-only">Toggle navigation</span><span class="fa fa-bars"></span></button><a class="navbar-brand" href="/"><img id="logo-header" src="https://storage.googleapis.com/gcs-boj-onlinejudgeimages-production/images/logo@2x.png" alt="Logo" data-retina></a></div><div class="collapse navbar-collapse navbar-responsive-collapse"><ul class="nav navbar-nav"><li class="dropdown mega-menu-fullwidth active"><a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">문제</a><ul class="dropdown-menu"><li><div class="mega-menu-content"><div class="container"><div class="row equal-height"><div class="col-md-3 equal-height-in"><ul class="list-unstyled equal-height-list"><li><h3>문제</h3></li><li><a href="/problemset">전체 문제</a></li><li><a href="/category">문제 출처</a></li><li><a href="/step">단계별로 풀어보기</a></li><li><a href="/problem/tags">알고리즘 분류</a></li><li><a href="/problem/added">추가된 문제</a></li><li><a href="/problem/ranking">문제 순위</a></li></ul></div><div class="col-md-3 equal-height-in"><ul class="list-unstyled equal-height-list"><li><h3>문제</h3></li><li><a href="/problem/only">푼 사람이 한 명인 문제</a></li><li><a href="/problem/nobody">아무도 못 푼 문제</a></li><li><a href="/problem/recent/submit">최근 제출된 문제</a></li><li><a href="/problem/recent/accepted">최근 풀린 문제</a></li><li><a href="/problem/random">랜덤</a></li></ul></div><div class="col-md-3 equal-height-in"><ul class="list-unstyled equal-height-list"><li><h3>출처</h3></li><li><a href="/category/1">ICPC</a></li><li><a href="/category/2">Olympiad</a></li><li><a href="/category/55">한국정보올림피아드</a></li><li><a href="/category/57">한국정보올림피아드시․도지역본선</a></li><li><a href="/category/318">전국 대학생 프로그래밍 대회 동아리 연합</a></li><li><a href="/category/5">대학교 대회</a></li><li><a href="/category/428">카카오 코드 페스티벌</a></li><li><a href="/category/215">Coder's High</a></li></ul></div><div class="col-md-3 equal-height-in"><ul class="list-unstyled equal-height-list"><li><h3>ICPC</h3></li><li><a href="/category/7">Regionals</a></li><li><a href="/category/4">World Finals</a></li><li><a href="/category/211">Korea Regional</a></li><li><a href="/category/34">Africa and the Middle East Regionals</a></li><li><a href="/category/10">Europe Regionals</a></li><li><a href="/category/103">Latin America Regionals</a></li><li><a href="/category/8">North America Regionals</a></li><li><a href="/category/92">South Pacific Regionals</a></li></ul></div></div></div></div></li></ul></li><li><a href="/workbook/top"  >문제집</a></li><li><a href="/contest/official/list"  >대회</a></li><li><a href="/status"  >채점 현황</a></li><li><a href="/board/list/all"  >게시판</a></li><li><a href="/group/list/all"  >그룹</a></li><li class="dropdown "><a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">더 보기</a><ul class="dropdown-menu"><li><a href="/change"  >재채점 기록</a></li><li><a href="/blog/list"  >블로그</a></li><li><a href="https://help.acmicpc.net/" target="_blank" >도움말 &nbsp;<i class="fa fa-external-link"></i></a></li></ul></li><li><a href="/search"  ><i class="fa fa-search search-btn"></i></a></li></ul></div></div></div></div><form action="/logout" method="post" id="logout_form"><input type='hidden' value='%2Fproblem%2F1000' name="next"></form>        
+<div class="container content">
+						<div class="row">
+		<div class="col-md-12">
+			<div id="result_log"></div>
+		</div>
+		<div class="col-md-12">
+							<ul class="nav nav-pills no-print problem-menu" ><li class="active">		<a href="/problem/1000">1000번</a></li><li><a href="/submit/1000"  >제출</a></li><li><a href="/problem/status/1000"  >맞힌 사람</a></li><li><a href="/short/status/1000"  >숏코딩</a></li><li><a href="/problem/history/1000"  >재채점 결과</a></li><li><a href="/status?from_problem=1&amp;problem_id=1000"  >채점 현황</a></li><li><a href="/board/search/all/problem/1000"  >질문 게시판</a></li></ul>					</div>
+		<div class="col-md-12">
+			<div class="page-header">
+				<h1><span class="printable">	1000번 - </span><span id="problem_title">A+B</span>
+				<span class="problem-label problem-label-multilang">다국어</span>				<div class="btn-group pull-right problem-button">
+														</div>
+				</h1>
+																</div>
+		</div>
+		<div class="col-md-12"><div class="table-responsive"><table class="table" id="problem-info"><thead><tr><th style="width:16%;">시간 제한</th><th style="width:16%;">메모리 제한</th><th style="width:17%;">제출</th><th style="width:17%;">정답</th><th style="width:17%;">맞힌 사람</th><th style="width:17%;">정답 비율</th></tr></thead><tbody><tr><td>2 초 </td><td>128 MB</td><td>1412718</td><td>551405</td><td>370792</td><td>38.367%</td></tr></tbody></table></div></div>						<div id="problem-body" class="">
+			<div class="col-md-12">
+				<section id="description"  class="problem-section">
+				<div class="headline">
+				<h2>문제</h2>
+				</div>
+				<div id="problem_description" class="problem-text">
+				<p>두 정수 A와 B를 입력받은 다음,&nbsp;A+B를 출력하는 프로그램을 작성하시오.</p>
+
+				</div>
+				</section>
+			</div>
+										<div class="col-md-12">
+					<section id="input"  class="problem-section">
+					<div class="headline">
+					<h2>입력</h2>
+					</div>
+					<div id="problem_input" class="problem-text">
+					<p>첫째 줄에 A와 B가 주어진다. (0 &lt; A, B &lt; 10)</p>
+
+					</div>
+					</section>
+				</div>
+	
+				<div class="col-md-12">
+					<section id="output"  class="problem-section">
+					<div class="headline">
+					<h2>출력</h2>
+					</div>
+					<div id="problem_output" class="problem-text">
+					<p>첫째 줄에 A+B를 출력한다.</p>
+
+					</div>
+					</section>
+				</div>
+						<div class="col-md-12">
+			<section id="limit" style="display:none;" class="problem-section">
+			<div class="headline">
+			<h2>제한</h2>
+			</div>
+			<div id="problem_limit" class="problem-text">
+						</div>
+			</section>
+			</div>
+																	<div class="col-md-12">
+				<div class="row">
+					<div class="col-md-6">
+						<section id="sampleinput1">
+						<div class="headline">
+						<h2>예제 입력 1
+							<button type="button" class="btn btn-link copy-button" style="padding: 0px;" data-clipboard-target="#sample-input-1">복사</button>
+						</h2>
+						</div>
+						<pre class="sampledata" id="sample-input-1">1 2
+</pre>
+						</section>
+					</div>
+					<div class="col-md-6">
+						<section id="sampleoutput1">
+						<div class="headline">
+						<h2>예제 출력 1
+							<button type="button" class="btn btn-link copy-button" style="padding: 0px;" data-clipboard-target="#sample-output-1">복사</button>
+						</h2>
+						</div>
+						<pre class="sampledata" id="sample-output-1">3
+</pre>
+						</section>
+					</div>
+									</div>
+				</div>
+										<div class="col-md-12">
+				<section id="hint"  class="problem-section">
+				<div class="headline">
+				<h2>힌트</h2>
+				</div>
+				<div id="problem_hint" class="problem-text">
+				<p><a href="https://www.acmicpc.net/help/language">여기</a>를 누르면 1000번 예제 소스를 볼 수 있습니다.</p>
+
+				</div>
+				</section>
+			</div>
+							<div style="display: none;">
+					<div id="problem-lang-base64">W3sicHJvYmxlbV9pZCI6IjEwMDAiLCJwcm9ibGVtX2xhbmciOiIwIiwidGl0bGUiOiJBK0IiLCJkZXNjcmlwdGlvbiI6IjxwPlx1YjQ1MCBcdWM4MTVcdWMyMTggQVx1YzY0MCBCXHViOTdjIFx1Yzc4NVx1YjgyNVx1YmMxYlx1Yzc0MCBcdWIyZTRcdWM3NGMsJm5ic3A7QStCXHViOTdjIFx1Y2Q5Y1x1YjgyNVx1ZDU1OFx1YjI5NCBcdWQ1MDRcdWI4NWNcdWFkZjhcdWI3YThcdWM3NDQgXHVjNzkxXHVjMTMxXHVkNTU4XHVjMmRjXHVjNjI0LjxcL3A+XHJcbiIsImlucHV0IjoiPHA+XHVjY2FiXHVjOWY4IFx1YzkwNFx1YzVkMCBBXHVjNjQwIEJcdWFjMDAgXHVjOGZjXHVjNWI0XHVjOWM0XHViMmU0LiAoMCAmbHQ7IEEsIEIgJmx0OyAxMCk8XC9wPlxyXG4iLCJvdXRwdXQiOiI8cD5cdWNjYWJcdWM5ZjggXHVjOTA0XHVjNWQwIEErQlx1Yjk3YyBcdWNkOWNcdWI4MjVcdWQ1NWNcdWIyZTQuPFwvcD5cclxuIiwiaGludCI6IjxwPjxhIGhyZWY9XCJodHRwczpcL1wvd3d3LmFjbWljcGMubmV0XC9oZWxwXC9sYW5ndWFnZVwiPlx1YzVlY1x1YWUzMDxcL2E+XHViOTdjIFx1YjIwNFx1Yjk3NFx1YmE3NCAxMDAwXHViYzg4IFx1YzYwOFx1YzgxYyBcdWMxOGNcdWMyYTRcdWI5N2MgXHViY2ZjIFx1YzIxOCBcdWM3ODhcdWMyYjVcdWIyYzhcdWIyZTQuPFwvcD5cclxuIiwib3JpZ2luYWwiOiIxIiwiaHRtbF90aXRsZSI6IjAiLCJwcm9ibGVtX2xhbmdfdGNvZGUiOiJLb3JlYW4ifSx7InByb2JsZW1faWQiOiIxMDAwIiwicHJvYmxlbV9sYW5nIjoiMSIsInRpdGxlIjoiQStCIiwiZGVzY3JpcHRpb24iOiI8cD5HaXZlbiB0d28gaW50ZWdlcnMgQSBhbmQgQiwgY2FsY3VsYXRlIHRoZWlyIHN1bS48XC9wPlxyXG4iLCJpbnB1dCI6IjxwPlRoZSBmaXJzdCBsaW5lIGNvbnRhaW5zJm5ic3A7dHdvIGludGVnZXJzIEEgYW5kIEIuICgwICZsdDsgQSwgQiAmbHQ7IDEwKTxcL3A+XHJcbiIsIm91dHB1dCI6IjxwPk91dHB1dCBvbmUgbGluZSBvZiBvbmUgaW50ZWdlciwgQStCLjxcL3A+XHJcbiIsImhpbnQiOiIiLCJvcmlnaW5hbCI6IjAiLCJodG1sX3RpdGxlIjoiMCIsInByb2JsZW1fbGFuZ190Y29kZSI6IkVuZ2xpc2gifV0=</div>
+				</div>
+								</div>
+									<div class="col-md-12"><section id="source"><div class="headline"><h2>출처</h2></div><ul><li>문제를 만든 사람:&nbsp;<a href="/user/tester1">tester1</a></li><li>데이터를 추가한 사람:&nbsp;<a href="/user/tester2">tester2</a></li><li>빠진 조건을 찾은 사람:&nbsp;<a href="/user/tester3">tester3</a></li></ul></section></div>
+										<div class="col-md-12">
+					<section id="problem_association">
+					<div class="headline">
+					<h2>비슷한 문제</h2>
+					</div>
+					
+					<ul>
+													<li><a href="/problem/1001">1001번. A-B</a></li>
+													<li><a href="/problem/1008">1008번. A/B</a></li>
+													<li><a href="/problem/2558">2558번. A+B - 2</a></li>
+													<li><a href="/problem/10950">10950번. A+B - 3</a></li>
+													<li><a href="/problem/10951">10951번. A+B - 4</a></li>
+													<li><a href="/problem/10952">10952번. A+B - 5</a></li>
+													<li><a href="/problem/10953">10953번. A+B - 6</a></li>
+													<li><a href="/problem/10998">10998번. A×B</a></li>
+													<li><a href="/problem/11021">11021번. A+B - 7</a></li>
+													<li><a href="/problem/11022">11022번. A+B - 8</a></li>
+													<li><a href="/problem/15740">15740번. A+B - 9</a></li>
+													<li><a href="/problem/15792">15792번. A/B - 2</a></li>
+											</ul>
+					</section>
+				</div>
+																								</div>
+    <div class="margin-bottom-20"></div>
+					</div>
+
+
+        <div class="footer-v3 no-print"><div class="footer"><div class="container"><div class="row"><div class="col-sm-4 md-margin-bottom-40"><div class="thumb-headline"><h2>BOJ 소개</h2></div><ul class="list-unstyled simple-list margin-bottom-10"><li><a href="/about">소개</a></li><li><a href="/news">업데이트</a></li></ul></div><div class="col-sm-4 md-margin-bottom-40"><div class="thumb-headline"><h2>대회 출처</h2></div><ul class="list-unstyled simple-list margin-bottom-10"><li><a href="/category/1">ICPC</a></li><li><a href="/category/2">Olympiad</a></li><li><a href="/category/5">대학교 대회 (University)</a></li><li><a href="/category/97">고등학교 대회 (School)</a></li><li><a href="/category/45">대회·컵 (Contest)</a></li><li><a href="/category/220">캠프 (Camp)</a></li></ul></div><div class="col-sm-4 md-margin-bottom-40"><div class="thumb-headline"><h2><a href="https://help.acmicpc.net">도움말</a></h2></div><ul class="list-unstyled simple-list margin-bottom-10"><li><a href="https://help.acmicpc.net">도움말 홈</a></li><li><a href="https://help.acmicpc.net/judge/info">채점 환경·재채점</a></li><li><a href="https://help.acmicpc.net/judge/rte">런타임 에러</a></li><li><a href="https://help.acmicpc.net/problem/style">문제 스타일</a></li><li><a href="https://help.acmicpc.net/language/info">언어·컴파일 옵션</a></li><li><a href="https://help.acmicpc.net/stats">문제집·통계</a></li><li><a href="https://help.acmicpc.net/rule">이용 규칙</a></li><li><a href="https://help.acmicpc.net/faq">자주묻는 질문</a></li></ul></div></div></div></div><div class="copyright"><div class="container"><div class="footer-info-wrap"><ul class="list-inline footer-info"><li>상호 : <strong>(주)데이원컴퍼니</strong></li><li>공동대표이사 : <strong>신해동, 김동혁</strong></li><li>개인정보책임관리자 : <strong>김동혁</strong></li><li>사업자번호 : <strong>810-86-00658</strong></li><li>통신판매업 신고번호 : <strong>제2017-서울강남-01977호</strong></li><li>원격평생교육원 : <a href="https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202110/151443-146/%5B%E1%84%91%E1%85%A7%E1%86%BC%E1%84%89%E1%85%A2%E1%86%BC%E1%84%80%E1%85%AD%E1%84%8B%E1%85%B2%E1%86%A8%E1%84%89%E1%85%B5%E1%84%89%E1%85%A5%E1%86%AF%E1%84%89%E1%85%B5%E1%86%AB%E1%84%80%E1%85%A9%E1%84%8C%E1%85%B3%E1%86%BC%5D-%E1%84%83%E1%85%A6%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%AF%E1%86%AB%E1%84%8F%E1%85%A5%E1%86%B7%E1%84%91%E1%85%A5%E1%84%82%E1%85%B5-%E1%84%8B%E1%85%AF%E1%86%AB%E1%84%80%E1%85%A7%E1%86%A8%E1%84%91%E1%85%A7%E1%86%BC%E1%84%89%E1%85%A2%E1%86%BC%E1%84%80%E1%85%AD%E1%84%8B%E1%85%B2%E1%86%A8%E1%84%8B%E1%85%AF%E1%86%AB.pdf" class="footer-info-emphasis" target="_blank" rel="noopener noreferrer">제 572호</a></li></ul><ul class="list-inline footer-info footer-info-links"><li><a href="/terms">서비스 약관</a></li><li><a href="/privacy" class="footer-info-privacy">개인정보처리방침</a></li><li><a href="/board/list/notice">공지사항</a></li></ul><ul class="list-inline footer-info"><li>이메일 <a href="mailto:help-tech@day1company.co.kr" class="footer-info-value">help-tech@day1company.co.kr</a></li><li>운영시간 <strong>주중 10시~18시 (점심시간 12~13시 / 주말 및 공휴일 제외)</strong></li></ul></div><div class="footer-info-bottom"><div class="row"><div class="col-sm-9"><p id="no-acm-icpc"></p></div><div class="col-sm-3"><p class="pull-right"><a href="/lang?lang=0&next=%2Fproblem%2F1000">한국어</a>&nbsp;|&nbsp;<a href="/lang?lang=1&next=%2Fproblem%2F1000">English (Beta)</a></p></div></div><p>&copy; 2026 주식회사 데이원컴퍼니. All Rights Reserved.</p></div></div></div></div>    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-migrate/3.0.1/jquery-migrate.min.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/ko.js"></script>
+<script type="text/javascript" src="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/unify/js/app.min.js?version=2026111301"></script><script type="text/javascript">jQuery(document).ready(function() {App.init(0);});</script><!--[if lt IE 9]><script src="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/unify/plugins/respond.js"></script><script src="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/unify/plugins/html5shiv.js"></script><script src="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/unify/js/plugins/placeholder-IE-fixes.js"></script><![endif]--><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min.js"></script><script src="https://js.pusher.com/4.2/pusher.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.js"></script>    <script src="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/js/mathjax.js"></script><script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>    
+
+<script type="text/javascript" src="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/js/detectmobilebrowser.js"></script>
+<script type="text/javascript">
+	function update_image_responsive() {
+		if ($.browser.mobile) {
+			$(".problem-text img").each(function(index) {
+				if (!$(this).hasClass('no-responsive')) {
+					$(this).addClass("img-responsive").css('width', 'auto').css('height', 'auto').css('max-width','100%');
+				}
+			});
+			$(".problem-text table[class^='table-'], .problem-text table[class*=' table-']").each(function(index) {
+				$(this).css('margin-left',0);
+				$(this).css('margin-right',0);
+			});
+		}
+	}
+	$(document).ready(function() {
+		update_image_responsive();
+	});
+</script>
+<script type="text/javascript">
+	var problem_lang = 0;
+	var subtask_table = 0;
+	var keys = $('.problem-section').map(function(_,el) {
+		return $(el).attr('id');
+	}).get();
+	$(function() {
+		var language_change = function(lang) {
+			$('#lang-select-button > .lang-select-text').text($('a.language-select-link[data-language-id='+lang+'] span.lang-text').text());
+			var check = {};
+			for (var i=0; i<keys.length; i++) {
+				var key = keys[i];
+				check[key] = false;
+			}
+			for (key in problem_langs[lang]) {
+				if (problem_langs[lang][key].length > 0) {
+					if (key == 'title') {
+						$('#problem_'+key).text(problem_langs[lang][key]);
+					} else {
+						$('#problem_'+key).html(problem_langs[lang][key]);
+					}
+					if (subtask_table && key.startsWith('subtask')) {
+						var subtask_id = parseInt(key.substring(7));
+						$('#problem_subtask table.subtask-table tr[data-subtask-id="'+subtask_id+'"] td.subtask-body').html(problem_langs[lang][key]);
+						check['subtask'] = true;
+					}
+					$('#'+key).show();
+					check[key] = true;
+				}
+			}
+			for (var i=0; i<keys.length; i++) {
+				var key = keys[i];
+				if (check[key] == false) {
+					$('#'+key).hide();
+				}
+			}
+			$("title").text("1000번: " + problem_langs[lang]['title']);
+			MathJax.typeset();
+			if (lang == 0) {
+				$('#original-diff').hide();
+			} else {
+				$('#original-diff').show();
+			}
+			update_image_responsive();
+		};
+		var temp = JSON.parse(atob($('#problem-lang-base64').html()));
+		var problem_langs = {};
+		for (var i=0; i<temp.length; i++) {
+			problem_langs[parseInt(temp[i]['problem_lang'])] = temp[i];
+		}
+		$('.language-select-link').click(function(e) {
+			e.preventDefault();
+			var lang = parseInt($(this).attr('data-language-id'));
+			if (lang != problem_lang && (lang in problem_langs) && problem_langs[lang]) {
+				problem_lang = lang;
+				language_change(lang);
+			}
+		});
+	});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+<script src="https://storage.googleapis.com/gcs-boj-onlinejudgeassets-production/js/problem/clipboard.js"></script><script type="text/javascript">
+  $(document).ready(function() {
+    $('.show-spoiler').click(function(e) {
+    	e.preventDefault();
+    	$(this).hide();
+    	$('#problem_tags div.spoiler').show();
+    });
+	});
+</script>
+
+</body>
+</html>
