@@ -72,7 +72,7 @@ function load({ globals = true, hidden = false, pusherState = 'connected', color
   const pageWindow = vm.runInContext('window', sandbox); // 컨텍스트 안에서 본 window 는 sandbox 객체와 다른 전역 객체다
 
   const page = {
-    log, server, timers, listeners, span, document,
+    log, server, timers, listeners, span, document, sandbox,
     start: now,
     times: () => log.requests.map((request) => request.at - page.start),
     /** 가짜 시계를 ms 만큼 돌린다 */
@@ -264,4 +264,42 @@ test('다른 출처·다른 창·잘못된 아이디·화면에 없는 제출의
   const isolated = load({ globals: false }); // 격리된 세계: 페이지의 display_solution 등이 보이지 않는다
   assert.equal(isolated.listeners.message.length, 0);
   assert.equal(isolated.listeners.visibilitychange.length, 0);
+});
+
+test('JSON 이 아닌 응답은 display_solution 에 넘기지 않고 실패한 요청처럼 쉬며, 응답을 처리하다 던져도 쉰다', async () => {
+  const page = load();
+  const received = [];
+  // BOJ 의 display_solution 처럼 객체가 아니면 던진다
+  page.sandbox.display_solution = (id, ans) => { received.push(ans); if (typeof ans !== 'object') throw new TypeError("'memory' in ans"); };
+  page.server.reply = () => '<html>login</html>';
+  page.ask();
+  await page.advance(100000);
+  assert.deepEqual(page.times(), [6000, 9750, 17250, 32250, 62250], '실패한 요청과 같은 쉬는 시간');
+  assert.deepEqual(received, [], '문자열은 그리지 않는다');
+
+  const throwing = load();
+  throwing.sandbox.display_solution = () => { throw new Error('그리기 실패'); };
+  throwing.server.reply = () => ({ result: 3 });
+  throwing.ask();
+  await throwing.advance(100000);
+  assert.deepEqual(throwing.times(), [6000, 9750, 17250, 32250, 62250]);
+});
+
+test('최종 결과 이벤트 뒤 그리다 던지면 그 제출은 포기로 끝나고, 화면이 끝내 최종이 되지 않아도 10분이 지나면 끝난다', async () => {
+  const page = load();
+  page.sandbox.display_solution = () => { throw new Error('그리기 실패'); };
+  page.ask();
+  page.emit({ result: 4 });
+  await page.advance(10000);
+  assert.equal(page.timers.size, 0);
+  page.ask();
+  assert.equal(page.timers.size, 0, '포기한 제출은 다시 시작하지 않는다');
+
+  const never = load();
+  never.sandbox.display_solution = () => {}; // 화면이 바뀌지 않는다
+  never.ask();
+  never.emit({ result: 4 });
+  await never.advance(610000);
+  assert.equal(never.timers.size, 0);
+  assert.deepEqual(never.times(), []);
 });

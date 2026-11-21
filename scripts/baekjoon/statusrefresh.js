@@ -129,8 +129,14 @@
   }
 
   function settle(job) {
-    if (!finalOnScreen(job.id)) window.display_solution(job.id, { ...job.finalEvent }); // 요청 없이 이벤트가 전한 결과를 그린다
-    else if (Date.now() - job.finalAt >= FINAL_SETTLE_MS) return end(job, false);
+    if (!finalOnScreen(job.id)) {
+      try {
+        window.display_solution(job.id, { ...job.finalEvent }); // 요청 없이 이벤트가 전한 결과를 그린다
+      } catch (error) {
+        log('그리기 실패', job.id, error);
+        return end(job, true); // 타이머도 없이 jobs 에 남는 대신 포기로 끝낸다
+      }
+    } else if (Date.now() - job.finalAt >= FINAL_SETTLE_MS) return end(job, false);
     job.due = Date.now() + FINAL_CHECK_MS;
     schedule();
   }
@@ -138,6 +144,8 @@
   function onAnswer(job, ans, sentAt, colorBefore) {
     if (jobs[job.id] !== job) return;
     if (!ans || ans.error) return end(job, true);
+    // BOJ 의 display_solution 은 객체가 아니면 던진다. 로그인·점검 페이지 같은 본문은 그리지 않고 실패한 요청으로 센다.
+    if (typeof ans !== 'object' || !/^\d+$/.test(String(ans.result))) throw new Error('그릴 수 없는 응답');
     if (job.eventAt > sentAt) return; // 기다리는 사이 이벤트가 왔다. 응답은 그 이벤트보다 옛 상태일 수 있어 그리지 않는다.
 
     // 화면이 서버보다 뒤처져 있었다 = 실시간 이벤트가 그 변화를 전하지 못했다 (응답을 기다리는 사이 화면이 바뀐 경우는 제외)
@@ -163,6 +171,13 @@
     job.due = Date.now() + wait;
   }
 
+  // 요청이 실패한 것으로 치는 모든 경우의 쉬는 시간. 이 시간이 지나기 전에는 어떤 요청도 보내지 않는다.
+  function pauseAfterFailure() {
+    errorDelay = Math.min(errorDelay ? errorDelay * 2 : ERROR_PAUSE_MS, ERROR_PAUSE_MAX_MS);
+    // 절반은 반드시 쉬고 나머지 절반은 무작위 (서버가 힘들 때 다 같이 재시도하지 않게)
+    pausedUntil = Date.now() + errorDelay / 2 + (Math.random() * errorDelay) / 2;
+  }
+
   function request(job) {
     const sentAt = Date.now();
     const colorBefore = screenColor(job.id);
@@ -172,18 +187,19 @@
     window.jQuery.ajax({ type: 'POST', url: '/status/ajax', data: { solution_id: job.id }, timeout: REQUEST_TIMEOUT_MS })
       .done((ans) => {
         inFlight = false;
-        errorDelay = 0;
         try {
           onAnswer(job, ans, sentAt, colorBefore);
+          errorDelay = 0;
+        } catch (error) {
+          log('응답 처리 실패', job.id, error);
+          pauseAfterFailure(); // 응답을 처리하다 던져도 job.due 가 그대로라 바로 다시 요청하지 않게 쉰다
         } finally {
           schedule();
         }
       })
       .fail(() => {
         inFlight = false;
-        errorDelay = Math.min(errorDelay ? errorDelay * 2 : ERROR_PAUSE_MS, ERROR_PAUSE_MAX_MS);
-        // 절반은 반드시 쉬고 나머지 절반은 무작위 (서버가 힘들 때 다 같이 재시도하지 않게)
-        pausedUntil = Date.now() + errorDelay / 2 + (Math.random() * errorDelay) / 2;
+        pauseAfterFailure();
         schedule();
       });
   }
@@ -194,8 +210,8 @@
     if (id === null) return;
     const job = jobs[id];
     if (Date.now() < dueAt(job)) return schedule();
+    if (Date.now() - job.start > MAX_WATCH_MS) return end(job, true); // 최종 결과 이벤트 뒤의 확인에도 10분 제한이 적용된다
     if (job.finalEvent) return settle(job);
-    if (Date.now() - job.start > MAX_WATCH_MS) return end(job, true);
     bindChannel(job);
     if (finalOnScreen(id)) return end(job, false); // 이미 결과가 있으면 묻지 않는다 (BOJ 가 열 때 확인했거나 이벤트로 그려진 경우)
     request(job);
