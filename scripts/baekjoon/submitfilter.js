@@ -4,8 +4,11 @@
  *
  * 패턴 출처: OWASP CRS (https://github.com/coreruleset/coreruleset), 태그 v3.3.8,
  *   rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf 의 규칙 941180 (paranoia-level/1) 의 @pm 단어 목록.
- *   Apache License 2.0 (licenses/coreruleset-LICENSE.txt). 가져온 날: 2026-11-21.
+ *   Apache License 2.0. 가져온 날: 2026-11-21.
  *   원문에서 바뀐 점: 단어 아홉 개만 옮겼고, 규칙의 디코딩(urlDecodeUni 등)과 점수 계산은 옮기지 않았다.
+ * 같은 파일의 규칙 941160 (paranoia-level/1, "NoScript XSS InjectionChecker: HTML Injection") 의 HTML 태그 갈래는 정규식으로 옮겼다(가져온 날 2026-11-21).
+ *   바뀐 점은 PATTERNS 의 그 항목 위 주석에 적었다.
+ * 그 밖의 항목은 백준 게시판 글 https://www.acmicpc.net/board/view/166494 (2026-11-21, 사용자 제보) 에서 따왔다.
  *
  * 편집기 객체(.CodeMirror 요소의 .CodeMirror 속성)는 페이지의 JS 세계에만 있어서, 콘텐츠 스크립트(baekjoon.js 의 injectPageScript)가
  * 제출 페이지에 이 파일을 <script src> 요소로 넣어 페이지 세계에서 돌린다(manifest 의 "world" 키는 Chrome 111 이상이라 쓰지 않는다).
@@ -16,6 +19,8 @@
 
   const DEBUG = false;
 
+  // 항목은 글자 그대로의 text, 또는 정규식 regex(대소문자 무시) 중 하나를 갖고, 어디서 왔는지(rule)를 적는다.
+  // tip 이 있으면 툴팁 본문으로 쓰고, 없으면 text 로 만든다. hintOf(일치한 글) 가 돌려준 키의 hints 글을 뒤에 덧붙인다.
   // 백준이 -->를 거부한다는 것은 위키(2차 자료)의 보고다. 나머지 단어는 같은 규칙에서 따온 추정이다.
   // shortcut: 소스에 적힌 그대로만 찾는다. 서버의 필터는 \x2d\x2d> 나 --&gt; 같은 인코딩도 풀어서 보므로 그건 놓친다.
   //   그런 사례가 제보되면 디코딩 단계를 추가한다.
@@ -29,6 +34,26 @@
     { text: '<!--', rule: '941180' },
     { text: '-->', rule: '941180', hint: '예: n --> 0 은 n-- > 0 처럼 띄어 쓰면 됩니다.' },
     { text: '<![cdata[', rule: '941180' },
+    // 사용자 제보 하나뿐이고, 이를 막는 규칙은 v3.3.8 의 paranoia-level/1 에서 찾지 못했다(CRS 4.30.0 의 942320 이 잡는다). 게시판 글 목록을 따랐다.
+    {
+      text: 'numeric_limits',
+      rule: 'board/166494',
+      tip: '백준허브: 이 부분(numeric_limits)이 들어 있으면 제출이 거부(403)된다는 사용자 제보가 있습니다(확인되지 않음). 제출이 거부되면 이 부분을 바꿔 보세요.',
+    },
+    // 규칙 941160 (CRS v3.3.8, REQUEST-941-APPLICATION-ATTACK-XSS.conf) 의 HTML 태그 갈래. 원문에서 세 곳의 상한만 바꿨다:
+    //   \W*? 는 \W{0,8}?, 앞쪽의 [^\w<>]* 두 곳은 [^\w<>]{0,8}, [^<>\"'\s]*: 는 [^<>\"'\s]{0,32}: .
+    //   원문은 `<` 만 64KB 있는 소스에서 5분이 지나도 끝나지 않았다(재앙적 역추적). 상한을 두면 10ms 다.
+    //   그래서 글자 사이에 8자를 넘는 글자가 낀 일치(예: `< / s c r i p t` 처럼 8자 넘게 벌린 것)는 놓친다.
+    {
+      regex: /<[^\w<>]{0,8}(?:[^<>\"'\s]{0,32}:)?[^\w<>]{0,8}\W{0,8}?(?:(?:a\W{0,8}?(?:n\W{0,8}?i\W{0,8}?m\W{0,8}?a\W{0,8}?t\W{0,8}?e|p\W{0,8}?p\W{0,8}?l\W{0,8}?e\W{0,8}?t|u\W{0,8}?d\W{0,8}?i\W{0,8}?o)|b\W{0,8}?(?:i\W{0,8}?n\W{0,8}?d\W{0,8}?i\W{0,8}?n\W{0,8}?g\W{0,8}?s|a\W{0,8}?s\W{0,8}?e|o\W{0,8}?d\W{0,8}?y)|i?\W{0,8}?f\W{0,8}?r\W{0,8}?a\W{0,8}?m\W{0,8}?e|o\W{0,8}?b\W{0,8}?j\W{0,8}?e\W{0,8}?c\W{0,8}?t|i\W{0,8}?m\W{0,8}?a?\W{0,8}?g\W{0,8}?e?|e\W{0,8}?m\W{0,8}?b\W{0,8}?e\W{0,8}?d|p\W{0,8}?a\W{0,8}?r\W{0,8}?a\W{0,8}?m|v\W{0,8}?i\W{0,8}?d\W{0,8}?e\W{0,8}?o|l\W{0,8}?i\W{0,8}?n\W{0,8}?k)[^>\w]|s\W{0,8}?(?:c\W{0,8}?r\W{0,8}?i\W{0,8}?p\W{0,8}?t|t\W{0,8}?y\W{0,8}?l\W{0,8}?e|e\W{0,8}?t[^>\w]|v\W{0,8}?g)|m\W{0,8}?(?:a\W{0,8}?r\W{0,8}?q\W{0,8}?u\W{0,8}?e\W{0,8}?e|e\W{0,8}?t\W{0,8}?a[^>\w])|f\W{0,8}?o\W{0,8}?r\W{0,8}?m)/gi,
+      rule: '941160',
+      tip:
+        '백준허브: 이 부분은 HTML 태그 같은 글(<script, <style, <svg, <form, <iframe, <object, <embed, <set< 등)이라, ' +
+        '들어 있으면 백준 서버가 제출을 거부(403)하는 것으로 알려져 있습니다. 제출하려면 이 부분을 바꿔 주세요.',
+      // 일치한 글이 set 갈래(<set<)인지만 가려 정해 둔 글을 고른다. 일치한 글을 툴팁에 넣지는 않는다.
+      hintOf: (matched) => (/s\W{0,8}?e\W{0,8}?t[^>\w]$/i.test(matched) ? 'set' : ''),
+      hints: { set: '예: vector<set<int>> 는 using S = set<int>; 로 이름을 붙여 vector<S> 처럼 쓰면 됩니다.' },
+    },
   ];
 
   const MAX_LENGTH = 64 * 1024; // 이보다 긴 소스는 표시하지 않는다 (제출 한도이기도 하다)
@@ -39,9 +64,10 @@
   const HIT_CLASS = 'bjh-filter-hit';
   const TIP_CLASS = 'bjh-filter-tooltip';
   const INDEX_ATTR = 'data-bjh-pattern';
+  const VARIANT_ATTR = 'data-bjh-variant';
 
   // 대소문자를 가리지 않는 글자 그대로의 일치. toLowerCase() 는 글자 수가 바뀔 수 있어(İ) 위치가 어긋나므로 RegExp 의 i 플래그를 쓴다.
-  const MATCHERS = PATTERNS.map((p) => new RegExp(p.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'));
+  const MATCHERS = PATTERNS.map((p) => p.regex || new RegExp(p.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'));
 
   function log(...args) {
     if (DEBUG) console.log('[BaekjoonHub submitfilter]', ...args);
@@ -53,7 +79,8 @@
     MATCHERS.forEach((re, index) => {
       for (const m of text.matchAll(re)) {
         if (hits.length > MAX_HITS) return;
-        hits.push({ index, start: m.index, end: m.index + m[0].length });
+        const variant = PATTERNS[index].hintOf ? PATTERNS[index].hintOf(m[0]) : '';
+        hits.push({ index, variant, start: m.index, end: m.index + m[0].length });
       }
     });
     return hits.sort((a, b) => a.start - b.start);
@@ -77,10 +104,11 @@
     tip = document.createElement('div');
     tip.className = TIP_CLASS;
     tip.setAttribute('role', 'tooltip');
+    const hint = pattern.hint || (pattern.hints && pattern.hints[markEl.getAttribute(VARIANT_ATTR)]);
     tip.textContent =
-      `백준허브: 이 부분(${pattern.text})이 들어 있으면 백준 서버가 제출을 거부(403)하는 것으로 알려져 있습니다. ` +
-      `제출하려면 이 부분을 바꿔 주세요.` +
-      (pattern.hint ? ` ${pattern.hint}` : '');
+      (pattern.tip ||
+        `백준허브: 이 부분(${pattern.text})이 들어 있으면 백준 서버가 제출을 거부(403)하는 것으로 알려져 있습니다. ` +
+          `제출하려면 이 부분을 바꿔 주세요.`) + (hint ? ` ${hint}` : '');
     tip.style.position = 'fixed';
     tip.style.left = `${Math.max(8, Math.min(rect.left, (document.documentElement.clientWidth || 1000) - 340))}px`;
     tip.style.top = `${rect.bottom + 6}px`;
@@ -132,7 +160,7 @@
             marks.push(
               cm.markText(cm.posFromIndex(h.start), cm.posFromIndex(h.end), {
                 className: HIT_CLASS,
-                attributes: { [INDEX_ATTR]: String(h.index) },
+                attributes: { [INDEX_ATTR]: String(h.index), [VARIANT_ATTR]: h.variant },
               })
             );
           }

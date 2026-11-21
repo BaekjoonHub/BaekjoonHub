@@ -238,3 +238,73 @@ test('편집기가 5초 안에 나타나지 않으면 아무것도 하지 않는
   assert.equal(timers.length, 0);
   assert.deepEqual(listeners, []);
 });
+
+// 백준 게시판 글(166494)의 제보와 규칙 941160 의 태그 갈래, 그리고 두 항목 이상이 겹치는 경우.
+test('vector<set<int>> 는 <set< 에만, #include <format> 은 <form 에만, </script> 는 </script 에 표시한다', () => {
+  assert.deepEqual(marksOf('vector<set<int>> v;'), [[[0, 6], [0, 11]]]);
+  assert.deepEqual(marksOf('#include <format>'), [[[0, 9], [0, 14]]]);
+  assert.deepEqual(marksOf('</script>'), [[[0, 0], [0, 8]]]);
+  assert.deepEqual(marksOf('< / s c r i p t'), [[[0, 0], [0, 15]]]);
+});
+
+test('std::numeric_limits 는 numeric_limits 에만 표시한다 (대소문자 무시)', () => {
+  assert.deepEqual(marksOf('std::numeric_limits<int>::max()'), [[[0, 5], [0, 19]]]);
+  assert.deepEqual(marksOf('Std::Numeric_Limits<int>'), [[[0, 5], [0, 19]]]);
+});
+
+for (const source of [
+  '#include <set>',
+  'map<int, set<int>> m;',
+  '#include <bits/stdc++.h>',
+  'if (a < b && c > d) {',
+  'for (int i = 0; i<n; i++) a<--b;',
+]) {
+  test(`표시하지 않는다: ${source}`, () => {
+    assert.deepEqual(marksOf(source), []);
+  });
+}
+
+test('<!-- 와 태그 표시는 겹치거나 맞닿아도 각자 남고 툴팁도 각자 다르다', () => {
+  const editor = fakeEditor('<!--script <svg>');
+  const page = load(editor);
+  assert.deepEqual(editor.live(), [[[0, 0], [0, 4]], [[0, 0], [0, 10]], [[0, 11], [0, 15]]]);
+  const texts = [0, 1].map((i) => {
+    page.fire('mouseover', { target: markElement(editor, i) });
+    return page.body.children[page.body.children.length - 1].textContent;
+  });
+  assert.match(texts[0], /^백준허브: 이 부분\(<!--\)이 들어 있으면/);
+  assert.match(texts[1], /^백준허브: 이 부분은 HTML 태그 같은 글\(<script, <style, <svg, <form, <iframe, <object, <embed, <set< 등\)/);
+});
+
+test('set 갈래의 툴팁에만 using 안내가 있고, numeric_limits 의 툴팁은 사용자 제보임을 밝힌다', () => {
+  const tooltipOf = (text, i = 0) => {
+    const editor = fakeEditor(text);
+    const page = load(editor);
+    page.fire('mouseover', { target: markElement(editor, i) });
+    const tip = page.body.children[0];
+    assert.equal(tip.htmlSet, false);
+    return tip.textContent;
+  };
+  const using = '예: vector<set<int>> 는 using S = set<int>; 로 이름을 붙여 vector<S> 처럼 쓰면 됩니다.';
+  assert.ok(tooltipOf('vector<set<int>> v;').endsWith(` ${using}`));
+  assert.doesNotMatch(tooltipOf('<script>'), /using/);
+  assert.doesNotMatch(tooltipOf('<script>'), /vector<set/); // 일치한 글이 아니라 정해 둔 글만 쓴다
+  assert.equal(
+    tooltipOf('std::numeric_limits<int>::max()'),
+    '백준허브: 이 부분(numeric_limits)이 들어 있으면 제출이 거부(403)된다는 사용자 제보가 있습니다(확인되지 않음). 제출이 거부되면 이 부분을 바꿔 보세요.'
+  );
+});
+
+test('64KB 직전의 `<` 만, 또는 `< ` 만 있는 소스도 500ms 안에 끝난다', () => {
+  for (const source of ['<'.repeat(64 * 1024 - 1), '< '.repeat(32 * 1024 - 1), ('<' + '-'.repeat(200)).repeat(320), '<' + '!'.repeat(64 * 1024 - 2)]) {
+    const t0 = Date.now();
+    assert.deepEqual(marksOf(source), []);
+    assert.ok(Date.now() - t0 < 500, `${Date.now() - t0}ms`);
+  }
+});
+
+test('200곳 한도는 모든 항목을 합쳐 센다', () => {
+  assert.equal(marksOf('-->\n<svg\n'.repeat(100)).length, 200);
+  assert.equal(marksOf('-->\n<svg\n'.repeat(100) + '<svg\n').length, 0);
+  assert.equal(marksOf('numeric_limits\n'.repeat(100) + '<svg\n'.repeat(101)).length, 0);
+});
