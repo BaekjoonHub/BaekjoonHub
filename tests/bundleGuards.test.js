@@ -77,6 +77,14 @@ describe('manifest 콘텐츠 스크립트 번들', () => {
     assert.match(errors[0], /b\.js: .*uploadState/);
   });
 
+  test('statusrefresh.js 는 BOJ 출처에만 웹 접근 가능으로 열고, 콘텐츠 스크립트에는 "world" 키가 없다', () => {
+    const file = 'scripts/baekjoon/statusrefresh.js';
+    const entries = manifest.web_accessible_resources.filter((entry) => entry.resources.includes(file));
+    assert.equal(entries.length, 1);
+    assert.deepEqual(entries[0].matches, ['https://www.acmicpc.net/*', 'https://acmicpc.net/*']);
+    assert.ok(manifest.content_scripts.every((entry) => !('world' in entry) && !entry.js.includes(file)));
+  });
+
   for (const bundle of bundles) {
     test(`${bundle.name}: 모든 파일이 존재하고 최상위 선언이 충돌하지 않는다`, () => {
       const sources = bundle.files.map((file) => {
