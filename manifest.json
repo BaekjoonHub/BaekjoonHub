@@ -71,6 +71,17 @@
     },
     {
       "matches": [
+        "https://www.acmicpc.net/submit/*",
+        "https://acmicpc.net/submit/*"
+      ],
+      "js": [
+        "scripts/baekjoon/submitfilter.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
         "https://www.acmicpc.net/*",
         "https://acmicpc.net/*"
       ],

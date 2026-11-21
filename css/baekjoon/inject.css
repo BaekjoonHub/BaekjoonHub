@@ -228,3 +228,22 @@
 .bjh-save-examples-btn.fail {
   background-color: #d9534f;
 }
+
+/* 제출 페이지: 백준 서버가 거부하는 것으로 알려진 문자열 표시와 안내 (scripts/baekjoon/submitfilter.js) */
+.bjh-filter-hit {
+  background-color: rgba(220, 38, 38, 0.25);
+  text-decoration: underline wavy #dc2626;
+}
+
+.bjh-filter-tooltip {
+  z-index: 10000;
+  max-width: 320px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background-color: #7f1d1d;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px;
+  pointer-events: none;
+}
