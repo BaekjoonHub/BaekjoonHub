@@ -62,7 +62,8 @@
         "https://acmicpc.net/*"
       ],
       "resources": [
-        "scripts/baekjoon/statusrefresh.js"
+        "scripts/baekjoon/statusrefresh.js",
+        "scripts/baekjoon/submitfilter.js"
       ]
     }
   ],
@@ -77,17 +78,6 @@
         "scripts/authorize.js"
       ],
       "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://www.acmicpc.net/submit/*",
-        "https://acmicpc.net/submit/*"
-      ],
-      "js": [
-        "scripts/baekjoon/submitfilter.js"
-      ],
-      "run_at": "document_idle",
-      "world": "MAIN"
     },
     {
       "matches": [

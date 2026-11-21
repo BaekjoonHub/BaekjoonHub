@@ -180,6 +180,17 @@ test('표시에 마우스를 올리면 문자열과 안내를 글로만 보여 �
   assert.equal(tip.removed, true);
 });
 
+test('data-bjh-pattern 속성이 없거나 패턴을 가리키지 않는 표시에는 툴팁이 없다', () => {
+  const editor = fakeEditor('document.cookie');
+  const page = load(editor);
+  for (const value of [null, '', '99']) {
+    const el = markElement(editor, 0);
+    el.getAttribute = () => value;
+    page.fire('mouseover', { target: el });
+    assert.equal(page.body.children.length, 0, `속성 ${JSON.stringify(value)}`);
+  }
+});
+
 test('-->가 아닌 단어의 안내에는 띄어 쓰라는 말이 없다', () => {
   const editor = fakeEditor('document.cookie');
   const page = load(editor);

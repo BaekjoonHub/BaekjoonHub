@@ -7,8 +7,9 @@
  *   Apache License 2.0 (licenses/coreruleset-LICENSE.txt). 가져온 날: 2026-11-21.
  *   원문에서 바뀐 점: 단어 아홉 개만 옮겼고, 규칙의 디코딩(urlDecodeUni 등)과 점수 계산은 옮기지 않았다.
  *
- * 편집기 객체(.CodeMirror 요소의 .CodeMirror 속성)는 페이지의 JS 세계에만 있어서
- * manifest 에서 "world": "MAIN" 으로 실행한다. 페이지 스크립트가 이 파일을 볼 수 있으니 전역에 아무것도 남기지 않는다.
+ * 편집기 객체(.CodeMirror 요소의 .CodeMirror 속성)는 페이지의 JS 세계에만 있어서, 콘텐츠 스크립트(baekjoon.js 의 injectPageScript)가
+ * 제출 페이지에 이 파일을 <script src> 요소로 넣어 페이지 세계에서 돌린다(manifest 의 "world" 키는 Chrome 111 이상이라 쓰지 않는다).
+ * 페이지 스크립트가 이 파일을 볼 수 있으니 전역에 아무것도 남기지 않는다.
  */
 (function () {
   'use strict';
@@ -69,7 +70,8 @@
   // 글은 패턴 데이터로만 만들고(사용자 소스 아님) textContent 로만 넣는다.
   function showTip(markEl) {
     hideTip();
-    const pattern = PATTERNS[Number(markEl.getAttribute(INDEX_ATTR))];
+    const index = markEl.getAttribute(INDEX_ATTR);
+    const pattern = PATTERNS[/^\d+$/.test(index) ? Number(index) : -1]; // 속성이 없으면 Number(null) 이 0 이라 첫 패턴으로 오인한다
     if (!pattern) return;
     const rect = markEl.getBoundingClientRect();
     tip = document.createElement('div');
