@@ -1,4 +1,4 @@
-/* BOJ 제출 현황 표의 멈춘 결과 칸을 채우는 스크립트. manifest 에서 "world": "MAIN" 으로 등록해 페이지 컨텍스트에서 돈다.
+/* BOJ 제출 현황 표의 멈춘 결과 칸을 채우는 스크립트. 로더(baekjoon.js)가 <script> 요소로 페이지에 넣어 페이지 컨텍스트에서 돈다.
    확장 스크립트(격리된 세계)는 페이지의 display_solution·jQuery·pusher 에 닿지 못하기 때문이다.
 
    BOJ 의 status.js 는 채점이 끝나지 않은 제출마다 Pusher 채널 solution-<id> 를 구독하고, 구독이 성공하면 /status/ajax 를 한 번 부른 뒤에야
@@ -35,7 +35,7 @@
   const PENDING_COLORS = ['wait', 'rejudge-wait', 'compile', 'judging'];
   const DOWN_STATES = ['unavailable', 'failed', 'disconnected']; // Pusher 4.2 연결 상태 중 끊긴 것
 
-  // 채점 현황 표가 있는 페이지(status.js 가 로드된 페이지)의 MAIN 세계에서만 동작한다. 격리된 세계로 실행되면 아무것도 하지 않는다.
+  // 채점 현황 표가 있는 페이지(status.js 가 로드된 페이지)의 페이지 컨텍스트에서만 동작한다. 격리된 세계로 실행되면 아무것도 하지 않는다.
   if (typeof window.display_solution !== 'function' || !Array.isArray(window.solution_ids) || !window.jQuery) return;
 
   function log(...args) {

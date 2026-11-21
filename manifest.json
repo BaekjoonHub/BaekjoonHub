@@ -55,6 +55,15 @@
         "welcome.html",
         "welcome.js"
       ]
+    },
+    {
+      "matches": [
+        "https://www.acmicpc.net/*",
+        "https://acmicpc.net/*"
+      ],
+      "resources": [
+        "scripts/baekjoon/statusrefresh.js"
+      ]
     }
   ],
   "content_scripts": [
@@ -100,17 +109,6 @@
         "scripts/baekjoon/baekjoon.js"
       ],
       "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://www.acmicpc.net/*",
-        "https://acmicpc.net/*"
-      ],
-      "js": [
-        "scripts/baekjoon/statusrefresh.js"
-      ],
-      "run_at": "document_idle",
-      "world": "MAIN"
     },
     {
       "matches": [

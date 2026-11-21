@@ -77,12 +77,30 @@ function stopLoader() {
    "채점 준비 중" 등에서 멈추고, 로더는 화면의 표만 읽으므로 새 제출이 올라가지 않는다.
    맨 위 제출이 채점 중이면 페이지 컨텍스트에서 도는 statusrefresh.js 에 그 제출을 지켜봐 달라고 부탁한다. 거기서는 BOJ 의
    display_solution·pusher 에 닿으므로, 실시간 이벤트가 오는 동안은 요청 없이 기다리고 오지 않을 때만 /status/ajax 로 결과를 채운다.
-   부탁은 두 스크립트 중 어느 쪽이 먼저 떠도 닿도록 채점 중인 동안 로더 주기마다 되풀이한다(이미 지켜보는 제출은 무시된다). */
+   그 스크립트는 manifest 의 "world" 키(Chrome 111 이상) 대신 <script> 요소로 페이지에 넣는다. 처음 부탁할 때 한 번만 넣고,
+   확장을 다시 불러와 이 스크립트가 한 번 더 떠도 두 벌이 되지 않도록 중복 여부는 페이지의 DOM(요소 id)으로 가린다.
+   부탁은 스크립트가 뜨기 전에 보낸 것이 사라지므로 채점 중인 동안 로더 주기마다 되풀이한다(이미 지켜보는 제출은 무시된다). */
+const STATUS_REFRESH_SCRIPT_ID = 'baekjoonhub-statusrefresh';
+
+function injectStatusRefreshScript() {
+  try {
+    if (document.getElementById(STATUS_REFRESH_SCRIPT_ID)) return;
+    const script = document.createElement('script');
+    script.id = STATUS_REFRESH_SCRIPT_ID;
+    script.src = chrome.runtime.getURL('scripts/baekjoon/statusrefresh.js');
+    (document.head || document.documentElement).appendChild(script);
+  } catch (error) {
+    console.warn('제출 현황 스크립트를 페이지에 넣지 못했습니다.', error);
+  }
+}
+
 function askToWatchSolution(row) {
   const pending = [RESULT_CATEGORY.RESULT_PENDING, RESULT_CATEGORY.RESULT_PENDING_REJUDGE, RESULT_CATEGORY.RESULT_PREPARE_FOR_JUDGE, RESULT_CATEGORY.RESULT_JUDGING];
   if (!pending.includes(row.resultCategory)) return;
   const id = /^solution-(\d+)$/.exec(row.elementId)?.[1];
-  if (id) window.postMessage({ type: 'BaekjoonHub:watch-solution', id }, window.location.origin);
+  if (!id) return;
+  injectStatusRefreshScript();
+  window.postMessage({ type: 'BaekjoonHub:watch-solution', id }, window.location.origin);
 }
 
 function toastThenStopLoader(toastMessage, errorMessage) {

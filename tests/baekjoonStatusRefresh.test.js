@@ -1,6 +1,6 @@
 'use strict';
 
-// scripts/baekjoon/statusrefresh.js 는 BOJ 페이지 컨텍스트("world": "MAIN")에서 돌며, 로더가 부탁한 제출만 지켜본다.
+// scripts/baekjoon/statusrefresh.js 는 BOJ 페이지 컨텍스트에서 돌며(로더가 <script> 요소로 넣는다), 로더가 부탁한 제출만 지켜본다.
 // 실제 파일을 vm 에 로드하고 가짜 시계·가짜 페이지(display_solution, jQuery.ajax, Pusher)로 규칙을 하나씩 확인한다.
 // 난수는 0.5 로 고정해 ±20% 흔들림이 1배가 되게 한다. 시각은 ask 를 보낸 순간을 0 으로 읽는다.
 
