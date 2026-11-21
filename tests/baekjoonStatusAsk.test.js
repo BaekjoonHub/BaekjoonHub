@@ -17,10 +17,10 @@ const PAGE = `${ORIGIN}/status?user_id=tester1&problem_id=1000&from_mine=1`;
 
 // 페이지 컨텍스트에서 도는 statusrefresh.js 는 manifest 의 "world" 키(Chrome 111 이상) 대신 로더가 <script> 요소로 넣는다.
 // 요소는 처음 부탁할 때만, 페이지에 이미 있으면(확장을 다시 불러와 로더가 한 번 더 뜬 경우) 넣지 않는다.
-function loadLoader(state, { existing = false } = {}) {
+function loadLoader(state, { existing = false, url = PAGE, username = 'tester1' } = {}) {
   const context = vm.createContext({
     console,
-    window: { location: { href: PAGE, origin: ORIGIN }, postMessage: (message, origin) => state.asks.push({ message, origin }) },
+    window: { location: { href: url, origin: ORIGIN }, postMessage: (message, origin) => state.asks.push({ message, origin }) },
     chrome: { runtime: { getURL: (file) => `chrome-extension://abcdef/${file}` } },
     document: {
       head: { appendChild: (el) => state.added.push(el) },
@@ -30,14 +30,16 @@ function loadLoader(state, { existing = false } = {}) {
     setInterval: (fn) => { state.tick = fn; return 1; },
     clearInterval: () => { state.tick = async () => {}; },
     checkEnable: async () => true,
-    findUsername: () => 'tester1',
+    findUsername: () => username,
+    parseProblemDescription: () => {}, // 문제 페이지 경로는 로드만 되면 된다
+    getSaveExamplesOption: async () => false,
     isExistResultTable: () => true,
     findFromResultTable: () => [{ elementId: 'solution-100000001', username: 'tester1', result: '', resultCategory: state.category }],
     findHtmlDocumentByUrl: async (url) => { state.fetched.push(url); throw new Error('페이지를 다시 받으면 안 된다'); },
-    startUpload: () => state.calls.push('startUpload'),
     findData: async () => { state.calls.push('findData'); return {}; }, // 빈 값이면 beginUpload 는 아무것도 올리지 않는다
   });
-  for (const file of ['scripts/util.js', 'scripts/baekjoon/variables.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), context, { filename: file });
+  for (const file of ['scripts/util.js', 'scripts/baekjoon/variables.js', 'scripts/baekjoon/util.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), context, { filename: file });
+  context.startUpload = () => state.calls.push('startUpload'); // util.js 가 진짜 startUpload 를 선언하므로 로드한 뒤에 바꾼다
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts/baekjoon/baekjoon.js'), 'utf8'), context, { filename: 'baekjoon.js' });
 }
 
@@ -66,4 +68,20 @@ test('채점 중인 맨 위 행은 지켜봐 달라고 부탁하고 페이지를
   loadLoader(again, { existing: true });
   await again.tick();
   assert.deepEqual([again.added.length, again.asks.length > 0], [0, true], '이미 있으면 넣지 않고 부탁은 한다');
+});
+
+// #371: 제출 페이지의 편집기 객체는 페이지 세계에만 있어 submitfilter.js 도 같은 방식(<script> 요소)으로 넣는다. 제출 페이지에서만, 한 번만, 로그인과 무관하게.
+test('제출 페이지에서는 submitfilter.js <script> 요소를 한 번 넣고, 이미 있으면 넣지 않으며, 다른 페이지에서는 넣지 않는다', () => {
+  const FILE = 'chrome-extension://abcdef/scripts/baekjoon/submitfilter.js';
+  const scriptsOf = (url, options) => {
+    const state = { tick: null, asks: [], added: [], fetched: [], calls: [], category: 'wa' };
+    loadLoader(state, { url, ...options });
+    return state.added.filter((el) => el.src === FILE).map((el) => ({ ...el }));
+  };
+  for (const url of [`${ORIGIN}/submit/1000`, `https://www.acmicpc.net/submit/1000/52961234`]) {
+    assert.deepEqual(scriptsOf(url), [{ tag: 'script', id: 'baekjoonhub-submitfilter', src: FILE }], url);
+  }
+  assert.equal(scriptsOf(`${ORIGIN}/submit/1000`, { username: null }).length, 1, '로그인 여부를 기다리지 않는다');
+  assert.equal(scriptsOf(`${ORIGIN}/submit/1000`, { existing: true }).length, 0, '이미 있으면 넣지 않는다');
+  for (const url of [PAGE, `${ORIGIN}/problem/1000`, `${ORIGIN}/submit`]) assert.equal(scriptsOf(url).length, 0, url);
 });
