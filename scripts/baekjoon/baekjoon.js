@@ -52,7 +52,7 @@ function startLoader() {
         if (!isAccepted) {
           // 채점 중/기다리는 중 등 비완료 상태를 감지
           seenPending = true;
-          await refreshStuckRow(data);
+          askToWatchSolution(data);
           return;
         }
         stopLoader();
@@ -74,40 +74,33 @@ function stopLoader() {
 }
 
 /* BOJ 는 채점 결과를 Pusher 이벤트로 화면에 반영한다(status.js 의 display_solution). 이벤트가 오지 않으면 결과 칸이
-   "채점 준비 중" 등에서 멈추고, BOJ 도 이때는 새로고침으로 결과를 확인하라고 안내한다.
-   맨 위 제출이 채점 중인 채 그대로면 같은 페이지를 다시 받아 BOJ 가 갱신하는 칸만 바꿔 넣는다. 그 뒤는 로더가 이어서 처리한다.
-   BOJ 에 부담을 주지 않게 5초 뒤부터 간격을 두 배씩(최대 60초) 늘리며 10번까지만 받는다. */
-const stuckRow = { result: null, since: 0, tries: 0, busy: false };
+   "채점 준비 중" 등에서 멈추고, 로더는 화면의 표만 읽으므로 새 제출이 올라가지 않는다.
+   맨 위 제출이 채점 중이면 페이지 컨텍스트에서 도는 statusrefresh.js 에 그 제출을 지켜봐 달라고 부탁한다. 거기서는 BOJ 의
+   display_solution·pusher 에 닿으므로, 실시간 이벤트가 오는 동안은 요청 없이 기다리고 오지 않을 때만 /status/ajax 로 결과를 채운다.
+   그 스크립트는 manifest 의 "world" 키(Chrome 111 이상) 대신 <script> 요소로 페이지에 넣는다. 처음 부탁할 때 한 번만 넣고,
+   확장을 다시 불러와 이 스크립트가 한 번 더 떠도 두 벌이 되지 않도록 중복 여부는 페이지의 DOM(요소 id)으로 가린다.
+   부탁은 스크립트가 뜨기 전에 보낸 것이 사라지므로 채점 중인 동안 로더 주기마다 되풀이한다(이미 지켜보는 제출은 무시된다). */
+const STATUS_REFRESH_SCRIPT_ID = 'baekjoonhub-statusrefresh';
 
-async function refreshStuckRow(row) {
-  const judging = [RESULT_CATEGORY.RESULT_PENDING, RESULT_CATEGORY.RESULT_PENDING_REJUDGE, RESULT_CATEGORY.RESULT_PREPARE_FOR_JUDGE, RESULT_CATEGORY.RESULT_JUDGING];
-  if (!judging.includes(row.resultCategory)) return;
-  // 화면이 바뀌고 있으면(채점 진행률 등) 실시간 갱신이 살아 있는 것이라 기다린다
-  if (stuckRow.result !== row.result) {
-    stuckRow.result = row.result;
-    stuckRow.since = Date.now();
-    return;
-  }
-  if (stuckRow.busy || stuckRow.tries >= 10) return;
-  if (Date.now() - stuckRow.since < Math.min(5000 * 2 ** stuckRow.tries, 60000)) return;
-  stuckRow.busy = true;
-  stuckRow.tries += 1;
+function injectStatusRefreshScript() {
   try {
-    const fresh = (await findHtmlDocumentByUrl(window.location.href)).getElementById(row.elementId);
-    const current = document.getElementById(row.elementId);
-    // 받는 사이 실시간 갱신이 도착해 로더가 끝났으면(업로드 표시가 결과 칸에 붙어 있다) 건드리지 않는다
-    if (loader === null || !fresh || !current) return;
-    for (const name of ['result', 'memory', 'time', 'judge-platform']) {
-      const from = fresh.querySelector(`td.${name}`);
-      const to = current.querySelector(`td.${name}`);
-      if (from && to) to.innerHTML = from.innerHTML;
-    }
+    if (document.getElementById(STATUS_REFRESH_SCRIPT_ID)) return;
+    const script = document.createElement('script');
+    script.id = STATUS_REFRESH_SCRIPT_ID;
+    script.src = chrome.runtime.getURL('scripts/baekjoon/statusrefresh.js');
+    (document.head || document.documentElement).appendChild(script);
   } catch (error) {
-    log(error);
-  } finally {
-    stuckRow.since = Date.now();
-    stuckRow.busy = false;
+    console.warn('제출 현황 스크립트를 페이지에 넣지 못했습니다.', error);
   }
+}
+
+function askToWatchSolution(row) {
+  const pending = [RESULT_CATEGORY.RESULT_PENDING, RESULT_CATEGORY.RESULT_PENDING_REJUDGE, RESULT_CATEGORY.RESULT_PREPARE_FOR_JUDGE, RESULT_CATEGORY.RESULT_JUDGING];
+  if (!pending.includes(row.resultCategory)) return;
+  const id = /^solution-(\d+)$/.exec(row.elementId)?.[1];
+  if (!id) return;
+  injectStatusRefreshScript();
+  window.postMessage({ type: 'BaekjoonHub:watch-solution', id }, window.location.origin);
 }
 
 function toastThenStopLoader(toastMessage, errorMessage) {
