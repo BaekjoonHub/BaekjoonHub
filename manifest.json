@@ -103,6 +103,17 @@
     },
     {
       "matches": [
+        "https://www.acmicpc.net/*",
+        "https://acmicpc.net/*"
+      ],
+      "js": [
+        "scripts/baekjoon/statusrefresh.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
         "https://school.programmers.co.kr/*"
       ],
       "css": [
