@@ -18,7 +18,7 @@ const oAuth2 = {
   /**
    * Begin
    */
-  begin() {
+  begin(selectAccount) {
     this.init(); // secure token params.
 
     let url = `${this.AUTHORIZATION_URL}?client_id=${this.CLIENT_ID}&redirect_uri=${encodeURIComponent(this.REDIRECT_URL)}&scope=`;
@@ -26,16 +26,15 @@ const oAuth2 = {
     for (let i = 0; i < this.SCOPES.length; i += 1) {
       url += this.SCOPES[i];
     }
+    if (selectAccount) url += '&prompt=select_account';
 
-    chrome.storage.local.set({ pipe_baekjoonhub: true }, () => {
+    // state: authorize.js 가 콜백 주소의 state 와 비교해, 이 확장이 시작한 요청의 콜백만 처리한다 (남이 만든 ?code= 링크 차단)
+    const state = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+    url += `&state=${state}`;
+
+    chrome.storage.local.set({ pipe_baekjoonhub: state }, () => {
       // opening pipe temporarily
-
-      chrome.tabs.create({ url, selected: true }, function () {
-        window.close();
-        chrome.tabs.getCurrent(function (tab) {
-          // chrome.tabs.remove(tab.id, function () {});
-        });
-      });
+      window.location.href = url;
     });
   },
 };

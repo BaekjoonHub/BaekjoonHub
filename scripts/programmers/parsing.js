@@ -3,14 +3,7 @@
   모든 해당 파일의 모든 함수는 parseData()를 통해 호출됩니다.
 */
 
-/*
-  bojData를 초기화하는 함수로 문제 요약과 코드를 파싱합니다.
-  - directory : 레포에 기록될 폴더명
-  - message : 커밋 메시지
-  - fileName : 파일명
-  - readme : README.md에 작성할 내용
-  - code : 소스코드 내용
-*/
+/* 빈칸 채우기 문제: 입력 칸의 값을 끼워 넣어 코드 원문을 다시 만든다 */
 function reconstructFillBlankCode(node) {
   let result = '';
   for (const child of node.childNodes) {
@@ -25,6 +18,14 @@ function reconstructFillBlankCode(node) {
   return result;
 }
 
+/*
+  bojData를 초기화하는 함수로 문제 요약과 코드를 파싱합니다.
+  - directory : 레포에 기록될 폴더명
+  - message : 커밋 메시지
+  - fileName : 파일명
+  - readme : README.md에 작성할 내용
+  - code : 소스코드 내용
+*/
 async function parseData() {
   const lessonEl = document.querySelector('.lesson-content') || document.querySelector('[data-lesson-id]');
   const problemId = lessonEl.getAttribute('data-lesson-id');
@@ -35,7 +36,6 @@ async function parseData() {
   const division = [...document.querySelector('ol.breadcrumb').childNodes]
     .filter((x) => x.className !== 'active')
     .map((x) => x.innerText)
-    // .filter((x) => !x.includes('코딩테스트'))
     .map((x) => convertSingleCharToDoubleChar(x))
     .reduce((a, b) => `${a}/${b}`);
   const title = document.querySelector('.algorithm-title .challenge-title').textContent.replace(/\\n/g, '').trim();
@@ -75,6 +75,8 @@ async function parseData() {
   return makeData({ link, problemId, level, title, problem_description, division, language_extension, code, result_message, runtime, memory, language });
 }
 
+/* 전체 업로드(fetchProblemCodeAndData)는 채점 결과를 볼 수 없어 runtime·memory·result_message 없이 부른다.
+   그때 README 에는 성능 요약·채점결과 절이 없다(커밋 메시지는 전체 업로드가 쓰지 않는다). */
 async function makeData(origin) {
   const { problem_description, problemId, level, result_message, division, language_extension, title, runtime, memory, code, language, link } = origin;
   const directory = await buildDirectory('programmers', {
@@ -93,63 +95,16 @@ async function makeData(origin) {
   const readme =
     `# [${levelWithLv}] ${title} - ${problemId} \n\n`
     + `[문제 링크](${link}) \n\n`
-    + `### 성능 요약\n\n`
-    + `메모리: ${memory}, `
-    + `시간: ${runtime}\n\n`
+    + (isNull(runtime) ? '' : `### 성능 요약\n\n메모리: ${memory}, 시간: ${runtime}\n\n`)
     + `### 구분\n\n`
     + `${division.replace('/', ' > ')}\n\n`
-    + `### 채점결과\n\n`
-    + `${result_message}\n\n`
+    + (isNull(result_message) ? '' : `### 채점결과\n\n${result_message}\n\n`)
     + `### 제출 일자\n\n`
     + `${dateInfo}\n\n`
     + `### 문제 설명\n\n`
     + `${problem_description}\n\n`
     + `> 출처: 프로그래머스 코딩 테스트 연습, https://school.programmers.co.kr/learn/challenges`;
   return { problemId, directory, message, fileName, readme, code };
-}
-
-/**
- * stats에서 이미 업로드된 프로그래머스 문제 ID를 추출합니다.
- */
-function extractUploadedProblemIdsForProgrammers(stats, hook) {
-  const uploadedIds = new Set();
-  if (isNull(stats) || isNull(stats.submission) || isNull(hook)) return uploadedIds;
-
-  const parts = hook.split('/');
-  if (parts.length < 2) return uploadedIds;
-  const owner = parts[0];
-  const repo = parts[1];
-
-  const ownerObj = stats.submission[owner];
-  if (isNull(ownerObj)) return uploadedIds;
-  const repoObj = ownerObj[repo];
-  if (isNull(repoObj)) return uploadedIds;
-
-  function extractFromNode(node) {
-    if (isNull(node)) return;
-    for (const key of Object.keys(node)) {
-      const match = key.match(/^(\d+)/);
-      if (match) {
-        uploadedIds.add(match[1]);
-      }
-    }
-  }
-
-  // 직접 모드: submission[owner][repo]["프로그래머스"]["12345.제목"]
-  if (!isNull(repoObj['프로그래머스'])) {
-    extractFromNode(repoObj['프로그래머스']);
-  }
-
-  // language 모드: submission[owner][repo][lang]["프로그래머스"]["12345.제목"]
-  for (const key of Object.keys(repoObj)) {
-    if (key === '프로그래머스') continue;
-    const langNode = repoObj[key];
-    if (!isNull(langNode) && typeof langNode === 'object' && !isNull(langNode['프로그래머스'])) {
-      extractFromNode(langNode['프로그래머스']);
-    }
-  }
-
-  return uploadedIds;
 }
 
 /**
@@ -216,39 +171,9 @@ async function fetchProblemCodeAndData(problemInfo) {
 
     const link = `https://school.programmers.co.kr/learn/courses/30/lessons/${problemId}`;
 
-    return await makeDataForBulkUpload({ link, problemId, level, title, problem_description, division, language_extension, code, language });
+    return await makeData({ link, problemId, level, title, problem_description, division, language_extension, code, language });
   } catch (e) {
     console.error(`Failed to fetch problem ${problemId}:`, e);
     return null;
   }
-}
-
-/**
- * 일괄 업로드용 데이터를 생성합니다.
- */
-async function makeDataForBulkUpload(origin) {
-  const { problem_description, problemId, level, division, language_extension, title, code, language, link } = origin;
-  const directory = await buildDirectory('programmers', {
-    platform: '프로그래머스',
-    level,
-    id: problemId,
-    title: convertSingleCharToDoubleChar(title),
-    language,
-    _defaultDir: `프로그래머스/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-  });
-  const levelWithLv = `${level}`.includes('lv') ? level : `lv${level}`.replace('lv', 'level ');
-  const message = `[${levelWithLv}] Title: ${title} -BaekjoonHub`;
-  const fileName = `${convertSingleCharToDoubleChar(title)}.${language_extension}`;
-  const dateInfo = getDateString(new Date(Date.now()));
-  const readme =
-    `# [${levelWithLv}] ${title} - ${problemId} \n\n`
-    + `[문제 링크](${link}) \n\n`
-    + `### 구분\n\n`
-    + `${division.replace('/', ' > ')}\n\n`
-    + `### 제출 일자\n\n`
-    + `${dateInfo}\n\n`
-    + `### 문제 설명\n\n`
-    + `${problem_description}\n\n`
-    + `> 출처: 프로그래머스 코딩 테스트 연습, https://school.programmers.co.kr/learn/challenges`;
-  return { problemId, directory, message, fileName, readme, code };
 }

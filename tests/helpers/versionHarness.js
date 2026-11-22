@@ -148,7 +148,6 @@ const PLATFORMS = {
   baekjoon: { dir: 'baekjoon', main: 'baekjoon.js', directory: '백준/Bronze/1000. A+B', fileName: 'A+B.py' },
   programmers: { dir: 'programmers', main: 'programmers.js', directory: '프로그래머스/2/12345. 두 수의 합 #1', fileName: '두 수의 합.py' },
   swexpertacademy: { dir: 'swexpertacademy', main: 'swexpertacademy.js', directory: 'SWEA/D3/1234. 문제', fileName: '문제.py' },
-  goormlevel: { dir: 'goormlevel', main: 'goormlevel.js', directory: 'goormlevel/보통/54321. 문제', fileName: '문제.py' },
 };
 
 /**
@@ -196,7 +195,7 @@ function loadPlatform(server, platform, { keep = false, stats = undefined } = {}
   };
   sandbox.window = sandbox; // js-sha1 이 window 에 sha1 을 건다
   vm.createContext(sandbox);
-  const files = ['library/sha1.min.js', 'scripts/util.js', 'scripts/Github.js', 'scripts/storage.js', 'scripts/utils/solutionVersions.js',
+  const files = ['library/sha1.min.js', 'scripts/util.js', 'scripts/Github.js', 'scripts/storage.js', 'scripts/upload.js', 'scripts/utils/solutionVersions.js',
     `scripts/${info.dir}/uploadfunctions.js`, `scripts/${info.dir}/${info.main}`];
   for (const file of files) vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), sandbox, { filename: file });
   return { sandbox, store, calls, info };
@@ -206,7 +205,7 @@ function loadPlatform(server, platform, { keep = false, stats = undefined } = {}
 function solved(platform, code, overrides = {}) {
   const { directory, fileName } = PLATFORMS[platform];
   return {
-    problemId: '1000', examId: '1', quizNumber: '1', message: 'commit message', readme: '# readme\n', directory, fileName, code, ...overrides,
+    problemId: '1000', message: 'commit message', readme: '# readme\n', directory, fileName, code, ...overrides,
   };
 }
 
@@ -216,7 +215,7 @@ async function settle() {
 
 /** 플랫폼의 beginUpload 를 실제로 태운다 */
 async function submit(loaded, platform, code, overrides) {
-  await loaded.sandbox.beginUpload(solved(platform, code, overrides), platform === 'programmers' || platform === 'goormlevel' ? {} : undefined);
+  await loaded.sandbox.beginUpload(solved(platform, code, overrides), platform === 'programmers' ? {} : undefined);
   await settle();
 }
 

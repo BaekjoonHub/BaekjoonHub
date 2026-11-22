@@ -6,14 +6,6 @@ function getVersion() {
   return chrome.runtime.getManifest().version;
 }
 
-/** element가 존재하는지 반환합니다.
- * @param {DOMElement} element - 존재하는지 확인할 element
- * @returns {boolean} - 존재하면 true, 존재하지 않으면 false
- */
-function elementExists(element) {
-  return element !== undefined && element !== null && element.hasOwnProperty('length') && element.length > 0;
-}
-
 /**
  * 해당 값이 null 또는 undefined인지 체크합니다.
  * @param {any} value - 체크할 값
@@ -75,30 +67,6 @@ function isNotEmpty(obj) {
   }
   return true;
 }
-/**
- * 문자열을 escape 하여 반환합니다.
- * @param {string} text - escape 할 문자열
- * @returns {string} - escape된 문자열
- */
-function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-  };
-
-  return text.replace(/[&<>"']/g, function (m) {
-    return map[m];
-  });
-}
-
-/** 문자열을 escape 하여 반환합니다. */
-String.prototype.escapeHtml = function () {
-  return escapeHtml(this);
-};
-
 /**
  * escape된 문자열을 unescape하여 반환합니다.
  * @param {string} text - unescape할 문자열
@@ -200,22 +168,6 @@ function toWellFormedText(str) {
   return str.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '�');
 }
 
-/**
- * base64로 인코딩된 문자열을 base64로 디코딩하여 반환합니다.
- * @param {string} b64str - base64로 인코딩된 문자열
- * @returns {string} - base64로 디코딩된 문자열
- */
-function b64DecodeUnicode(b64str) {
-  return decodeURIComponent(
-    atob(b64str)
-      .split('')
-      .map(function (c) {
-        return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
-      })
-      .join(''),
-  );
-}
-
 function parseNumberFromString(str) {
   const numbers = str.match(/\d+/g);
   if (isNotEmpty(numbers) && numbers.length > 0) {
@@ -310,20 +262,21 @@ async function asyncPool(poolLimit, array, iteratorFn) {
 }
 
 /**
- * combine two array<Object> same index.
- * @param {array<Object>} a
- * @param {array<Object>} b
- * @return {array<Object>}
+ * 백준의 날짜 형식과 같게 포맷된 스트링을 반환하는 함수
+ * @example 2023년 09월 23일 16:26:26
+ * @param {Date} date
+ * @return {string} 포맷된 스트링
  */
-function combine(a, b) {
-  return a.map((x, i) => ({ ...x, ...b[i] }));
-}
+function getDateString(date) {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
 
-if (typeof __DEV__ !== "undefined") {
-  var exports = (module.exports = {});
-  exports.filter = filter;
+  return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
 }
-
 
 function log(...args) {
   if (debug) console.log(...args)

@@ -1,12 +1,7 @@
-/** 푼 문제들에 대한 단일 업로드는 uploadGit 함수로 합니다.
- * 파라미터는 아래와 같습니다.
- * @param {string} filePath - 업로드할 파일의 경로
- * @param {string} sourceCode - 업로드하는 소스코드 내용
- * @param {string} readme - 업로드하는 README 내용
- * @param {string} filename - 업로드할 파일명
- * @param {string} commitMessage - 커밋 메시지
- * @param {function} cb - 콜백 함수 (ex. 업로드 후 로딩 아이콘 처리 등)
- * @returns {Promise<void>}
+/**
+ * 맞은 풀이 하나를 GitHub 에 올립니다.
+ * @param {object} bojData - 파싱 결과 { code, readme, directory, fileName, message }
+ * @param {function} cb - 업로드 뒤 완료 표시 콜백 (branches, directory)
  */
 async function uploadOneSolveProblemOnGit(bojData, cb) {
   const token = await getToken();
@@ -16,7 +11,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     return;
   }
   try {
-    return await upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb);
+    return await uploadSWEA(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb);
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);
@@ -28,19 +23,11 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
   }
 }
 
-/** Github api를 사용하여 업로드를 합니다.
- * @see https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
- * @param {string} token - github api 토큰
- * @param {string} hook - github api hook
- * @param {string} sourceText - 업로드할 소스코드
- * @param {string} readmeText - 업로드할 readme
- * @param {string} directory - 업로드할 파일의 경로
- * @param {string} filename - 업로드할 파일명
- * @param {string} commitMessage - 커밋 메시지
- * @param {function} cb - 콜백 함수 (ex. 업로드 후 로딩 아이콘 처리 등)
+/**
+ * 풀이 하나를 한 커밋으로 올리고 캐시에 기록합니다. 인자는 scripts/upload.js 의 upload 와 같다.
+ * 결과창을 닫기 전에 끝나야 해서 API 호출을 줄인다: blob 을 따로 만들지 않고, 브랜치는 캐시한 값을 먼저 쓴다.
  */
-async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
-  /* 업로드 후 커밋 */
+async function uploadSWEA(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
   const git = new GitHub(hook, token);
   const cachedStats = await getStats();
 
@@ -106,7 +93,7 @@ async function uploadAllSolvedProblemSWEA() {
 
     // 2. 풀이 완료 문제 목록 파싱 & 이미 업로드된 문제 스킵
     const solvedProblems = await findAllSolvedProblemsSWEA();
-    const uploadedIds = extractUploadedProblemIdsForSWEA(stats, hook);
+    const uploadedIds = extractUploadedProblemIds(stats, hook, 'SWEA');
     const newList = solvedProblems.filter((item) => !uploadedIds.has(String(item.problemId)));
 
     if (newList.length === 0) {
@@ -125,25 +112,10 @@ async function uploadAllSolvedProblemSWEA() {
     const skippedIds = results.filter((result) => result.status === 'skipped').map((result) => result.problemId);
     const failedIds = results.filter((result) => result.status === 'failed').map((result) => result.problemId);
 
-    // 4. Tree 아이템 생성 (Blob 생성 API 호출을 줄이기 위해 content 직접 전달)
+    // 4. Tree 아이템 생성
     for (const bojData of bojDatas) {
       if (!isEmpty(bojData.code) && !isEmpty(bojData.readme)) {
-        zip
-          .folder(bojData.directory)
-          .file(bojData.fileName, bojData.code)
-          .file('README.md', bojData.readme);
-        tree_items.push({
-          path: `${bojData.directory}/${bojData.fileName}`,
-          mode: '100644',
-          type: 'blob',
-          content: bojData.code,
-        });
-        tree_items.push({
-          path: `${bojData.directory}/README.md`,
-          mode: '100644',
-          type: 'blob',
-          content: bojData.readme,
-        });
+        addBulkFiles(zip, tree_items, bojData.directory, [[bojData.fileName, bojData.code], ['README.md', bojData.readme]]);
       }
     }
 

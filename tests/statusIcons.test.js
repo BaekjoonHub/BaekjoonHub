@@ -38,6 +38,22 @@ function fakeDocument(html) {
   return { icons, querySelectorAll: () => links, createElement: () => ({}) };
 }
 
+test('이미 올린 문제 번호는 플랫폼 폴더가 레포 바로 아래에 있든 언어 폴더 아래에 있든 모으고, 다른 플랫폼의 번호는 섞지 않는다', () => {
+  const context = vm.createContext({ isNull: (v) => v === null || v === undefined });
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts/upload.js'), 'utf8'), context, { filename: 'upload.js' });
+  const stats = { submission: { tester: { repo: {
+    백준: { '1000.A+B': {}, 'README.md': 'sha' },
+    Python: { 백준: { '2557.Hello': {} }, 프로그래머스: { '12345.제목': {} } },
+    프로그래머스: { '42576.완주': {} },
+    'README.md': 'sha',
+  } } } };
+  const ids = (platform, hook = 'tester/repo') => [...context.extractUploadedProblemIds(stats, hook, platform)].sort();
+  assert.deepEqual(ids('백준'), ['1000', '2557']);
+  assert.deepEqual(ids('프로그래머스'), ['12345', '42576']);
+  assert.deepEqual(ids('SWEA'), []);
+  assert.deepEqual([ids('백준', 'tester/other'), ids('백준', 'tester'), ids('백준', null)], [[], [], []]);
+});
+
 test('문제 페이지 상단 탭에는 아이콘을 붙이지 않고, 본문의 업로드한 문제 링크에만 붙인다', async () => {
   const html = fs.readFileSync(path.join(__dirname, 'fixtures/boj/problem-1000.html'), 'utf8') + EXTRA;
   const document = fakeDocument(html);
@@ -50,6 +66,7 @@ test('문제 페이지 상단 탭에는 아이콘을 붙이지 않고, 본문의
     getStats: async () => stats,
     getHook: async () => 'tester/repo',
   });
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts/upload.js'), 'utf8'), context, { filename: 'upload.js' });
   const src = fs.readFileSync(path.join(ROOT, 'scripts/baekjoon/statusicons.js'), 'utf8');
   // 파일 끝의 자동 실행 한 줄을 빼고 로드해서 끝날 때까지 기다린다
   vm.runInContext(src.slice(0, src.lastIndexOf('injectUploadStatusIcons();')), context, { filename: 'statusicons.js' });

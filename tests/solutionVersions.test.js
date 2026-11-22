@@ -7,8 +7,6 @@
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const vm = require('node:vm');
 
 const {
@@ -20,6 +18,8 @@ const B = 'print(2)\n';
 const C = 'print(3)\n';
 const D = 'print(4)\n';
 const EMPTY_CACHE = { version: VERSION, branches: {}, submission: {} };
+// 풀이 하나를 올리는 구현은 둘이다: scripts/upload.js 의 upload(백준·프로그래머스)와 SWEA 의 uploadSWEA
+const UPLOADERS = ['baekjoon', 'swexpertacademy'];
 
 /** 'A+B.py' → ['A+B', '.py'] */
 function split(fileName) {
@@ -202,15 +202,13 @@ describe('옵션 켜짐 — 번호 규칙 (백준 beginUpload)', () => {
     assert.equal(cached(p.v2), server.commits[server.head].files.get(p.v2));
     assert.equal(cached(p.readme), blobSha('# readme\n'));
     assert.equal(branches[HOOK], 'main');
-    // 전체 업로드가 "이미 올린 문제" 를 거르는 목록(statusicons.js 의 extractUploadedProblemIds)에도 보인다
-    const icons = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'baekjoon', 'statusicons.js'), 'utf8');
-    vm.runInContext(icons.slice(0, icons.indexOf('async function injectUploadStatusIcons')), loaded.sandbox);
-    assert.ok(loaded.sandbox.extractUploadedProblemIds({ submission, branches }, HOOK).has('1000'));
+    // 전체 업로드가 "이미 올린 문제" 를 거르는 목록에도 보인다
+    assert.ok(loaded.sandbox.extractUploadedProblemIds({ submission, branches }, HOOK, '백준').has('1000'));
   });
 });
 
 describe('옵션 켜짐 — 로컬 캐시가 아니라 GitHub 의 파일로 정한다', () => {
-  for (const platform of Object.keys(PLATFORMS)) {
+  for (const platform of UPLOADERS) {
     test(`${platform}: 캐시가 비어 있고 GitHub 에 이름·_002 가 있으면 _003 으로 올리고 아무것도 덮지 않는다`, async () => {
       const p = paths(platform);
       const server = new FakeGithub({ files: { [p.plain]: A, [p.v2]: B, [p.readme]: 'old readme' } });
@@ -267,7 +265,7 @@ describe('옵션 켜짐 — 로컬 캐시가 아니라 GitHub 의 파일로 정�
 });
 
 describe('옵션 켜짐 — 커밋이 밀려 다시 시도될 때 (다른 탭·기기와 경합)', () => {
-  for (const platform of Object.keys(PLATFORMS)) {
+  for (const platform of UPLOADERS) {
     test(`${platform}: 새 브랜치 끝에 이미 _002 가 있으면 다시 시도한 커밋은 _003 으로 저장된다`, async () => {
       const p = paths(platform);
       const server = new FakeGithub({

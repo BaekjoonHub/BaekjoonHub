@@ -1,124 +1,17 @@
 const REPO_DESCRIPTION = 'This is an auto push repository for Baekjoon Online Judge created with [BaekjoonHub](https://github.com/BaekjoonHub/BaekjoonHub).';
+const MANUAL = '__manual__';
+const VIEWS = ['auth', 'repo', 'done'];
 
-const $ = (sel) => document.querySelector(sel);
 const $id = (id) => document.getElementById(id);
 
-const option = () => $id('type').value;
+let pickAccount = false; // 이 페이지에서 로그아웃한 뒤에는 다른 계정을 고를 수 있게 한다
+let banner = null; // [i18n key, params]: 이번에 만들거나 연결한 저장소 안내
+let reposLoaded = false;
 
-const repositoryName = () => {
-  const input = $id('name').value.trim();
-  const match = input.match(/^https?:\/\/github\.com\/[^/]+\/([^/]+)/);
-  if (match) {
-    return match[1].replace(/\.git$/, '');
-  }
-  return input;
-};
-
-/* Status codes for creating of repo */
-const statusCode = (res, status, name) => {
-  const errorEl = $id('error');
-  const successEl = $id('success');
-  const unlinkEl = $id('unlink');
-
-  switch (status) {
-    case 304:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating304', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 400:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating400', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 401:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating401', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 403:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating403', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 422:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating422', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    default:
-      chrome.storage.local.set({ mode_type: 'commit' }, () => {
-        errorEl.hidden = true;
-        I18N.bind(successEl, 'welcome.success.created', { url: res.html_url, name });
-        successEl.hidden = false;
-        unlinkEl.hidden = false;
-        $id('hook_mode').classList.add('hidden');
-        $id('commit_mode').classList.remove('hidden');
-      });
-      chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
-        console.log('Successfully set new repo hook');
-      });
-      break;
-  }
-};
-
-const createRepo = (token, name) => {
-  const AUTHENTICATION_URL = 'https://api.github.com/user/repos';
-  const data = JSON.stringify({
-    name,
-    private: true,
-    auto_init: true,
-    description: REPO_DESCRIPTION,
-  });
-
-  const xhr = new XMLHttpRequest();
-  xhr.addEventListener('readystatechange', function () {
-    if (xhr.readyState === 4) {
-      statusCode(JSON.parse(xhr.responseText), xhr.status, name);
-    }
-  });
-
-  stats = {};
-  stats.version = chrome.runtime.getManifest().version;
-  stats.submission = {};
-  chrome.storage.local.set({ stats });
-
-  xhr.open('POST', AUTHENTICATION_URL, true);
-  xhr.setRequestHeader('Authorization', `token ${token}`);
-  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-  xhr.send(data);
-};
-
-/* Status codes for linking of repo */
-const linkStatusCode = (status, name) => {
-  const errorEl = $id('error');
-  const successEl = $id('success');
-  const unlinkEl = $id('unlink');
-  let bool = false;
-
-  switch (status) {
-    case 301:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.linking301', { name });
-      errorEl.hidden = false;
-      break;
-    case 403:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.linking403', { name });
-      errorEl.hidden = false;
-      break;
-    case 404:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.linking404', { name });
-      errorEl.hidden = false;
-      break;
-    default:
-      bool = true;
-      break;
-  }
-  unlinkEl.hidden = false;
-  return bool;
-};
+const ghFetch = (token, path, init) => fetch(`https://api.github.com${path}`, {
+  ...init,
+  headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+});
 
 /**
  * 빈 레포에 README.md 를 생성한다.
@@ -160,347 +53,337 @@ const initializeEmptyRepoWelcome = async (token, hook, branch) => {
   }
 };
 
-const linkRepo = (token, name) => {
-  const AUTHENTICATION_URL = `https://api.github.com/repos/${name}`;
-  const errorEl = $id('error');
-  const successEl = $id('success');
-  const unlinkEl = $id('unlink');
-
-  const xhr = new XMLHttpRequest();
-  xhr.addEventListener('readystatechange', async function () {
-    if (xhr.readyState === 4) {
-      const res = JSON.parse(xhr.responseText);
-      const bool = linkStatusCode(xhr.status, name);
-      if (xhr.status === 200) {
-        if (!bool) {
-          chrome.storage.local.set({ mode_type: 'hook' }, () => {
-            console.log(`Error linking ${name} to BaekjoonHub`);
-          });
-          chrome.storage.local.set({ BaekjoonHub_hook: null }, () => {
-            console.log('Defaulted repo hook to NONE');
-          });
-          $id('hook_mode').classList.remove('hidden');
-          $id('commit_mode').classList.add('hidden');
-        } else {
-          if (res.size === 0) {
-            try {
-              await initializeEmptyRepoWelcome(token, res.full_name, res.default_branch);
-              console.log('Initialized empty repo with README.md');
-            } catch (e) {
-              console.log('Empty repo init failed', e);
-            }
-          }
-
-          chrome.storage.local.set({ mode_type: 'commit', repo: res.html_url }, () => {
-            errorEl.hidden = true;
-            I18N.bind(successEl, 'welcome.success.linked', { url: res.html_url, name });
-            successEl.hidden = false;
-            unlinkEl.hidden = false;
-          });
-
-          stats = {};
-          stats.version = chrome.runtime.getManifest().version;
-          stats.submission = {};
-          chrome.storage.local.set({ stats });
-
-          chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
-            console.log('Successfully set new repo hook');
-            chrome.storage.local.get('stats', (psolved) => {
-              const { stats } = psolved;
-            });
-          });
-          $id('hook_mode').classList.add('hidden');
-          $id('commit_mode').classList.remove('hidden');
-        }
-      }
-    }
-  });
-
-  xhr.open('GET', AUTHENTICATION_URL, true);
-  xhr.setRequestHeader('Authorization', `token ${token}`);
-  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-  xhr.send();
-};
-
-const unlinkRepo = () => {
-  chrome.storage.local.set({ mode_type: 'hook' }, () => {
-    console.log('Unlinking repo');
-  });
-  chrome.storage.local.set({ BaekjoonHub_hook: null }, () => {
-    console.log('Defaulted repo hook to NONE');
-  });
-  chrome.storage.local.set({ BaekjoonHub_disOption: 'platform' }, () => {
-    console.log('DisOption Reset');
-  });
-  $id('hook_mode').classList.remove('hidden');
-  $id('commit_mode').classList.add('hidden');
-};
-
-/* --- Dark/Light theme --- */
-function applyTheme(theme) {
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark');
-    $id('theme_icon_light').classList.remove('hidden');
-    $id('theme_icon_dark').classList.add('hidden');
-  } else {
-    document.documentElement.classList.remove('dark');
-    $id('theme_icon_light').classList.add('hidden');
-    $id('theme_icon_dark').classList.remove('hidden');
-  }
-}
-
-function initTheme() {
-  chrome.storage.local.get('bjh_theme', (data) => {
-    let theme = data.bjh_theme;
-    if (!theme) {
-      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    applyTheme(theme);
+/* --- Views --- */
+function showView(name) {
+  const current = VIEWS.indexOf(name);
+  VIEWS.forEach((v) => $id(`view_${v}`).classList.toggle('hidden', v !== name));
+  document.querySelectorAll('#steps li').forEach((li) => {
+    const i = VIEWS.indexOf(li.dataset.step);
+    li.classList.toggle('is-done', i < current || name === 'done');
+    li.classList.toggle('is-active', i === current);
+    if (i === current) li.setAttribute('aria-current', 'step');
+    else li.removeAttribute('aria-current');
   });
 }
 
-$id('theme_toggle').addEventListener('click', () => {
-  const isDark = document.documentElement.classList.contains('dark');
-  const newTheme = isDark ? 'light' : 'dark';
-  applyTheme(newTheme);
-  chrome.storage.local.set({ bjh_theme: newTheme });
-});
+function showAuth(error) {
+  const el = $id('auth_error');
+  if (error) I18N.bind(el, `welcome.auth.error.${error}`, null, 'text');
+  el.classList.toggle('hidden', !error);
+  showView('auth');
+}
 
-/* --- Event listeners --- */
-$id('type').addEventListener('change', function () {
-  $id('hook_button').disabled = !this.value;
-});
+// 어디서든 401 이면 토큰만 지운다. 저장소 연결은 남겨 두어 다시 인증하면 바로 완료 화면으로 온다.
+function expire() {
+  chrome.storage.local.set({ BaekjoonHub_token: null }, () => showAuth('expired'));
+}
 
-$id('hook_button').addEventListener('click', () => {
-  const errorEl = $id('error');
-  const successEl = $id('success');
-
-  if (!option()) {
-    I18N.bind(errorEl, 'welcome.error.noOption', null, 'text');
-    errorEl.hidden = false;
-  } else if (!repositoryName()) {
-    I18N.bind(errorEl, 'welcome.error.noRepoName', null, 'text');
-    $id('name').focus();
-    errorEl.hidden = false;
-  } else {
-    errorEl.hidden = true;
-    I18N.bind(successEl, 'welcome.attempting', null, 'text');
-    successEl.hidden = false;
-
-    chrome.storage.local.get('BaekjoonHub_token', (data) => {
-      const token = data.BaekjoonHub_token;
-      if (token === null || token === undefined) {
-        I18N.bind(errorEl, 'welcome.error.auth', null, 'text');
-        errorEl.hidden = false;
-        successEl.hidden = true;
-      } else if (option() === 'new') {
-        createRepo(token, repositoryName());
-      } else {
-        chrome.storage.local.get('BaekjoonHub_username', (data2) => {
-          const username = data2.BaekjoonHub_username;
-          if (!username) {
-            I18N.bind(errorEl, 'welcome.error.improperAuth', null, 'text');
-            errorEl.hidden = false;
-            successEl.hidden = true;
-          } else {
-            linkRepo(token, `${username}/${repositoryName()}`, false);
-          }
-        });
-      }
-    });
-  }
-
-  const org_option = $id('org_option').value;
-  chrome.storage.local.set({ BaekjoonHub_OrgOption: org_option }, () => {
-    console.log(`Set Organize by ${org_option}`);
+function showRepo(fromDone) {
+  chrome.storage.local.get('BaekjoonHub_username', ({ BaekjoonHub_username: username }) => {
+    const account = $id('repo_account');
+    if (username) I18N.bind(account, 'welcome.repo.signedInAs', { username });
+    account.classList.toggle('hidden', !username);
+    $id('repo_cancel').classList.toggle('hidden', !fromDone);
+    $id('repo_error').classList.add('hidden');
+    showView('repo');
   });
-});
+}
 
-$id('name').addEventListener('input', function () {
-  if (this.value.trim()) {
-    $id('type').value = 'link';
-    $id('hook_button').disabled = false;
+function showDone() {
+  chrome.storage.local.get(['BaekjoonHub_token', 'BaekjoonHub_username', 'BaekjoonHub_hook'], (d) => {
+    const bannerEl = $id('done_banner');
+    if (banner) I18N.bind(bannerEl, banner[0], banner[1]);
+    bannerEl.classList.toggle('hidden', !banner);
+    banner = null;
+    $id('conn_account').textContent = d.BaekjoonHub_username ? `@${d.BaekjoonHub_username}` : '';
+    const repoLink = $id('conn_repo');
+    repoLink.textContent = d.BaekjoonHub_hook;
+    repoLink.href = `https://github.com/${d.BaekjoonHub_hook}`;
+    showView('done');
+    checkConnection(d.BaekjoonHub_token, d.BaekjoonHub_hook);
+  });
+}
+
+let connectionCheck = 0;
+async function checkConnection(token, hook) {
+  const check = ++connectionCheck;
+  const el = $id('conn_status');
+  const set = (state, cls) => {
+    // 저장소를 바꾼 뒤 늦게 도착한 이전 저장소의 결과는 버린다
+    if (check !== connectionCheck) return;
+    I18N.bind(el, `welcome.conn.status.${state}`, null, 'text');
+    el.className = `conn-status ${cls || ''}`;
+  };
+  set('checking');
+  try {
+    const res = await ghFetch(token, `/repos/${hook}`);
+    if (res.status === 401) return expire();
+    const body = res.ok ? await res.json() : {};
+    const canPush = !(body.permissions && body.permissions.push === false);
+    if (body.archived) set('archived', 'status-err');
+    else if (res.ok && canPush) set('ok', 'status-ok');
+    else if (res.ok || [301, 403, 404].includes(res.status)) set('repoGone', 'status-err');
+    else set('unknown');
+  } catch (e) {
+    set('unknown');
   }
-});
+}
 
-$id('unlink').querySelector('a').addEventListener('click', () => {
-  unlinkRepo();
-  $id('unlink').hidden = true;
-  I18N.bind($id('success'), 'welcome.success.unlinked', null, 'text');
-});
+/* --- Step 1: GitHub account --- */
+$id('auth_button').addEventListener('click', () => oAuth2.begin(pickAccount));
 
-$id('token_refresh_button').addEventListener('click', () => {
-  const tokenStatusEl = $id('token_status');
-  chrome.storage.local.get('BaekjoonHub_token', (data) => {
-    const token = data.BaekjoonHub_token;
-    if (!token) {
-      I18N.bind(tokenStatusEl, 'welcome.tokenStatus.notFound', null, 'text');
-      tokenStatusEl.className = 'token-status status-err';
-      tokenStatusEl.hidden = false;
-      return;
+/* --- Step 2: repository --- */
+const repoMode = () => ($id('repo_mode_existing').checked ? 'existing' : 'new');
+
+function setSubmitting(busy) {
+  const button = $id('repo_submit');
+  button.disabled = busy;
+  const key = busy ? 'submitting' : repoMode() === 'existing' ? 'submitExisting' : 'submitNew';
+  I18N.bind(button, `welcome.repo.${key}`, null, 'text');
+}
+
+function showRepoError(key, params, mode) {
+  const el = $id('repo_error');
+  I18N.bind(el, key, params, mode);
+  el.classList.remove('hidden');
+}
+
+function addOption(select, value, key) {
+  const option = document.createElement('option');
+  option.value = value;
+  if (key) I18N.bind(option, key, null, 'text');
+  else option.textContent = value;
+  select.appendChild(option);
+  return option;
+}
+
+const updateManual = () => $id('repo_manual_field').classList.toggle('hidden', $id('repo_select').value !== MANUAL);
+
+function loadRepos() {
+  reposLoaded = true;
+  const select = $id('repo_select');
+  select.textContent = '';
+  addOption(select, '', 'welcome.repo.listLoading').disabled = true;
+  chrome.storage.local.get('BaekjoonHub_token', async ({ BaekjoonHub_token: token }) => {
+    let repos = null;
+    try {
+      // shortcut: only the first 100 repositories by latest push; the rest via manual entry. Upgrade to pagination if users ask.
+      const res = await ghFetch(token, '/user/repos?per_page=100&sort=pushed');
+      if (res.status === 401) return expire();
+      // 보관(archive)된 저장소는 push 권한이 true 로 오지만 올릴 수 없다
+      if (res.ok) repos = (await res.json()).filter((r) => r.permissions && r.permissions.push && !r.archived);
+    } catch (e) {
+      // 목록을 못 받으면 직접 입력으로 넘어간다.
     }
-    fetch('https://api.github.com/user', {
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-    })
-      .then((res) => {
-        if (res.ok) {
-          I18N.bind(tokenStatusEl, 'welcome.tokenStatus.valid', null, 'text');
-          tokenStatusEl.className = 'token-status status-ok';
-        } else {
-          I18N.bind(tokenStatusEl, 'welcome.tokenStatus.expired');
-          tokenStatusEl.className = 'token-status status-err';
-        }
-        tokenStatusEl.hidden = false;
-      })
-      .catch(() => {
-        I18N.bind(tokenStatusEl, 'welcome.tokenStatus.error', null, 'text');
-        tokenStatusEl.className = 'token-status status-err';
-        tokenStatusEl.hidden = false;
+    select.textContent = '';
+    if (repos) {
+      const placeholder = addOption(select, '', 'welcome.repo.listPlaceholder');
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      repos.forEach((r) => addOption(select, r.full_name));
+    }
+    addOption(select, MANUAL, 'welcome.repo.listManual').selected = !repos;
+    $id('repo_list_failed').classList.toggle('hidden', !!repos);
+    updateManual();
+  });
+}
+
+document.querySelectorAll('input[name="repo_mode"]').forEach((radio) => radio.addEventListener('change', () => {
+  const existing = repoMode() === 'existing';
+  $id('repo_new_panel').classList.toggle('hidden', existing);
+  $id('repo_existing_panel').classList.toggle('hidden', !existing);
+  $id('repo_error').classList.add('hidden');
+  if (!$id('repo_submit').disabled) setSubmitting(false); // 요청 중에는 버튼을 다시 켜지 않는다
+  if (existing && !reposLoaded) loadRepos();
+}));
+
+$id('repo_select').addEventListener('change', updateManual);
+
+function linked(res, key) {
+  chrome.storage.local.set({
+    mode_type: 'commit',
+    repo: res.html_url,
+    BaekjoonHub_hook: res.full_name,
+    stats: { version: chrome.runtime.getManifest().version, submission: {} },
+  }, () => {
+    banner = [key, { url: res.html_url, name: res.full_name }];
+    showDone();
+  });
+}
+
+async function submitRepo(token, name, existing) {
+  try {
+    const res = existing
+      ? await ghFetch(token, `/repos/${name}`)
+      : await ghFetch(token, '/user/repos', {
+        method: 'POST',
+        body: JSON.stringify({ name, private: document.querySelector('input[name="repo_visibility"]:checked').value === 'private', auto_init: true, description: REPO_DESCRIPTION }),
       });
+    if (res.status === 401) return expire();
+    const body = await res.json().catch(() => ({}));
+    if (res.ok && existing && body.archived) return showRepoError('welcome.error.archived', { name });
+    if (res.ok && existing && body.permissions && body.permissions.push === false) {
+      return showRepoError('welcome.error.noPush', { name });
+    }
+    if (res.ok) {
+      if (existing && body.size === 0) {
+        await initializeEmptyRepoWelcome(token, body.full_name, body.default_branch).catch((e) => console.log('Empty repo init failed', e));
+      }
+      return linked(body, existing ? 'welcome.success.linked' : 'welcome.success.created');
+    }
+    // 연결 오류 메시지는 HTML(저장소 링크), 생성 오류 메시지는 사용자가 친 이름이 들어가므로 TEXT.
+    if (existing && [301, 403, 404].includes(res.status)) return showRepoError(`welcome.error.linking${res.status}`, { name });
+    if (!existing && [304, 400, 403, 422].includes(res.status)) return showRepoError(`welcome.error.creating${res.status}`, { name }, 'text');
+    showRepoError('welcome.error.unknown', { status: res.status }, 'text');
+  } catch (e) {
+    showRepoError('welcome.error.network', null, 'text');
+  }
+}
+
+$id('repo_form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if ($id('repo_submit').disabled) return;
+  $id('repo_error').classList.add('hidden');
+  const existing = repoMode() === 'existing';
+  setSubmitting(true); // 저장소를 읽기 전에 잠가 연속 제출을 막는다
+  chrome.storage.local.get(['BaekjoonHub_token', 'BaekjoonHub_username'], async (d) => {
+    try {
+      let name;
+      if (!existing) {
+        name = $id('repo_name').value.trim();
+        if (!name) {
+          $id('repo_name').focus();
+          return showRepoError('welcome.error.noRepoName', null, 'text');
+        }
+      } else {
+        const selected = $id('repo_select').value;
+        if (!selected) return showRepoError('welcome.error.noRepoSelected', null, 'text');
+        name = selected === MANUAL ? parseRepoInput($id('repo_manual').value, d.BaekjoonHub_username) : selected;
+        if (!name) {
+          $id('repo_manual').focus();
+          return showRepoError('welcome.error.invalidRepo', null, 'text');
+        }
+      }
+      await submitRepo(d.BaekjoonHub_token, name, existing);
+    } finally {
+      setSubmitting(false);
+    }
   });
 });
 
-/* Save examples toggle */
-chrome.storage.local.get('bjhSaveExamples', (data) => {
-  $id('examplesBox').checked = data.bjhSaveExamples === true;
-});
-$id('examplesBox').addEventListener('click', () => {
-  chrome.storage.local.set({ bjhSaveExamples: $id('examplesBox').checked });
+$id('repo_cancel').addEventListener('click', showDone);
+
+/* --- Step 3: connection --- */
+$id('change_repo_button').addEventListener('click', () => showRepo(true));
+
+$id('logout_button').addEventListener('click', () => {
+  if (!confirm(I18N.t('welcome.conn.logoutConfirm'))) return;
+  chrome.storage.local.set({ BaekjoonHub_token: null, BaekjoonHub_username: null, BaekjoonHub_hook: null, mode_type: 'hook' }, () => {
+    pickAccount = true;
+    showAuth(null);
+  });
 });
 
-/* Keep each different solution of a re-solved problem as a numbered file (off by default) */
-chrome.storage.local.get('bjhKeepSolutionVersions', (data) => {
-  $id('keepVersionsBox').checked = data.bjhKeepSolutionVersions === true;
-});
-$id('keepVersionsBox').addEventListener('click', () => {
-  chrome.storage.local.set({ bjhKeepSolutionVersions: $id('keepVersionsBox').checked });
-});
+/* --- Step 3: upload settings (each change saves immediately) --- */
+let savedTimer;
+function flashSaved() {
+  const el = $id('settings_saved');
+  el.textContent = I18N.t('welcome.settings.saved');
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => { el.textContent = ''; }, 1500);
+}
 
-/* === Directory Template Settings === */
-const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea', 'goormlevel'];
+const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea'];
+const templateKey = (platform) => `BaekjoonHub_dirTemplate_${platform}`;
 
 const TEMPLATE_PREVIEW_VARS = {
   baekjoon:    { platform: '백준', level: 'Gold', levelFull: 'Gold V', id: '1000', title: 'A＋B', language: 'Python' },
   programmers: { platform: '프로그래머스', level: '2', id: '12345', title: '타겟 넘버', language: 'JavaScript' },
   swea:        { platform: 'SWEA', level: 'D4', id: '1234', title: '문제제목', language: 'Java' },
-  goormlevel:  { platform: 'goormlevel', level: '보통', examId: '12345', id: '54321', title: '문제제목', language: 'Python' },
 };
 
 const TEMPLATE_DEFAULTS = {
   baekjoon:    '${platform}/${level}/${id}. ${title}',
   programmers: '${platform}/${level}/${id}. ${title}',
   swea:        '${platform}/${level}/${id}. ${title}',
-  goormlevel:  '${platform}/${examId}/${id}. ${title}',
 };
 
 function updateTemplatePreview(platform) {
-  const input = $id(`tmpl_${platform}`);
-  const preview = $id(`tmpl_preview_${platform}`);
-  if (!input || !preview) return;
-  const template = input.value || TEMPLATE_DEFAULTS[platform];
+  const template = $id(`tmpl_${platform}`).value || TEMPLATE_DEFAULTS[platform];
   const vars = TEMPLATE_PREVIEW_VARS[platform];
-  const result = template.replace(/\$\{(\w+)\}/g, (match, key) => {
-    return vars.hasOwnProperty(key) ? vars[key] : '';
-  });
-  preview.textContent = `\u279C ${result}`;
+  const result = template.replace(/\$\{(\w+)\}/g, (match, key) => (vars.hasOwnProperty(key) ? vars[key] : ''));
+  $id(`tmpl_preview_${platform}`).textContent = `➜ ${result}`;
 }
 
-function loadTemplateSettings() {
-  TEMPLATE_PLATFORMS.forEach((platform) => {
-    const key = `BaekjoonHub_dirTemplate_${platform}`;
-    chrome.storage.local.get(key, (data) => {
-      const input = $id(`tmpl_${platform}`);
-      if (input && data[key]) {
-        input.value = data[key];
-      }
+function loadSettings() {
+  const keys = ['BaekjoonHub_OrgOption', 'bjhSaveExamples', 'bjhKeepSolutionVersions', ...TEMPLATE_PLATFORMS.map(templateKey)];
+  chrome.storage.local.get(keys, (d) => {
+    $id('org_option').value = d.BaekjoonHub_OrgOption === 'language' ? 'language' : 'platform';
+    $id('examplesBox').checked = d.bjhSaveExamples === true;
+    $id('keepVersionsBox').checked = d.bjhKeepSolutionVersions === true;
+    TEMPLATE_PLATFORMS.forEach((platform) => {
+      $id(`tmpl_${platform}`).value = d[templateKey(platform)] || '';
       updateTemplatePreview(platform);
     });
   });
 }
 
-function saveTemplateSettings() {
-  TEMPLATE_PLATFORMS.forEach((platform) => {
-    const input = $id(`tmpl_${platform}`);
-    if (!input) return;
-    const key = `BaekjoonHub_dirTemplate_${platform}`;
-    const value = input.value.trim();
-    if (value) {
-      chrome.storage.local.set({ [key]: value });
-    } else {
-      chrome.storage.local.remove(key);
-    }
-  });
-}
-
-function resetTemplateSettings() {
-  TEMPLATE_PLATFORMS.forEach((platform) => {
-    const input = $id(`tmpl_${platform}`);
-    if (input) input.value = '';
-    const key = `BaekjoonHub_dirTemplate_${platform}`;
-    chrome.storage.local.remove(key);
-    updateTemplatePreview(platform);
-  });
-}
+$id('org_option').addEventListener('change', (e) => chrome.storage.local.set({ BaekjoonHub_OrgOption: e.target.value }, flashSaved));
+$id('examplesBox').addEventListener('change', (e) => chrome.storage.local.set({ bjhSaveExamples: e.target.checked }, flashSaved));
+$id('keepVersionsBox').addEventListener('change', (e) => chrome.storage.local.set({ bjhKeepSolutionVersions: e.target.checked }, flashSaved));
 
 TEMPLATE_PLATFORMS.forEach((platform) => {
   const input = $id(`tmpl_${platform}`);
-  if (input) {
-    input.addEventListener('input', () => updateTemplatePreview(platform));
-  }
-});
-
-$id('tmpl_save').addEventListener('click', () => {
-  saveTemplateSettings();
-  const successEl = $id('success');
-  successEl.textContent = 'Directory template saved.';
-  successEl.hidden = false;
-  setTimeout(() => { successEl.hidden = true; }, 2000);
+  // 입력할 때마다 저장한다: change 는 포커스를 잃을 때만 생겨, 입력 직후 탭을 닫으면 저장되지 않는다
+  input.addEventListener('input', () => {
+    updateTemplatePreview(platform);
+    const value = input.value.trim();
+    if (value) chrome.storage.local.set({ [templateKey(platform)]: value }, flashSaved);
+    else chrome.storage.local.remove(templateKey(platform), flashSaved);
+  });
 });
 
 $id('tmpl_reset').addEventListener('click', () => {
-  resetTemplateSettings();
+  TEMPLATE_PLATFORMS.forEach((platform) => {
+    $id(`tmpl_${platform}`).value = '';
+    updateTemplatePreview(platform);
+  });
+  chrome.storage.local.remove(TEMPLATE_PLATFORMS.map(templateKey), flashSaved);
 });
 
-/* Initialize i18n, theme, and detect mode type */
+/* --- Dark/Light theme --- */
+function applyTheme(theme) {
+  const dark = theme === 'dark';
+  document.documentElement.classList.toggle('dark', dark);
+  $id('theme_icon_light').classList.toggle('hidden', !dark);
+  $id('theme_icon_dark').classList.toggle('hidden', dark);
+}
+
+function initTheme() {
+  chrome.storage.local.get('bjh_theme', (data) => {
+    applyTheme(data.bjh_theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  });
+}
+
+$id('theme_toggle').addEventListener('click', () => {
+  const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+  applyTheme(newTheme);
+  chrome.storage.local.set({ bjh_theme: newTheme });
+});
+
+/* --- Start: pick the view from storage --- */
+const authError = new URLSearchParams(location.search).get('auth_error');
+if (authError) history.replaceState(null, '', location.pathname);
+
 I18N.init(() => {
   initTheme();
-
-  chrome.storage.local.get('mode_type', (data) => {
-    const mode = data.mode_type;
-    const errorEl = $id('error');
-    const successEl = $id('success');
-
-    if (mode && mode === 'commit') {
-      chrome.storage.local.get('BaekjoonHub_token', (data2) => {
-        const token = data2.BaekjoonHub_token;
-        if (token === null || token === undefined) {
-          I18N.bind(errorEl, 'welcome.error.authTopRight', null, 'text');
-          errorEl.hidden = false;
-          successEl.hidden = true;
-          $id('hook_mode').classList.remove('hidden');
-          $id('commit_mode').classList.add('hidden');
-        } else {
-          chrome.storage.local.get('BaekjoonHub_hook', (repoName) => {
-            const hook = repoName.BaekjoonHub_hook;
-            if (!hook) {
-              I18N.bind(errorEl, 'welcome.error.improperAuthTopRight', null, 'text');
-              errorEl.hidden = false;
-              successEl.hidden = true;
-              $id('hook_mode').classList.remove('hidden');
-              $id('commit_mode').classList.add('hidden');
-            } else {
-              linkRepo(token, hook);
-            }
-          });
-        }
-      });
-
-      $id('hook_mode').classList.add('hidden');
-      $id('commit_mode').classList.remove('hidden');
-      loadTemplateSettings();
-    } else {
-      $id('hook_mode').classList.remove('hidden');
-      $id('commit_mode').classList.add('hidden');
-    }
+  loadSettings();
+  setSubmitting(false);
+  chrome.storage.local.get(['BaekjoonHub_token', 'BaekjoonHub_hook', 'mode_type'], (d) => {
+    // 저장소는 남아 있는데 토큰이 없으면 만료로 지워진 것이다 (로그아웃은 저장소도 지운다)
+    const lost = d.BaekjoonHub_hook ? 'expired' : null;
+    if (!d.BaekjoonHub_token) showAuth(authError ? (authError === 'denied' ? 'denied' : 'failed') : lost);
+    else if (d.mode_type === 'commit' && d.BaekjoonHub_hook) showDone();
+    else showRepo(false);
   });
 });

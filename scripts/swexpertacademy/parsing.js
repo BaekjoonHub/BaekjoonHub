@@ -187,7 +187,7 @@ async function parseData(root = document, search = window.location.search) {
 
   // 확장자명
   /* 맵에 없는 언어면 undefined 가 파일명에 박히므로(`제목.undefined`) 공용 헬퍼로 해석한다.
-     대량 업로드 경로(makeDataForBulkUploadSWEA)는 이미 `|| 'txt'` 를 쓰고 있어 동작을 맞춘 것이다. */
+     대량 업로드 경로(fetchSWEASubmissionCode)는 이미 `|| 'txt'` 를 쓰고 있어 동작을 맞춘 것이다. */
   const extension = resolveLanguageExtension(languages, language);
 
   // 제출날짜
@@ -241,50 +241,6 @@ async function makeData(origin) {
     + `\n\n`
     + `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
   return { problemId, directory, message, fileName, readme, code };
-}
-
-/**
- * stats에서 이미 업로드된 SWEA 문제 ID를 추출합니다.
- */
-function extractUploadedProblemIdsForSWEA(stats, hook) {
-  const uploadedIds = new Set();
-  if (isNull(stats) || isNull(stats.submission) || isNull(hook)) return uploadedIds;
-
-  const parts = hook.split('/');
-  if (parts.length < 2) return uploadedIds;
-  const owner = parts[0];
-  const repo = parts[1];
-
-  const ownerObj = stats.submission[owner];
-  if (isNull(ownerObj)) return uploadedIds;
-  const repoObj = ownerObj[repo];
-  if (isNull(repoObj)) return uploadedIds;
-
-  function extractFromNode(node) {
-    if (isNull(node)) return;
-    for (const key of Object.keys(node)) {
-      const match = key.match(/^(\d+)/);
-      if (match) {
-        uploadedIds.add(match[1]);
-      }
-    }
-  }
-
-  // 직접 모드: submission[owner][repo]["SWEA"]["1234.제목"]
-  if (!isNull(repoObj['SWEA'])) {
-    extractFromNode(repoObj['SWEA']);
-  }
-
-  // language 모드: submission[owner][repo][lang]["SWEA"]["1234.제목"]
-  for (const key of Object.keys(repoObj)) {
-    if (key === 'SWEA') continue;
-    const langNode = repoObj[key];
-    if (!isNull(langNode) && typeof langNode === 'object' && !isNull(langNode['SWEA'])) {
-      extractFromNode(langNode['SWEA']);
-    }
-  }
-
-  return uploadedIds;
 }
 
 /** 현재 SWEA의 카드형 제출 목록에서 문제 정보를 추출합니다. */
@@ -371,46 +327,15 @@ async function fetchSWEASubmissionCode(problemInfo) {
     const [languageRaw, memoryRaw, runtime, length] = info;
     const memory = memoryRaw?.toUpperCase();
     if (!languageRaw) throw new Error('제출 언어를 찾지 못했습니다.');
-    const language = languageRaw === languageRaw.toUpperCase()
-      ? languageRaw.substring(0, 1) + languageRaw.substring(1).toLowerCase() : languageRaw;
     const extension = resolveLanguageExtension(languages, languageRaw);
     const link = `${location.origin}/main/code/problem/problemDetail.do?contestProbId=${encodeURIComponent(contestProbId)}`;
-    const data = await makeDataForBulkUploadSWEA({
-      link, problemId, level, title, extension, code, runtime, memory, length, language,
+    // 제출 시각을 넘기지 않으므로 README 의 제출 일자는 업로드 시각이 된다
+    const data = await makeData({
+      link, problemId, level, title, extension, code, runtime, memory, length, language: languageRaw,
     });
     return { status: 'success', data };
   } catch (error) {
     console.error(`[BaekjoonHub] SWEA ${problemId} 코드 조회 실패`, error);
     return { status: 'failed', problemId };
   }
-}
-
-/**
- * SWEA 일괄 업로드용 데이터를 생성합니다.
- */
-async function makeDataForBulkUploadSWEA(origin) {
-  const { link, problemId, level, extension, title, runtime, memory, code, length, language } = origin;
-  const directory = await buildDirectory('swea', {
-    platform: 'SWEA',
-    level,
-    id: problemId,
-    title: convertSingleCharToDoubleChar(title),
-    language,
-    _defaultDir: `SWEA/${level}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-  });
-  const message = `[${level}] Title: ${title} -BaekjoonHub`;
-  const fileName = `${convertSingleCharToDoubleChar(title)}.${extension}`;
-  const dateInfo = getDateString(new Date(Date.now()));
-  const readme =
-    `# [${level}] ${title} - ${problemId} \n\n`
-    + `[문제 링크](${link}) \n\n`
-    + `### 성능 요약\n\n`
-    + `메모리: ${memory}, `
-    + `시간: ${runtime}, `
-    + `코드길이: ${length} Bytes\n\n`
-    + `### 제출 일자\n\n`
-    + `${dateInfo}\n\n`
-    + `\n\n`
-    + `> 출처: SW Expert Academy, https://swexpertacademy.com/main/code/problem/problemList.do`;
-  return { problemId, directory, message, fileName, readme, code };
 }

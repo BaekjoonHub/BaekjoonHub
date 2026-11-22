@@ -80,8 +80,8 @@
 4. [작동 원리](#작동원리how-it-works)
    1. [동작 화면](#1-동작-화면)
    2. [업로드 시점](#2-업로드-시점)
-   3. [백준 제출 기준](#4-백준-제출-기준)
-   4. [저장되는 정보](#3-저장되는-정보)
+   3. [백준 제출 기준](#3-백준-제출-기준)
+   4. [저장되는 정보](#4-저장되는-정보)
 5. [링크 및 문서](#링크-및-문서)
    <br />
    <br />
@@ -103,7 +103,7 @@
 ## 백준허브란?(What is BaekjoonHub?)
 
 <p>
-  백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. <a href="https://acmicpc.net/">백준</a>, <a href="https://programmers.co.kr/">프로그래머스</a>, <a href="https://level.goorm.io/">goormlevel</a>를 통해 알고리즘 공부를 하시는 분들이 더욱 쉽게 코드를 저장하고 관리할 수 있게 하도록 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.<br/>
+  백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. <a href="https://acmicpc.net/">백준</a>, <a href="https://programmers.co.kr/">프로그래머스</a>를 통해 알고리즘 공부를 하시는 분들이 더욱 쉽게 코드를 저장하고 관리할 수 있게 하도록 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.<br/>
 </p>
 <p>
   BaekjoonHub is a chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>, a similar extension for Leetcode.
@@ -118,12 +118,12 @@
 ## 설치 및 연동(How to set it up)
 
 <ol>
-  <li>크롬에서 설치 후 우측 상단의 popup 버튼을 클릭합니다.</li>
-  <li>"Authorize with GitHub" 버튼을 누르고 인증을 완료하면 Repository 연동 화면이 표시됩니다.</li>
-  <li>Repository를 신규로 만들거나 기존에 존재하는 Repository에 연동 가능합니다. (신규 Repository 생성시 visibility 기본값은 private으로 되어있습니다)</li>
-  <li>디렉토리 구조를 플랫폼별로 또는 언어별로 하는 옵션이 있습니다.</li>
-  <li>같은 문제를 다시 풀 때 서로 다른 풀이를 <code>이름_002.py</code>, <code>이름_003.py</code> 처럼 번호를 붙여 파일로 모두 남기는 옵션이 있습니다. (설정 화면에서 켤 수 있으며 기본값은 꺼짐, 똑같은 코드는 다시 올리지 않습니다)</li>
-  <li>Get Started 버튼을 누르면 링크가 완료됩니다.</li>
+  <li>크롬에서 설치하면 설정 페이지가 자동으로 열립니다. (닫았다면 우측 상단의 백준허브 아이콘을 눌러 "시작하기"로 다시 열 수 있습니다)</li>
+  <li>"GitHub로 계속하기" 버튼을 누르고 인증을 완료하면 같은 탭에서 저장소 선택 화면이 표시됩니다.</li>
+  <li>Repository를 새로 만들거나(비공개/공개 선택, 기본값은 비공개) 기존 Repository를 목록에서 골라 연결합니다. organization 저장소도 목록에 나오며, 목록에 없으면 <code>소유자/이름</code> 또는 GitHub 주소로 직접 입력할 수 있습니다.</li>
+  <li>"만들고 연결하기" 또는 "연결하기" 버튼을 누르면 연동이 완료됩니다.</li>
+  <li>완료 화면의 업로드 설정에서 디렉토리 구조를 플랫폼별 또는 언어별로 바꿀 수 있습니다.</li>
+  <li>같은 문제를 다시 풀 때 서로 다른 풀이를 <code>이름_002.py</code>, <code>이름_003.py</code> 처럼 번호를 붙여 파일로 모두 남기는 옵션이 있습니다. (업로드 설정에서 켤 수 있으며 기본값은 꺼짐, 똑같은 코드는 다시 올리지 않습니다)</li>
   <li>이후 제출화면이 감지되면 자동으로 업로드됩니다.</li>
 </ol>
 <br />
@@ -151,16 +151,11 @@
 ![](assets/extension/SWExpertAcademy.gif)
 
 <div align="center">SW Expert Academy 동작 화면</div>
-<br/>
-
-![](assets/extension/goormlevel.gif)
-
-<div align="center">goormlevel 동작 화면</div>
 
 ### 2. 업로드 시점
 
 <p>백준허브는 기본적으로 풀이 채점 후 정답임을 감지하여 작동합니다.</p>
-<p>다만 SW Expert Academy 플랫폼은 정답을 맞추면 "백준허브로 업로드" 버튼이 생깁니다.</p>
+<p>SW Expert Academy 는 Pass 결과창이 뜨면 바로 업로드하며, 업로드가 끝날 때까지 결과창의 확인·닫기가 잠시 미뤄집니다.</p>
 <p>업로드 도중 페이지 이동은 권장드리지 않습니다.</p>
 
 ### 3. 백준 제출 기준
@@ -231,21 +226,6 @@
         <li>사용한 메모리</li>
         <li>실행 시간</li>
         <li>코드 길이</li>
-      </td>
-    </tr>
-    <tr>
-      <td>goormlevel</td>
-      <td align="left">
-        <li>문제 제목</li>
-        <li>시험 아이디</li>
-        <li>문제 아이디</li>
-        <li>문제 링크</li>
-        <li>사용 언어</li>
-      </td>
-      <td align="left">
-        <li>코드</li>
-        <li>사용한 메모리</li>
-        <li>실행 시간</li>
       </td>
     </tr>
   </tbody>

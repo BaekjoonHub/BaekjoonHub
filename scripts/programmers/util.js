@@ -82,24 +82,6 @@ function startUploadCountDown(attempt) {
 }
 
 /**
- * 백준의 날짜 형식과 같게 포맷된 스트링을 반환하는 함수
- * @example 2023년 9월 23일 16:26:26
- * @param {Date} date
- * @return {string} 포맷된 스트링
- */
-
-function getDateString(date){
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const seconds = date.getSeconds().toString().padStart(2, '0');
-
-  return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
-}
-
-/**
  * 풀이 목록 페이지에 "전체제출 업로드" 버튼을 삽입합니다.
  * "즐겨찾기한 문제" 버튼 옆에 동일한 스타일(div.bookmark)로 백준허브 아이콘과 함께 삽입합니다.
  */

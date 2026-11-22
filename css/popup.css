@@ -28,12 +28,49 @@ body {
   font-family: sans-serif;
   border-top: solid black 1px;
   font-weight: 500;
-  padding-top: 2%;
+  margin-top: 10px;
+  padding-top: 10px;
   font-size: medium;
 }
 
+#toggle_row {
+  margin-top: 10px;
+}
+
+#toggle_row > * {
+  vertical-align: middle;
+}
+
+#toggle_label {
+  font-weight: 500;
+  margin-right: 6px;
+}
+
+#toggle_state {
+  display: inline-block;
+  min-width: 3em;
+  margin-left: 6px;
+  text-align: left;
+}
+
+/* Hidden but still focusable, so the switch works from the keyboard. */
 #onffbox {
-  appearance: none;
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+
+#onffbox:focus-visible + #onffmain {
+  outline: 2px solid #2f5496;
+  outline-offset: 2px;
+}
+
+#welcome_URL span {
+  color: grey;
+  font-size: 14px;
+  vertical-align: middle;
 }
 
 #onffmain {

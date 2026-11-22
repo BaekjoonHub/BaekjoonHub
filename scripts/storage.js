@@ -1,20 +1,16 @@
 /* Sync to local storage */
 chrome.storage.local.get('isSync', (data) => {
-  keys = ['BaekjoonHub_token', 'BaekjoonHub_username', 'pipe_baekjoonhub', 'stats', 'BaekjoonHub_hook', 'mode_type'];
+  const keys = ['BaekjoonHub_token', 'BaekjoonHub_username', 'pipe_baekjoonhub', 'stats', 'BaekjoonHub_hook', 'mode_type'];
   if (!data || !data.isSync) {
     keys.forEach((key) => {
       chrome.storage.sync.get(key, (data) => {
         chrome.storage.local.set({ [key]: data[key] });
       });
     });
-    chrome.storage.local.set({ isSync: true }, (data) => {
-      // if (debug)
+    chrome.storage.local.set({ isSync: true }, () => {
       console.log('BaekjoonHub Synced to local values');
     });
   } else {
-    // if (debug)
-    // console.log('Upload Completed. Local Storage status:', data);
-    // if (debug)
     console.log('BaekjoonHub Local storage already synced!');
   }
 });
@@ -66,82 +62,8 @@ async function saveObjectInLocalStorage(obj) {
   });
 }
 
-/**
- * @author https://gist.github.com/sumitpore/47439fcd86696a71bf083ede8bbd5466
- * Chrome Local StorageArea에서 개체 제거
- *
- * @param {string or array of string keys} keys
- */
-async function removeObjectFromLocalStorage(keys) {
-  return new Promise((resolve, reject) => {
-    try {
-      chrome.storage.local.remove(keys, function() {
-        resolve();
-      });
-    } catch (ex) {
-      reject(ex);
-    }
-  });
-}
-
-/**
- * Chrome의 Sync StorageArea에서 개체 가져오기
- * @param {string} key
- */
-async function getObjectFromSyncStorage(key) {
-  return new Promise((resolve, reject) => {
-    try {
-      chrome.storage.sync.get(key, function(value) {
-        resolve(value[key]);
-      });
-    } catch (ex) {
-      reject(ex);
-    }
-  });
-}
-
-/**
- * Chrome의 Sync StorageArea에 개체 저장
- * @param {*} obj
- */
-async function saveObjectInSyncStorage(obj) {
-  return new Promise((resolve, reject) => {
-    try {
-      chrome.storage.sync.set(obj, function() {
-        resolve();
-      });
-    } catch (ex) {
-      reject(ex);
-    }
-  });
-}
-
-/**
- * Chrome Sync StorageArea에서 개체 제거
- * @param {string or array of string keys} keys
- */
-async function removeObjectFromSyncStorage(keys) {
-  return new Promise((resolve, reject) => {
-    try {
-      chrome.storage.sync.remove(keys, function() {
-        resolve();
-      });
-    } catch (ex) {
-      reject(ex);
-    }
-  });
-}
-
 async function getToken() {
   return await getObjectFromLocalStorage('BaekjoonHub_token');
-}
-
-// async function getPipe() {
-//   return await getObjectFromLocalStorage('pipe_baekjoonhub');
-// }
-
-async function getGithubUsername() {
-  return await getObjectFromLocalStorage('BaekjoonHub_username');
 }
 
 async function getStats() {
@@ -163,10 +85,6 @@ async function getOrgOption() {
   }
 }
 
-async function getModeType() {
-  return await getObjectFromLocalStorage('mode_type');
-}
-
 async function getSaveExamplesOption() {
   return (await getObjectFromLocalStorage('bjhSaveExamples')) === true;
 }
@@ -176,29 +94,17 @@ async function getKeepSolutionVersionsOption() {
   return (await getObjectFromLocalStorage('bjhKeepSolutionVersions')) === true;
 }
 
-async function saveToken(token) {
-  return await saveObjectInLocalStorage({ BaekjoonHub_token: token });
-}
-
 async function saveStats(stats) {
   return await saveObjectInLocalStorage({ stats });
 }
 
 /**
- * update stats from path recursively
- * ex) updateOptimizedStatsfromPath('_owner/_repo/백준/README.md', '1342259dssd') -> stats.submission.append({_owner: {_repo: {백준: {README.md: '1342259dssd'}}}})
- * updateOptimizedStatsfromPath('_owner/_repo/백준/1000.테스트/테스트.cpp', 'sfgbdksalf144') -> stats.submission.append({_owner: {_repo: {백준: {'1000.테스트': {'테스트.cpp': 'sfgbdksalf144'}}}}}})
- * updateOptimizedStatsfromPath('_owner/_repo/백준/1000.테스트/aaa/README.md', '123savvsvfffbb') -> stats.submission.append({_owner: {_repo: {백준: {'1000.테스트': {'aaa': {'README.md': '123savvsvfffbb'}}}}}})
- * @param {string} path - path to file
- * @param {string} sha - sha of file
- * @returns {Promise<void>}
+ * 경로를 따라 중첩 객체에 값을 넣습니다. (경로는 normalizePath 로 정규화한다)
+ * ex) updateObjectDatafromPath(submission, '_owner/_repo/백준/1000.테스트/테스트.cpp', 'sha') -> {_owner: {_repo: {백준: {'1000.테스트': {'테스트.cpp': 'sha'}}}}}
+ * @param {object} obj - stats.submission
+ * @param {string} path - 'owner/repo/파일 경로'
+ * @param {string} data - 파일의 blob sha
  */
-async function updateStatsSHAfromPath(path, sha) {
-  const stats = await getStats();
-  updateObjectDatafromPath(stats.submission, path, sha);
-  await saveStats(stats);
-}
-
 function updateObjectDatafromPath(obj, path, data) {
   let current = obj;
   // split path into array and filter out empty strings
@@ -406,11 +312,6 @@ function applyDirectoryTemplate(template, variables) {
 async function getDirectoryTemplate(platform) {
   const key = `BaekjoonHub_dirTemplate_${platform}`;
   return await getObjectFromLocalStorage(key);
-}
-
-async function saveDirectoryTemplate(platform, template) {
-  const key = `BaekjoonHub_dirTemplate_${platform}`;
-  return await saveObjectInLocalStorage({ [key]: template });
 }
 
 async function buildDirectory(platform, variables) {

@@ -178,63 +178,9 @@ function isResultModalOpen() {
 async function beginUpload(bojData, attempt) {
   log('bojData', bojData);
   if (isNotEmpty(bojData)) {
-    const stats = await getStats();
-    const hook = await getHook();
-    const token = await getToken();
-
-    const currentVersion = stats.version;
-    /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
-    if (isNull(currentVersion) || currentVersion !== getVersion() || isNull(await getStatsSHAfromPath(hook))) {
-      await versionUpdate();
-    }
-
-    /* 풀이별 파일 보관 옵션이 켜져 있으면 같은 코드인지도 캐시가 아니라 GitHub 의 파일 목록으로 정한다(utils/solutionVersions.js).
-       같은 코드면 upload 가 커밋 없이 끝나고 완료 표시는 콜백이 한다. */
-    if (await getKeepSolutionVersionsOption()) {
-      await uploadOneSolveProblemOnGit(bojData, (branches, directory) => markUploadedCSS(branches, directory, attempt));
-      return;
-    }
-
-    /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    /* 선언 없이 대입하면 전역 변수가 되어, 겹쳐 실행되는 다른 업로드가 비교 도중 값을 바꿀 수 있다 */
-    const cachedSHA = await getStatsSHAfromPath(`${hook}/${bojData.directory}/${bojData.fileName}`);
-    const calcSHA = calculateBlobSHA(bojData.code);
-    log('cachedSHA', cachedSHA, 'calcSHA', calcSHA)
-
-    if (isNull(cachedSHA)) {
-      /* 로컬 캐시가 없는 경우 원격 저장소에서 파일 존재 여부 실시간 확인 */
-      const remoteFile = await getFile(hook, token, `${bojData.directory}/${bojData.fileName}`);
-      if (remoteFile && remoteFile.sha === calcSHA) {
-        markUploadedCSS(stats.branches, bojData.directory, attempt);
-        console.log('원격 저장소에 동일한 파일이 존재하여 업로드를 건너뜁니다.');
-        return;
-      }
-      /* GitHub에서 파일이 삭제되거나 없는 경우, 새 업로드로 처리 */
-      console.log('캐시된 SHA가 없습니다. 새로 업로드합니다.');
-    } else if (cachedSHA == calcSHA) {
-      markUploadedCSS(stats.branches, bojData.directory, attempt);
-      console.log(`현재 제출번호를 업로드한 기록이 있습니다. problemIdID ${bojData.problemId}`);
-      return;
-    }
-    /* 신규 제출 번호라면 새롭게 커밋  */
-    await uploadOneSolveProblemOnGit(bojData, (branches, directory) => markUploadedCSS(branches, directory, attempt));
+    await uploadUnlessSame(bojData, (branches, directory) => markUploadedCSS(branches, directory, attempt));
   } else {
     console.error('[BaekjoonHub] 프로그래머스 파싱 결과가 비어 있어 업로드하지 않습니다.', bojData);
     markUploadFailedCSS(attempt);
   }
 }
-
-async function versionUpdate() {
-  log('start versionUpdate');
-  /* 버전은 재구축과 같은 저장에 기록한다(레포 파일 목록을 읽지 못했으면 기록하지 않아 다음에 다시 재구축한다).
-     재구축 결과를 받아 버전을 붙여 다시 저장하면, 그 사이 다른 탭이 남긴 업로드 기록을 덮는다. */
-  const stats = await updateLocalStorageStats({ version: getVersion() });
-  log('stats updated.', stats);
-}
-
-// /* TODO: 하나의 데이터만 가져오는 구조이므로 page를 계속적으로
-//   아래 있는 네이베이션바의 "다음"버튼이 비활성화 될때까지 반복으로 진행한다.
-//   진행하며 존재하는 알고리즘 카드인 div.col-item > div.card-algorithm > a 의 href 속성값을 가져와 리스트화하고,
-//   이를 차후 fetch GET를 진행하여 작성한 알고리즘을 가져와 github에 업로드를 진행한다.
-//   */
-// function get_all_problems() {}

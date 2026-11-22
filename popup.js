@@ -1,86 +1,65 @@
-/* global oAuth2, I18N */
+/* global I18N */
 /* eslint no-undef: "error" */
 
 I18N.init();
 
-let action = false;
+const WELCOME_URL = chrome.runtime.getURL('welcome.html');
+$('#welcome_URL').attr('href', WELCOME_URL);
+$('#status_action').attr('href', WELCOME_URL);
 
-$('#authenticate').on('click', () => {
-  if (action) {
-    oAuth2.begin();
-  }
-});
+function showStatus(textKey, actionKey) {
+  $('#commit_mode').hide();
+  I18N.bind($('#status_text').show()[0], textKey, null, 'text');
+  I18N.bind($('#status_action').show()[0], actionKey, null, 'text');
+}
 
-/* Get URL for welcome page */
-$('#welcome_URL').attr('href', `chrome-extension://${chrome.runtime.id}/welcome.html`);
-$('#hook_URL').attr('href', `chrome-extension://${chrome.runtime.id}/welcome.html`);
-
-chrome.storage.local.get('BaekjoonHub_token', (data) => {
-  const token = data.BaekjoonHub_token;
-  if (token === null || token === undefined) {
-    action = true;
-    $('#auth_mode').show();
+function render(data) {
+  const hook = data.BaekjoonHub_hook;
+  if (!data.BaekjoonHub_token) {
+    showStatus('popup.status.needAuth', 'popup.action.start');
+  } else if (data.mode_type !== 'commit' || !hook) {
+    showStatus('popup.status.needRepo', 'popup.action.pickRepo');
   } else {
-    // To validate user, load user object from GitHub.
-    const AUTHENTICATION_URL = 'https://api.github.com/user';
-
-    const xhr = new XMLHttpRequest();
-    xhr.addEventListener('readystatechange', function () {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          /* Show MAIN FEATURES */
-          chrome.storage.local.get('mode_type', (data2) => {
-            if (data2 && data2.mode_type === 'commit') {
-              $('#commit_mode').show();
-              /* Get problem stats and repo link */
-              chrome.storage.local.get(['stats', 'BaekjoonHub_hook'], (data3) => {
-                const BaekjoonHubHook = data3.BaekjoonHub_hook;
-                if (BaekjoonHubHook) {
-                  const repoLink = `<a target="blank" style="color: cadetblue !important;" href="https://github.com/${BaekjoonHubHook}">${BaekjoonHubHook}</a>`;
-                  const updateRepoUrl = () => {
-                    $('#repo_url').html(`${I18N.t('popup.yourRepo')} ${repoLink}`);
-                  };
-                  updateRepoUrl();
-                  I18N.onChange(updateRepoUrl);
-                }
-              });
-            } else {
-              $('#hook_mode').show();
-            }
-          });
-        } else if (xhr.status === 401) {
-          // bad oAuth
-          // reset token and redirect to authorization process again!
-          chrome.storage.local.set({ BaekjoonHub_token: null }, () => {
-            console.log('BAD oAuth!!! Redirecting back to oAuth process');
-            action = true;
-            $('#auth_mode').show();
-          });
-        }
-      }
-    });
-    xhr.open('GET', AUTHENTICATION_URL, true);
-    xhr.setRequestHeader('Authorization', `token ${token}`);
-    xhr.send();
+    $('#status_text, #status_action').hide();
+    $('#repo_link').attr('href', `https://github.com/${hook}`).text(hook);
+    $('#commit_mode').show();
   }
+}
+
+chrome.storage.local.get(['BaekjoonHub_token', 'mode_type', 'BaekjoonHub_hook'], (data) => {
+  render(data);
+  const token = data.BaekjoonHub_token;
+  if (!token) return;
+  // Only a 401 proves the token is bad; offline, rate limits and 5xx keep the rendered state.
+  const xhr = new XMLHttpRequest();
+  xhr.addEventListener('load', () => {
+    if (xhr.status === 401) {
+      chrome.storage.local.set({ BaekjoonHub_token: null }, () => {
+        render(Object.assign({}, data, { BaekjoonHub_token: null }));
+      });
+    }
+  });
+  xhr.open('GET', 'https://api.github.com/user', true);
+  xhr.setRequestHeader('Authorization', `token ${token}`);
+  xhr.send();
 });
+
+function showToggleState() {
+  I18N.bind($('#toggle_state')[0], $('#onffbox').is(':checked') ? 'popup.toggle.on' : 'popup.toggle.off', null, 'text');
+}
 
 /*
   초기에 활성화 데이터가 존재하는지 확인, 없으면 새로 생성, 있으면 있는 데이터에 맞게 버튼 조정
  */
 chrome.storage.local.get('bjhEnable', (data4) => {
-  if (data4.bjhEnable === undefined) {
-    $('#onffbox').prop('checked', true);
-    chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
-  }
-  else {
-    $('#onffbox').prop('checked', data4.bjhEnable);
-    chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
-  }
-})
+  $('#onffbox').prop('checked', data4.bjhEnable === undefined ? true : data4.bjhEnable);
+  chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
+  showToggleState();
+});
 /*
   활성화 버튼 클릭 시 storage에 활성 여부 데이터를 저장.
  */
-$('#onffbox').on('click', () => {
+$('#onffbox').on('change', () => {
   chrome.storage.local.set({ 'bjhEnable': $('#onffbox').is(':checked') }, () => { });
+  showToggleState();
 });

@@ -106,7 +106,7 @@ describe('manifest 콘텐츠 스크립트 번들', () => {
 });
 
 describe('업로드 커밋 소스 가드', () => {
-  const uploadFiles = ['baekjoon', 'goormlevel', 'programmers', 'swexpertacademy'].map((dir) => `scripts/${dir}/uploadfunctions.js`);
+  const uploadFiles = ['scripts/upload.js', ...['baekjoon', 'programmers', 'swexpertacademy'].map((dir) => `scripts/${dir}/uploadfunctions.js`)];
 
   test('플랫폼 업로드 코드는 ref 를 직접 옮기지 않고 commitTreeItems 로 커밋한다', () => {
     for (const file of uploadFiles) {
@@ -142,30 +142,23 @@ describe('업로드 커밋 소스 가드', () => {
 
 describe('버전 갱신 가드', () => {
   // 재구축 결과를 받아 버전을 붙여 다시 저장하면 그 사이 다른 탭의 기록을 덮고, 재구축에 실패해도 버전이 기록된다
-  const files = ['scripts/baekjoon/baekjoon.js', 'scripts/programmers/programmers.js', 'scripts/swexpertacademy/swexpertacademy.js', 'scripts/goormlevel/goormlevel.js'];
   test('versionUpdate 는 재구축과 같은 저장에 버전을 기록한다', () => {
-    for (const file of files) {
-      const code = codeOf(file);
-      const body = code.slice(code.indexOf('async function versionUpdate()'));
-      const fn = body.slice(0, body.indexOf('\n}') + 2);
-      assert.match(fn, /updateLocalStorageStats\(\{\s*version:\s*getVersion\(\)\s*\}\)/, `${file}`);
-      assert.doesNotMatch(fn, /saveStats\s*\(/, `${file}: versionUpdate 가 stats 를 다시 저장한다`);
-    }
+    const code = codeOf('scripts/upload.js');
+    const body = code.slice(code.indexOf('async function versionUpdate()'));
+    const fn = body.slice(0, body.indexOf('\n}') + 2);
+    assert.match(fn, /updateLocalStorageStats\(\{\s*version:\s*getVersion\(\)\s*\}\)/);
+    assert.doesNotMatch(fn, /saveStats\s*\(/, 'versionUpdate 가 stats 를 다시 저장한다');
   });
 });
 
 describe('암묵적 전역 변수 가드', () => {
   // 선언 없이 대입하면 전역 변수가 되어 같은 탭의 다른 업로드와 값을 공유한다(비동기 업로드가 겹치면 섞인다).
-  const files = ['scripts/baekjoon/baekjoon.js', 'scripts/programmers/programmers.js', 'scripts/swexpertacademy/swexpertacademy.js', 'scripts/goormlevel/goormlevel.js'];
   for (const name of ['cachedSHA', 'calcSHA']) {
     test(`${name} 는 선언한 지역 변수다`, () => {
-      for (const file of files) {
-        const code = codeOf(file);
-        if (!new RegExp(`\\b${name}\\b`).test(code)) continue;
-        assert.match(code, new RegExp(`\\b(?:const|let)\\s+${name}\\b`), `${file}: ${name} 선언이 없다`);
-        const bare = code.split('\n').filter((line) => new RegExp(`^\\s*${name}\\s*=[^=]`).test(line));
-        assert.deepEqual(bare, [], `${file}: 선언 없이 ${name} 에 대입한다`);
-      }
+      const code = codeOf('scripts/upload.js');
+      assert.match(code, new RegExp(`\\b(?:const|let)\\s+${name}\\b`), `${name} 선언이 없다`);
+      const bare = code.split('\n').filter((line) => new RegExp(`^\\s*${name}\\s*=[^=]`).test(line));
+      assert.deepEqual(bare, [], `선언 없이 ${name} 에 대입한다`);
     });
   }
 });

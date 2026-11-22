@@ -1,11 +1,10 @@
 /**
  * 언어 표기 → 파일 확장자 해석 유틸.
  *
- * 플랫폼이 화면에 보여주는 언어 표기에는 버전이 붙는다. 특히 구름LEVEL 은 드롭다운의 29개 언어가
- * "전부" 버전 표기다 — 'Java 14', 'C++ 17', 'Python 3.9', 'R 3.6.3', 'Common Lisp 2.49' …
+ * 플랫폼이 화면에 보여주는 언어 표기에는 버전이 붙을 수 있다 — 'Java 14', 'C++ 17', 'Python 3.9', 'R 3.6.3', 'Common Lisp 2.49' …
  * 그런데 확장자 맵의 key 는 버전이 없는 표기('java', 'c++', 'python')라
  * `languages[language.toLowerCase()]` 직접 조회가 undefined 를 반환했고, 그 값이 템플릿 문자열에
- * 그대로 박혀 `제목.undefined` 파일이 업로드됐다(tests/fixtures/realPaths.txt 에 실제 사례 43건).
+ * 그대로 박혀 `제목.undefined` 파일이 업로드됐다(공개 BaekjoonHub 레포 약 100곳의 경로에서 실제 사례 43건).
  *
  * 핵심 불변식(#349 의 난이도 파싱과 동일): 맵에 "정확히" 존재하는 key 만 채택한다.
  *   → 후보를 늘려도 틀린 확장자를 "합성" 하지 못하고, 실패 모드가 "오답" 이 아니라
@@ -13,12 +12,12 @@
  *   → 그래서 접두사 추정(startsWith)은 쓰지 않는다. 'cython' 이 'c' 에 걸려 .c 가 되는 식의
  *     조용한 오답은 .undefined 보다 나쁘다. 모르는 언어는 그냥 .txt 로 간다.
  *
- * NOTE: 이 파일은 4개 플랫폼 번들 전부에 로드된다. 콘텐츠 스크립트는 번들 하나당 전역 스코프를
+ * NOTE: 이 파일은 플랫폼 번들 전부에 로드된다. 콘텐츠 스크립트는 번들 하나당 전역 스코프를
  *       공유하므로, 여기에 선언한 최상위 이름은 어느 플랫폼 파일과도 겹치면 안 된다.
- *       (baekjoon/variables.js 의 `getLanguageExtension`·`languageExtensions`, goorm·SWEA
+ *       (baekjoon/variables.js 의 `getLanguageExtension`·`languageExtensions`, SWEA
  *        variables.js 의 `languages` 와 겹치지 않도록 이름을 고른 것이다.)
- *       맵을 전역에서 읽지 않고 "인자로 받는" 것도 같은 이유다 — `languages` 전역은 4개 번들 중
- *       2개에만 존재한다.
+ *       맵을 전역에서 읽지 않고 "인자로 받는" 것도 같은 이유다 — `languages` 전역은 SWEA 번들에만
+ *       존재한다.
  */
 
 /** 언어 표기 뒤에 붙는 버전 토큰. 'Java 14', 'R 3.6.3', 'D 2.074', 'C++17' 을 모두 걷어낸다. */

@@ -1,6 +1,6 @@
 /**
  * 같은 문제를 다시 풀었을 때 서로 다른 풀이를 번호 붙은 파일로 모두 남기는 옵션(bjhKeepSolutionVersions, 기본 꺼짐)의 규칙.
- * 네 플랫폼의 단일 업로드(각 uploadfunctions.js 의 upload)가 함께 쓴다.
+ * 단일 업로드(scripts/upload.js 의 upload 와 SWEA 의 uploadSWEA)가 함께 쓴다.
  *
  * 풀이 파일 이름이 `이름.확장자` 일 때 "버전" 은 같은 디렉토리의 `이름.확장자` 와 `이름_숫자.확장자` 다.
  * - 버전이 없으면 `이름.확장자` (지금과 같다)

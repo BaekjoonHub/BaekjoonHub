@@ -41,7 +41,7 @@ function loadBackground(responses) {
   const sandbox = {
     console: { log: () => {}, warn: () => {}, error: () => {} },
     setTimeout: (fn) => { fn(); return 0; }, // 재시도 대기를 기다리지 않는다
-    chrome: { runtime: { onMessage: { addListener: () => {} } } },
+    chrome: { runtime: { onMessage: { addListener: () => {} }, onInstalled: { addListener: () => {} } } },
     fetch: async (url) => {
       requests.push(url);
       const body = responses[url];

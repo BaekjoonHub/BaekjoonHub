@@ -3,171 +3,220 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BaekjoonHub</title>
   <link rel="stylesheet" href="css/welcome.css" />
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen transition-colors">
+<body>
   <div class="container">
 
     <!-- Top-right controls: Language + Theme toggle -->
     <div class="top-controls">
-      <button id="lang_toggle" class="btn-control">한국어</button>
-      <button id="theme_toggle" class="btn-control" title="Toggle theme">
+      <button id="lang_toggle" class="btn-control" type="button">한국어</button>
+      <button id="theme_toggle" class="btn-control" type="button" title="Toggle theme" aria-label="Toggle theme">
         <span id="theme_icon_light" class="hidden">&#9728;</span>
         <span id="theme_icon_dark" class="hidden">&#9790;</span>
       </button>
     </div>
 
     <!-- Logo / Title -->
-    <div class="text-center mb-12">
+    <div class="text-center mb-8">
       <h1 class="logo-font">
         Bae<span class="text-brand">/&lt;</span>joonHub<span class="text-brand">></span>
       </h1>
       <p class="subtitle" data-i18n="welcome.subtitle">Automatically sync your code from Baekjoon to GitHub</p>
     </div>
 
-    <!-- Error message -->
-    <div hidden id="error" class="msg msg-error"></div>
+    <ol id="steps" class="steps">
+      <li data-step="auth"><span class="step-dot"></span><span data-i18n="welcome.step.auth">Connect GitHub</span></li>
+      <li data-step="repo"><span class="step-dot"></span><span data-i18n="welcome.step.repo">Choose repository</span></li>
+      <li data-step="done"><span class="step-dot"></span><span data-i18n="welcome.step.done">Done</span></li>
+    </ol>
 
-    <!-- Success message -->
-    <div hidden id="success" class="msg msg-success"></div>
+    <!-- Step 1: GitHub account -->
+    <section id="view_auth" class="card hidden">
+      <h2 class="card-title" data-i18n="welcome.auth.title">Connect your GitHub account</h2>
+      <p class="lead" data-i18n="welcome.auth.desc"></p>
+      <div id="auth_error" role="alert" class="msg msg-error hidden"></div>
+      <div class="text-center">
+        <button id="auth_button" class="btn-primary btn-lg" type="button" data-i18n="welcome.auth.button">Continue with GitHub</button>
+      </div>
+      <p class="field-hint text-center mt-4" data-i18n="welcome.auth.scopeNote"></p>
+    </section>
 
-    <!-- Unlink -->
-    <p hidden id="unlink" class="unlink-area">
-      <span data-i18n="welcome.unlinkText">Linked the wrong repo?</span>
-      <a class="link-brand" data-i18n="welcome.unlinkAction">Unlink</a>.
-    </p>
+    <!-- Step 2: repository -->
+    <section id="view_repo" class="card hidden">
+      <h2 id="repo_title" class="card-title" data-i18n="welcome.repo.title">Choose where to upload your solutions</h2>
+      <p id="repo_account" class="field-hint text-center mb-4 hidden"></p>
 
-    <!-- Hook Mode: Setup form -->
-    <div id="hook_mode" class="hidden">
-      <div class="card">
-        <h2 class="card-title" data-i18n="welcome.getStarted.title">To get started with BaekjoonHub</h2>
+      <form id="repo_form" class="form-stack" novalidate>
+        <div class="mode-group" role="radiogroup" aria-labelledby="repo_title">
+          <label class="mode-option">
+            <input type="radio" name="repo_mode" id="repo_mode_new" value="new" checked />
+            <span data-i18n="welcome.repo.modeNew">Create a new repository</span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="repo_mode" id="repo_mode_existing" value="existing" />
+            <span data-i18n="welcome.repo.modeExisting">Use an existing repository</span>
+          </label>
+        </div>
+
+        <div id="repo_new_panel" class="form-stack">
+          <div>
+            <label for="repo_name" class="field-label" data-i18n="welcome.repo.nameLabel">Repository name</label>
+            <input id="repo_name" class="form-input" type="text" autocomplete="off" spellcheck="false" value="BaekjoonHub"
+              data-i18n-placeholder="welcome.repo.namePlaceholder" />
+          </div>
+          <fieldset class="plain-fieldset">
+            <legend class="field-label" data-i18n="welcome.repo.visibilityLabel">Visibility</legend>
+            <label class="checkbox-label">
+              <input type="radio" name="repo_visibility" value="private" checked />
+              <span data-i18n="welcome.repo.private">Private</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="radio" name="repo_visibility" value="public" />
+              <span data-i18n="welcome.repo.public">Public</span>
+            </label>
+          </fieldset>
+        </div>
+
+        <div id="repo_existing_panel" class="form-stack hidden">
+          <div>
+            <label for="repo_select" class="field-label" data-i18n="welcome.repo.listLabel">Your repositories</label>
+            <select id="repo_select" class="form-input"></select>
+            <p id="repo_list_failed" class="field-hint mt-1 hidden" data-i18n="welcome.repo.listFailed"></p>
+          </div>
+          <div id="repo_manual_field" class="hidden">
+            <label for="repo_manual" class="field-label" data-i18n="welcome.repo.manualLabel">Repository</label>
+            <input id="repo_manual" class="form-input" type="text" autocomplete="off" spellcheck="false"
+              placeholder="owner/name" />
+          </div>
+        </div>
+
+        <div id="repo_error" role="alert" class="msg msg-error hidden"></div>
+
+        <div class="form-actions">
+          <button id="repo_cancel" class="btn-control hidden" type="button" data-i18n="welcome.repo.cancel">Cancel</button>
+          <button id="repo_submit" class="btn-primary" type="submit"></button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Step 3: connected -->
+    <div id="view_done" class="hidden">
+      <div id="done_banner" class="msg msg-success hidden" role="status"></div>
+
+      <section class="card">
+        <h2 class="card-title" data-i18n="welcome.conn.title">Connection</h2>
+        <dl class="conn-list">
+          <div class="conn-row">
+            <dt data-i18n="welcome.conn.account">GitHub account</dt>
+            <dd><span id="conn_account" class="conn-value"></span>
+              <button id="logout_button" class="btn-control btn-sm" type="button" data-i18n="welcome.conn.logout">Log out</button></dd>
+          </div>
+          <div class="conn-row">
+            <dt data-i18n="welcome.conn.repo">Repository</dt>
+            <dd><a id="conn_repo" class="link-brand conn-value" target="_blank" rel="noopener"></a>
+              <button id="change_repo_button" class="btn-control btn-sm" type="button" data-i18n="welcome.conn.changeRepo">Change repository</button></dd>
+          </div>
+        </dl>
+        <p id="conn_status" class="conn-status" aria-live="polite"></p>
+      </section>
+
+      <section class="card mt-6">
+        <div class="card-head">
+          <h2 class="card-title" data-i18n="welcome.settings.title">Upload settings</h2>
+          <span id="settings_saved" class="saved-flash" aria-live="polite"></span>
+        </div>
 
         <div class="form-stack">
-          <!-- Option select -->
-          <select id="type" class="form-input">
-            <option value="" data-i18n="welcome.pickOption">Pick an Option</option>
-            <option value="new" data-i18n="welcome.createRepo">Create a new Private Repository</option>
-            <option value="link" data-i18n="welcome.linkRepo">Link an Existing Repository</option>
-          </select>
+          <div>
+            <label for="org_option" class="field-label" data-i18n="welcome.settings.organize">Folder layout</label>
+            <select id="org_option" class="form-input">
+              <option value="platform" data-i18n="welcome.organizeByPlatform">Organize by Platform</option>
+              <option value="language" data-i18n="welcome.organizeByLanguage">Organize by Language</option>
+            </select>
+            <p class="field-hint mt-1" data-i18n="welcome.settings.organizeHint"></p>
+          </div>
 
-          <!-- Organize option -->
-          <select id="org_option" class="form-input">
-            <option value="platform" data-i18n="welcome.organizeByPlatform">Organize by Platform</option>
-            <option value="language" data-i18n="welcome.organizeByLanguage">Organize by Language</option>
-          </select>
-
-          <!-- Repository name -->
-          <input autocomplete="off" id="name" class="form-input"
-            placeholder="Repository Name" data-i18n-placeholder="welcome.repoNamePlaceholder" type="text" />
-        </div>
-
-        <!-- Get Started button -->
-        <div class="text-right mt-6">
-          <button id="hook_button" disabled class="btn-primary"
-            data-i18n="welcome.getStartedBtn">Get Started</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Commit Mode: Connected state -->
-    <div id="commit_mode" class="hidden">
-      <div class="text-center space-y-6">
-        <button id="token_refresh_button" class="btn-primary"
-          data-i18n="welcome.refreshToken">Refresh GitHub Token</button>
-
-        <p hidden id="token_status" class="token-status"></p>
-
-        <div>
           <label class="checkbox-label">
             <input type="checkbox" id="examplesBox" />
             <span data-i18n="welcome.saveExamples">Save example I/O</span>
           </label>
-        </div>
 
-        <div>
           <label class="checkbox-label">
             <input type="checkbox" id="keepVersionsBox" />
-            <span data-i18n="welcome.keepVersions">Keep each different solution as a numbered file (_002, _003 ...)</span>
+            <span data-i18n="welcome.keepVersions">Keep each different solution as a numbered file</span>
           </label>
+
+          <details class="tmpl-details">
+            <summary class="tmpl-summary">
+              <span data-i18n="welcome.dirTemplate.title">Directory Path Template</span>
+              <span class="tmpl-chevron"></span>
+            </summary>
+
+            <div class="tmpl-body">
+              <p class="field-hint" data-i18n="welcome.dirTemplate.hint"></p>
+              <div class="tmpl-var-list">
+                <code class="var-badge">platform</code>
+                <code class="var-badge">level</code>
+                <code class="var-badge">id</code>
+                <code class="var-badge">title</code>
+                <code class="var-badge">language</code>
+              </div>
+
+              <div class="tmpl-group">
+                <div class="tmpl-label-row">
+                  <label for="tmpl_baekjoon" data-i18n="welcome.platform.baekjoon">Baekjoon</label>
+                  <span class="tmpl-extra">+ <code>levelFull</code></span>
+                </div>
+                <input id="tmpl_baekjoon" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
+                <p class="tmpl-preview" id="tmpl_preview_baekjoon"></p>
+              </div>
+
+              <div class="tmpl-group">
+                <div class="tmpl-label-row">
+                  <label for="tmpl_programmers" data-i18n="welcome.platform.programmers">Programmers</label>
+                </div>
+                <input id="tmpl_programmers" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
+                <p class="tmpl-preview" id="tmpl_preview_programmers"></p>
+              </div>
+
+              <div class="tmpl-group">
+                <div class="tmpl-label-row">
+                  <label for="tmpl_swea" data-i18n="welcome.platform.swea">SWEA</label>
+                </div>
+                <input id="tmpl_swea" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
+                <p class="tmpl-preview" id="tmpl_preview_swea"></p>
+              </div>
+
+              <div class="tmpl-actions">
+                <button id="tmpl_reset" class="btn-control btn-sm" type="button" data-i18n="welcome.dirTemplate.reset">Reset</button>
+              </div>
+            </div>
+          </details>
         </div>
-
-        <div class="muted-text">
-          <p class="text-lg font-semibold" data-i18n="welcome.wantMore">Want more features?</p>
-          <a class="link-brand text-sm" target="_blank"
-            href="https://github.com/BaekjoonHub/BaekjoonHub/issues"
-            data-i18n="welcome.requestFeature">Request a feature!</a>
-        </div>
-      </div>
-
-      <details class="tmpl-details mt-4">
-        <summary class="tmpl-summary">
-          <span data-i18n="welcome.dirTemplate.title">Directory Path Template</span>
-          <span class="tmpl-chevron"></span>
-        </summary>
-
-        <div class="card tmpl-card">
-          <div class="tmpl-var-list">
-            <code class="var-badge">platform</code>
-            <code class="var-badge">level</code>
-            <code class="var-badge">id</code>
-            <code class="var-badge">title</code>
-            <code class="var-badge">language</code>
-          </div>
-
-          <div class="tmpl-group">
-            <div class="tmpl-label-row">
-              <label>백준</label>
-              <span class="tmpl-extra">+ <code>levelFull</code></span>
-            </div>
-            <input id="tmpl_baekjoon" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
-            <p class="tmpl-preview" id="tmpl_preview_baekjoon"></p>
-          </div>
-
-          <div class="tmpl-group">
-            <div class="tmpl-label-row">
-              <label>프로그래머스</label>
-            </div>
-            <input id="tmpl_programmers" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
-            <p class="tmpl-preview" id="tmpl_preview_programmers"></p>
-          </div>
-
-          <div class="tmpl-group">
-            <div class="tmpl-label-row">
-              <label>SWEA</label>
-            </div>
-            <input id="tmpl_swea" class="form-input form-input-sm" placeholder="${platform}/${level}/${id}. ${title}" />
-            <p class="tmpl-preview" id="tmpl_preview_swea"></p>
-          </div>
-
-          <div class="tmpl-group">
-            <div class="tmpl-label-row">
-              <label>구름레벨</label>
-              <span class="tmpl-extra">+ <code>examId</code></span>
-            </div>
-            <input id="tmpl_goormlevel" class="form-input form-input-sm" placeholder="${platform}/${examId}/${id}. ${title}" />
-            <p class="tmpl-preview" id="tmpl_preview_goormlevel"></p>
-          </div>
-
-          <div class="tmpl-actions">
-            <button id="tmpl_reset" class="btn-control btn-sm" data-i18n="welcome.dirTemplate.reset">Reset</button>
-            <button id="tmpl_save" class="btn-primary btn-sm" data-i18n="welcome.dirTemplate.save">Save</button>
-          </div>
-        </div>
-      </details>
+      </section>
     </div>
 
-    <!-- GitHub Star link -->
-    <div class="footer-link">
-      <a class="link-muted" target="_blank"
+    <footer class="footer">
+      <p>
+        <span data-i18n="welcome.wantMore">Want more features?</span>
+        <a class="link-brand" target="_blank" rel="noopener"
+          href="https://github.com/BaekjoonHub/BaekjoonHub/issues"
+          data-i18n="welcome.requestFeature">Request a feature!</a>
+      </p>
+      <a class="link-muted" target="_blank" rel="noopener"
         href="https://github.com/BaekjoonHub/BaekjoonHub"
         data-i18n-html="welcome.starOnGithub">Star
         <span>Baekjoon</span><span class="text-brand">Hub</span> on GitHub</a>
-    </div>
+    </footer>
 
   </div>
 
   <script src="scripts/i18n.js"></script>
-  <script type="text/javascript" src="welcome.js"></script>
+  <script src="scripts/oauth2.js"></script>
+  <script src="scripts/utils/repoInput.js"></script>
+  <script src="welcome.js"></script>
 </body>
 </html>
