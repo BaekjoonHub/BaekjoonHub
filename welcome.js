@@ -312,20 +312,18 @@ $id('keepVersionsBox').addEventListener('click', () => {
 });
 
 /* === Directory Template Settings === */
-const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea', 'goormlevel'];
+const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea'];
 
 const TEMPLATE_PREVIEW_VARS = {
   baekjoon:    { platform: '백준', level: 'Gold', levelFull: 'Gold V', id: '1000', title: 'A＋B', language: 'Python' },
   programmers: { platform: '프로그래머스', level: '2', id: '12345', title: '타겟 넘버', language: 'JavaScript' },
   swea:        { platform: 'SWEA', level: 'D4', id: '1234', title: '문제제목', language: 'Java' },
-  goormlevel:  { platform: 'goormlevel', level: '보통', examId: '12345', id: '54321', title: '문제제목', language: 'Python' },
 };
 
 const TEMPLATE_DEFAULTS = {
   baekjoon:    '${platform}/${level}/${id}. ${title}',
   programmers: '${platform}/${level}/${id}. ${title}',
   swea:        '${platform}/${level}/${id}. ${title}',
-  goormlevel:  '${platform}/${examId}/${id}. ${title}',
 };
 
 function updateTemplatePreview(platform) {

@@ -39,8 +39,7 @@
     "https://github.com/",
     "https://api.github.com/",
     "https://swexpertacademy.com/",
-    "https://solvedac.ssafy.today/api/v4/*",
-    "https://level.goorm.io/"
+    "https://solvedac.ssafy.today/api/v4/*"
   ],
   "web_accessible_resources": [
     {
@@ -172,33 +171,6 @@
         "scripts/swexpertacademy/swexpertacademy.js"
       ],
       "run_at": "document_end"
-    },
-    {
-      "matches": [
-        "https://level.goorm.io/*"
-      ],
-      "css": [
-        "css/goormlevel/inject.css"
-      ],
-      "js": [
-        "library/sha1.min.js",
-        "scripts/util.js",
-        "scripts/Github.js",
-        "scripts/authorize.js",
-        "scripts/utils/pathNormalize.js",
-        "scripts/utils/languageMigration.js",
-        "scripts/utils/languageExtension.js",
-        "scripts/utils/solutionVersions.js",
-        "scripts/storage.js",
-        "scripts/upload.js",
-        "scripts/enable.js",
-        "scripts/goormlevel/variables.js",
-        "scripts/goormlevel/util.js",
-        "scripts/goormlevel/parsing.js",
-        "scripts/goormlevel/uploadfunctions.js",
-        "scripts/goormlevel/goormlevel.js"
-      ],
-      "run_at": "document_idle"
     }
   ]
 }

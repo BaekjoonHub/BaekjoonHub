@@ -18,7 +18,7 @@ const B = 'print(2)\n';
 const C = 'print(3)\n';
 const D = 'print(4)\n';
 const EMPTY_CACHE = { version: VERSION, branches: {}, submission: {} };
-// 풀이 하나를 올리는 구현은 둘이다: scripts/upload.js 의 upload(백준·프로그래머스·구름LEVEL)와 SWEA 의 uploadSWEA
+// 풀이 하나를 올리는 구현은 둘이다: scripts/upload.js 의 upload(백준·프로그래머스)와 SWEA 의 uploadSWEA
 const UPLOADERS = ['baekjoon', 'swexpertacademy'];
 
 /** 'A+B.py' → ['A+B', '.py'] */

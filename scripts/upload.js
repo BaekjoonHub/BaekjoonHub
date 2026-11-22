@@ -1,4 +1,4 @@
-/* 네 플랫폼이 함께 쓰는 업로드 흐름. manifest 의 각 번들에서 storage.js 뒤, 플랫폼 스크립트 앞에 로드한다.
+/* 세 플랫폼이 함께 쓰는 업로드 흐름. manifest 의 각 번들에서 storage.js 뒤, 플랫폼 스크립트 앞에 로드한다.
    uploadOneSolveProblemOnGit 은 각 플랫폼의 uploadfunctions.js 가 정의한다(토큰 만료 때 할 일이 플랫폼마다 다르다). */
 
 /* 버전은 재구축과 같은 저장에 기록한다(레포 파일 목록을 읽지 못했으면 기록하지 않아 다음에 다시 재구축한다).
