@@ -24,15 +24,11 @@ describe('golden characterization (real-data vectors)', () => {
     // SWEA
     [`SWEA/D3/1220. ［S／W${U}문제해결${U}기본］${U}5일차${U}－${U}Magnetic/［S／W${U}문제해결${U}기본］${U}5일차${U}－${U}Magnetic.py`, 'SWEA/1220.［S／W문제해결기본］5일차－Magnetic/［S／W문제해결기본］5일차－Magnetic.py'],
     [`SWEA/Unrated/1949. ［모의${U}SW${U}역량테스트］${U}등산로${U}조성/［모의${U}SW${U}역량테스트］${U}등산로${U}조성.cpp`, 'SWEA/1949.［모의SW역량테스트］등산로조성/［모의SW역량테스트］등산로조성.cpp'],
-    // goorm
-    [`goormlevel/159695/1. 별${U}찍기－12/별${U}찍기－12.undefined`, 'goormlevel/159695/1.별찍기－12/별찍기－12.undefined'],
     // 사용자 지정 디렉토리 템플릿(설정 페이지)이 만드는 경로
     ['owner/repo/백준/Gold V/1000. A＋B/A＋B.py', 'owner/repo/백준/1000.A＋B/A＋B.py'], // ${platform}/${levelFull}/… 세부 티어 스트립(#344)
     [`owner/repo/타겟${U}넘버/타겟${U}넘버.js`, 'owner/repo/타겟넘버/타겟넘버.js'], // ${title}
     ['owner/repo/1000/A＋B/A＋B.py', 'owner/repo/1000/A＋B/A＋B.py'], // ${id}/${title} — 여러 자리 숫자 폴더는 남는다
     [`owner/repo/solutions/JavaScript/프로그래머스/2/12345. 타겟${U}넘버/타겟${U}넘버.js`, 'owner/repo/solutions/JavaScript/프로그래머스/12345.타겟넘버/타겟넘버.js'],
-    [`owner/repo/goormlevel/159695/54321. 문제${U}제목/문제${U}제목.py`, 'owner/repo/goormlevel/159695/54321.문제제목/문제제목.py'], // goorm examId 폴더는 남는다
-    [`owner/repo/goormlevel/3/54321. 문제${U}제목/문제${U}제목.py`, 'owner/repo/goormlevel/54321.문제제목/문제제목.py'], // 한 자리 난이도 폴더는 프로그래머스 레벨처럼 빠진다
     ['owner/repo/D4-1234_문제제목/문제제목.java', 'owner/repo/D4-1234_문제제목/문제제목.java'], // ${level}-${id}_${title}
     ['owner/repo/백준//1000. A＋B/A＋B.py', 'owner/repo/백준//1000.A＋B/A＋B.py'], // 없는 변수는 빈 문자열
   ];
@@ -78,8 +74,7 @@ describe('removeProgrammersRank', () => {
     for (const n of [0, 1, 2, 3, 4, 5]) assert.equal(removeProgrammersRank(`프로그래머스/Lv.${n}/x`), '프로그래머스/x', `Lv.${n}`);
     assert.equal(removeProgrammersRank('프로그래머스/lv.3/x'), '프로그래머스/x');
   });
-  test('does NOT strip multi-digit folders (C-regression guard: goorm examId / date / two-digit lv / Lv.10)', () => {
-    assert.equal(removeProgrammersRank('goormlevel/159695/x'), 'goormlevel/159695/x');
+  test('does NOT strip multi-digit folders (C-regression guard: date / two-digit lv / Lv.10)', () => {
     assert.equal(removeProgrammersRank('260420/x'), '260420/x');
     assert.equal(removeProgrammersRank('프로그래머스/lv10/x'), '프로그래머스/lv10/x');
     assert.equal(removeProgrammersRank('프로그래머스/12/x'), '프로그래머스/12/x');

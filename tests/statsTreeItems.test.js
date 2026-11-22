@@ -2,7 +2,7 @@
 
 // 업로드 후 submission 캐시 갱신 검증 (e686e20 회귀).
 // createTree 응답의 tree 는 루트 한 단계 목록이라, 그것으로 캐시를 갱신하면 최상위 폴더 노드가
-// tree SHA 문자열로 덮여 레포 캐시 전체가 무너졌다(2026-09-23 E2E 에서 구름 업로드 직후 확인).
+// tree SHA 문자열로 덮여 레포 캐시 전체가 무너졌다(2026-09-23 E2E 에서 확인).
 // storage.js 는 chrome.* 스텁을 넣은 vm 에 원문을 로드하고, blob SHA 는 실제 번들과 같게
 // library/sha1.min.js + scripts/util.js 의 calculateBlobSHA 를 그대로 쓴다.
 
@@ -80,7 +80,7 @@ describe('recordTreeItemsInStats — 업로드한 항목만 캐시에 기록', (
   test('createBlob 항목은 GitHub 가 준 sha 로 중첩 경로에 기록된다', () => {
     const sandbox = loadStorageJs();
     const submission = existingSubmission(sandbox);
-    const dir = 'goormlevel/173089/1. 정수의 길이';
+    const dir = 'SWEA/D3/1234. 정수의 길이';
     sandbox.recordTreeItemsInStats(submission, HOOK, [
       { path: `${dir}/정수의 길이.cc`, sha: 'sha-code', mode: '100644', type: 'blob' },
       { path: `${dir}/README.md`, sha: 'sha-readme', mode: '100644', type: 'blob' },
@@ -93,7 +93,7 @@ describe('recordTreeItemsInStats — 업로드한 항목만 캐시에 기록', (
     const sandbox = loadStorageJs();
     const submission = existingSubmission(sandbox);
     sandbox.recordTreeItemsInStats(submission, HOOK, [
-      { path: 'goormlevel/1/1. 제목/제목.cc', sha: 'sha-code', mode: '100644', type: 'blob' },
+      { path: 'SWEA/D3/1. 제목/제목.cc', sha: 'sha-code', mode: '100644', type: 'blob' },
     ]);
     assert.equal(sandbox.getObjectDatafromPath(submission, `${HOOK}/백준/Bronze/1000. A＋B/A＋B.py`), 'sha-boj');
     assert.equal(sandbox.getObjectDatafromPath(submission, `${HOOK}/프로그래머스/1/12906. 같은 숫자는 싫어/같은 숫자는 싫어.cpp`), 'sha-prog');
@@ -163,7 +163,7 @@ describe('recordUploadInStats — 저장 직전에 다시 읽어 다른 탭의 �
     // 예전 전체 업로드는 시작할 때 읽은 stats 를 수 분 뒤 통째로 저장해, 그 사이 다른 탭이 올린 문제의 캐시를 지웠다
     const staleAtStart = await sandbox.getStats();
     const otherTab = await sandbox.getStats();
-    sandbox.updateObjectDatafromPath(otherTab.submission, `${HOOK}/goormlevel/1/1. 다른 탭/다른 탭.py`, 'sha-other-tab');
+    sandbox.updateObjectDatafromPath(otherTab.submission, `${HOOK}/SWEA/D3/1. 다른 탭/다른 탭.py`, 'sha-other-tab');
     await sandbox.saveStats(otherTab);
 
     const saved = await sandbox.recordUploadInStats(HOOK, 'main', [
@@ -171,12 +171,12 @@ describe('recordUploadInStats — 저장 직전에 다시 읽어 다른 탭의 �
     ]);
     const persisted = store.get('stats');
     const read = (p) => sandbox.getObjectDatafromPath(persisted.submission, `${HOOK}/${p}`);
-    assert.equal(read('goormlevel/1/1. 다른 탭/다른 탭.py'), 'sha-other-tab');
+    assert.equal(read('SWEA/D3/1. 다른 탭/다른 탭.py'), 'sha-other-tab');
     assert.equal(read('프로그래머스/2/2. 이번 업로드/이번 업로드.py'), 'sha-mine');
     assert.equal(read('백준/Bronze/1000. A＋B/A＋B.py'), 'sha-boj');
     assert.equal(persisted.version, '1.4.20');
-    assert.equal(sandbox.getObjectDatafromPath(saved.submission, `${HOOK}/goormlevel/1/1. 다른 탭/다른 탭.py`), 'sha-other-tab', '반환값도 저장한 최신 stats 다');
-    assert.equal(sandbox.getObjectDatafromPath(staleAtStart.submission, `${HOOK}/goormlevel/1/1. 다른 탭/다른 탭.py`), null);
+    assert.equal(sandbox.getObjectDatafromPath(saved.submission, `${HOOK}/SWEA/D3/1. 다른 탭/다른 탭.py`), 'sha-other-tab', '반환값도 저장한 최신 stats 다');
+    assert.equal(sandbox.getObjectDatafromPath(staleAtStart.submission, `${HOOK}/SWEA/D3/1. 다른 탭/다른 탭.py`), null);
   });
 
   test('stats 가 비어 있어도 submission/branches 를 만들어 기록한다', async () => {

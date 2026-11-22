@@ -4,7 +4,7 @@
  * 업로드 경로 → stats 캐시 키(SHA dedup) 변환에 쓰이는 정식 유틸입니다.
  * {@link updateObjectDatafromPath}(쓰기) / {@link getObjectDatafromPath}(조회) 양쪽에서
  * 반드시 동일하게 적용되어야 하며(어긋나면 동일 문제가 중복 업로드됨),
- * baekjoon / programmers / swexpertacademy 경로와, 서비스가 끝난 goormlevel 의 레포에 남은 경로에 공통으로 적용됩니다.
+ * baekjoon / programmers / swexpertacademy 경로에 공통으로 적용됩니다.
  * 언어 폴더명 표준화({@link normalizeLanguageName}, #346)도 이 파일이 담당하며,
  * 업로드 폴더명 생성({@link buildDirectory})과 캐시 키({@link unifyPythonFolder}) 양쪽에서 쓰입니다.
  *
