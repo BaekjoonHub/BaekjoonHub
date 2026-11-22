@@ -17,7 +17,7 @@
  *   → 잘못된 selector 가 매칭돼도 틀린 난이도를 만들어내지 못하고 다음 후보로 넘어갈 뿐이다.
  *     실패 모드가 "오답" 이 아니라 "미검출" 로 고정된다.
  *   → 난이도는 커밋 메시지와 ${level} 커스텀 템플릿에서만 쓰이고 기본 저장 경로/dedup 키에는
- *     쓰이지 않으므로(tests/directoryTemplate.test.js), 미검출이어도 업로드는 계속하는 게 옳다.
+ *     쓰이지 않으므로(기본 경로는 makeData 의 _defaultDir: examId 기반), 미검출이어도 업로드는 계속하는 게 옳다.
  *
  * NOTE: 이 파일은 tests/goormDifficulty.test.js 가 Node 에서 그대로 require 한다.
  *       최상위(top-level)에 chrome.* 호출이나 DOM 접근을 추가하지 말 것.

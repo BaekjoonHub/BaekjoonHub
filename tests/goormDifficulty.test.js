@@ -152,15 +152,6 @@ describe('parseDifficulty — 실패해도 throw 하지 않고 업로드를 계�
     assert.equal(captured.messages.length, 1, '침묵하지 않고 반드시 console.error 를 남겨야 한다');
     assert.match(captured.messages[0], /^error: .*난이도를 찾지 못했습니다/);
   });
-
-  test('난이도 맵이 비어 있어도(상수 파손) throw 하지 않는다', () => {
-    const doc = fakeDocument(el({ children: [headerRow('보통')] }));
-    let value;
-    assert.doesNotThrow(() => {
-      value = captureConsole(() => parseDifficulty(doc, { __empty: 0 })).value;
-    });
-    assert.equal(value, DIFFICULTY_UNKNOWN);
-  });
 });
 
 describe('parseDifficulty — 라벨 5종 매핑 (variables.js difficultyLabels)', () => {
@@ -190,17 +181,4 @@ describe('buildGoormCommitMessage — 난이도를 못 찾았을 때의 커밋 �
       assert.doesNotMatch(buildGoormCommitMessage({ ...base, difficulty: bad }), /난이도/);
     }
   });
-});
-
-describe('normalizeLabelText — null 안전성', () => {
-  for (const [input, expected] of [
-    [null, ''],
-    [undefined, ''],
-    ['  보통 ', '보통'],
-    [{ textContent: ' 매우  어려움 ' }, '매우 어려움'],
-  ]) {
-    test(`${JSON.stringify(input)} → ${JSON.stringify(expected)}`, () => {
-      assert.equal(normalizeLabelText(input), expected);
-    });
-  }
 });

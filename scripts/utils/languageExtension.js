@@ -5,7 +5,7 @@
  * "전부" 버전 표기다 — 'Java 14', 'C++ 17', 'Python 3.9', 'R 3.6.3', 'Common Lisp 2.49' …
  * 그런데 확장자 맵의 key 는 버전이 없는 표기('java', 'c++', 'python')라
  * `languages[language.toLowerCase()]` 직접 조회가 undefined 를 반환했고, 그 값이 템플릿 문자열에
- * 그대로 박혀 `제목.undefined` 파일이 업로드됐다(tests/fixtures/realPaths.txt 에 실제 사례 43건).
+ * 그대로 박혀 `제목.undefined` 파일이 업로드됐다(공개 BaekjoonHub 레포 약 100곳의 경로에서 실제 사례 43건).
  *
  * 핵심 불변식(#349 의 난이도 파싱과 동일): 맵에 "정확히" 존재하는 key 만 채택한다.
  *   → 후보를 늘려도 틀린 확장자를 "합성" 하지 못하고, 실패 모드가 "오답" 이 아니라
