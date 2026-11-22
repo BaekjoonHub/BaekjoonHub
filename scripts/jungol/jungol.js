@@ -56,12 +56,13 @@ async function handleResult(dialog, problemId) {
       stopLoader();
       return;
     }
-    let latest = await findMyLatestSubmission(problemId);
-    /* 화면에 결과가 뜬 직후에는 서버 목록에 아직 채점 중으로 남아 있을 때가 있어, 짧게 다시 본다 */
+    let latest = await findMySubmission(problemId);
+    /* 화면에 결과가 뜬 직후에는 서버 목록에 아직 채점 중으로 남아 있을 때가 있어, 짧게 다시 본다.
+       그사이 같은 문제에 낸 다음 제출로 바뀌지 않도록 처음 찾은 제출을 번호로 다시 본다 */
     for (const delay of RETRY_DELAYS) {
       if (!PENDING.includes(latest?.r)) break;
       await new Promise((resolve) => setTimeout(resolve, delay));
-      latest = await findMyLatestSubmission(problemId);
+      latest = await findMySubmission(problemId, latest.id);
     }
     if (latest?.r !== 'AC') return;
     showStatus(dialog, 'loading', 'BaekjoonHub: GitHub 에 올리는 중…');
@@ -96,18 +97,19 @@ async function load(path) {
 }
 
 /**
- * 이 문제에 내가 가장 최근에 낸 제출을 찾습니다.
+ * 이 문제에 낸 내 제출을 찾습니다. 번호를 주면 그 제출을, 주지 않으면 가장 최근 제출을 찾는다.
  * @param {string} problemId
- * @returns {Promise<(object|undefined)>} 제출 목록의 항목 { id, r: 결과, … }. 로그인하지 않았거나 낸 적이 없으면 undefined
+ * @param {number} [id] - 제출 번호
+ * @returns {Promise<(object|undefined)>} 제출 목록의 항목 { id, r: 결과, … }. 로그인하지 않았거나 찾지 못하면 undefined
  */
-async function findMyLatestSubmission(problemId) {
+async function findMySubmission(problemId, id) {
   const listOf = async (query) => findLoaded(await load(`/submission?${query}`), '$/submission?', true)?.data?.list || [];
-  const mine = (item) => item.accountInfo?.id === me.id;
+  const wanted = (item) => item.accountInfo?.id === me.id && (isNull(id) || item.id === id);
   /* 로그인한 계정을 아직 모르면 문제의 최근 제출 목록에서 계정과 내 제출을 함께 찾는다 */
   let list = isNull(me) ? await listOf(`problem=${problemId}`) : [];
   if (isNull(me)) return undefined;
-  if (!list.some(mine)) list = await listOf(`problem=${problemId}&account=${encodeURIComponent(me.handle)}`);
-  return list.find(mine);
+  if (!list.some(wanted)) list = await listOf(`problem=${problemId}&account=${encodeURIComponent(me.handle)}`);
+  return list.find(wanted);
 }
 
 /**
