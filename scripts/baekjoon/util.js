@@ -282,24 +282,6 @@ function convertImageTagAbsoluteURL(doc = document) {
 }
 
 /**
- * 백준의 날짜 형식과 같게 포맷된 스트링을 반환하는 함수
- * @example 2023년 9월 23일 16:26:26
- * @param {Date} date
- * @return {string} 포맷된 스트링
- */
-function getDateString(date){
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const seconds = date.getSeconds().toString().padStart(2, '0');
-
-  return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
-
-}
-
-/**
  * 확장 파일을 페이지의 JS 세계에서 돌도록 <script> 요소로 넣는다(콘텐츠 스크립트는 격리된 세계라 페이지의 객체가 안 보인다).
  * 요소 id 로 페이지당 한 번만 넣고(콘텐츠 스크립트가 한 번 더 떠도 두 벌이 되지 않는다), 실패해도 호출한 쪽을 멈추지 않는다.
  * 파일은 manifest 의 web_accessible_resources 에 있어야 한다.

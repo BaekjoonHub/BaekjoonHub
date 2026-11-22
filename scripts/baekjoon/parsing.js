@@ -83,7 +83,7 @@ async function makeDetailMessageAndReadme(data) {
     levelFull: level,
     id: problemId,
     title: convertSingleCharToDoubleChar(title),
-    language: langVersionRemove(language, null),
+    language: langVersionRemove(language),
     _defaultDir: `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
   });
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`
@@ -372,47 +372,6 @@ async function findDatas(datas, onProgress) {
 }
 
 /**
- * 문제의 상세 정보 목록을 문제 번호 목록으로 한꺼번에 반환합니다.
- * (한번 조회 시 2개씩 병렬로 진행)
- * @param {Array} problemIds
- * @returns {Promise<Array>}
- */
-async function fetchProblemDescriptionsByIds(problemIds) {
-  return asyncPool(2, problemIds, async (problemId) => {
-    return getProblemDescriptionById(problemId);
-  })
-}
-
-/**
- * submissionId들을 통해 코드들을 가져옵니다. (부하를 줄이기 위해 한번에 2개씩 가져옵니다.)
- * @param {Array} submissionIds
- * @returns {Promise<Array>}
- */
-async function fetchSubmissionCodeByIds(submissionIds) {
-  return asyncPool(2, submissionIds, async (submissionId) => {
-    return getSubmitCodeById(submissionId);
-  });
-}
-
-
-
-/**
- * user가 problemId 에 제출한 리스트를 가져오는 함수
- * @param problemId: 문제 번호
- * @param username: 백준 아이디
- * @return Promise<Array<String>>
- */
-async function findResultTableByProblemIdAndUsername(problemId, username) {
-  return fetch(`/status?from_mine=1&problem_id=${problemId}&user_id=${username}`, { method: 'GET' })
-    .then((html) => html.text())
-    .then((text) => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/html');
-      return parsingResultTableList(doc);
-    });
-}
-
-/**
  * user가 "맞았습니다!!" 결과를 맞은 중복되지 않은 제출 결과 리스트를 가져오는 함수
  * @param username: 백준 아이디
  * @returns Promise<Array<Object>>
@@ -460,22 +419,12 @@ async function findHtmlDocumentByUrl(url) {
 }
 
 /**
- * 백준에서 표기된 프로그래밍 언어의 버전을 없애고 업로드 하기 위함입니다.
- * 버전에 차이가 중요하게 여겨진다면, 'ignore'에 예외 케이스를 추가하세요.
- * 해당 코드는 'lang'이 "PyPy3" 같이 주어진다면은 버전을 제거하지 않습니다.
- * 예외에 추가 되어있거나, "Python 3.8" 혹은 "Java 11" 같이 주어진다면 버전이 제거될것입니다.
- * @param {string} lang - 처리 하고자 하는 언어입니다.
- * @param {Set} ignores - 예외 처리 하고자 하는 언어를 추가 해주세요.
- * @return {string} - 분기 처리에 따른 lang
- *  */
-function langVersionRemove(lang, ignores) {
-  if (ignores === null || !ignores.has(lang)) {
-    let parts = lang.split(' ');
-    if (/^\d/.test(parts[parts.length - 1])) {
-      parts.pop();
-    }
-    lang = parts.join(' ');
-  }
-
-  return lang;
+ * 백준이 표기한 언어에서 공백으로 띄운 버전을 뗍니다. ("Python 3.8" → "Python", "Java 11" → "Java", "PyPy3" 는 그대로)
+ * @param {string} lang
+ * @return {string}
+ */
+function langVersionRemove(lang) {
+  const parts = lang.split(' ');
+  if (/^\d/.test(parts[parts.length - 1])) parts.pop();
+  return parts.join(' ');
 }

@@ -143,7 +143,7 @@ describe('recordTreeItemsInStats — 업로드한 항목만 캐시에 기록', (
 
 describe('업로드 함수 소스 가드', () => {
   test('createTree 응답의 tree 를 코드에서 읽지 않는다', () => {
-    const files = ['baekjoon', 'goormlevel', 'programmers', 'swexpertacademy'].map((dir) => path.join(ROOT, 'scripts', dir, 'uploadfunctions.js'));
+    const files = ['upload.js', ...['baekjoon', 'goormlevel', 'programmers', 'swexpertacademy'].map((dir) => `${dir}/uploadfunctions.js`)].map((file) => path.join(ROOT, 'scripts', file));
     for (const file of files) {
       // 주석(원인 설명)은 제외하고 코드만 본다. forEach 가 아닌 for...of 나 map 으로 읽어도 걸린다.
       const code = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');

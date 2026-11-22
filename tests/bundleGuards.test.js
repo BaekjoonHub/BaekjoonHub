@@ -106,14 +106,16 @@ describe('manifest 콘텐츠 스크립트 번들', () => {
 });
 
 describe('업로드 커밋 소스 가드', () => {
-  const uploadFiles = ['baekjoon', 'goormlevel', 'programmers', 'swexpertacademy'].map((dir) => `scripts/${dir}/uploadfunctions.js`);
+  const uploadFiles = ['scripts/upload.js', ...['baekjoon', 'goormlevel', 'programmers', 'swexpertacademy'].map((dir) => `scripts/${dir}/uploadfunctions.js`)];
+  // 스스로 커밋하는 파일 (구름LEVEL 은 scripts/upload.js 의 upload 만 부른다)
+  const committers = uploadFiles.filter((file) => !file.includes('goormlevel'));
 
   test('플랫폼 업로드 코드는 ref 를 직접 옮기지 않고 commitTreeItems 로 커밋한다', () => {
     for (const file of uploadFiles) {
       const code = codeOf(file);
       assert.doesNotMatch(code, /\.updateHead\s*\(/, `${file}: updateHead 를 직접 부르면 fast-forward 재시도가 빠진다`);
       assert.doesNotMatch(code, /\.createCommit\s*\(/, `${file}: createCommit 은 commitTreeItems 안에서만 부른다`);
-      assert.match(code, /\.commitTreeItems\s*\(/, `${file}: commitTreeItems 로 커밋해야 한다`);
+      assert.equal(/\.commitTreeItems\s*\(/.test(code), committers.includes(file), `${file}: commitTreeItems 로 커밋해야 한다`);
     }
   });
 
@@ -129,7 +131,7 @@ describe('업로드 커밋 소스 가드', () => {
   test('업로드 후 캐시는 recordUploadInStats 로 저장 직전에 다시 읽어 기록한다', () => {
     for (const file of uploadFiles) {
       const code = codeOf(file);
-      assert.match(code, /recordUploadInStats\s*\(/, `${file}`);
+      assert.equal(/recordUploadInStats\s*\(/.test(code), committers.includes(file), `${file}`);
       // 업로드 시작 전에 읽은 stats 를 업로드가 끝난 뒤 통째로 저장하면 그 사이 다른 탭의 기록을 덮는다.
       // 직접 저장은 바로 앞(몇 줄 안)에서 새로 읽은 경우만 허용한다 (SWEA 의 브랜치 재확인).
       for (const match of code.matchAll(/saveStats\s*\(/g)) {
@@ -142,30 +144,23 @@ describe('업로드 커밋 소스 가드', () => {
 
 describe('버전 갱신 가드', () => {
   // 재구축 결과를 받아 버전을 붙여 다시 저장하면 그 사이 다른 탭의 기록을 덮고, 재구축에 실패해도 버전이 기록된다
-  const files = ['scripts/baekjoon/baekjoon.js', 'scripts/programmers/programmers.js', 'scripts/swexpertacademy/swexpertacademy.js', 'scripts/goormlevel/goormlevel.js'];
   test('versionUpdate 는 재구축과 같은 저장에 버전을 기록한다', () => {
-    for (const file of files) {
-      const code = codeOf(file);
-      const body = code.slice(code.indexOf('async function versionUpdate()'));
-      const fn = body.slice(0, body.indexOf('\n}') + 2);
-      assert.match(fn, /updateLocalStorageStats\(\{\s*version:\s*getVersion\(\)\s*\}\)/, `${file}`);
-      assert.doesNotMatch(fn, /saveStats\s*\(/, `${file}: versionUpdate 가 stats 를 다시 저장한다`);
-    }
+    const code = codeOf('scripts/upload.js');
+    const body = code.slice(code.indexOf('async function versionUpdate()'));
+    const fn = body.slice(0, body.indexOf('\n}') + 2);
+    assert.match(fn, /updateLocalStorageStats\(\{\s*version:\s*getVersion\(\)\s*\}\)/);
+    assert.doesNotMatch(fn, /saveStats\s*\(/, 'versionUpdate 가 stats 를 다시 저장한다');
   });
 });
 
 describe('암묵적 전역 변수 가드', () => {
   // 선언 없이 대입하면 전역 변수가 되어 같은 탭의 다른 업로드와 값을 공유한다(비동기 업로드가 겹치면 섞인다).
-  const files = ['scripts/baekjoon/baekjoon.js', 'scripts/programmers/programmers.js', 'scripts/swexpertacademy/swexpertacademy.js', 'scripts/goormlevel/goormlevel.js'];
   for (const name of ['cachedSHA', 'calcSHA']) {
     test(`${name} 는 선언한 지역 변수다`, () => {
-      for (const file of files) {
-        const code = codeOf(file);
-        if (!new RegExp(`\\b${name}\\b`).test(code)) continue;
-        assert.match(code, new RegExp(`\\b(?:const|let)\\s+${name}\\b`), `${file}: ${name} 선언이 없다`);
-        const bare = code.split('\n').filter((line) => new RegExp(`^\\s*${name}\\s*=[^=]`).test(line));
-        assert.deepEqual(bare, [], `${file}: 선언 없이 ${name} 에 대입한다`);
-      }
+      const code = codeOf('scripts/upload.js');
+      assert.match(code, new RegExp(`\\b(?:const|let)\\s+${name}\\b`), `${name} 선언이 없다`);
+      const bare = code.split('\n').filter((line) => new RegExp(`^\\s*${name}\\s*=[^=]`).test(line));
+      assert.deepEqual(bare, [], `선언 없이 ${name} 에 대입한다`);
     });
   }
 });

@@ -146,7 +146,7 @@ function submissionContext({ passed = true, code = 'a[b[i]]>0', historyStatus = 
     },
   });
   vm.runInContext(source, ctx);
-  ctx.makeDataForBulkUploadSWEA = async (data) => data;
+  ctx.makeData = async (data) => data;
   return { ctx, requests, errors };
 }
 
@@ -199,7 +199,6 @@ function bulkContext(results) {
     updateLocalStorageStats: async () => ({ branches: { 'my/repo': 'main' } }),
     getHook: async () => 'my/repo', getToken: async () => 'test',
     findAllSolvedProblemsSWEA: async () => results.map((result, index) => ({ problemId: String(index) })),
-    extractUploadedProblemIdsForSWEA: () => new Set(),
     fetchSWEASubmissionCode: async ({ problemId }) => results[Number(problemId)],
     recordUploadInStats: async (hook, branch, items) => recorded.push(items),
     setMultiLoaderDenom() {}, incMultiLoader: () => { progress += 1; },
@@ -208,12 +207,20 @@ function bulkContext(results) {
     MultiloaderIncomplete: (message) => notices.push(message),
     Toast: { raiseToast: (message) => notices.push(message) },
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../scripts/util.js'), 'utf8'), ctx);
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../scripts/swexpertacademy/uploadfunctions.js'), 'utf8'), ctx);
+  for (const file of ['util.js', 'upload.js', 'swexpertacademy/uploadfunctions.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../scripts', file), 'utf8'), ctx);
   return { ctx, commits, recorded, notices, upToDate: () => upToDate, success: () => success, progress: () => progress };
 }
 
 const validResult = { status: 'success', data: { problemId: '1959', directory: 'SWEA/D2/1959', fileName: 'solution.py', code: 'a[b[i]]>0', readme: '# 1959' } };
+
+test('addBulkFiles 는 같은 파일을 zip 과 커밋 트리 양쪽에 같은 경로로 넣는다', () => {
+  const zipped = [];
+  const tree = [];
+  const zip = { folder: (dir) => ({ file: (name, content) => zipped.push([`${dir}/${name}`, content]) }) };
+  bulkContext([]).ctx.addBulkFiles(zip, tree, 'SWEA/D2/1959', [['a.py', 'x'], ['README.md', 'y']]);
+  assert.deepEqual(zipped, [['SWEA/D2/1959/a.py', 'x'], ['SWEA/D2/1959/README.md', 'y']]);
+  assert.deepEqual(tree.map((item) => [item.path, item.content, item.mode, item.type]), zipped.map((file) => [...file, '100644', 'blob']));
+});
 
 test('Pass 없음과 요청 실패가 섞여 있어도 정상 코드는 커밋하고 제외된 문제 번호를 알린다', async () => {
   const s = bulkContext([validResult, { status: 'skipped', problemId: '1989' }, { status: 'failed', problemId: '2072' }]);

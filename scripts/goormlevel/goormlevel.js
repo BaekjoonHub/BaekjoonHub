@@ -182,61 +182,7 @@ function getResultBlock(resultSpan) {
 async function beginUpload(parsedData, attempt) {
   log('parsedData', parsedData);
   if (isNotEmpty(parsedData)) {
-    const {
-      // 시험 uid
-      examId,
-      // 시험 uid와 연계된 퀴즈 uid
-      quizNumber,
-      // 커밋 메시지
-      message,
-      // 폴더 이름
-      directory,
-      // 파일 이름
-      fileName,
-      // README.md 내용
-      readme,
-      // 정답 코드
-      code,
-    } = parsedData;
-    const stats = await getStats();
-    const hook = await getHook();
-    const token = await getToken();
-
-    const currentVersion = stats.version;
-    /* 버전 차이가 발생하거나, 해당 hook에 대한 데이터가 없는 경우 localstorage의 Stats 값을 업데이트하고, version을 최신으로 변경한다 */
-    if (isNull(currentVersion) || currentVersion !== getVersion() || isNull(await getStatsSHAfromPath(hook))) {
-      await versionUpdate();
-    }
-
-    /* 풀이별 파일 보관 옵션이 켜져 있으면 같은 코드인지도 캐시가 아니라 GitHub 의 파일 목록으로 정한다(utils/solutionVersions.js).
-       같은 코드면 upload 가 커밋 없이 끝나고 완료 표시는 콜백이 한다. */
-    if (await getKeepSolutionVersionsOption()) {
-      await uploadOneSolveProblemOnGit({ code, readme, directory, fileName, message }, (branches, dir) => markUploadedCSS(branches, dir, attempt));
-      return;
-    }
-
-    /* 현재 제출하려는 소스코드가 기존 업로드한 내용과 같다면 중지 */
-    const cachedSHA = await getStatsSHAfromPath(`${hook}/${directory}/${fileName}`);
-    const calcSHA = calculateBlobSHA(code);
-    log('cachedSHA', cachedSHA, 'calcSHA', calcSHA);
-
-    if (isNull(cachedSHA)) {
-      /* 로컬 캐시가 없는 경우 원격 저장소에서 파일 존재 여부 실시간 확인 */
-      const remoteFile = await getFile(hook, token, `${directory}/${fileName}`);
-      if (remoteFile && remoteFile.sha === calcSHA) {
-        markUploadedCSS(stats.branches, directory, attempt);
-        console.log('원격 저장소에 동일한 파일이 존재하여 업로드를 건너뜁니다.');
-        return;
-      }
-      /* GitHub에서 파일이 삭제되거나 없는 경우, 새 업로드로 처리 */
-      console.log('캐시된 SHA가 없습니다. 새로 업로드합니다.');
-    } else if (cachedSHA == calcSHA) {
-      markUploadedCSS(stats.branches, directory, attempt);
-      console.log(`현재 제출번호를 업로드한 기록이 있습니다. examId: ${examId}, quizNumber: ${quizNumber}`);
-      return;
-    }
-    /* 신규 제출 번호라면 새롭게 커밋  */
-    await uploadOneSolveProblemOnGit({ code, readme, directory, fileName, message }, (branches, dir) => markUploadedCSS(branches, dir, attempt));
+    await uploadUnlessSame(parsedData, (branches, directory) => markUploadedCSS(branches, directory, attempt));
   } else {
     /* #349: parseData 는 성공했지만 코드/제목 등이 비어 있는 경우.
        isNotEmpty 가 조용히 false 를 반환하고 끝나던 경로는 사용자에게 파싱 실패와 똑같은 증상이므로
@@ -244,12 +190,4 @@ async function beginUpload(parsedData, attempt) {
     console.error('[BaekjoonHub] 구름LEVEL 파싱 결과가 비어 있어 업로드하지 않습니다. 에디터/언어 탭 선택 상태를 확인해주세요.', parsedData);
     markUploadFailedCSS(attempt);
   }
-}
-
-async function versionUpdate() {
-  log('start versionUpdate');
-  /* 버전은 재구축과 같은 저장에 기록한다(레포 파일 목록을 읽지 못했으면 기록하지 않아 다음에 다시 재구축한다).
-     재구축 결과를 받아 버전을 붙여 다시 저장하면, 그 사이 다른 탭이 남긴 업로드 기록을 덮는다. */
-  const stats = await updateLocalStorageStats({ version: getVersion() });
-  log('stats updated.', stats);
 }

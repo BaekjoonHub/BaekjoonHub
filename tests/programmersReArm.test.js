@@ -161,6 +161,8 @@ function loadProgrammersJs(options = {}) {
   };
 
   vm.createContext(sandbox);
+  // beginUpload 가 부르는 공용 흐름(uploadUnlessSame)은 실제 코드를 쓴다
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'upload.js'), 'utf8'), sandbox, { filename: 'upload.js' });
   vm.runInContext(src, sandbox, { filename: 'programmers.js' });
 
   return {

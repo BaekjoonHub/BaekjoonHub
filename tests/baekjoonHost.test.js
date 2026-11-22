@@ -80,11 +80,9 @@ test('문제 설명을 페이지와 같은 출처에서 가져와 파싱한다',
 test('제출 코드와 제출 목록도 페이지와 같은 출처에 요청한다', async () => {
   const { context, requested } = load();
   assert.equal(await context.fetchSubmitCodeById(123), SOURCE);
-  await context.findResultTableByProblemIdAndUsername(1000, 'tester');
   await context.findResultTableListByUsername('tester');
   assert.deepEqual(requested, [
     `${ORIGIN}/source/download/123`,
-    `${ORIGIN}/status?from_mine=1&problem_id=1000&user_id=tester`,
     `${ORIGIN}/status?user_id=tester&result_id=4`,
   ]);
 });

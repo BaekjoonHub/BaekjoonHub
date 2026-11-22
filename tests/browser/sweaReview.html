@@ -11,7 +11,7 @@ window.multiloader = { wrap: document.createElement('span'), nom: document.creat
 window.log = () => {};
 window.chrome = { runtime: { id: 'local-regression-test' } };
 </script>
-<script src="/scripts/util.js"></script><script src="/scripts/toast.js"></script>
+<script src="/scripts/util.js"></script><script src="/scripts/toast.js"></script><script src="/scripts/upload.js"></script>
 <script src="/scripts/swexpertacademy/util.js"></script><script src="/scripts/swexpertacademy/parsing.js"></script>
 <script src="/scripts/swexpertacademy/uploadfunctions.js"></script><script src="/scripts/swexpertacademy/swexpertacademy.js"></script>
 <script>
@@ -43,7 +43,7 @@ window.chrome = { runtime: { id: 'local-regression-test' } };
   getNickname = () => 'my-user';
   window.languages = {};
   window.resolveLanguageExtension = () => 'py';
-  makeDataForBulkUploadSWEA = async (data) => ({ ...data, directory:`SWEA/D2/${data.problemId}`, fileName:'solution.py', readme:'# solution' });
+  makeData = async (data) => ({ ...data, directory:`SWEA/D2/${data.problemId}`, fileName:'solution.py', readme:'# solution' });
   const result = await fetchSWEASubmissionCode(problems.find((p) => p.problemId === '1959'));
   assert(result.status === 'success', 'code result');
   assert(result.data.code === rawCode, 'source changed');

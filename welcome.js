@@ -1,6 +1,5 @@
 const REPO_DESCRIPTION = 'This is an auto push repository for Baekjoon Online Judge created with [BaekjoonHub](https://github.com/BaekjoonHub/BaekjoonHub).';
 
-const $ = (sel) => document.querySelector(sel);
 const $id = (id) => document.getElementById(id);
 
 const option = () => $id('type').value;
@@ -14,52 +13,29 @@ const repositoryName = () => {
   return input;
 };
 
-/* Status codes for creating of repo */
+/* Status codes for creating of repo (i18n 키: welcome.error.creating304/400/401/403/422) */
 const statusCode = (res, status, name) => {
   const errorEl = $id('error');
   const successEl = $id('success');
   const unlinkEl = $id('unlink');
 
-  switch (status) {
-    case 304:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating304', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 400:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating400', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 401:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating401', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 403:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating403', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    case 422:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.creating422', { name }, 'text');
-      errorEl.hidden = false;
-      break;
-    default:
-      chrome.storage.local.set({ mode_type: 'commit' }, () => {
-        errorEl.hidden = true;
-        I18N.bind(successEl, 'welcome.success.created', { url: res.html_url, name });
-        successEl.hidden = false;
-        unlinkEl.hidden = false;
-        $id('hook_mode').classList.add('hidden');
-        $id('commit_mode').classList.remove('hidden');
-      });
-      chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
-        console.log('Successfully set new repo hook');
-      });
-      break;
+  if ([304, 400, 401, 403, 422].includes(status)) {
+    successEl.hidden = true;
+    I18N.bind(errorEl, `welcome.error.creating${status}`, { name }, 'text');
+    errorEl.hidden = false;
+    return;
   }
+  chrome.storage.local.set({ mode_type: 'commit' }, () => {
+    errorEl.hidden = true;
+    I18N.bind(successEl, 'welcome.success.created', { url: res.html_url, name });
+    successEl.hidden = false;
+    unlinkEl.hidden = false;
+    $id('hook_mode').classList.add('hidden');
+    $id('commit_mode').classList.remove('hidden');
+  });
+  chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
+    console.log('Successfully set new repo hook');
+  });
 };
 
 const createRepo = (token, name) => {
@@ -78,10 +54,7 @@ const createRepo = (token, name) => {
     }
   });
 
-  stats = {};
-  stats.version = chrome.runtime.getManifest().version;
-  stats.submission = {};
-  chrome.storage.local.set({ stats });
+  chrome.storage.local.set({ stats: { version: chrome.runtime.getManifest().version, submission: {} } });
 
   xhr.open('POST', AUTHENTICATION_URL, true);
   xhr.setRequestHeader('Authorization', `token ${token}`);
@@ -89,35 +62,15 @@ const createRepo = (token, name) => {
   xhr.send(data);
 };
 
-/* Status codes for linking of repo */
+/* Status codes for linking of repo (i18n 키: welcome.error.linking301/403/404) */
 const linkStatusCode = (status, name) => {
   const errorEl = $id('error');
-  const successEl = $id('success');
-  const unlinkEl = $id('unlink');
-  let bool = false;
-
-  switch (status) {
-    case 301:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.linking301', { name });
-      errorEl.hidden = false;
-      break;
-    case 403:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.linking403', { name });
-      errorEl.hidden = false;
-      break;
-    case 404:
-      successEl.hidden = true;
-      I18N.bind(errorEl, 'welcome.error.linking404', { name });
-      errorEl.hidden = false;
-      break;
-    default:
-      bool = true;
-      break;
+  if ([301, 403, 404].includes(status)) {
+    $id('success').hidden = true;
+    I18N.bind(errorEl, `welcome.error.linking${status}`, { name });
+    errorEl.hidden = false;
   }
-  unlinkEl.hidden = false;
-  return bool;
+  $id('unlink').hidden = false;
 };
 
 /**
@@ -170,48 +123,30 @@ const linkRepo = (token, name) => {
   xhr.addEventListener('readystatechange', async function () {
     if (xhr.readyState === 4) {
       const res = JSON.parse(xhr.responseText);
-      const bool = linkStatusCode(xhr.status, name);
+      linkStatusCode(xhr.status, name);
       if (xhr.status === 200) {
-        if (!bool) {
-          chrome.storage.local.set({ mode_type: 'hook' }, () => {
-            console.log(`Error linking ${name} to BaekjoonHub`);
-          });
-          chrome.storage.local.set({ BaekjoonHub_hook: null }, () => {
-            console.log('Defaulted repo hook to NONE');
-          });
-          $id('hook_mode').classList.remove('hidden');
-          $id('commit_mode').classList.add('hidden');
-        } else {
-          if (res.size === 0) {
-            try {
-              await initializeEmptyRepoWelcome(token, res.full_name, res.default_branch);
-              console.log('Initialized empty repo with README.md');
-            } catch (e) {
-              console.log('Empty repo init failed', e);
-            }
+        if (res.size === 0) {
+          try {
+            await initializeEmptyRepoWelcome(token, res.full_name, res.default_branch);
+            console.log('Initialized empty repo with README.md');
+          } catch (e) {
+            console.log('Empty repo init failed', e);
           }
-
-          chrome.storage.local.set({ mode_type: 'commit', repo: res.html_url }, () => {
-            errorEl.hidden = true;
-            I18N.bind(successEl, 'welcome.success.linked', { url: res.html_url, name });
-            successEl.hidden = false;
-            unlinkEl.hidden = false;
-          });
-
-          stats = {};
-          stats.version = chrome.runtime.getManifest().version;
-          stats.submission = {};
-          chrome.storage.local.set({ stats });
-
-          chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
-            console.log('Successfully set new repo hook');
-            chrome.storage.local.get('stats', (psolved) => {
-              const { stats } = psolved;
-            });
-          });
-          $id('hook_mode').classList.add('hidden');
-          $id('commit_mode').classList.remove('hidden');
         }
+
+        chrome.storage.local.set({ mode_type: 'commit', repo: res.html_url }, () => {
+          errorEl.hidden = true;
+          I18N.bind(successEl, 'welcome.success.linked', { url: res.html_url, name });
+          successEl.hidden = false;
+          unlinkEl.hidden = false;
+        });
+        chrome.storage.local.set({ stats: { version: chrome.runtime.getManifest().version, submission: {} } });
+
+        chrome.storage.local.set({ BaekjoonHub_hook: res.full_name }, () => {
+          console.log('Successfully set new repo hook');
+        });
+        $id('hook_mode').classList.add('hidden');
+        $id('commit_mode').classList.remove('hidden');
       }
     }
   });
@@ -303,7 +238,7 @@ $id('hook_button').addEventListener('click', () => {
             errorEl.hidden = false;
             successEl.hidden = true;
           } else {
-            linkRepo(token, `${username}/${repositoryName()}`, false);
+            linkRepo(token, `${username}/${repositoryName()}`);
           }
         });
       }

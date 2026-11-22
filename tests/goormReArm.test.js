@@ -259,7 +259,8 @@ function loadGoorm({ parseImpl = null, uploadImpl = null, cachedSHA = null, enab
     },
   };
   vm.createContext(sandbox);
-  // uploadState(업로드 줄)는 스텁하지 않고 실제 번들의 선언을 쓴다
+  // uploadState(업로드 줄)와 공용 업로드 흐름(uploadUnlessSame)은 스텁하지 않고 실제 번들의 선언을 쓴다
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts', 'upload.js'), 'utf8'), sandbox, { filename: 'upload.js' });
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts', 'goormlevel', 'variables.js'), 'utf8'), sandbox, { filename: 'goormlevel/variables.js' });
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts', 'goormlevel', 'util.js'), 'utf8'), sandbox, { filename: 'goormlevel/util.js' });
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts', 'goormlevel', 'goormlevel.js'), 'utf8'), sandbox, { filename: 'goormlevel.js' });

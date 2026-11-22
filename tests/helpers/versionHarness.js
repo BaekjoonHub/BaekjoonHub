@@ -196,7 +196,7 @@ function loadPlatform(server, platform, { keep = false, stats = undefined } = {}
   };
   sandbox.window = sandbox; // js-sha1 이 window 에 sha1 을 건다
   vm.createContext(sandbox);
-  const files = ['library/sha1.min.js', 'scripts/util.js', 'scripts/Github.js', 'scripts/storage.js', 'scripts/utils/solutionVersions.js',
+  const files = ['library/sha1.min.js', 'scripts/util.js', 'scripts/Github.js', 'scripts/storage.js', 'scripts/upload.js', 'scripts/utils/solutionVersions.js',
     `scripts/${info.dir}/uploadfunctions.js`, `scripts/${info.dir}/${info.main}`];
   for (const file of files) vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), sandbox, { filename: file });
   return { sandbox, store, calls, info };
