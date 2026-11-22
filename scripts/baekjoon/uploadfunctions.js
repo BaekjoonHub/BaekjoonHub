@@ -55,9 +55,7 @@ async function uploadAllSolvedProblem() {
       Toast.raiseToast('맞은 제출 내역을 찾지 못했습니다. 백준 페이지 상태를 확인해 주세요.');
       return;
     }
-    // TODO: 자동 검수 임시 분기 — ?bjhForceAll=1 이면 dedup을 건너뜀. 복구 시 제거.
-    const forceAll = new URLSearchParams(location.search).get('bjhForceAll') === '1';
-    const uploadedIds = forceAll ? new Set() : extractUploadedProblemIds(stats, hook, '백준');
+    const uploadedIds = extractUploadedProblemIds(stats, hook, '백준');
     const newList = list.filter((item) => !uploadedIds.has(String(item.problemId)));
 
     if (newList.length === 0) {
