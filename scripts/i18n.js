@@ -47,11 +47,11 @@ const I18N = (() => {
       'welcome.error.creating400': 'Error creating ${name} - Bad POST request, make sure you\'re not overriding any existing scripts',
       'welcome.error.creating403': 'Error creating ${name} - Forbidden access to repository. Try again later!',
       'welcome.error.creating422': 'Error creating ${name} - A repository with this name may already exist. Choose "Use an existing repository" instead.',
-      'welcome.success.created': 'Successfully created <a target="blank" href="${url}">${name}</a>.<br/>Start solving on <a href="https://acmicpc.net/">BOJ</a> · <a href="https://school.programmers.co.kr/">Programmers</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">JUNGOL</a>!',
+      'welcome.success.created': 'Successfully created <a target="blank" href="${url}">${name}</a>.<br/>Start solving on <a href="https://acmicpc.net/">BOJ</a> · <a href="https://school.programmers.co.kr/">Programmers</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">JUNGOL</a> · <a href="https://doj.kr/">DOJ</a>!',
       'welcome.error.linking301': 'Error linking <a target="blank" href="https://github.com/${name}">${name}</a> to BaekjoonHub. <br> This repository has been moved permanently. Try creating a new one.',
       'welcome.error.linking403': 'Error linking <a target="blank" href="https://github.com/${name}">${name}</a> to BaekjoonHub. <br> Forbidden action. Please make sure you have the right access to this repository.',
       'welcome.error.linking404': 'Error linking <a target="blank" href="https://github.com/${name}">${name}</a> to BaekjoonHub. <br> Resource not found. Make sure you enter the right repository name.',
-      'welcome.success.linked': 'Successfully linked <a target="blank" href="${url}">${name}</a> to BaekjoonHub.<br/>Start solving on <a href="https://acmicpc.net/">BOJ</a> · <a href="https://school.programmers.co.kr/">Programmers</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">JUNGOL</a>!',
+      'welcome.success.linked': 'Successfully linked <a target="blank" href="${url}">${name}</a> to BaekjoonHub.<br/>Start solving on <a href="https://acmicpc.net/">BOJ</a> · <a href="https://school.programmers.co.kr/">Programmers</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">JUNGOL</a> · <a href="https://doj.kr/">DOJ</a>!',
       'welcome.error.noRepoName': 'Enter a name for the repository.',
       'welcome.error.noRepoSelected': 'Select a repository first.',
       'welcome.error.invalidRepo': 'That does not look like a repository. Use owner/name or a GitHub URL.',
@@ -89,6 +89,7 @@ const I18N = (() => {
       'welcome.platform.programmers': 'Programmers',
       'welcome.platform.swea': 'SWEA',
       'welcome.platform.jungol': 'JUNGOL',
+      'welcome.platform.doj': 'DOJ',
 
       // popup.html
       'popup.caption': 'Sync your code from BOJ to GitHub',
@@ -153,11 +154,11 @@ const I18N = (() => {
       'welcome.error.creating400': '${name} 생성 중 문제가 생겼어요. 기존 스크립트와 충돌이 없는지 확인해주세요.',
       'welcome.error.creating403': '${name} 저장소에 접근이 거부됐어요. 잠시 후 다시 시도해주세요!',
       'welcome.error.creating422': '${name} 저장소가 이미 있는 것 같아요. "기존 저장소 연결"을 선택해보세요.',
-      'welcome.success.created': '<a target="blank" href="${url}">${name}</a> 저장소가 만들어졌어요!<br/><a href="https://acmicpc.net/">백준</a> · <a href="https://school.programmers.co.kr/">프로그래머스</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">정올</a>에서 문제를 풀어보세요!',
+      'welcome.success.created': '<a target="blank" href="${url}">${name}</a> 저장소가 만들어졌어요!<br/><a href="https://acmicpc.net/">백준</a> · <a href="https://school.programmers.co.kr/">프로그래머스</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">정올</a> · <a href="https://doj.kr/">DOJ</a>에서 문제를 풀어보세요!',
       'welcome.error.linking301': '<a target="blank" href="https://github.com/${name}">${name}</a> 연결에 실패했어요. <br> 저장소가 다른 곳으로 이동된 것 같아요. 새로 만들어보세요.',
       'welcome.error.linking403': '<a target="blank" href="https://github.com/${name}">${name}</a> 연결에 실패했어요. <br> 이 저장소에 대한 접근 권한이 있는지 확인해주세요.',
       'welcome.error.linking404': '<a target="blank" href="https://github.com/${name}">${name}</a> 연결에 실패했어요. <br> 저장소를 찾을 수 없어요. 이름을 다시 확인해주세요.',
-      'welcome.success.linked': '<a target="blank" href="${url}">${name}</a> 저장소가 연결됐어요!<br/><a href="https://acmicpc.net/">백준</a> · <a href="https://school.programmers.co.kr/">프로그래머스</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">정올</a>에서 문제를 풀어보세요!',
+      'welcome.success.linked': '<a target="blank" href="${url}">${name}</a> 저장소가 연결됐어요!<br/><a href="https://acmicpc.net/">백준</a> · <a href="https://school.programmers.co.kr/">프로그래머스</a> · <a href="https://swexpertacademy.com/">SWEA</a> · <a href="https://jungol.co.kr/">정올</a> · <a href="https://doj.kr/">DOJ</a>에서 문제를 풀어보세요!',
       'welcome.error.noRepoName': '저장소 이름을 입력해주세요.',
       'welcome.error.noRepoSelected': '저장소를 먼저 선택해주세요.',
       'welcome.error.invalidRepo': '저장소 형식이 올바르지 않아요. 소유자/이름 또는 GitHub 주소로 입력해주세요.',
@@ -195,6 +196,7 @@ const I18N = (() => {
       'welcome.platform.programmers': '프로그래머스',
       'welcome.platform.swea': 'SWEA',
       'welcome.platform.jungol': '정올',
+      'welcome.platform.doj': 'DOJ',
 
       // popup.html
       'popup.caption': '백준 코드를 GitHub에 동기화',

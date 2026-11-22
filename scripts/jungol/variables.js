@@ -31,7 +31,5 @@ function jungolLanguage(code) {
  * @returns {string} 'Gold V' 같은 이름. 티어가 없으면 'Unrated'
  */
 function jungolTierName(tier) {
-  if (tier === 31) return 'Master';
-  if (!(tier >= 1 && tier <= 30)) return 'Unrated';
-  return `${['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ruby'][Math.floor((tier - 1) / 5)]} ${['V', 'IV', 'III', 'II', 'I'][(tier - 1) % 5]}`;
+  return tier === 31 ? 'Master' : tierName(tier);
 }

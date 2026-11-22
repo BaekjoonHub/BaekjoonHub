@@ -1,0 +1,5 @@
+/* DOJ 는 자체 알림을 오른쪽 아래에 쌓는다. 그 위에 겹치지 않도록 토스트(css/toast.css)를 왼쪽 아래에 띄운다. */
+body > .toast-notification {
+  left: 20px;
+  right: auto;
+}
