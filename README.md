@@ -156,6 +156,11 @@
 ![](assets/extension/Jungol.gif)
 
 <div align="center">정올 동작 화면</div>
+<br/>
+
+![](assets/extension/DOJ.gif)
+
+<div align="center">DOJ 동작 화면</div>
 
 ### 2. 업로드 시점
 
