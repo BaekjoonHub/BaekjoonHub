@@ -171,6 +171,33 @@
         "scripts/swexpertacademy/swexpertacademy.js"
       ],
       "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://jungol.co.kr/*"
+      ],
+      "css": [
+        "css/jungol/inject.css"
+      ],
+      "js": [
+        "library/sha1.min.js",
+        "scripts/toast.js",
+        "scripts/util.js",
+        "scripts/Github.js",
+        "scripts/authorize.js",
+        "scripts/utils/pathNormalize.js",
+        "scripts/utils/languageMigration.js",
+        "scripts/utils/languageExtension.js",
+        "scripts/utils/solutionVersions.js",
+        "scripts/storage.js",
+        "scripts/upload.js",
+        "scripts/enable.js",
+        "scripts/jungol/variables.js",
+        "scripts/jungol/parsing.js",
+        "scripts/jungol/uploadfunctions.js",
+        "scripts/jungol/jungol.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }
