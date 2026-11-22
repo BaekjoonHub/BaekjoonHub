@@ -278,6 +278,16 @@ function getDateString(date) {
   return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
 }
 
+/**
+ * solved.ac 와 같은 번호를 쓰는 티어의 이름입니다 (1 = Bronze V … 30 = Ruby I). 정올과 DOJ 가 이 번호를 쓴다.
+ * @param {number} tier
+ * @returns {string} 'Gold V' 같은 이름. 1~30 이 아니면 'Unrated'
+ */
+function tierName(tier) {
+  if (!(tier >= 1 && tier <= 30)) return 'Unrated';
+  return `${['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ruby'][Math.floor((tier - 1) / 5)]} ${['V', 'IV', 'III', 'II', 'I'][(tier - 1) % 5]}`;
+}
+
 function log(...args) {
   if (debug) console.log(...args)
 }

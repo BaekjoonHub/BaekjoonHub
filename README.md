@@ -103,7 +103,7 @@
 ## 백준허브란?(What is BaekjoonHub?)
 
 <p>
-  백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. <a href="https://acmicpc.net/">백준</a>, <a href="https://programmers.co.kr/">프로그래머스</a>, <a href="https://jungol.co.kr/">정올</a>을 통해 알고리즘 공부를 하시는 분들이 더욱 쉽게 코드를 저장하고 관리할 수 있게 하도록 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.<br/>
+  백준 허브는 LeetCode의 개인 풀이를 github에 자동 푸시해주는 <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>에서 영감을 받아 만든 프로젝트입니다. <a href="https://acmicpc.net/">백준</a>, <a href="https://programmers.co.kr/">프로그래머스</a>, <a href="https://jungol.co.kr/">정올</a>, <a href="https://doj.kr/">DOJ</a>를 통해 알고리즘 공부를 하시는 분들이 더욱 쉽게 코드를 저장하고 관리할 수 있게 하도록 만들었으며, 오픈소스 프로젝트로 여러분의 조언과 참여를 환영합니다.<br/>
 </p>
 <p>
   BaekjoonHub is a chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://acmicpc.net/">Baekjoon Online Judge</a> problem. This project was based off of <a href="https://github.com/QasimWani/LeetHub">LeetHub</a>, a similar extension for Leetcode.
@@ -162,6 +162,7 @@
 <p>백준허브는 기본적으로 풀이 채점 후 정답임을 감지하여 작동합니다.</p>
 <p>SW Expert Academy 는 Pass 결과창이 뜨면 바로 업로드하며, 업로드가 끝날 때까지 결과창의 확인·닫기가 잠시 미뤄집니다.</p>
 <p>정올은 문제 페이지에서 제출한 뒤 채점 결과창이 뜨면 정답일 때 업로드하며, 업로드 결과를 결과창과 알림으로 보여줍니다. 대회 중 제출은 업로드하지 않습니다.</p>
+<p>DOJ 는 제출한 뒤 채점 결과가 나오면 만점 정답일 때 업로드하며, 새로 올리면 알림으로 보여줍니다. 대회·DLC 제출은 업로드하지 않습니다.</p>
 <p>업로드 도중 페이지 이동은 권장드리지 않습니다.</p>
 
 ### 3. 백준 제출 기준
@@ -249,10 +250,23 @@
         <li>실행 시간</li>
       </td>
     </tr>
+    <tr>
+      <td>DOJ</td>
+      <td align="left">
+        <li>문제 제목</li>
+        <li>문제 아이디</li>
+        <li>문제 링크</li>
+        <li>문제 등급</li>
+        <li>사용 언어</li>
+      </td>
+      <td align="left">
+        <li>코드</li>
+        <li>사용한 메모리</li>
+        <li>실행 시간</li>
+      </td>
+    </tr>
   </tbody>
 </table>
-
-<p>정올은 이용약관에 따라 문제 설명은 저장하지 않습니다.</p>
 
 <br />
 <br />
