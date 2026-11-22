@@ -293,19 +293,21 @@ function flashSaved() {
   savedTimer = setTimeout(() => { el.textContent = ''; }, 1500);
 }
 
-const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea'];
+const TEMPLATE_PLATFORMS = ['baekjoon', 'programmers', 'swea', 'jungol'];
 const templateKey = (platform) => `BaekjoonHub_dirTemplate_${platform}`;
 
 const TEMPLATE_PREVIEW_VARS = {
   baekjoon:    { platform: '백준', level: 'Gold', levelFull: 'Gold V', id: '1000', title: 'A＋B', language: 'Python' },
   programmers: { platform: '프로그래머스', level: '2', id: '12345', title: '타겟 넘버', language: 'JavaScript' },
   swea:        { platform: 'SWEA', level: 'D4', id: '1234', title: '문제제목', language: 'Java' },
+  jungol:      { platform: '정올', level: 'Bronze', levelFull: 'Bronze V', id: '1000', title: '두 정수 더하기', language: 'C++' },
 };
 
 const TEMPLATE_DEFAULTS = {
   baekjoon:    '${platform}/${level}/${id}. ${title}',
   programmers: '${platform}/${level}/${id}. ${title}',
   swea:        '${platform}/${level}/${id}. ${title}',
+  jungol:      '${platform}/${level}/${id}. ${title}',
 };
 
 function updateTemplatePreview(platform) {
