@@ -33,17 +33,16 @@ html.dark body {
 .hidden { display: none !important; }
 
 .text-center { text-align: center; }
-.text-right { text-align: right; }
-
+.mt-1 { margin-top: 4px; }
+.mt-4 { margin-top: 16px; }
 .mt-6 { margin-top: 24px; }
-.mb-12 { margin-bottom: 48px; }
-
-.space-y-6 > * + * { margin-top: 24px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-8 { margin-bottom: 32px; }
 
 /* === Logo === */
 .logo-font {
   font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
-  font-size: clamp(3.5rem, 10vw, 5rem);
+  font-size: clamp(2.25rem, 11vw, 5rem);
   font-weight: 700;
   margin-bottom: 8px;
   text-align: center;
@@ -100,7 +99,7 @@ html.dark .btn-control:hover { background: #374151; }
 
 .msg-error {
   background: #fef2f2;
-  color: #dc2626;
+  color: #b91c1c;
 }
 html.dark .msg-error {
   background: rgba(127, 29, 29, 0.2);
@@ -109,7 +108,7 @@ html.dark .msg-error {
 
 .msg-success {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
   text-align: center;
 }
 html.dark .msg-success {
@@ -122,15 +121,6 @@ html.dark .msg-success {
   color: inherit;
   text-decoration: underline;
 }
-
-/* === Unlink === */
-.unlink-area {
-  margin-bottom: 24px;
-  font-size: 14px;
-  color: #6b7280;
-  text-align: center;
-}
-html.dark .unlink-area { color: #9ca3af; }
 
 .link-brand {
   color: #0078c3;
@@ -214,18 +204,6 @@ html.dark .form-input:focus {
   cursor: not-allowed;
 }
 
-/* === Token status === */
-.token-status {
-  font-size: 14px;
-  margin-top: 8px;
-}
-
-.token-status.status-ok { color: #16a34a; }
-.token-status.status-err { color: #dc2626; }
-
-html.dark .token-status.status-ok { color: #4ade80; }
-html.dark .token-status.status-err { color: #f87171; }
-
 /* === Checkbox label === */
 .checkbox-label {
   display: inline-flex;
@@ -237,44 +215,31 @@ html.dark .token-status.status-err { color: #f87171; }
 }
 html.dark .checkbox-label { color: #9ca3af; }
 
-/* === Muted text === */
-.muted-text {
+/* === Footer === */
+.footer {
+  margin-top: 48px;
+  text-align: center;
+  font-size: 14px;
   color: #6b7280;
 }
-html.dark .muted-text { color: #9ca3af; }
-
-.muted-text .text-lg {
-  font-size: 1.125rem;
-}
-.muted-text .font-semibold {
-  font-weight: 600;
-}
-.muted-text .text-sm {
-  font-size: 0.875rem;
-}
-
-/* === Footer === */
-.footer-link {
-  margin-top: 64px;
-  text-align: center;
-}
+.footer p { margin-bottom: 12px; }
+html.dark .footer { color: #9ca3af; }
 
 .link-muted {
   font-size: 14px;
-  color: #9ca3af;
+  color: #6b7280;
   text-decoration: none;
   transition: color 0.2s;
 }
 .link-muted:hover { color: #0078c3; }
 
-html.dark .link-muted { color: #6b7280; }
+html.dark .link-muted { color: #9ca3af; }
 html.dark .link-muted:hover { color: #0078c3; }
 
 .star-logo-name { color: #374151; }
 html.dark .star-logo-name { color: #f9fafb; }
 
 /* === Template settings === */
-.mt-4 { margin-top: 16px; }
 
 /* Collapsible wrapper */
 .tmpl-details {
@@ -324,17 +289,19 @@ html.dark .tmpl-summary:hover { color: #0078c3; }
   margin-top: 6px;
 }
 
-.tmpl-card {
-  padding: 20px !important;
+.tmpl-body {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
 }
+html.dark .tmpl-body { border-color: #374151; }
 
 /* Variable badges */
 .tmpl-var-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  justify-content: center;
-  margin-bottom: 20px;
+  margin: 8px 0 20px;
 }
 
 .var-badge {
@@ -375,7 +342,7 @@ html.dark .tmpl-label-row label {
 }
 .tmpl-extra {
   font-size: 11px;
-  color: #9ca3af;
+  color: #6b7280;
 }
 .tmpl-extra code {
   font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
@@ -402,18 +369,18 @@ html.dark .tmpl-extra code {
   padding: 0 2px;
   font-size: 12px;
   font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-  color: #9ca3af;
+  color: #6b7280;
   min-height: 16px;
+  overflow-wrap: anywhere;
 }
 html.dark .tmpl-preview {
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 /* Action buttons */
 .tmpl-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid #e5e7eb;
@@ -426,3 +393,202 @@ html.dark .tmpl-actions {
   padding: 6px 16px;
   font-size: 13px;
 }
+
+/* === Focus (keyboard) === */
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid #0078c3;
+  outline-offset: 2px;
+}
+
+.btn-lg {
+  padding: 12px 32px;
+  font-size: 16px;
+}
+
+.lead {
+  margin-bottom: 24px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* === Stepper === */
+.steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  list-style: none;
+  counter-reset: step;
+}
+.steps li {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  text-align: center;
+  color: #6b7280;
+  counter-increment: step;
+}
+html.dark .steps li { color: #9ca3af; }
+.step-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  font-weight: 600;
+}
+html.dark .step-dot { border-color: #4b5563; }
+.step-dot::before { content: counter(step); }
+.steps li.is-done .step-dot {
+  border-color: #0078c3;
+  background: #0078c3;
+  color: #fff;
+}
+.steps li.is-done .step-dot::before { content: '\2713'; }
+.steps li.is-active { color: #111827; font-weight: 600; }
+html.dark .steps li.is-active { color: #f9fafb; }
+.steps li.is-active .step-dot { border-color: #0078c3; }
+
+/* === Form fields === */
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field-hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b7280;
+}
+html.dark .field-hint { color: #9ca3af; }
+
+.plain-fieldset {
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-label input { flex-shrink: 0; }
+
+/* Two selectable cards; the radio is visually hidden but stays focusable */
+.mode-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.mode-option {
+  flex: 1 1 200px;
+  position: relative;
+  cursor: pointer;
+}
+.mode-option input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.mode-option span {
+  display: block;
+  padding: 14px 16px 14px 44px;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+}
+html.dark .mode-option span { border-color: #4b5563; }
+.mode-option span::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+}
+.mode-option input:checked + span {
+  border-color: #0078c3;
+  background: #eff6ff;
+}
+html.dark .mode-option input:checked + span { background: rgba(0, 120, 195, 0.15); }
+.mode-option input:checked + span::before {
+  border-color: #0078c3;
+  box-shadow: inset 0 0 0 3px #fff;
+  background: #0078c3;
+}
+html.dark .mode-option input:checked + span::before { box-shadow: inset 0 0 0 3px #1f2937; }
+.mode-option input:focus-visible + span {
+  outline: 2px solid #0078c3;
+  outline-offset: 2px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.form-stack > .msg { margin-bottom: 0; }
+
+/* === Connection card === */
+.conn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+html.dark .conn-row { border-bottom-color: #374151; }
+.conn-row dt { font-weight: 600; }
+.conn-row dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.conn-value { overflow-wrap: anywhere; }
+
+.conn-status {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6b7280;
+}
+html.dark .conn-status { color: #9ca3af; }
+.conn-status.status-ok { color: #15803d; }
+.conn-status.status-err { color: #b91c1c; }
+html.dark .conn-status.status-ok { color: #4ade80; }
+html.dark .conn-status.status-err { color: #f87171; }
+
+/* === Settings card === */
+.card-head {
+  position: relative;
+  margin-bottom: 24px;
+}
+.card-head .card-title { margin-bottom: 0; }
+.saved-flash {
+  position: absolute;
+  right: 0;
+  top: 4px;
+  font-size: 13px;
+  color: #15803d;
+}
+html.dark .saved-flash { color: #4ade80; }

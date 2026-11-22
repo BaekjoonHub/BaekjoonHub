@@ -14,35 +14,16 @@
       <div class="sixteen wide center aligned column">
         <h1 id="title">Baekjoon<span style="color: #0078c3">Hub</span></h1>
         <p id="caption" data-i18n="popup.caption">Sync your code from BOJ to GitHub</p>
-        <br />
-        <!-- Authentication mode -->
-        <div id="auth_mode" hidden>
-          <p class="onboarding" data-i18n-html="popup.auth.text">
-            <br />
-            Authenticate with GitHub to use
-            <strong>Baekjoon<span style="color: #f18500">Hub</span></strong>
-          </p>
-          <button id="authenticate" class="ui secondary button">
-            <i class="icon github"></i>
-            <span data-i18n="popup.auth.button">Authenticate</span>
-          </button>
-        </div>
 
-        <!-- Repo Hook mode -->
-        <div id="hook_mode" hidden>
-          <p class="onboarding" data-i18n-html="popup.hook.text">
-            <br />
-            Set up repository hook to use
-            <strong>Baekjoon<span style="color: #0078c3">Hub</span></strong>
-          </p>
-          <a id="hook_URL" href="" target="blank" class="ui secondary button">
-            <i class="icon github"></i>
-            <span data-i18n="popup.hook.button">Set up Hook</span>
-          </a>
-        </div>
+        <p id="status_text" class="onboarding" style="display: none"></p>
+        <!-- display:none, not hidden: Semantic's .ui.button display would override the hidden attribute -->
+        <a id="status_action" class="ui secondary button" target="_blank" style="display: none"></a>
 
         <div id="commit_mode" hidden>
-          <p id="repo_url" class="ui small header" style="margin-top: 5px; margin-bottom: 6px !important"></p>
+          <p id="repo_url" class="ui small header" style="margin-top: 5px; margin-bottom: 6px !important">
+            <span data-i18n="popup.yourRepo">Your Repo:</span>
+            <a id="repo_link" target="_blank" style="color: cadetblue !important"></a>
+          </p>
           <div class="ui small header" style="margin-bottom: 5px; margin-top: 0px !important">
             <span data-i18n="popup.wantMore">Want more features?</span>
             <a style="color: rgb(10, 89, 92) !important" target="_blank" href="https://github.com/BaekjoonHub/BaekjoonHub/issues" data-i18n="popup.requestFeature">Request a feature!</a>
@@ -50,24 +31,25 @@
         </div>
 
         <!-- 기능 on/off -->
-        <div style="margin-top: 10px">
-          <input type="checkbox" id="onffbox" />
+        <div id="toggle_row">
+          <span id="toggle_label" data-i18n="popup.toggle.label">Auto upload</span>
+          <input type="checkbox" id="onffbox" aria-labelledby="toggle_label" />
           <label for="onffbox" id="onffmain">
             <span id="onffball"></span>
           </label>
+          <span id="toggle_state"></span>
         </div>
       </div>
 
       <!-- Generate Socials -->
       <div id="socials" class="sixteen wide column" style="position:relative;text-align:center;">
         <a title="BaekjoonHub GitHub" href="https://github.com/BaekjoonHub/BaekjoonHub" target="_blank"><i class="ui black big github icon"></i></a>
-        <a title="BaekjoonHub Setting" id="welcome_URL" href="" target="_blank"><i class="ui grey big cog icon"></i></a>
+        <a id="welcome_URL" href="" target="_blank"><i class="ui grey big cog icon"></i><span data-i18n="popup.settings">Settings</span></a>
         <button id="lang_toggle" style="position:absolute;right:0;top:50%;transform:translateY(-50%);padding:3px 10px;border:1px solid #ccc;border-radius:3px;background:#fff;cursor:pointer;font-size:13px;line-height:1.4;">한국어</button>
       </div>
     </div>
 
     <script src="scripts/i18n.js"></script>
-    <script src="scripts/oauth2.js"></script>
     <script type="text/javascript" src="popup.js"></script>
   </body>
 </html>

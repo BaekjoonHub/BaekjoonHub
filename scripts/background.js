@@ -72,27 +72,22 @@ async function SolvedApiCall(problemId) {
   return problem && toV3Problem(problem, solvedTagNames || {});
 }
 
+/** 인증을 진행한 GitHub 탭을 welcome 페이지로 돌린다. 탭을 모르면 새 탭을 연다. */
+function openWelcome(sender, query) {
+  const url = chrome.runtime.getURL('welcome.html') + query;
+  if (sender && sender.tab) chrome.tabs.update(sender.tab.id, { url });
+  else chrome.tabs.create({ url });
+}
+
 function handleMessage(request, sender, sendResponse) {
   if (request && request.closeWebPage === true && request.isSuccess === true) {
-    /* Set username */
-    chrome.storage.local.set({ BaekjoonHub_username: request.username });
-
-    /* Set token */
-    chrome.storage.local.set({ BaekjoonHub_token: request.token });
-
-    /* Close pipe */
-    chrome.storage.local.set({ pipe_BaekjoonHub: false }, () => {
-      console.log('Closed pipe.');
-    });
-
-    /* Go to onboarding for UX */
-    const urlOnboarding = `chrome-extension://${chrome.runtime.id}/welcome.html`;
-    chrome.tabs.create({ url: urlOnboarding, selected: true }); // creates new tab
+    chrome.storage.local.set(
+      { BaekjoonHub_username: request.username, BaekjoonHub_token: request.token, pipe_baekjoonhub: false },
+      () => openWelcome(sender, ''),
+    );
   } else if (request && request.closeWebPage === true && request.isSuccess === false) {
-    alert('Something went wrong while trying to authenticate your profile!');
-    chrome.tabs.getSelected(null, function (tab) {
-      chrome.tabs.remove(tab.id);
-    });
+    const reason = request.reason === 'denied' ? 'denied' : 'failed';
+    chrome.storage.local.set({ pipe_baekjoonhub: false }, () => openWelcome(sender, `?auth_error=${reason}`));
   } else if (request && request.sender == "baekjoon" && request.task == "SolvedApiCall") {
     SolvedApiCall(request.problemId).then((res) => sendResponse(res));
   }
@@ -100,3 +95,7 @@ function handleMessage(request, sender, sendResponse) {
 }
 
 chrome.runtime.onMessage.addListener(handleMessage);
+
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
+});

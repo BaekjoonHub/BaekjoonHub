@@ -23,16 +23,11 @@ const localAuth = {
    * @param url The url containing the access code.
    */
   parseAccessCode(url) {
-    if (url.match(/\?error=(.+)/)) {
-      chrome.tabs.getCurrent(function (tab) {
-        chrome.tabs.remove(tab.id, function () {});
-      });
-    } else {
-      // eslint-disable-next-line
-      const accessCode = url.match(/\?code=([\w\/\-]+)/);
-      if (accessCode) {
-        this.requestToken(accessCode[1]);
-      }
+    const params = new URL(url).searchParams;
+    if (params.get('error')) {
+      this.fail('denied');
+    } else if (params.get('code')) {
+      this.requestToken(params.get('code'));
     }
   },
 
@@ -51,13 +46,12 @@ const localAuth = {
     const xhr = new XMLHttpRequest();
     xhr.addEventListener('readystatechange', function () {
       if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          that.finish(xhr.responseText.match(/access_token=([^&]*)/)[1]);
+        // GitHub answers 200 with error=... in the body for a bad or expired code
+        const token = xhr.status === 200 && xhr.responseText.match(/access_token=([^&]*)/);
+        if (token) {
+          that.finish(token[1]);
         } else {
-          chrome.runtime.sendMessage({
-            closeWebPage: true,
-            isSuccess: false,
-          });
+          that.fail('failed');
         }
       }
     });
@@ -71,6 +65,7 @@ const localAuth = {
    * @param token The OAuth2 token given to the application from the provider.
    */
   finish(token) {
+    const that = this;
     /* Get username */
     // To validate user, load user object from GitHub.
     const AUTHENTICATION_URL = 'https://api.github.com/user';
@@ -85,8 +80,9 @@ const localAuth = {
             isSuccess: true,
             token,
             username,
-            KEY: this.KEY,
           });
+        } else {
+          that.fail('failed');
         }
       }
     });
@@ -94,15 +90,21 @@ const localAuth = {
     xhr.setRequestHeader('Authorization', `token ${token}`);
     xhr.send();
   },
+
+  fail(reason) {
+    chrome.runtime.sendMessage({ closeWebPage: true, isSuccess: false, reason });
+  },
 };
 
 localAuth.init(); // load params.
 const link = window.location.href;
 
 /* Check for open pipe */
-if (window.location.host === 'github.com') {
+if (link.startsWith(localAuth.REDIRECT_URL)) {
   chrome.storage.local.get('pipe_baekjoonhub', (data) => {
-    if (data && data.pipe_baekjoonhub) {
+    // 파이프 값은 oAuth2.begin 이 만든 state 다. 예전 버전이 남긴 true 는 어떤 state 와도 같지 않다.
+    const pipe = data && data.pipe_baekjoonhub;
+    if (pipe && pipe === new URL(link).searchParams.get('state')) {
       localAuth.parseAccessCode(link);
     }
   });
