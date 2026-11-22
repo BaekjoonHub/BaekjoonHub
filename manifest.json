@@ -206,7 +206,8 @@
         "https://www.doj.kr/*"
       ],
       "css": [
-        "css/toast.css"
+        "css/toast.css",
+        "css/doj/inject.css"
       ],
       "js": [
         "library/sha1.min.js",
