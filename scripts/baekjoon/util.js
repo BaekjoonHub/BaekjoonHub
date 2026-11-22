@@ -312,6 +312,7 @@ function injectPageScript(id, file) {
     const script = document.createElement('script');
     script.id = id;
     script.src = chrome.runtime.getURL(file);
+    script.onerror = () => console.warn(`${file} 을 불러오지 못했습니다.`);
     (document.head || document.documentElement).appendChild(script);
   } catch (error) {
     console.warn(`${file} 을 페이지에 넣지 못했습니다.`, error);

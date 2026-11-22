@@ -55,7 +55,7 @@ test('채점 중인 맨 위 행은 지켜봐 달라고 부탁하고 페이지를
   assert.ok(state.asks.length > 0, '지켜봐 달라고 부탁한다');
   // vm 안에서 만든 객체라 프로토타입이 달라 JSON 으로 옮겨 비교한다
   for (const ask of state.asks) assert.deepEqual(JSON.parse(JSON.stringify(ask)), { message: { type: 'BaekjoonHub:watch-solution', id: '100000001' }, origin: ORIGIN });
-  assert.deepEqual(state.added.map((el) => ({ ...el })), [{ tag: 'script', id: 'baekjoonhub-statusrefresh', src: 'chrome-extension://abcdef/scripts/baekjoon/statusrefresh.js' }], '요소는 한 번, 확장의 URL 로');
+  assert.deepEqual(state.added.map(({ onerror, ...el }) => el), [{ tag: 'script', id: 'baekjoonhub-statusrefresh', src: 'chrome-extension://abcdef/scripts/baekjoon/statusrefresh.js' }], '요소는 한 번, 확장의 URL 로');
   assert.deepEqual(state.fetched, [], '페이지를 다시 받지 않는다');
   assert.deepEqual(state.calls, []);
 
@@ -76,7 +76,7 @@ test('제출 페이지에서는 submitfilter.js <script> 요소를 한 번 넣�
   const scriptsOf = (url, options) => {
     const state = { tick: null, asks: [], added: [], fetched: [], calls: [], category: 'wa' };
     loadLoader(state, { url, ...options });
-    return state.added.filter((el) => el.src === FILE).map((el) => ({ ...el }));
+    return state.added.filter((el) => el.src === FILE).map(({ onerror, ...el }) => el);
   };
   for (const url of [`${ORIGIN}/submit/1000`, `https://www.acmicpc.net/submit/1000/52961234`]) {
     assert.deepEqual(scriptsOf(url), [{ tag: 'script', id: 'baekjoonhub-submitfilter', src: FILE }], url);
