@@ -16,6 +16,10 @@ jobs:
     steps:
       - name: Checkout 코드
         uses: actions/checkout@v2
+        with:
+          # 릴리즈 노트는 직전 태그부터 지금까지의 커밋 제목으로 만든다.
+          # 기본값(커밋 1개, 태그 없음)으로 받으면 직전 태그를 찾지 못해 맨 끝 커밋 한 줄만 들어간다.
+          fetch-depth: 0
 
       - name: 추출 버전 정보
         id: extract_version
