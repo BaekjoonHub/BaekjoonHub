@@ -79,3 +79,14 @@ test('채점 중이던 제출을 다시 볼 때 그사이 낸 다음 제출이 �
   assert.equal(uploaded[0].code, 'int main(){}\n');
   assert.equal(uploaded[0].problemId, '1001');
 });
+
+test('정올 제출자 u handle로 내 제출을 찾아 올린다', async () => {
+  const { context, uploaded, errors } = loadJungol({
+    '/submission?problem=1001': [{ '$/account/my': ME, '$/submission?problem=1001': { list: [{ id: 11, u: 'me', r: 'AC' }] } }],
+    '/problem/1001/submission?sid=11': [{ '$/submission/11': DETAIL }],
+  });
+  await context.handleResult({ querySelector: () => null }, '1001');
+  assert.deepEqual(errors, []);
+  assert.equal(uploaded.length, 1);
+  assert.equal(uploaded[0].problemId, '1001');
+});

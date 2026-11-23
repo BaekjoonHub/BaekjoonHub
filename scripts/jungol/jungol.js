@@ -104,7 +104,7 @@ async function load(path) {
  */
 async function findMySubmission(problemId, id) {
   const listOf = async (query) => findLoaded(await load(`/submission?${query}`), '$/submission?', true)?.data?.list || [];
-  const wanted = (item) => item.accountInfo?.id === me.id && (isNull(id) || item.id === id);
+  const wanted = (item) => (item.accountInfo?.id === me.id || item.u === me.handle) && (isNull(id) || item.id === id);
   /* 로그인한 계정을 아직 모르면 문제의 최근 제출 목록에서 계정과 내 제출을 함께 찾는다 */
   let list = isNull(me) ? await listOf(`problem=${problemId}`) : [];
   if (isNull(me)) return undefined;
