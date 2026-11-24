@@ -60,6 +60,11 @@ const I18N = (() => {
       'welcome.error.unknown': 'Something went wrong (GitHub responded with ${status}). Please try again.',
       'welcome.error.network': 'Could not reach GitHub. Check your network connection and try again.',
 
+      // welcome: step 3 (just linked)
+      'welcome.complete.hint': 'You can also change settings later from the BaekjoonHub icon (top right) → Settings.',
+      'welcome.complete.details': 'Go to settings',
+      'welcome.complete.close': 'OK',
+
       // welcome: step 3 (connection)
       'welcome.conn.title': 'Connection',
       'welcome.conn.account': 'GitHub account',
@@ -166,6 +171,11 @@ const I18N = (() => {
       'welcome.error.archived': '<a target="blank" href="https://github.com/${name}">${name}</a> 저장소는 보관(archive)되어 있어 올릴 수 없어요. 다른 저장소를 골라주세요.',
       'welcome.error.unknown': '문제가 생겼어요 (GitHub 응답 ${status}). 잠시 후 다시 시도해주세요.',
       'welcome.error.network': 'GitHub에 연결하지 못했어요. 네트워크 상태를 확인하고 다시 시도해주세요.',
+
+      // welcome: 3단계 (방금 연결함)
+      'welcome.complete.hint': '설정은 우측 상단 백준허브 아이콘 → 설정에서도 바꿀 수 있어요.',
+      'welcome.complete.details': '세부 설정으로 이동',
+      'welcome.complete.close': '확인',
 
       // welcome: 3단계 (연결 정보)
       'welcome.conn.title': '연결 정보',

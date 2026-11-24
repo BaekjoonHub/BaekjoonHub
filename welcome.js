@@ -91,18 +91,29 @@ function showRepo(fromDone) {
 
 function showDone() {
   chrome.storage.local.get(['BaekjoonHub_token', 'BaekjoonHub_username', 'BaekjoonHub_hook'], (d) => {
-    const bannerEl = $id('done_banner');
-    if (banner) I18N.bind(bannerEl, banner[0], banner[1]);
-    bannerEl.classList.toggle('hidden', !banner);
+    // 방금 연결했으면 완료 안내만 보여 준다: 설정 카드가 함께 보이면 아직 할 일이 남은 줄 안다
+    const justLinked = !!banner;
+    if (justLinked) I18N.bind($id('done_banner'), banner[0], banner[1]);
+    $id('done_complete').classList.toggle('hidden', !justLinked);
+    $id('done_details').classList.toggle('hidden', justLinked);
     banner = null;
     $id('conn_account').textContent = d.BaekjoonHub_username ? `@${d.BaekjoonHub_username}` : '';
     const repoLink = $id('conn_repo');
     repoLink.textContent = d.BaekjoonHub_hook;
     repoLink.href = `https://github.com/${d.BaekjoonHub_hook}`;
     showView('done');
+    if (justLinked) $id('close_button').focus();
     checkConnection(d.BaekjoonHub_token, d.BaekjoonHub_hook);
   });
 }
+
+$id('details_button').addEventListener('click', () => {
+  $id('done_complete').classList.add('hidden');
+  $id('done_details').classList.remove('hidden');
+});
+
+// window.close() 는 GitHub 인증을 다녀와 기록이 쌓인 탭을 닫지 못한다
+$id('close_button').addEventListener('click', () => chrome.tabs.getCurrent((tab) => chrome.tabs.remove(tab.id)));
 
 let connectionCheck = 0;
 async function checkConnection(token, hook) {
