@@ -104,8 +104,17 @@
 
     <!-- Step 3: connected -->
     <div id="view_done" class="hidden">
-      <div id="done_banner" class="msg msg-success hidden" role="status"></div>
+      <!-- 저장소를 방금 연결했을 때만 보인다 -->
+      <section id="done_complete" class="card hidden">
+        <div id="done_banner" class="msg msg-success" role="status"></div>
+        <p class="field-hint text-center" data-i18n="welcome.complete.hint"></p>
+        <div class="form-actions mt-6">
+          <button id="details_button" class="btn-control" type="button" data-i18n="welcome.complete.details">Go to settings</button>
+          <button id="close_button" class="btn-primary" type="button" data-i18n="welcome.complete.close">OK</button>
+        </div>
+      </section>
 
+      <div id="done_details">
       <section class="card">
         <h2 class="card-title" data-i18n="welcome.conn.title">Connection</h2>
         <dl class="conn-list">
@@ -215,6 +224,7 @@
           </details>
         </div>
       </section>
+      </div>
     </div>
 
     <footer class="footer">
