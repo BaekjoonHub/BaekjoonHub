@@ -2,13 +2,10 @@
  * 로딩 버튼 추가
  */
 function startUpload() {
-  let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  if (elem !== undefined) {
-    elem = document.createElement('span');
-    elem.id = 'BaekjoonHub_progress_anchor_element';
-    elem.className = 'runcode-wrapper__8rXm';
-    elem.style = 'margin-left: 10px;padding-top: 0px;';
-  }
+  const elem = document.createElement('span');
+  elem.id = 'BaekjoonHub_progress_anchor_element';
+  elem.className = 'runcode-wrapper__8rXm';
+  elem.style = 'margin-left: 10px;padding-top: 0px;';
   elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
   const target = document.getElementById('status-table')?.childNodes[1].childNodes[0].childNodes[3] || document.querySelector('div.table-responsive > table > tbody > tr > td:nth-child(5)');
   target.append(elem);
@@ -62,61 +59,19 @@ function startUploadCountDown() {
 }
 
 /**
- * 제출 목록 비교함수입니다
- * @param {object} a - 제출 요소 피연산자 a
- * @param {object} b - 제출 요소 피연산자 b
- * @returns {number} - a와 b 아래의 우선순위로 값을 비교하여 정수값을 반환합니다.
- * 1. 서브태스크가 있는 문제이고, 점수(result)의 차이가 있을 경우 a > b 이면 음수, a < b 이면 양수를 반환합니다.
- * 2. 실행시간(runtime)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 3. 사용메모리(memory)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 4. 코드길이(codeLength)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 5. 위의 요소가 모두 같은 경우 제출한 요소(submissionId)의 그 차이 값의 역을 반환합니다.
- * */
+ * 제출 목록 비교함수입니다. 음수면 a 가 더 좋은 제출이다. (README 의 "백준 제출 기준")
+ * 1. 서브태스크 점수가 있으면 점수가 높은 쪽
+ * 2. 실행시간, 3. 메모리, 4. 코드길이가 작은 쪽 (같은 값이면 다음 기준으로 넘어간다)
+ * 5. 제출번호가 큰(최신) 쪽
+ */
 function compareSubmission(a, b) {
-  // prettier-ignore-start
-  /* eslint-disable */
-  return hasNotSubtask(a.result, b.result)
-          ? a.runtime === b.runtime
-            ? a.memory === b.memory
-              ? a.codeLength === b.codeLength
-                ? -(a.submissionId - b.submissionId)
-                : a.codeLength - b.codeLength
-              : a.memory - b.memory
-            : a.runtime - b.runtime
-          : compareResult(a.result, b.result)
-  ;
-  /* eslint-enable */
-  // prettier-ignore-end
-}
-
-/**
- * 서브태스크가 있는 문제의 경우도 고려해 제출 결과를 비교하는 함수입니다.
- * @param {string} a 제출 결과 피연산자 a
- * @param {string} b 제출 결과 피연산자 b
- * @returns {boolean} 서브 태스크가 없는 경우 true, 서브 태스크가 있는 경우 false를 반환합니다.
- */
-function hasNotSubtask(a, b) {
-  a = parseNumberFromString(a);
-  b = parseNumberFromString(b);
-
-  if (isNaN(a) && isNaN(b)) return true;
-
-  return false;
-}
-
-/**
- * 서브태스크가 있는 문제의 경우 점수가 높은 순서로 정렬되도록 값을 반환합니다.
- * @param {string} a 제출 결과 피연산자 a
- * @param {string} b 제출 결과 피연산자 b
- * @returns {number} a의 점수가 높은 경우 음수, b의 점수가 높은 경우 양수
- */
-function compareResult(a, b) {
-  a = parseNumberFromString(a);
-  b = parseNumberFromString(b);
-
-  if (typeof a === 'number' && typeof b === 'number') return -(a - b);
-  if (isNaN(b)) return -1;
-  if (isNaN(a)) return 1;
+  const scoreA = parseNumberFromString(a.result);
+  const scoreB = parseNumberFromString(b.result);
+  if (!(isNaN(scoreA) && isNaN(scoreB))) return scoreB - scoreA;
+  if (a.runtime !== b.runtime) return a.runtime - b.runtime;
+  if (a.memory !== b.memory) return a.memory - b.memory;
+  if (a.codeLength !== b.codeLength) return a.codeLength - b.codeLength;
+  return b.submissionId - a.submissionId;
 }
 
 /**

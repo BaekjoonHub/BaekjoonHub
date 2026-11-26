@@ -74,15 +74,9 @@ async function getHook() {
   return await getObjectFromLocalStorage('BaekjoonHub_hook');
 }
 
-/** welcome.html 의 분기 처리 dis_option에서 설정된 boolean 값을 반환합니다. */
+/** 디렉토리 정리 방식(welcome.html 의 업로드 설정): 'language' 면 언어별, 그 밖에는 플랫폼별 */
 async function getOrgOption() {
-  try {
-    return await getObjectFromLocalStorage('BaekjoonHub_OrgOption');
-  } catch (ex) {
-    console.log('The way it works has changed with updates. Update your storage. ');
-    chrome.storage.local.set({ BaekjoonHub_OrgOption: "platform" }, () => {});
-    return "platform";
-  }
+  return getObjectFromLocalStorage('BaekjoonHub_OrgOption');
 }
 
 async function getSaveExamplesOption() {

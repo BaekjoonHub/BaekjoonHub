@@ -375,7 +375,7 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
     ? safeSolved.tags.flatMap((tag) => tag.displayNames).filter((tag) => tag.language === 'ko').map((tag) => tag.name)
     : [];
   const title = safeSolved.titleKo || `문제 ${problemId}`;
-  const level = bj_level[safeSolved.level] || bj_level[0];
+  const level = solvedTierName(safeSolved.level);
 
   const { problem_description, problem_input, problem_output, samples, deleted } = description || {};
   return {
@@ -406,18 +406,12 @@ async function findResultTableListByUsername(username) {
   if (doc.getElementById('status-table') === null) {
     throw new Error('status-table을 찾을 수 없습니다. 로그인/백준 페이지 상태를 확인해 주세요.');
   }
-  let next_page = doc.getElementById('next_page');
-  do {
+  for (;;) {
     result.push(...parsingResultTableList(doc));
-    if (next_page !== null) {
-      const href = next_page.getAttribute('href');
-      const nextUrl = new URL(href, location.origin).toString();
-      doc = await findHtmlDocumentByUrl(nextUrl);
-    }
-  } while ((next_page = doc.getElementById('next_page')) !== null);
-  result.push(...parsingResultTableList(doc));
-
-  return result;
+    const next_page = doc.getElementById('next_page');
+    if (next_page === null) return result;
+    doc = await findHtmlDocumentByUrl(new URL(next_page.getAttribute('href'), location.origin).toString());
+  }
 }
 
 /**

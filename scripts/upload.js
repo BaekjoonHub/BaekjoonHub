@@ -47,20 +47,15 @@ async function uploadUnlessSame(bojData, markUploaded) {
  * (SWEA 는 캐시한 브랜치를 쓰는 자체 구현 uploadSWEA 를 쓴다)
  * @param {string} token - GitHub 토큰
  * @param {string} hook - 'owner/repo'
- * @param {string} sourceText - 소스코드
- * @param {string} readmeText - README 내용
- * @param {string} directory - 풀이 디렉토리
- * @param {string} filename - 풀이 파일 이름
- * @param {string} commitMessage - 커밋 메시지
- * @param {function(object, string): void} cb - 업로드 뒤 완료 표시 (branches, directory)
- * @param {Array<{input: string, output: string}>} [samples] - 예제 입출력 (백준)
+ * @param {{code: string, readme: string, directory: string, fileName: string, message: string, samples?: Array<{input: string, output: string}>}} bojData - 플랫폼의 파싱 결과 (samples 는 백준의 예제 입출력)
+ * @param {function(object, string, boolean): void} cb - 업로드 뒤 완료 표시 (branches, directory, true). 같은 코드라 건너뛸 때는 uploadUnlessSame 이 앞의 두 인자로만 부른다.
  */
-async function upload(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb, samples) {
+async function upload(token, hook, { code, readme, directory, fileName, message, samples }, cb) {
   const git = new GitHub(hook, token);
   const default_branch = await git.getDefaultBranchOnRepo();
   const tree_items = [
-    await createSolutionItem(git, sourceText, `${directory}/${filename}`),
-    await createSolutionItem(git, readmeText, `${directory}/README.md`),
+    await createSolutionItem(git, code, `${directory}/${fileName}`),
+    await createSolutionItem(git, readme, `${directory}/README.md`),
   ];
   if (samples?.length > 0 && (await getSaveExamplesOption())) {
     for (const entry of samplesToFileEntries(samples)) {
@@ -69,14 +64,14 @@ async function upload(token, hook, sourceText, readmeText, directory, filename, 
   }
 
   /* 풀이별 파일 보관 옵션이 켜져 있으면 풀이 파일의 경로(이름_002.py …)를 커밋의 부모에서 정한다(utils/solutionVersions.js) */
-  const commit = await prepareSolutionItems(git, directory, filename, sourceText, tree_items);
+  const commit = await prepareSolutionItems(git, directory, fileName, code, tree_items);
   // 브랜치는 fast-forward 로만 옮긴다 — 다른 탭이 그 사이 커밋했으면 그 위에 다시 커밋한다 (commitTreeItems 참고)
-  await git.commitTreeItems(default_branch, commit.items, commitMessage);
+  await git.commitTreeItems(default_branch, commit.items, message);
 
   /* 올린 항목만 기록하고(createTree 응답의 tree 는 루트 목록이라 쓰면 캐시가 무너진다),
      저장 직전에 다시 읽어 다른 탭의 기록을 덮지 않는다. */
   const stats = await recordUploadInStats(hook, default_branch, commit.committed);
-  if (typeof cb === 'function') cb(stats.branches, directory);
+  if (typeof cb === 'function') cb(stats.branches, directory, true);
 }
 
 /**

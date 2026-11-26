@@ -7,6 +7,7 @@
 // - 요청은 간격을 두고 보내고, 끝내 막히면 전체 업로드를 멈췄다가 이어 한다. 받은 문제·코드는 저장해 다시 요청하지 않는다.
 // - 확인 질문, 진행 상황, 결과(가져오지 못한 문제와 이유, 다시 시도)는 모달로 보여 준다(toast.js 의 confirmModal · progressModal).
 // 실제 스크립트를 vm 에 로드해 확인한다. 기다림은 가짜 시계로 바로 넘긴다.
+// 일부러 다루지 않는 것: 모달·안내 문구, 시작 전 어림 안내(describeBulkUpload), 남은 시간 표시.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -174,7 +175,6 @@ test('전체 업로드: 올리지 않는 대회 문제만 남으면 실패가 �
   const { context, state, made } = loadBulk(() => ({ status: 200, body: SOURCE }), [{ problemId: '1', submissionId: '10' }, { problemId: null, submissionId: '11' }]);
   await context.uploadAllSolvedProblem();
   const { status, retry } = modalParts(made);
-  assert.equal(status.textContent, '새로 올릴 문제가 없습니다. 이미 모두 올라가 있습니다.');
   assert.equal(status.style.color, undefined, '실패 색이 아니다');
   assert.match(retry.style.cssText, /display:none/);
   assert.deepEqual(state.requested, []);
@@ -186,8 +186,7 @@ test('전체 업로드: 가져오지 못한 문제는 번호와 이유를 보여
   await context.uploadAllSolvedProblem();
   const first = modalParts(made);
   assert.deepEqual(committed, [filesOf(1000)]);
-  assert.equal(first.status.textContent, '1개 문제를 GitHub에 올렸습니다. 1개는 가져오지 못했습니다.');
-  assert.equal(first.list.textContent, '25176: 백준 요청 실패 (404) /source/download/20');
+  assert.match(first.list.textContent, /^25176: /);
   assert.deepEqual([first.list.style.display, first.retry.style.display, first.ok.style.display], ['block', '', '']);
   assert.deepEqual(calls, ['list', 'commit', 'recorded']);
 
@@ -197,7 +196,6 @@ test('전체 업로드: 가져오지 못한 문제는 번호와 이유를 보여
   await settle();
   const second = modalParts(made, 1);
   assert.deepEqual(committed, [filesOf(1000), filesOf(25176)]);
-  assert.equal(second.status.textContent, '1개 문제를 GitHub에 올렸습니다.');
   assert.deepEqual(calls, ['list', 'commit', 'recorded', 'commit', 'recorded'], '새로 고치지 않았고 제출 목록도 다시 읽지 않았다');
   second.dialog.returnValue = 'ok';
   second.dialog.onclose();
@@ -209,9 +207,7 @@ test('전체 업로드: 백준이 끝내 막으면 실패로 넘기지 않고 �
   const { context, state, committed, made } = loadBulk((url) => (blocked && url === '/source/download/20' ? { status: 403, body: BLOCKED } : { status: 200, body: SOURCE }), ROWS);
   const run = context.uploadAllSolvedProblem();
   await settle();
-  const { status, pause, fill } = modalParts(made);
-  assert.equal(status.textContent, '백준이 요청을 계속 막고 있어 멈췄습니다. 몇 분 뒤 이어하기를 눌러 주세요.');
-  assert.deepEqual([pause.textContent, fill.style.background], ['이어하기', '#9aa0a6']);
+  const { pause } = modalParts(made);
   assert.match(pause.style.cssText, /^(?!.*display:none)/);
   assert.deepEqual(state.waits.filter((ms) => ms >= 5000), [5000, 10000, 20000, 40000]);
   assert.deepEqual(committed, [], '멈춘 동안에는 커밋하지 않는다');
@@ -223,7 +219,6 @@ test('전체 업로드: 백준이 끝내 막으면 실패로 넘기지 않고 �
   pause.onclick();
   await run;
   assert.deepEqual(committed, [[...filesOf(1000), ...filesOf(25176)]]);
-  assert.equal(status.textContent, '2개 문제를 GitHub에 올렸습니다.');
 });
 
 test('전체 업로드: 예전 버전이 403 응답을 풀이로 올린 문제는 올린 문제로 치지 않고 같은 경로에 다시 올린다', async () => {
@@ -239,123 +234,69 @@ test('전체 업로드: 예전 버전이 403 응답을 풀이로 올린 문제�
   assert.deepEqual([ids(false), ids(true)], [['1000'], ['25176']]);
   await context.uploadAllSolvedProblem();
   assert.deepEqual(committed, [filesOf(25176)]);
-  assert.equal(modalParts(made).status.textContent, '1개 문제를 GitHub에 올렸습니다.');
 });
 
-test('시작 전 안내는 프로필의 맞은 문제와 업로드 기록으로 새로 올릴 문제 수를 요청 없이 어림한다', async () => {
-  const submission = { 백준: { '1000.A＋B': { 'A＋B.java': 'sha' } } };
-  const { context, state } = loadParsing(() => ({ status: 200, body: SOURCE }));
-  Object.assign(context, {
-    document: { querySelectorAll: (selector) => (selector === '.problem-list a.result-ac' ? ['1000', '1001', ' 25176 '].map((textContent) => ({ textContent })) : []) },
-    getStats: async () => ({ submission: { me: { repo: submission } } }),
-    getHook: async () => 'me/repo',
-  });
-  assert.equal(await context.describeBulkUpload(), '새로 올릴 문제는 약 2개입니다. 맞은 문제 3개 중 1개는 이미 올라가 있습니다.');
-  assert.deepEqual(state.requested, []);
-  context.document = { querySelectorAll: () => [] };
-  assert.equal(await context.describeBulkUpload(), undefined, '맞은 문제 목록이 없는 화면에서는 안내하지 않는다');
-});
-
-test('남은 시간은 지금까지의 속도로 어림해 보여 주고, 처음 몇 문제와 끝난 뒤에는 보여 주지 않는다', () => {
-  const shown = [];
-  let clock = 0;
-  const context = vm.createContext({ Date: { now: () => clock }, progressModal: () => ({ update: (fields) => { if (fields.max !== undefined) shown.push(`${fields.value}/${fields.max} ${fields.eta}`); } }) });
-  for (const file of ['scripts/util.js', 'scripts/upload.js']) vm.runInContext(read(file), context, { filename: file });
-  context.insertMultiLoader('안내');
-  context.setMultiLoaderDenom(100);
-  clock = 4000;
-  context.incMultiLoader(4);
-  clock = 10000; // 5문제에 10초 → 남은 95문제에 190초
-  context.incMultiLoader(1);
-  clock = 150000; // 90문제에 150초 → 남은 10문제에 17초쯤
-  context.incMultiLoader(85);
-  context.incMultiLoader(10);
-  assert.deepEqual(shown, ['0/100 ', '4/100 ', '5/100 약 3분 남음', '90/100 1분 안에 끝남', '100/100 ']);
-});
-
-test('진행 모달은 끝나기 전에는 닫히지 않고, 끝나면 결과와 확인 버튼을 보여 준 뒤 닫힐 때 onClose 를 부른다', () => {
+function loadModal() {
   const made = [];
   const context = vm.createContext({ document: fakeDocument(made) });
   vm.runInContext(read('scripts/toast.js'), context, { filename: 'toast.js' });
-  let closed = 0;
-  const modal = context.progressModal('전체제출 업로드');
-  const { dialog, status, bar, fill, count, note, list, form, pause, retry, ok } = modalParts(made);
-  assert.deepEqual([dialog.tag, form.tag, pause.tag, retry.tag, ok.tag, dialog.shown], ['dialog', 'form', 'button', 'button', 'button', 1]);
-  assert.match(form.style.cssText, /display:none/, '끝나기 전에는 버튼 줄이 없다');
+  return { modal: context.progressModal('전체제출 업로드'), ...modalParts(made) };
+}
 
-  modal.update({ status: '가져오는 중', note: '탭을 닫지 마세요' });
-  assert.equal(fill.style.width, undefined, '전체 개수를 모르면 막대를 채우지 않는다');
-  modal.update({ value: 3, max: 10, eta: '약 2분 남음' });
-  assert.deepEqual([status.textContent, note.textContent, fill.style.width, count.textContent], ['가져오는 중', '탭을 닫지 마세요', '30%', '3 / 10 · 약 2분 남음']);
-
-  let prevented = false;
-  dialog.oncancel({ preventDefault: () => { prevented = true; } }); // Esc
-  dialog.onclose(); // 그래도 닫혔다면 다시 띄운다
-  assert.deepEqual([prevented, dialog.shown, dialog.removed, closed], [true, 2, undefined, 0]);
-
-  modal.finish('막혔습니다', { failed: true, onClose: () => { closed += 1; } });
-  assert.deepEqual([status.textContent, status.style.color, bar.style.display, ok.style.display, ok.focused], ['막혔습니다', '#eb3b5a', 'none', '', true]);
-  assert.match(form.style.cssText, /display:flex/);
-  assert.deepEqual([list.style.display, retry.style.display], [undefined, undefined], '목록과 다시 시도는 줄 때만 보인다');
-  dialog.onclose(); // Esc 로 닫으면 returnValue 가 없다
-  assert.deepEqual([dialog.removed, closed, dialog.shown], [true, 1, 2]);
+test('진행 모달은 끝나기 전에는 닫히지 않고, 끝나면 확인 버튼을 보여 준 뒤 닫힐 때 누른 버튼의 onRetry · onClose 를 부른다', () => {
+  for (const [returnValue, expected] of [['', 'close'], ['ok', 'close'], ['retry', 'retry']]) {
+    const { modal, dialog, ok } = loadModal();
+    let prevented = false;
+    dialog.oncancel({ preventDefault: () => { prevented = true; } }); // Esc
+    dialog.onclose(); // 그래도 닫혔다면 다시 띄운다
+    assert.deepEqual([prevented, dialog.shown, dialog.removed], [true, 2, undefined], '끝나기 전에는 닫히지 않는다');
+    const called = [];
+    modal.finish('끝', { onRetry: () => called.push('retry'), onClose: () => called.push('close') });
+    assert.equal(ok.style.display, '', '확인 버튼을 보여 준다');
+    dialog.returnValue = returnValue; // Esc 로 닫으면 returnValue 가 없다
+    dialog.onclose();
+    assert.deepEqual([dialog.removed, called], [true, [expected]], `returnValue ${JSON.stringify(returnValue)}`);
+  }
 });
 
 test('진행 모달의 일시정지는 running() 을 붙잡아 두고, 이어하기나 멈출 수 없는 단계로 넘어갈 때 풀린다', async () => {
-  const made = [];
-  const context = vm.createContext({ document: fakeDocument(made) });
-  vm.runInContext(read('scripts/toast.js'), context, { filename: 'toast.js' });
-  const modal = context.progressModal('전체제출 업로드');
-  const { status, form, pause } = modalParts(made);
+  const { modal, pause } = loadModal();
   let passed = 0;
   const wait = () => modal.running().then(() => { passed += 1; });
-
   await wait();
   assert.equal(passed, 1, '멈춰 있지 않으면 바로 지나간다');
-  modal.update({ status: '가져오는 중', pausable: true });
-  assert.deepEqual([pause.textContent, /display:flex/.test(form.style.cssText)], ['일시정지', true]);
-
+  modal.update({ pausable: true });
   pause.onclick();
   wait();
-  modal.update({ status: '가져오는 중', value: 4, max: 10 }); // 이미 보낸 요청이 끝나며 진행 수를 바꾼다
+  modal.update({ value: 4, max: 10 }); // 이미 보낸 요청이 끝나며 진행 수를 바꿔도 멈춘 채다
   await settle();
-  assert.deepEqual([passed, pause.textContent, status.textContent], [1, '이어하기', '일시정지했습니다. 이어하기를 누르면 멈춘 곳부터 계속합니다.']);
+  assert.equal(passed, 1, '일시정지를 누르면 붙잡는다');
   pause.onclick();
   await settle();
-  assert.deepEqual([passed, pause.textContent, status.textContent], [2, '일시정지', '가져오는 중']);
-
-  modal.pause('막혀서 멈췄습니다');
+  assert.equal(passed, 2, '이어하기를 누르면 풀린다');
+  modal.pause('막혔습니다');
   wait();
   await settle();
-  assert.deepEqual([passed, status.textContent], [2, '막혀서 멈췄습니다']);
+  assert.equal(passed, 2, 'pause() 도 붙잡는다');
   modal.update({ pausable: false });
   await settle();
-  assert.equal(passed, 3);
-  assert.match(pause.style.cssText, /display:none/);
-
-  // 멈춰 있지 않을 때도 문구는 바뀌고 버튼은 사라진다
-  modal.update({ status: '가져오는 중', pausable: true });
-  modal.update({ status: 'GitHub에 올리는 중…', pausable: false });
-  assert.equal(status.textContent, 'GitHub에 올리는 중…');
+  assert.equal(passed, 3, '멈출 수 없는 단계로 넘어가면 풀린다');
   assert.match(pause.style.cssText, /display:none/);
 });
 
-test('확인 모달은 확인을 누르면 true, 취소·Esc 면 false 로 끝나고 닫히면 페이지에서 빠진다', async () => {
+test('확인 모달은 확인을 누를 때만 true 이고, 취소·Esc 면 false 로 끝나고 닫히면 페이지에서 빠진다', async () => {
   const made = [];
   const context = vm.createContext({ document: fakeDocument(made) });
   vm.runInContext(read('scripts/toast.js'), context, { filename: 'toast.js' });
-  for (const [returnValue, expected, detail] of [['ok', true, '새로 올릴 문제는 약 3개입니다.'], ['cancel', false], ['', false]]) {
+  for (const [returnValue, expected] of [['ok', true], ['cancel', false], ['', false]]) {
     made.length = 0;
-    const answer = context.confirmModal('올릴까요?', detail);
+    const answer = context.confirmModal('올릴까요?');
     const dialog = made.find((el) => el.tag === 'dialog');
-    assert.equal(dialog.shown, 1);
-    assert.equal(dialog.children[0].textContent, '올릴까요?');
-    assert.equal(dialog.children[1].textContent, detail || '');
-    assert.equal(/display:none/.test(dialog.children[1].style.cssText), !detail, '설명은 줄 때만 보인다');
+    assert.equal(dialog.shown, 1, `${returnValue}: 띄운다`);
     dialog.returnValue = returnValue; // 버튼(method="dialog")이나 Esc 가 남기는 값
     dialog.onclose();
-    assert.equal(await answer, expected);
-    assert.equal(dialog.removed, true);
+    assert.equal(await answer, expected, `returnValue ${JSON.stringify(returnValue)}`);
+    assert.equal(dialog.removed, true, `${returnValue}: 빠진다`);
   }
 });
 

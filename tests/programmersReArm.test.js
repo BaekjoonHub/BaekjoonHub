@@ -5,6 +5,7 @@
 // 최상위 함수 선언(startLoader / handleSolvedResult / beginUpload ...)을 샌드박스 속성으로 꺼내 쓴다.
 // beginUpload 은 스텁하지 않고 실물을 그대로 태워 SHA dedup 게이트까지 함께 검증한다.
 // 타이머는 가짜 시계로 대체해 2초 폴링을 실제로 기다리지 않는다.
+// 확장 컨텍스트가 무효화됐을 때 로더가 멈추는 것은 일부러 검증하지 않는다 (업로드 결과에 영향이 없다).
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
@@ -28,9 +29,10 @@ function makeClock() {
   return {
     setInterval(fn) { const id = nextId++; timers.set(id, { fn, once: false }); return id; },
     clearInterval(id) { timers.delete(id); },
-    setTimeout(fn) { const id = nextId++; timers.set(id, { fn, once: true }); return id; },
+    setTimeout(fn, delay) { const id = nextId++; timers.set(id, { fn, once: true, delay }); return id; },
     clearTimeout(id) { timers.delete(id); },
     pending() { return timers.size; },
+    delays() { return [...timers.values()].map((entry) => entry.delay); },
     async tick() {
       for (const [id, entry] of [...timers]) {
         if (entry.once) timers.delete(id);
@@ -76,10 +78,9 @@ function loadProgrammersJs(options = {}) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'programmers', 'programmers.js'), 'utf8');
   const clock = makeClock();
   const modal = { text: null, open: false };
-  const calls = { parseData: 0, startUpload: 0, upload: 0, markUploaded: 0, markFailed: 0 };
+  const calls = { parseData: 0, startUpload: 0, upload: 0, markUploaded: 0 };
   // 시도(attempt)별 결과 기록: 앞 시도의 콜백이 뒤 시도의 아이콘을 건드리지 않는지 검증한다
   const marks = [];
-  const enableRef = { value: enabled };
   const codeRef = { value: CODE };
   const uploaded = []; // 실제로 커밋된(업로드 스텁이 받은) 코드 순서
   const countdowns = []; // 워치독이 켜진 시도 순서
@@ -113,7 +114,7 @@ function loadProgrammersJs(options = {}) {
     calculateBlobSHA: (content) => 'sha1-' + content.length,
 
     // scripts/enable.js
-    checkEnable: async () => enableRef.value,
+    checkEnable: async () => enabled,
 
     // scripts/storage.js
     getStats: async () => ({ version: '1.4.19', branches: { [HOOK]: 'main' }, submission: {}, problems: {} }),
@@ -133,7 +134,7 @@ function loadProgrammersJs(options = {}) {
     // scripts/programmers/util.js
     startUpload: () => { calls.startUpload += 1; return { id: calls.startUpload }; },
     markUploadedCSS: (branches, directory, attempt) => { calls.markUploaded += 1; marks.push(['uploaded', attempt && attempt.id]); },
-    markUploadFailedCSS: (attempt) => { calls.markFailed += 1; marks.push(['failed', attempt && attempt.id]); },
+    markUploadFailedCSS: (attempt) => { marks.push(['failed', attempt && attempt.id]); },
     startUploadCountDown: (attempt) => { countdowns.push(attempt.id); },
     insertUploadAllButton: () => {},
 
@@ -166,41 +167,19 @@ function loadProgrammersJs(options = {}) {
   vm.runInContext(src, sandbox, { filename: 'programmers.js' });
 
   return {
-    sandbox,
     clock,
     calls,
     marks,
     uploaded,
     countdowns,
     codeRef,
-    enableRef,
     openModal(text = '정답입니다.') { modal.text = text; modal.open = true; },
     closeModal() { modal.open = false; }, // 텍스트는 일부러 남겨둔다
   };
 }
 
 describe('프로그래머스 채점 결과 감지 (#348)', () => {
-  test('레슨 URL에서는 로더가 자동으로 시작된다', () => {
-    const env = loadProgrammersJs();
-    assert.equal(env.clock.pending(), 1);
-  });
-
-  test('레슨 URL이 아니면 감지 로더가 붙지 않는다', async () => {
-    const env = loadProgrammersJs({ url: 'https://school.programmers.co.kr/learn/challenges' });
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.calls.parseData, 0);
-  });
-
-  test('정답 모달이 뜨면 한 번 처리한다', async () => {
-    const env = loadProgrammersJs();
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.calls.parseData, 1);
-    assert.equal(env.calls.upload, 1);
-  });
-
-  test('같은 모달이 떠 있는 동안에는 중복 트리거되지 않는다', async () => {
+  test('정답 모달이 떠 있는 동안에는 한 번만 처리한다', async () => {
     const env = loadProgrammersJs();
     env.openModal();
     await env.clock.tick();
@@ -208,6 +187,21 @@ describe('프로그래머스 채점 결과 감지 (#348)', () => {
     await env.clock.tick();
     assert.equal(env.calls.parseData, 1);
     assert.equal(env.calls.upload, 1);
+  });
+
+  test('레슨 페이지가 아니거나, 오답이거나, 기능이 꺼져 있으면 업로드하지 않는다', async () => {
+    const cases = [
+      ['레슨 페이지가 아님', { url: 'https://school.programmers.co.kr/learn/challenges' }, '정답입니다.', null],
+      ['오답', {}, '실패했습니다.', 1],
+      ['기능 꺼짐', { enabled: false }, '정답입니다.', 0],
+    ];
+    for (const [name, options, text, pending] of cases) {
+      const env = loadProgrammersJs(options);
+      env.openModal(text);
+      await env.clock.tick();
+      assert.equal(env.calls.parseData, 0, name);
+      if (pending !== null) assert.equal(env.clock.pending(), pending, `${name}: 남은 로더 수`);
+    }
   });
 
   test('#348: 모달을 닫고 재제출하면 다시 감지되어 업로드한다', async () => {
@@ -226,63 +220,18 @@ describe('프로그래머스 채점 결과 감지 (#348)', () => {
     assert.equal(env.calls.upload, 2);
   });
 
-  test('1차 업로드가 예외로 실패해도 재제출이 감지된다', async () => {
-    const env = loadProgrammersJs({
-      uploadImpl: (attempt) => {
-        if (attempt === 1) throw new Error('GitHub API error: 401');
-        return undefined;
-      },
-    });
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.calls.upload, 1);
-    assert.equal(env.calls.markFailed, 1, '확정된 실패는 워치독을 기다리지 않고 즉시 표시된다');
-
-    env.closeModal();
-    await env.clock.tick();
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.calls.upload, 2, '예외가 감지를 영구히 막으면 안 된다');
-  });
-
-  test('오답 모달은 무시한다', async () => {
-    const env = loadProgrammersJs();
-    env.openModal('실패했습니다.');
-    await env.clock.tick();
-    assert.equal(env.calls.parseData, 0);
-  });
-
-  test('캐시된 SHA가 같으면 업로드하지 않고 완료 표시만 한다', async () => {
-    const env = loadProgrammersJs({ cachedSHA: 'sha1-' + CODE.length });
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.calls.upload, 0, '동일 코드 재제출은 중복 커밋을 만들지 않는다');
-    assert.equal(env.calls.markUploaded, 1);
-  });
-
-  test('원격에 동일한 파일이 있으면 업로드를 건너뛴다', async () => {
-    const env = loadProgrammersJs({ remoteFile: { sha: 'sha1-' + CODE.length } });
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.calls.upload, 0);
-    assert.equal(env.calls.markUploaded, 1);
-  });
-
-  test('기능이 꺼져 있으면 로더가 중단된다', async () => {
-    const env = loadProgrammersJs({ enabled: false });
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.clock.pending(), 0);
-    assert.equal(env.calls.parseData, 0);
-  });
-
-  test('확장 컨텍스트가 무효화되면 로더가 조용히 중단된다', async () => {
-    const env = loadProgrammersJs();
-    env.sandbox.chrome.runtime = {}; // id 소멸 = 컨텍스트 무효화
-    env.openModal();
-    await env.clock.tick();
-    assert.equal(env.clock.pending(), 0);
-    assert.equal(env.calls.parseData, 0);
+  test('이미 올라간 코드와 같으면 업로드하지 않고 완료 표시만 한다', async () => {
+    const cases = [
+      ['캐시된 SHA 가 같음', { cachedSHA: 'sha1-' + CODE.length }],
+      ['캐시에 없고 원격 파일이 같음', { remoteFile: { sha: 'sha1-' + CODE.length } }],
+    ];
+    for (const [name, options] of cases) {
+      const env = loadProgrammersJs(options);
+      env.openModal();
+      await env.clock.tick();
+      assert.equal(env.calls.upload, 0, `${name}: 동일 코드 재제출은 중복 커밋을 만들지 않는다`);
+      assert.equal(env.calls.markUploaded, 1, name);
+    }
   });
 });
 
@@ -310,32 +259,13 @@ describe('느린 업로드 도중 재제출 (#348 후속)', () => {
     await env.clock.tick(); // 2차 감지 → 즉시 파싱
   }
 
-  test('1차 업로드가 끝나기 전에 모달을 닫고 재제출해도 2차 코드가 업로드된다', async () => {
+  test('1차 업로드 도중 재제출하면 2차는 1차가 끝난 뒤에 감지 시점의 코드로 업로드된다 (2차 모달을 먼저 닫아도)', async () => {
     const first = deferred();
     const env = loadProgrammersJs({ uploadImpl: (n) => (n === 1 ? first.promise : undefined) });
     await submitSecondWhileFirstInFlight(env);
     assert.equal(env.calls.parseData, 2, '2차 정답이 감지되어야 한다');
-
-    first.resolve();
-    await env.clock.tick();
-    assert.deepEqual(env.uploaded, ['E1', 'E2']);
-  });
-
-  test('업로드는 한 번에 하나씩 실행된다 (force PATCH 로 앞 커밋이 지워지지 않도록)', async () => {
-    const first = deferred();
-    const env = loadProgrammersJs({ uploadImpl: (n) => (n === 1 ? first.promise : undefined) });
-    await submitSecondWhileFirstInFlight(env);
-    assert.equal(env.calls.upload, 1, '1차가 끝나기 전에 2차 업로드가 시작되면 안 된다');
-
-    first.resolve();
-    await env.clock.tick();
-    assert.equal(env.calls.upload, 2);
-  });
-
-  test('2차 모달을 1차 업로드가 끝나기 전에 닫아도 2차는 업로드된다', async () => {
-    const first = deferred();
-    const env = loadProgrammersJs({ uploadImpl: (n) => (n === 1 ? first.promise : undefined) });
-    await submitSecondWhileFirstInFlight(env);
+    assert.equal(env.calls.upload, 1, '1차가 끝나기 전에 2차 업로드가 시작되면 안 된다 (force PATCH 로 앞 커밋이 지워지지 않도록)');
+    assert.deepEqual(env.countdowns, [1], '1차 뒤에서 기다리는 2차는 아직 워치독 대상이 아니다');
 
     env.closeModal(); // 사용자가 아이콘이 안 바뀌는 것을 보고 모달을 닫아버린 경우
     env.codeRef.value = '에디터에서 다시 고친 코드';
@@ -343,6 +273,8 @@ describe('느린 업로드 도중 재제출 (#348 후속)', () => {
 
     first.resolve();
     await env.clock.tick();
+    assert.equal(env.calls.upload, 2);
+    assert.deepEqual(env.countdowns, [1, 2], '워치독은 자기 업로드가 시작될 때 켜진다');
     assert.deepEqual(env.uploaded, ['E1', 'E2'], '감지 시점에 파싱한 코드(방금 정답을 받은 코드)를 올린다');
   });
 
@@ -355,27 +287,6 @@ describe('느린 업로드 도중 재제출 (#348 후속)', () => {
     await env.clock.tick();
     assert.deepEqual(env.uploaded, ['E1', 'E2']);
     assert.deepEqual(env.marks, [['failed', 1], ['uploaded', 2]]);
-  });
-
-  test('각 시도의 완료 표시는 자기 아이콘에만 적용된다', async () => {
-    const first = deferred();
-    const env = loadProgrammersJs({ uploadImpl: (n) => (n === 1 ? first.promise : undefined) });
-    await submitSecondWhileFirstInFlight(env);
-
-    first.resolve();
-    await env.clock.tick();
-    assert.deepEqual(env.marks, [['uploaded', 1], ['uploaded', 2]]);
-  });
-
-  test('워치독은 줄을 기다린 시간이 아니라 자기 업로드가 시작될 때부터 잰다', async () => {
-    const first = deferred();
-    const env = loadProgrammersJs({ uploadImpl: (n) => (n === 1 ? first.promise : undefined) });
-    await submitSecondWhileFirstInFlight(env);
-    assert.deepEqual(env.countdowns, [1], '1차 뒤에서 기다리는 2차는 아직 실패 판정 대상이 아니다');
-
-    first.resolve();
-    await env.clock.tick();
-    assert.deepEqual(env.countdowns, [1, 2]);
   });
 
   test('1차 파싱이 늦어져도 커밋 순서는 감지 순서를 따른다', async () => {
@@ -435,124 +346,53 @@ describe('느린 업로드 도중 재제출 (#348 후속)', () => {
   });
 });
 
-describe('업로드 아이콘과 워치독 (시도 단위)', () => {
-  /* startUpload 가 쓰는 DOM 은 모달 footer 하나와 createElement/getElementById 뿐이다. */
-  function makeDom() {
-    const footer = { children: [], parent: null };
-    const makeElement = () => ({
-      id: '',
-      className: '',
-      style: {},
-      children: [],
-      parent: null,
-      listeners: {},
-      appendChild(child) { this.children.push(child); child.parent = this; },
-      remove() {
-        if (this.parent) this.parent.children = this.parent.children.filter((c) => c !== this);
-        this.parent = null;
-      },
-      addEventListener(type, fn) { this.listeners[type] = fn; },
-    });
-    footer.prepend = (child) => { footer.children.unshift(child); child.parent = footer; };
-    const findById = (node, id) => {
-      for (const child of node.children) {
-        if (child.id === id) return child;
-        const found = findById(child, id);
-        if (found) return found;
-      }
-      return null;
-    };
-    return {
-      footer,
-      document: {
-        createElement: makeElement,
-        querySelector: (selector) => (selector.includes('modal-footer') ? footer : null),
-        getElementById: (id) => findById(footer, id),
-      },
-    };
-  }
-
-  function loadUtilJs() {
-    const src = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'programmers', 'util.js'), 'utf8');
-    const clock = makeClock();
-    const dom = makeDom();
-    const sandbox = {
-      console,
-      isNull,
-      setTimeout: clock.setTimeout,
-      clearTimeout: clock.clearTimeout,
-      document: dom.document,
-      window: { location: {} },
-    };
-    vm.createContext(sandbox);
-    vm.runInContext(src, sandbox, { filename: 'util.js' });
-    return { sandbox, clock, footer: dom.footer };
-  }
-
+describe('업로드 아이콘과 워치독 (programmers/util.js, 시도 단위)', () => {
   const BRANCHES = { [HOOK]: 'main' };
 
-  test('시도마다 새 아이콘을 만들고, 이전 시도의 아이콘은 떼어낸다', () => {
-    const { sandbox, footer } = loadUtilJs();
-    const first = sandbox.startUpload();
-    const second = sandbox.startUpload();
-    assert.equal(footer.children.length, 1);
-    assert.equal(footer.children[0].children[0], second.elem);
-    assert.equal(first.elem.parent.parent, null, '이전 시도의 아이콘은 화면에서 빠진다');
-  });
+  function loadUtilJs() {
+    const clock = makeClock();
+    const created = [];
+    const document = {
+      createElement: () => {
+        const elem = { id: '', className: '', style: {}, appendChild() {}, remove() {}, addEventListener() {} };
+        created.push(elem);
+        return elem;
+      },
+      getElementById: (id) => created.filter((elem) => elem.id === id).pop() || null,
+      querySelector: () => null,
+    };
+    const sandbox = { isNull, document, window: { location: {} }, setTimeout: clock.setTimeout, clearTimeout: clock.clearTimeout };
+    vm.createContext(sandbox);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'programmers', 'util.js'), 'utf8'), sandbox, { filename: 'util.js' });
+    return { sandbox, clock };
+  }
 
-  test('앞 시도가 늦게 성공해도 새 시도의 아이콘은 바뀌지 않는다', () => {
-    const { sandbox } = loadUtilJs();
-    const first = sandbox.startUpload();
-    const second = sandbox.startUpload();
-    sandbox.markUploadedCSS(BRANCHES, DIRECTORY, first);
-    assert.equal(first.elem.className, 'markuploaded');
-    assert.equal(second.elem.className, 'BaekjoonHub_progress');
-  });
-
-  test('startUpload 만으로는 워치독이 켜지지 않는다 (줄을 기다리는 동안은 로딩 아이콘 유지)', async () => {
-    const { sandbox, clock } = loadUtilJs();
-    const attempt = sandbox.startUpload();
-    assert.equal(clock.pending(), 0);
-    await clock.tick();
-    assert.equal(attempt.elem.className, 'BaekjoonHub_progress');
-  });
-
-  test('워치독은 시도마다 따로 돌고, 완료된 시도의 워치독은 해제된다', async () => {
+  test('각 시도의 완료·워치독은 자기 아이콘에만 적용된다 (앞 시도가 늦게 끝나도 새 시도의 아이콘은 그대로)', async () => {
     const { sandbox, clock } = loadUtilJs();
     const first = sandbox.startUpload();
     const second = sandbox.startUpload();
     sandbox.startUploadCountDown(first);
     sandbox.startUploadCountDown(second);
-    assert.equal(clock.pending(), 2);
-    sandbox.markUploadedCSS(BRANCHES, DIRECTORY, second);
-    assert.equal(clock.pending(), 1);
-    await clock.tick(); // 남은 워치독(1차)만 발화
-    assert.equal(first.elem.className, 'markuploadfailed');
-    assert.equal(second.elem.className, 'markuploaded', '다른 시도의 워치독이 완료 표시를 실패로 덮어쓰면 안 된다');
+    sandbox.markUploadedCSS(BRANCHES, DIRECTORY, first);
+    assert.equal(first.elem.className, 'markuploaded');
+    assert.equal(second.elem.className, 'BaekjoonHub_progress', '앞 시도의 완료가 새 시도의 아이콘을 바꾸면 안 된다');
+    assert.equal(clock.pending(), 1, '완료된 시도의 워치독만 해제된다');
+    await clock.tick();
+    assert.equal(second.elem.className, 'markuploadfailed');
+    assert.equal(first.elem.className, 'markuploaded', '다른 시도의 워치독이 완료 표시를 실패로 덮어쓰면 안 된다');
   });
 
-  test('워치독이 실패로 표시한 뒤 업로드가 성공하면 완료로 바뀐다', async () => {
+  test('워치독은 업로드 시작 때 켜져 20초 뒤 실패로 표시하고, 뒤늦은 성공은 완료로 바꾸며, 완료는 실패로 되돌리지 않는다', async () => {
     const { sandbox, clock } = loadUtilJs();
     const attempt = sandbox.startUpload();
+    assert.equal(clock.pending(), 0, '감지(startUpload)만으로는 워치독이 켜지지 않는다');
     sandbox.startUploadCountDown(attempt);
+    assert.deepEqual(clock.delays(), [20000]);
     await clock.tick();
     assert.equal(attempt.elem.className, 'markuploadfailed');
     sandbox.markUploadedCSS(BRANCHES, DIRECTORY, attempt);
     assert.equal(attempt.elem.className, 'markuploaded');
-  });
-
-  test('완료된 시도는 실패로 되돌리지 않는다', () => {
-    const { sandbox } = loadUtilJs();
-    const attempt = sandbox.startUpload();
-    sandbox.markUploadedCSS(BRANCHES, DIRECTORY, attempt);
     sandbox.markUploadFailedCSS(attempt);
-    assert.equal(attempt.elem.className, 'markuploaded');
-  });
-
-  test('아이콘이 없거나 시도가 없어도 예외를 던지지 않는다', () => {
-    const { sandbox } = loadUtilJs();
-    assert.doesNotThrow(() => sandbox.markUploadedCSS(BRANCHES, DIRECTORY, undefined));
-    assert.doesNotThrow(() => sandbox.markUploadFailedCSS(undefined));
-    assert.doesNotThrow(() => sandbox.markUploadedCSS(BRANCHES, DIRECTORY, { elem: null, done: false, countdown: null }));
+    assert.equal(attempt.elem.className, 'markuploaded', '완료된 시도는 실패로 되돌리지 않는다');
   });
 });

@@ -11,7 +11,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     return;
   }
   try {
-    return await upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb, bojData.samples);
+    return await upload(token, hook, bojData, cb);
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);
@@ -57,7 +57,7 @@ async function uploadExamplesFromProblemPage(samples) {
   if (!problemId) throw new Error('문제 번호를 파싱할 수 없습니다.');
   const solvedJson = await getSolvedACById(problemId);
   const title = solvedJson.titleKo;
-  const level = bj_level[solvedJson.level];
+  const level = solvedTierName(solvedJson.level);
   const directory = await buildDirectory('baekjoon', {
     platform: '백준',
     level: level.replace(/ .*/, ''),

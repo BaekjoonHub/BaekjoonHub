@@ -1,6 +1,7 @@
 'use strict';
 
 // GitHub 인증 흐름: authorize.js(GitHub 콜백 탭의 content script) → background.js → welcome.html
+// 보낸 탭이 없을 때 새 탭을 여는 것은 일부러 검증하지 않는다 (보안·저장과 무관한 화면 이동).
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -47,13 +48,6 @@ test('실패하면 파이프를 닫고 사유를 붙여 welcome 으로 보낸다
     assert.deepEqual(calls.set, [{ pipe_baekjoonhub: false }]);
     assert.deepEqual(calls.update, [[3, `${WELCOME}?auth_error=${expected}`]]);
   }
-});
-
-test('보낸 탭이 없으면 새 탭을 연다', () => {
-  const { calls, listeners } = loadBackground();
-  listeners.message({ closeWebPage: true, isSuccess: false, reason: 'denied' }, {}, () => {});
-  assert.deepEqual(calls.create, [`${WELCOME}?auth_error=denied`]);
-  assert.deepEqual(calls.update, []);
 });
 
 test('처음 설치할 때만 welcome 을 연다', () => {

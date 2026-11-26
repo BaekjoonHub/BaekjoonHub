@@ -11,7 +11,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     return;
   }
   try {
-    return await upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb);
+    return await upload(token, hook, bojData, cb);
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);

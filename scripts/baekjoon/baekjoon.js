@@ -114,26 +114,24 @@ async function processManualUploadQueue() {
   isManualUploading = true;
   while (manualUploadQueue.length > 0) {
     const { data, button } = manualUploadQueue.shift();
-    button.classList.remove('bjh-upload-icon');
-    button.classList.add('BaekjoonHub_progress');
-    button.title = '업로드 중...';
+    const show = (state, title) => {
+      button.classList.remove('bjh-upload-icon');
+      button.classList.remove('BaekjoonHub_progress');
+      button.classList.add(state);
+      button.title = title;
+    };
+    show('BaekjoonHub_progress', '업로드 중...');
     try {
       const bojData = await findData(data);
       if (isNotEmpty(bojData)) {
         await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
-        button.classList.remove('BaekjoonHub_progress');
-        button.classList.add('bjh-upload-success');
-        button.title = '업로드 완료';
+        show('bjh-upload-success', '업로드 완료');
       } else {
-        button.classList.remove('BaekjoonHub_progress');
-        button.classList.add('bjh-upload-fail');
-        button.title = '데이터 파싱 실패';
+        show('bjh-upload-fail', '데이터 파싱 실패');
       }
     } catch (e) {
       console.error('Manual upload failed:', e);
-      button.classList.remove('BaekjoonHub_progress');
-      button.classList.add('bjh-upload-fail');
-      button.title = '업로드 실패: ' + e.message;
+      show('bjh-upload-fail', `업로드 실패: ${e.message}`);
     }
   }
   isManualUploading = false;

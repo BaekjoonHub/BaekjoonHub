@@ -227,7 +227,6 @@ const I18N = (() => {
   };
 
   let currentLang = 'en';
-  const onChangeCallbacks = [];
 
   function detectLang() {
     const lang = navigator.language || navigator.userLanguage || 'en';
@@ -308,24 +307,15 @@ const I18N = (() => {
     }
   }
 
-  function onChange(callback) {
-    onChangeCallbacks.push(callback);
-  }
-
   function setLanguage(lang) {
     currentLang = lang;
     chrome.storage.local.set({ bjh_lang: lang });
     applyTranslations();
-    onChangeCallbacks.forEach((cb) => cb(lang));
-  }
-
-  function getCurrentLang() {
-    return currentLang;
   }
 
   function toggleLanguage() {
     setLanguage(currentLang === 'ko' ? 'en' : 'ko');
   }
 
-  return { init, t, bind, setLanguage, getCurrentLang, toggleLanguage, applyTranslations, onChange };
+  return { init, t, bind };
 })();

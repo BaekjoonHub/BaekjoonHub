@@ -11,7 +11,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     return;
   }
   try {
-    return await uploadSWEA(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb);
+    return await uploadSWEA(token, hook, bojData, cb);
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);
@@ -27,15 +27,15 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
  * 풀이 하나를 한 커밋으로 올리고 캐시에 기록합니다. 인자는 scripts/upload.js 의 upload 와 같다.
  * 결과창을 닫기 전에 끝나야 해서 API 호출을 줄인다: blob 을 따로 만들지 않고, 브랜치는 캐시한 값을 먼저 쓴다.
  */
-async function uploadSWEA(token, hook, sourceText, readmeText, directory, filename, commitMessage, cb) {
+async function uploadSWEA(token, hook, { code, readme, directory, fileName, message }, cb) {
   const git = new GitHub(hook, token);
   const cachedStats = await getStats();
 
   /* blob 생성 API 2회 대신 tree에 content를 직접 전달한다 (전체 업로드 경로와 동일 방식).
      브랜치는 fast-forward 로만 옮긴다 — 다른 탭이 그 사이 커밋했으면 그 위에 다시 커밋한다 (commitTreeItems 참고). */
   const tree_items = [
-    { path: `${directory}/${filename}`, mode: '100644', type: 'blob', content: sourceText },
-    { path: `${directory}/README.md`, mode: '100644', type: 'blob', content: readmeText },
+    { path: `${directory}/${fileName}`, mode: '100644', type: 'blob', content: code },
+    { path: `${directory}/README.md`, mode: '100644', type: 'blob', content: readme },
   ];
 
   /* default branch는 이전 업로드에서 캐시된 값을 우선 사용해 API 1회를 줄인다.
@@ -43,15 +43,15 @@ async function uploadSWEA(token, hook, sourceText, readmeText, directory, filena
   const cachedBranch = cachedStats?.branches?.[hook];
   let default_branch = isNull(cachedBranch) ? await git.getDefaultBranchOnRepo() : cachedBranch;
   /* 풀이별 파일 보관 옵션이 켜져 있으면 풀이 파일의 경로(이름_002.py …)를 커밋의 부모에서 정한다(utils/solutionVersions.js) */
-  const commit = await prepareSolutionItems(git, directory, filename, sourceText, tree_items);
+  const commit = await prepareSolutionItems(git, directory, fileName, code, tree_items);
   try {
-    await git.commitTreeItems(default_branch, commit.items, commitMessage);
+    await git.commitTreeItems(default_branch, commit.items, message);
   } catch (e) {
-    if (isNull(cachedBranch) || e.name === 'TokenExpiredError' || !(e instanceof GitHubApiError && e.status === 404)) throw e;
+    if (isNull(cachedBranch) || !(e instanceof GitHubApiError && e.status === 404)) throw e;
     const liveBranch = await git.getDefaultBranchOnRepo();
     if (liveBranch === default_branch) throw e;
     default_branch = liveBranch;
-    await git.commitTreeItems(default_branch, commit.items, commitMessage);
+    await git.commitTreeItems(default_branch, commit.items, message);
   }
 
   /* stats의 값을 갱신합니다. 업로드한 두 파일의 blob sha를 로컬에서 계산해 기록하므로(recordTreeItemsInStats)

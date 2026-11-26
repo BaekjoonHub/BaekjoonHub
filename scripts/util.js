@@ -288,6 +288,11 @@ function tierName(tier) {
   return `${['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ruby'][Math.floor((tier - 1) / 5)]} ${['V', 'IV', 'III', 'II', 'I'][(tier - 1) % 5]}`;
 }
 
+/** tierName 에 31 = Master 를 더한 이름. solved.ac(백준)와 정올이 31 을 Master 로 쓴다. */
+function solvedTierName(tier) {
+  return tier === 31 ? 'Master' : tierName(tier);
+}
+
 function log(...args) {
   if (debug) console.log(...args)
 }

@@ -81,7 +81,7 @@ test('고정 티어가 있으면 그 티어를 쓰고, 모르는 언어는 코�
   assert.equal(data.directory, `정올/Gold/6268.${U}어떤${U}함수${U}f（x）`);
   assert.match(data.message, /^\[Gold V\] /);
   assert.equal(data.fileName, `어떤${U}함수${U}f（x）.txt`);
-  assert.deepEqual([0, 1, 30, 31, undefined].map((tier) => context.jungolTierName(tier)), ['Unrated', 'Bronze V', 'Ruby I', 'Master', 'Unrated']);
+  assert.deepEqual([0, 1, 30, 31, undefined].map((tier) => context.solvedTierName(tier)), ['Unrated', 'Bronze V', 'Ruby I', 'Master', 'Unrated']);
 });
 
 test('코드를 볼 수 없는 제출(source 가 안내 문구)은 업로드 데이터를 만들지 않는다', async () => {

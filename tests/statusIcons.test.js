@@ -1,7 +1,8 @@
 'use strict';
 
+// extractUploadedProblemIds: 업로드 캐시에서 이미 올린 문제 번호를 모은다. 전체 업로드가 이미 올린 문제를 건너뛰는 근거다(upload.js).
 // #367: 문제 페이지 상단 탭("1000번", "질문 게시판") 뒤에 업로드 체크 아이콘이 붙어 탭 아래 줄에 따로 보였다.
-// 실제 statusicons.js 를 vm 에 로드하고, 실제 문제 페이지(fixtures/boj/problem-1000.html)의 링크에 아이콘이 어디 붙는지 본다.
+// 실제 upload.js · statusicons.js 를 vm 에 로드하고, 실제 문제 페이지(fixtures/boj/problem-1000.html)의 링크에 아이콘이 어디 붙는지 본다.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
