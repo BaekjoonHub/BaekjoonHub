@@ -114,6 +114,11 @@ async function processManualUploadQueue() {
   isManualUploading = true;
   while (manualUploadQueue.length > 0) {
     const { data, button } = manualUploadQueue.shift();
+    // 연결이 없으면 uploadOneSolveProblemOnGit 이 올리지 않고 조용히 끝나 버튼이 "업로드 완료"로 바뀌었다. 버튼을 건드리기 전에 알린다.
+    if (isNull(await getToken()) || isNull(await getHook())) {
+      Toast.raiseToast('GitHub 저장소가 연결되어 있지 않습니다. BaekjoonHub 설정을 확인해 주세요.');
+      continue;
+    }
     const show = (state, title) => {
       button.classList.remove('bjh-upload-icon');
       button.classList.remove('BaekjoonHub_progress');

@@ -9,6 +9,7 @@
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
+const vm = require('node:vm');
 
 const { FakeGithub, loadPlatform, solved, settle, HOOK, VERSION } = require('./helpers/versionHarness.js');
 
@@ -103,6 +104,33 @@ test('완료 콜백의 세 번째 인자는 새로 커밋했을 때만 true 다 
   const seen = [];
   for (let i = 0; i < 2; i += 1) await sandbox.uploadUnlessSame(solved('baekjoon', 'print(1)\n'), (branches, directory, committed) => seen.push(committed));
   assert.deepEqual(seen, [true, undefined], '같은 코드를 다시 올리면 커밋 없이 완료 표시만 한다');
+});
+
+test('백준 수동 업로드: 토큰이나 저장소가 없으면 업로드 완료로 바꾸지 않고, 실패를 알리고 버튼을 원래대로 둔다', async () => {
+  for (const missing of ['BaekjoonHub_token', 'BaekjoonHub_hook', null]) {
+    const server = new FakeGithub();
+    const { sandbox, store } = loadPlatform(server, 'baekjoon');
+    await settle();
+    if (missing) store.delete(missing);
+    const toasts = [];
+    sandbox.Toast = { raiseToast: (message) => toasts.push(message) };
+    sandbox.findData = async () => solved('baekjoon', 'print(1)\n');
+    const classes = new Set(['bjh-manual-upload-btn', 'bjh-upload-icon']);
+    const button = { title: 'GitHub에 업로드', classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) } };
+    sandbox.__item = { data: { elementId: 'solution-1' }, button };
+    await vm.runInContext('manualUploadQueue.push(__item); processManualUploadQueue();', sandbox);
+    await settle();
+    if (missing === null) { // 대조군: 연결돼 있으면 올리고 완료로 바꾼다
+      assert.ok(classes.has('bjh-upload-success'), '연결돼 있으면 업로드 완료');
+      assert.deepEqual(toasts, []);
+      continue;
+    }
+    assert.deepEqual([...classes].sort(), ['bjh-manual-upload-btn', 'bjh-upload-icon'], `${missing}: 버튼은 누르기 전 상태 그대로다`);
+    assert.equal(button.title, 'GitHub에 업로드', missing);
+    assert.equal(toasts.length, 1, `${missing}: 실패를 알린다`);
+    assert.match(toasts[0], /연결/, missing);
+    assert.deepEqual(server.requests, [], `${missing}: GitHub 에 요청하지 않는다`);
+  }
 });
 
 describe('updateLocalStorageStats — 레포 파일 목록으로 캐시 재구축', () => {
