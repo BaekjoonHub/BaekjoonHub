@@ -57,16 +57,50 @@ async function findData(data) {
       // 자동 업로드 시 가장 최근 accepted 제출을 사용 (과거 best가 아닌 현재 제출)
       data = table[0];
     }
-    if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
-    data = { ...data, ...await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId) };
-    const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
-    return { ...data, ...detail }; // detail 만 반환해도 되나, 확장성을 위해 모든 데이터를 반환합니다.
+    return await findDataOfSubmission(data);
   } catch (error) {
     console.error(error);
   }
   return null;
 }
- 
+
+/**
+ * 제출 하나(제출 목록의 한 줄)의 문제 정보와 코드를 가져와 올릴 내용을 만듭니다. 가져오지 못하면 이유를 담아 throw 합니다.
+ * @param {object} data - 제출 목록의 한 줄 { problemId, submissionId, language, … }
+ * @returns {Promise<object>} data 에 문제 정보와 { directory, fileName, message, readme, code, samples } 를 더한 것
+ */
+async function findDataOfSubmission(data) {
+  if (isNaN(Number(data.problemId)) || Number(data.problemId) < 1000) throw new Error(`정책상 대회 문제는 업로드 되지 않습니다. 대회 문제가 아니라고 판단된다면 이슈로 남겨주시길 바랍니다.\n문제 ID: ${data.problemId}`);
+  const info = await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId);
+  if (isNull(info)) throw new Error('제출 번호를 찾지 못했습니다.');
+  data = { ...data, ...info };
+  const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
+  return { ...data, ...detail }; // detail 만 반환해도 되나, 확장성을 위해 모든 데이터를 반환합니다.
+}
+
+/**
+ * 백준 풀이 폴더 경로. 풀이 업로드와 예제 업로드가 같은 폴더를 쓰도록 여기에서만 만든다
+ * (예제 업로드가 따로 만들던 기본 경로는 번호 뒤가 보통 공백이라, 풀이 폴더 옆에 폴더가 하나 더 생겼다).
+ * @param {string} problemId
+ * @param {string} title
+ * @param {string} level - 'Gold V' 같은 등급 이름
+ * @param {string} language - 언어별 정리와 템플릿의 ${language} 에 쓴다. 예제 업로드는 언어를 몰라 ''
+ * @returns {Promise<string>}
+ */
+function buildBojDirectory(problemId, title, level, language) {
+  const tier = level.replace(/ .*/, '');
+  const safeTitle = convertSingleCharToDoubleChar(title);
+  return buildDirectory('baekjoon', {
+    platform: '백준',
+    level: tier,
+    levelFull: level,
+    id: problemId,
+    title: safeTitle,
+    language,
+    _defaultDir: `백준/${tier}/${problemId}. ${safeTitle}`, // 번호 뒤는 U+2005 (제목의 공백을 바꾸는 문자와 같다)
+  });
+}
+
 /**
  * 문제의 상세 정보를 가지고, 문제의 업로드할 디렉토리, 파일명, 커밋 메시지, 문제 설명을 파싱하여 반환합니다.
  * @param {Object} data
@@ -77,15 +111,7 @@ async function makeDetailMessageAndReadme(data) {
     problem_description, problem_input, problem_output, submissionTime,
     code, language, memory, runtime, samples, deleted } = data;
   const score = parseNumberFromString(result);
-  const directory = await buildDirectory('baekjoon', {
-    platform: '백준',
-    level: level.replace(/ .*/, ''),
-    levelFull: level,
-    id: problemId,
-    title: convertSingleCharToDoubleChar(title),
-    language: langVersionRemove(language),
-    _defaultDir: `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-  });
+  const directory = await buildBojDirectory(problemId, title, level, langVersionRemove(language));
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`
     + ((isNaN(score)) ? ' ' : `, Score: ${score} point `) // 서브 태스크가 있는 문제로, 점수가 있는 경우 점수까지 커밋 메시지에 표기
     + `-BaekjoonHub`;
@@ -172,7 +198,10 @@ function parsingResultTableList(doc) {
         case 'submissionTime':
           const el = x.querySelector('a.show-date');
           if (isNull(el)) return null;
-          return el.getAttribute('data-original-title');
+          /* 화면에 그려진 표에서는 백준의 툴팁 스크립트가 제출 시각을 data-original-title 에 둔다(예: 2026년 11월 20일 11:38:30).
+             전체 업로드가 fetch 로 받은 표에는 그 값이 없어 README 의 제출 일자가 올린 시각이 됐다. 그때는 data-timestamp(초)로 같은 모양을 만든다. */
+          const timestamp = Number(el.getAttribute('data-timestamp'));
+          return el.getAttribute('data-original-title') || (timestamp ? getDateString(new Date(timestamp * 1000)) : null);
         case 'problemId':
           const a = x.querySelector('a.problem_title');
           if (isNull(a)) return null;
@@ -244,9 +273,45 @@ function parseProblemDescription(doc = document) {
   return {};
 }
 
+/* 백준은 요청이 짧은 시간에 몰리면 한동안 403 을 준다(2026-11-26 전체 업로드에서 간격 없이 보냈을 때 80초 동안 900번째 요청쯤부터,
+   20초 안에 풀렸다). 그 응답은 문제 페이지도 제출 코드도 아니다. 한도는 공개되어 있지 않아, 요청의 시작 시각을 띄워 보내다가
+   막히면 간격을 두 배로 늘리고 모든 요청을 쉬었다가 다시 보낸다. 끝내 막혀 있으면 전체 업로드는 멈춰서 이어하기를 기다리고
+   (남은 문제마다 다시 기다리다 실패하지 않게), 그 밖의 업로드는 오류로 알린다. */
+const BOJ_BLOCKED_WAITS_MS = [5000, 10000, 20000, 40000];
+const BOJ_MAX_GAP_MS = 1000;
+let bojGapMs = 200;
+let bojNextAt = 0;
+let bojBlockedUntil = 0;
+
+async function sleepUntil(time) {
+  while (Date.now() < time) await new Promise((resolve) => setTimeout(resolve, time - Date.now()));
+}
+
+async function fetchBoj(url) {
+  for (let attempt = 0; ; attempt += 1) {
+    await multiloader.modal?.running(); // 전체 업로드가 멈춰 있으면 이어하기를 기다린다
+    await sleepUntil(bojBlockedUntil); // 다른 요청이 막혀서 미룬 시각까지 함께 기다린다
+    const startAt = Math.max(Date.now(), bojNextAt);
+    bojNextAt = startAt + bojGapMs;
+    await sleepUntil(startAt);
+    const res = await fetch(url, { method: 'GET' });
+    if (res.status !== 403 && res.status !== 429) return res;
+    if (attempt >= BOJ_BLOCKED_WAITS_MS.length) {
+      if (!multiloader.modal) throw new Error(`백준이 요청을 막고 있습니다 (${res.status}). 잠시 후 다시 시도해 주세요.`);
+      multiloader.modal.pause('백준이 요청을 계속 막고 있어 멈췄습니다. 몇 분 뒤 이어하기를 눌러 주세요.');
+      attempt = -1; // 이어하면 처음부터 다시 센다
+      continue;
+    }
+    // 막힌 줄 모르고 보낸 요청이 막혔을 때만 늦춘다 (같은 차단에 걸린 다른 요청과 다시 보낸 요청은 세지 않는다)
+    if (attempt === 0 && Date.now() >= bojBlockedUntil) bojGapMs = Math.min(bojGapMs * 2, BOJ_MAX_GAP_MS);
+    bojBlockedUntil = Math.max(bojBlockedUntil, Date.now() + BOJ_BLOCKED_WAITS_MS[attempt]);
+    updateMultiLoader({ note: '백준이 요청을 잠시 막아 기다리는 중입니다. 풀리면 이어서 진행합니다.' });
+  }
+}
+
 async function fetchProblemDescriptionById(problemId) {
-  const res = await fetch(`/problem/${problemId}`);
-  if (!res.ok) {
+  const res = await fetchBoj(`/problem/${problemId}`);
+  if (res.status === 404) {
     // 404 = 출제자가 삭제했거나 비공개 처리된 문제. 제출 이력엔 남아있어 업로드 대상에 포함되지만
     // 설명 페이지는 가져올 수 없다. 소스코드는 보존하고 README에 안내를 남기도록 placeholder 반환.
     return {
@@ -258,14 +323,17 @@ async function fetchProblemDescriptionById(problemId) {
       samples: [],
     };
   }
+  if (!res.ok) throw new Error(`백준 요청 실패 (${res.status}) /problem/${problemId}`);
   const html = await res.text();
   const doc = new DOMParser().parseFromString(html, 'text/html');
   return parseProblemDescription(doc);
 }
 
 async function fetchSubmitCodeById(submissionId) {
-  return fetch(`/source/download/${submissionId}`, { method: 'GET' })
-    .then((res) => res.text())
+  const res = await fetchBoj(`/source/download/${submissionId}`);
+  // 오류 응답의 본문을 풀이 코드로 올리지 않는다
+  if (!res.ok) throw new Error(`백준 요청 실패 (${res.status}) /source/download/${submissionId}`);
+  return res.text();
 }
 
 async function fetchSolvedACById(problemId) {
@@ -285,7 +353,8 @@ async function getProblemDescriptionById(problemId) {
 
 async function getSubmitCodeById(submissionId) {
   let code = await getSubmitCodeFromStats(submissionId);
-  if (isNull(code)) {
+  // v1.7.2 까지는 막힌 요청의 403 응답 본문을 코드로 캐시했다. 캐시 수명(1주)이 지난 뒤에는 이 검사를 지워도 된다.
+  if (isNull(code) || code.includes('<title>403</title>403 Forbidden')) {
     code = await fetchSubmitCodeById(submissionId);
     updateSubmitCodeFromStats({ submissionId, code }); // not await
   }
@@ -321,7 +390,7 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
     ? safeSolved.tags.flatMap((tag) => tag.displayNames).filter((tag) => tag.language === 'ko').map((tag) => tag.name)
     : [];
   const title = safeSolved.titleKo || `문제 ${problemId}`;
-  const level = bj_level[safeSolved.level] || bj_level[0];
+  const level = solvedTierName(safeSolved.level);
 
   const { problem_description, problem_input, problem_output, samples, deleted } = description || {};
   return {
@@ -330,45 +399,6 @@ async function findProblemInfoAndSubmissionCode(problemId, submissionId) {
     samples: samples || [],
     deleted: Boolean(deleted),
   };
-}
-
-/**
- * 맞은 문제 목록에 대해 문제 정보와 제출 코드를 병렬로 파싱하여 반환합니다.
- * asyncPool(2)로 동시 요청을 제한하고, TTL 캐시를 활용합니다.
- * @param {Array} datas - findUniqueResultTableListByUsername()의 결과
- * @param {Function} [onProgress] - 각 아이템 파싱 완료 시 호출. 진행률 UI 갱신에 사용.
- * @returns {Promise<Array>}
- */
-async function findDatas(datas, onProgress) {
-  datas = datas.filter((data) => !isNaN(Number(data.problemId)) && Number(data.problemId) >= 1000);
-  // 개별 아이템 파싱이 실패해도 전체 업로드가 중단되지 않도록 실패분은 null로 마킹하고 상위에서 필터링한다.
-  const enriched = await asyncPool(2, datas, async (data) => {
-    try {
-      const info = await findProblemInfoAndSubmissionCode(data.problemId, data.submissionId);
-      if (typeof onProgress === 'function') onProgress(data, info);
-      if (isNull(info)) return null;
-      return { ...data, ...info };
-    } catch (err) {
-      console.warn('문제 파싱 실패', data?.problemId, err);
-      if (typeof onProgress === 'function') onProgress(data, null);
-      return null;
-    }
-  });
-  const results = [];
-  for (const data of enriched) {
-    if (isNull(data)) {
-      results.push(null);
-      continue;
-    }
-    try {
-      const detail = await makeDetailMessageAndReadme(preProcessEmptyObj(data));
-      results.push({ ...data, ...detail });
-    } catch (err) {
-      console.warn('README/디렉토리 생성 실패', data?.problemId, err);
-      results.push(null);
-    }
-  }
-  return results;
 }
 
 /**
@@ -391,18 +421,12 @@ async function findResultTableListByUsername(username) {
   if (doc.getElementById('status-table') === null) {
     throw new Error('status-table을 찾을 수 없습니다. 로그인/백준 페이지 상태를 확인해 주세요.');
   }
-  let next_page = doc.getElementById('next_page');
-  do {
+  for (;;) {
     result.push(...parsingResultTableList(doc));
-    if (next_page !== null) {
-      const href = next_page.getAttribute('href');
-      const nextUrl = new URL(href, location.origin).toString();
-      doc = await findHtmlDocumentByUrl(nextUrl);
-    }
-  } while ((next_page = doc.getElementById('next_page')) !== null);
-  result.push(...parsingResultTableList(doc));
-
-  return result;
+    const next_page = doc.getElementById('next_page');
+    if (next_page === null) return result;
+    doc = await findHtmlDocumentByUrl(new URL(next_page.getAttribute('href'), location.origin).toString());
+  }
 }
 
 /**
@@ -411,7 +435,7 @@ async function findResultTableListByUsername(username) {
  * @returns html document
  */
 async function findHtmlDocumentByUrl(url) {
-  const res = await fetch(url, { method: 'GET' });
+  const res = await fetchBoj(url);
   if (!res.ok) throw new Error(`백준 요청 실패 (${res.status}) ${url}`);
   const text = await res.text();
   const parser = new DOMParser();

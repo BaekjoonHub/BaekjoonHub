@@ -10,8 +10,6 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/v/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="chrome-webstore"/></a>
   <a href="https://chrome.google.com/webstore/detail/ccammcjdkpgjmcpijpahlehmapgmphmk"><img src="https://img.shields.io/chrome-web-store/d/ccammcjdkpgjmcpijpahlehmapgmphmk.svg" alt="users"></a>
-    
-</a>
 </p>
 
 </br>
@@ -173,7 +171,7 @@
 
 ### 3. 백준 제출 기준
 
-<p>백준의 경우 "내 제출" 목록을 정렬해서 가장 적합한 제출을 업로드하며 비교 요소는 아래와 같습니다.</p>
+<p>채점 직후에는 방금 맞은 제출을 업로드합니다. 프로필의 "전체제출 업로드"는 문제마다 "내 제출" 목록에서 가장 적합한 제출 하나를 골라 업로드하며 비교 요소는 아래와 같습니다.</p>
 
 1. 서브태스크가 있는 문제일 경우 점수가 더 높은 제출
 2. 실행시간이 짧은 제출
@@ -185,94 +183,13 @@
 
 <p>플랫폼 별로 문제 해결 시 파싱 후 저장되는 정보는 다음과 같습니다.</p>
 
-<table>
-  <tbody>
-    <tr>
-      <th>플랫폼</th>
-      <th align="center">문제 메타 정보</th>
-      <th align="center">사용자 제출 정보</th>
-    </tr>
-    <tr>
-      <td>백준</td>
-      <td align="left">
-        <li>문제 제목</li>
-        <li>문제 아이디</li>
-        <li>문제 링크</li>
-        <li>문제 등급</li>
-        <li>문제 설명</li>
-        <li>사용 언어</li>
-        <li>문제 분류</li>
-      </td>
-      <td align="left">
-        <li>코드</li>
-        <li>사용한 메모리</li>
-        <li>실행 시간</li>
-      </td>
-    </tr>
-    <tr>
-      <td>프로그래머스</td>
-      <td align="left">
-        <li>문제 제목</li>
-        <li>문제 아이디</li>
-        <li>문제 링크</li>
-        <li>문제 등급</li>
-        <li>문제 설명</li>
-        <li>사용 언어</li>
-      </td>
-      <td align="left">
-        <li>코드</li>
-        <li>사용한 메모리</li>
-        <li>실행 시간</li>
-      </td>
-    </tr>
-    <tr>
-      <td>SW Expert Academy</td>
-      <td align="left">
-        <li>문제 제목</li>
-        <li>문제 아이디</li>
-        <li>문제 링크</li>
-        <li>문제 등급</li>
-        <li>사용 언어</li>
-      </td>
-      <td align="left">
-        <li>코드</li>
-        <li>사용한 메모리</li>
-        <li>실행 시간</li>
-        <li>코드 길이</li>
-      </td>
-    </tr>
-    <tr>
-      <td>정올</td>
-      <td align="left">
-        <li>문제 제목</li>
-        <li>문제 아이디</li>
-        <li>문제 링크</li>
-        <li>문제 등급</li>
-        <li>사용 언어</li>
-      </td>
-      <td align="left">
-        <li>코드</li>
-        <li>사용한 메모리</li>
-        <li>실행 시간</li>
-      </td>
-    </tr>
-    <tr>
-      <td>DOJ</td>
-      <td align="left">
-        <li>문제 제목</li>
-        <li>문제 아이디</li>
-        <li>문제 링크</li>
-        <li>문제 등급</li>
-        <li>사용 언어</li>
-      </td>
-      <td align="left">
-        <li>코드</li>
-        <li>사용한 메모리</li>
-        <li>실행 시간</li>
-      </td>
-    </tr>
-  </tbody>
-</table>
+| 플랫폼 | 문제 메타 정보 | 사용자 제출 정보 |
+| --- | --- | --- |
+| 백준 | 문제 제목, 문제 아이디, 문제 링크, 문제 등급, 문제 설명, 사용 언어, 문제 분류 | 코드, 사용한 메모리, 실행 시간 |
+| 프로그래머스 | 문제 제목, 문제 아이디, 문제 링크, 문제 등급, 문제 설명, 사용 언어 | 코드, 사용한 메모리, 실행 시간 |
+| SW Expert Academy | 문제 제목, 문제 아이디, 문제 링크, 문제 등급, 사용 언어 | 코드, 사용한 메모리, 실행 시간, 코드 길이 |
+| 정올 | 문제 제목, 문제 아이디, 문제 링크, 문제 등급, 사용 언어 | 코드, 사용한 메모리, 실행 시간 |
+| DOJ | 문제 제목, 문제 아이디, 문제 링크, 문제 등급, 사용 언어 | 코드, 사용한 메모리, 실행 시간 |
 
 <br />
 <br />

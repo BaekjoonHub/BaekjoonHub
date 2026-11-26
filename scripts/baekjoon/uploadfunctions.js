@@ -11,7 +11,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
     return;
   }
   try {
-    return await upload(token, hook, bojData.code, bojData.readme, bojData.directory, bojData.fileName, bojData.message, cb, bojData.samples);
+    return await upload(token, hook, bojData, cb);
   } catch (e) {
     if (e.name === 'TokenExpiredError') {
       console.error('GitHub 토큰이 만료되었거나 유효하지 않습니다.', e);
@@ -20,105 +20,31 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
       }
       return;
     }
+    if (e.name === 'GitHubRateLimitError' && typeof Toast !== 'undefined') Toast.raiseToast(e.message);
     throw e;
   }
 }
 
 /**
- * 프로필 페이지에서 맞은 문제 전체를 GitHub에 일괄 업로드합니다.
- * 이미 업로드된 문제는 파싱 전에 스킵하고, 단일 커밋으로 업로드합니다.
+ * 프로필 페이지에서 맞은 문제 전체를 GitHub에 일괄 업로드합니다. (uploadAllSolved: scripts/upload.js)
+ * 받은 문제 설명·제출 코드는 캐시(scripts/baekjoon/storage.js)에 남아, 멈추거나 실패한 뒤 다시 해도 새로 요청하지 않는다.
  */
-async function uploadAllSolvedProblem() {
-  const tree_items = [];
-  const zip = new JSZip();
-
-  try {
-    // 1. GitHub tree 동기화
-    const stats = await updateLocalStorageStats();
-    const hook = await getHook();
-    const token = await getToken();
-    const git = new GitHub(hook, token);
-    const default_branch = stats.branches[hook];
-    // 브랜치가 없으면 오래 걸리는 파싱 전에 멈춘다. 커밋의 부모는 커밋 직전에 다시 읽는다(commitTreeItems).
-    await git.getReference(default_branch);
-
-    // 2. 맞은 문제 목록 파싱 & 이미 업로드된 문제 스킵
-    const username = findUsername();
-    if (isEmpty(username)) {
-      MultiloaderFail('로그인 정보를 확인할 수 없습니다.');
-      Toast.raiseToast('로그인 상태를 확인한 뒤 다시 시도해 주세요.');
-      return;
-    }
-    const list = await findUniqueResultTableListByUsername(username);
-    if (list.length === 0) {
-      MultiloaderFail('맞은 제출 내역을 찾지 못했습니다. 백준 페이지 상태를 확인해 주세요.');
-      Toast.raiseToast('맞은 제출 내역을 찾지 못했습니다. 백준 페이지 상태를 확인해 주세요.');
-      return;
-    }
-    const uploadedIds = extractUploadedProblemIds(stats, hook, '백준');
-    const newList = list.filter((item) => !uploadedIds.has(String(item.problemId)));
-
-    if (newList.length === 0) {
-      MultiloaderUpToDate();
-      return null;
-    }
-
-    // 3. 문제 데이터 파싱 (TTL 캐시 활용, asyncPool(2) 병렬 제어)
-    setMultiLoaderDenom(newList.length);
-    const datas = await findDatas(newList, () => incMultiLoader(1));
-    const bojDatas = datas.filter((d) => !isNull(d));
-
-    const failedCount = newList.length - bojDatas.length;
-    if (failedCount > 0) {
-      Toast.raiseToast(`일부 문제(${failedCount}개) 파싱 실패: solved.ac 응답 지연일 수 있으니 잠시 후 다시 시도해 주세요.`);
-    }
-    if (bojDatas.length === 0) {
-      MultiloaderFail('모든 문제 파싱에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-      return;
-    }
-
-    // 4. Tree 아이템 생성
-    const saveExamples = await getSaveExamplesOption();
-    for (const bojData of bojDatas) {
-      if (isEmpty(bojData.code) || isEmpty(bojData.readme)) continue;
-      const files = [[bojData.fileName, bojData.code], ['README.md', bojData.readme]];
-      if (saveExamples && bojData.samples?.length > 0) {
-        for (const entry of samplesToFileEntries(bojData.samples)) files.push([entry.filename, entry.content]);
-      }
-      addBulkFiles(zip, tree_items, bojData.directory, files);
-    }
-
-    // 5. 단일 커밋으로 일괄 업로드
-    if (tree_items.length !== 0) {
-      /* 파싱에 수 분이 걸리므로 그 사이 다른 탭의 커밋이 올라갔을 수 있다. 부모는 커밋 직전에 읽고,
-         브랜치는 fast-forward 로만 옮긴다(예전에는 파싱 전에 읽은 ref 로 force 갱신해 그 사이 커밋을 지웠다). */
-      await git.commitTreeItems(default_branch, tree_items, '전체 코드 업로드 -BaekjoonHub');
-      MultiloaderSuccess();
-      await recordUploadInStats(hook, default_branch, tree_items);
-    } else {
-      MultiloaderUpToDate();
-    }
-  } catch (error) {
-    console.error('전체 코드 업로드 실패', error);
-    const msg = error?.message || String(error);
-    MultiloaderFail(msg);
-
-    // 토큰 만료(재인증으로 해결) 또는 트리 적재 이전 단계 실패(빈 ZIP)인 경우 폴백 스킵
-    const isTokenExpired = error?.name === 'TokenExpiredError';
-    const hasZipContent = Object.keys(zip.files).length > 0;
-    if (!isTokenExpired && hasZipContent) {
-      try {
-        const zipped = await zip.generateAsync({ type: 'blob' });
-        const filename = `baekjoon_backup_${Date.now()}.zip`;
-        saveAs(zipped, filename);
-        Toast.raiseToast(`전체 업로드 실패: ${msg}. 데이터를 zip 파일로 다운로드했습니다.`);
-        return;
-      } catch (zipError) {
-        console.error('ZIP 폴백 생성 실패', zipError);
-      }
-    }
-    Toast.raiseToast(`전체 업로드 실패: ${msg}`);
-  }
+function uploadAllSolvedProblem() {
+  return uploadAllSolved({
+    folder: '백준',
+    zipName: 'baekjoon',
+    poolLimit: 2,
+    note: '받은 문제는 일주일 동안 저장되어, 멈추거나 이 탭을 닫아도 다시 요청하지 않습니다.',
+    listSolved: async () => {
+      const username = findUsername();
+      if (isEmpty(username)) throw new Error('로그인 정보를 확인할 수 없습니다. 로그인 상태를 확인한 뒤 다시 시도해 주세요.');
+      const list = await findUniqueResultTableListByUsername(username);
+      if (list.length === 0) throw new Error('맞은 제출 내역을 찾지 못했습니다. 백준 페이지 상태를 확인해 주세요.');
+      // 대회 문제(번호가 1000 미만이거나 없음)는 올리지 않는다. 남겨 두면 실행할 때마다 가져오지 못한 문제로 나온다.
+      return list.filter((item) => Number(item.problemId) >= 1000);
+    },
+    fetchOne: findDataOfSubmission,
+  });
 }
 
 async function uploadExamplesFromProblemPage(samples) {
@@ -132,16 +58,8 @@ async function uploadExamplesFromProblemPage(samples) {
   if (!problemId) throw new Error('문제 번호를 파싱할 수 없습니다.');
   const solvedJson = await getSolvedACById(problemId);
   const title = solvedJson.titleKo;
-  const level = bj_level[solvedJson.level];
-  const directory = await buildDirectory('baekjoon', {
-    platform: '백준',
-    level: level.replace(/ .*/, ''),
-    levelFull: level,
-    id: problemId,
-    title: convertSingleCharToDoubleChar(title),
-    language: '',
-    _defaultDir: `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-  });
+  const level = solvedTierName(solvedJson.level);
+  const directory = await buildBojDirectory(problemId, title, level, '');
   const commitMessage = `[${level}] Title: ${title} - 예제 입출력 -BaekjoonHub`;
 
   const git = new GitHub(hook, token);

@@ -20,6 +20,13 @@ class GitHubTimeoutError extends GitHubApiError {
   }
 }
 
+class GitHubRateLimitError extends GitHubApiError {
+  constructor(message, status) {
+    super(message, status);
+    this.name = 'GitHubRateLimitError';
+  }
+}
+
 /* GitHub API 요청 하나에 허용하는 최대 시간(ms).
    응답 없이 멈춘 요청이 업로드를 영원히 붙잡지 않도록 끊는다. 프로그래머스는 업로드를 한 줄로 세우므로
    멈춘 요청 하나가 그 탭의 이후 업로드를 모두 막는다. 트리 생성(전체 업로드는 수 MB 본문을 싣는다)과
@@ -80,6 +87,10 @@ async function handleGitHubResponse(res) {
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({}));
     const message = errorBody.message || `GitHub API error: ${res.status}`;
+    // 403 은 요청 한도 초과일 수도 있다(1차 한도: x-ratelimit-remaining 이 0, 2차 한도: retry-after). 재인증으로 풀리지 않으므로 토큰 문제와 가른다.
+    if (res.status === 403 && (res.headers.get('x-ratelimit-remaining') === '0' || res.headers.get('retry-after') !== null)) {
+      throw new GitHubRateLimitError(`GitHub 요청 한도를 넘었습니다. 잠시 뒤 다시 시도해 주세요. (${message})`, res.status);
+    }
     if (res.status === 401 || res.status === 403) {
       throw new TokenExpiredError(message, res.status);
     }
@@ -90,17 +101,11 @@ async function handleGitHubResponse(res) {
 
 class GitHub {
   constructor(hook, token) {
-    log('GitHub constructor', hook, token);
-    this.update(hook, token);
-  }
-
-  update(hook, token) {
     this.hook = hook;
     this.token = token;
   }
 
   async getReference(branch = 'main') {
-    // hook, token, branch
     return getReference(this.hook, this.token, branch);
   }
 
@@ -109,27 +114,22 @@ class GitHub {
   }
 
   async createBlob(content, path) {
-    // hook, token, content, path
     return createBlob(this.hook, this.token, content, path);
   }
 
   async createTree(refSHA, tree_items) {
-    // hook, token, baseSHA, tree_items
     log('GitHub createTree', 'refSHA:', refSHA, 'tree_items:', tree_items);
     return createTree(this.hook, this.token, refSHA, tree_items);
   }
 
   async createCommit(message, treeSHA, refSHA) {
-    // hook, token, message, tree, parent
     log('GitHub createCommit', 'message:', message, 'treeSHA:', treeSHA, 'refSHA:', refSHA);
     return createCommit(this.hook, this.token, message, treeSHA, refSHA);
   }
 
-  /* force 기본값은 false 다. force 로 ref 를 옮기면 그 사이 다른 탭·기기가 올린 커밋이 브랜치 이력에서 사라진다. */
-  async updateHead(ref, commitSHA, force = false) {
-    // hook, token, commitSHA, force
-    log('GitHub updateHead', 'ref:', ref, 'commitSHA:', commitSHA, 'force:', force);
-    return updateHead(this.hook, this.token, ref, commitSHA, force);
+  async updateHead(ref, commitSHA) {
+    log('GitHub updateHead', 'ref:', ref, 'commitSHA:', commitSHA);
+    return updateHead(this.hook, this.token, ref, commitSHA);
   }
 
   /** 커밋 또는 브랜치 시점의 디렉토리 안 파일 목록 ([{name, sha}], sha 는 blob SHA). 디렉토리가 없으면 [] */
@@ -138,12 +138,10 @@ class GitHub {
   }
 
   async getTree() {
-    // hook, token
     return getTree(this.hook, this.token);
   }
 
   async getTreeWithTruncation(ref = 'HEAD') {
-    // hook, token, ref
     return getTreeWithTruncation(this.hook, this.token, ref);
   }
 
@@ -171,7 +169,7 @@ class GitHub {
       const treeData = await this.createTree(refSHA, items);
       const commitSHA = await this.createCommit(message, treeData.sha, refSHA);
       try {
-        await this.updateHead(ref, commitSHA, false);
+        await this.updateHead(ref, commitSHA);
         return { commitSHA, parentSHA: refSHA };
       } catch (error) {
         if (!GitHub.isNotFastForwardError(error) || attempt >= GITHUB_COMMIT_MAX_ATTEMPTS) throw error;
@@ -189,9 +187,6 @@ class GitHub {
 
 /** get a repo default branch
  * @see https://docs.github.com/en/rest/reference/repos
- * @param {string} hook - the github repository
- * @param {string} token - the github token
- * @return {Promise} - the promise for the branch sha
  */
 async function getDefaultBranchOnRepo(hook, token) {
   const data = await githubRequest(`https://api.github.com/repos/${hook}`, {
@@ -203,10 +198,7 @@ async function getDefaultBranchOnRepo(hook, token) {
 
 /** get a reference
  * @see https://docs.github.com/en/rest/reference/git#get-a-reference
- * @param {string} hook - github repository
- * @param {string} token - reference name
  * @param {string} ref - reference name
- * @return {Promise} - the promise for the reference sha
  */
 async function getReference(hook, token, branch = 'main') {
   /* 단수 엔드포인트(git/ref)를 쓴다. 복수(git/refs/heads/<이름>)는 정확히 일치하는 브랜치가 없으면 404 가 아니라
@@ -221,11 +213,8 @@ async function getReference(hook, token, branch = 'main') {
 }
 /** create a Blob
  * @see https://docs.github.com/en/rest/reference/git#create-a-blob
- * @param {string} hook - github repository
- * @param {string} token - github token
  * @param {string} content - the content on base64 to add the repository
  * @param {string} path - the path to add the repository
- * @return {Promise} - the promise for the tree_item object
  */
 async function createBlob(hook, token, content, path) {
   // b64EncodeUnicode 는 UTF-8 바이트(외톨이 서러게이트는 U+FFFD)를 싣는다 — calculateBlobSHA 가 해시하는 바이트와 같다.
@@ -239,11 +228,8 @@ async function createBlob(hook, token, content, path) {
 
 /** create a new tree in git
  * @see https://docs.github.com/en/rest/reference/git#create-a-tree
- * @param {string} hook - the github repository
- * @param {string} token - the github token
  * @param {object} tree_items - the tree items
  * @param {string} refSHA - the root sha of the tree
- * @return {Promise} - the promise for the tree sha
  */
 async function createTree(hook, token, refSHA, tree_items) {
   /* content 를 직접 싣는 항목은 외톨이 서러게이트를 U+FFFD 로 바꿔 보낸다. 그대로 보내면 GitHub 가 '?' 로 저장해
@@ -258,12 +244,9 @@ async function createTree(hook, token, refSHA, tree_items) {
 
 /** create a commit in git
  * @see https://docs.github.com/en/rest/reference/git#create-a-commit
- * @param {string} hook - the github repository
- * @param {string} token - the github token
  * @param {string} message - the commit message
  * @param {string} treeSHA - the tree sha
  * @param {string} refSHA - the parent sha
- * @return {Promise} - the promise for the commit sha
  */
 async function createCommit(hook, token, message, treeSHA, refSHA) {
   const data = await githubRequest(`https://api.github.com/repos/${hook}/git/commits`, {
@@ -274,19 +257,16 @@ async function createCommit(hook, token, message, treeSHA, refSHA) {
   return data.sha;
 }
 
-/** update a ref
+/** update a ref (fast-forward only)
+ * force 로 ref 를 옮기면 그 사이 다른 탭·기기가 올린 커밋이 브랜치 이력에서 사라지므로, force 는 인자로도 받지 않는다.
  * @see https://docs.github.com/en/rest/reference/git#update-a-reference
- * @param {string} hook - the github repository
- * @param {string} token - the github token
  * @param {string} ref - the ref to update
  * @param {string} commitSHA - the commit sha
- * @param {boolean} force - force update
- * @return {Promise} - the promise for the http request
  */
-async function updateHead(hook, token, ref, commitSHA, force = false) {
+async function updateHead(hook, token, ref, commitSHA) {
   const data = await githubRequest(`https://api.github.com/repos/${hook}/git/${ref}`, {
     method: 'PATCH',
-    body: JSON.stringify({ sha: commitSHA, force }),
+    body: JSON.stringify({ sha: commitSHA, force: false }),
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'content-type': 'application/json' },
   });
   return data.sha;
@@ -294,29 +274,20 @@ async function updateHead(hook, token, ref, commitSHA, force = false) {
 
 /** get a tree recursively
  * @see https://docs.github.com/en/rest/reference/git#get-a-tree
- * @param {string} hook - the github repository
- * @param {string} token - the github token
- * @return {Promise} - the promise for the tree items
  */
 async function getTree(hook, token) {
-  // 재귀 트리 응답은 레포 크기에 비례해 수 MB 가 될 수 있어 트리 생성과 같은 제한 시간을 준다
-  const data = await githubRequest(`https://api.github.com/repos/${hook}/git/trees/HEAD?recursive=1`, {
-    method: 'GET',
-    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
-  }, { timeoutMs: GITHUB_TREE_TIMEOUT_MS });
-  return data.tree;
+  return (await getTreeWithTruncation(hook, token)).tree;
 }
 
 /** get a tree recursively at a specific commit/ref, preserving the truncated flag.
  * recursive 응답은 10만 항목/7MB 초과 시 truncated:true 와 함께 불완전한 배열이 오므로,
  * 트리 내용을 근거로 레포에 쓰기를 수행하는 소비자(마이그레이션 등)는 이 함수를 사용해야 한다.
  * @see https://docs.github.com/en/rest/git/trees#get-a-tree
- * @param {string} hook - the github repository
- * @param {string} token - the github token
  * @param {string} ref - commit SHA or ref name (default: HEAD)
  * @return {Promise<{tree: Array, truncated: boolean}>}
  */
 async function getTreeWithTruncation(hook, token, ref = 'HEAD') {
+  // 재귀 트리 응답은 레포 크기에 비례해 수 MB 가 될 수 있어 트리 생성과 같은 제한 시간을 준다
   const data = await githubRequest(`https://api.github.com/repos/${hook}/git/trees/${ref}?recursive=1`, {
     method: 'GET',
     headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
@@ -329,8 +300,6 @@ async function getTreeWithTruncation(hook, token, ref = 'HEAD') {
  * 디렉토리면 항목 배열을 돌려주고(항목의 sha 는 blob SHA), 없는 경로는 404 다. 이 API 는 디렉토리당 1,000개까지만 돌려주므로
  * 그 이상이면 목록이 잘렸을 수 있어 오류로 멈춘다(번호를 잘못 매기느니 업로드하지 않는다).
  * 경로의 각 조각은 encodeURIComponent 로 인코딩한다(공백·한글·#·+ 가 든 문제 이름).
- * @param {string} hook - the github repository
- * @param {string} token - the github token
  * @param {string} path - the directory path
  * @param {string} ref - commit SHA or branch name
  * @return {Promise<Array<{name: string, sha: string}>>} - 파일 항목. 디렉토리가 없으면 []
@@ -348,10 +317,7 @@ async function listDirectory(hook, token, path, ref) {
 
 /** get a file from the repository
  * @see https://docs.github.com/en/rest/repos/contents#get-repository-content
- * @param {string} hook - the github repository
- * @param {string} token - the github token
  * @param {string} path - the file path
- * @return {Promise} - the promise for the file object or null if not found
  */
 async function getFile(hook, token, path) {
   return githubRequest(`https://api.github.com/repos/${hook}/contents/${path}`, {

@@ -24,12 +24,3 @@ const jungolLanguages = {
 function jungolLanguage(code) {
   return Object.prototype.hasOwnProperty.call(jungolLanguages, code) ? jungolLanguages[code] : [`${code}`, 'txt'];
 }
-
-/**
- * 정올 티어 번호를 이름으로 바꿉니다. 번호와 이름은 solved.ac 와 같다 (1 = Bronze V … 30 = Ruby I, 31 = Master).
- * @param {number} tier
- * @returns {string} 'Gold V' 같은 이름. 티어가 없으면 'Unrated'
- */
-function jungolTierName(tier) {
-  return tier === 31 ? 'Master' : tierName(tier);
-}

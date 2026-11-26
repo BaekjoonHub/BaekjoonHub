@@ -115,7 +115,8 @@ async function findAllSolvedProblems() {
   let page = 1;
   while (true) {
     const res = await fetch(`/api/v2/school/challenges/?perPage=100&statuses[]=solved&order=acceptance_desc&search=&page=${page}`);
-    if (!res.ok) break;
+    // 읽지 못한 것을 "풀이 없음"으로 넘기면 전체 업로드가 이미 모두 올렸다고 안내한다
+    if (!res.ok) throw new Error(`프로그래머스 풀이 목록 조회 실패 (${res.status})`);
     const data = await res.json();
     if (!data.result || data.result.length === 0) break;
     for (const item of data.result) {
@@ -132,48 +133,44 @@ async function findAllSolvedProblems() {
 }
 
 /**
- * 개별 문제 페이지에서 코드와 메타데이터를 가져옵니다.
+ * 개별 문제 페이지에서 코드와 메타데이터를 가져옵니다. 가져오지 못하면 이유를 담아 throw 합니다(전체 업로드가 결과에 보여 준다).
  */
 async function fetchProblemCodeAndData(problemInfo) {
   const { problemId, title, level } = problemInfo;
-  try {
-    const res = await fetch(`/learn/courses/30/lessons/${problemId}`);
-    const html = await res.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+  const res = await fetch(`/learn/courses/30/lessons/${problemId}`);
+  if (!res.ok) throw new Error(`프로그래머스 요청 실패 (${res.status})`);
+  const html = await res.text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
 
-    // Extract code from textarea#code
-    const codeEl = doc.querySelector('textarea#code');
-    const code = codeEl ? codeEl.value : '';
-    if (!code) return null;
+  // Extract code from textarea#code
+  const codeEl = doc.querySelector('textarea#code');
+  const code = codeEl ? codeEl.value : '';
+  if (!code) throw new Error('제출한 코드를 찾지 못했습니다.');
 
-    // Extract language extension from editor tab
-    const langTab = doc.querySelector('div.editor ul li.nav-item a, .editor .nav-item a');
-    const language_extension = extensionFromFileLabel(langTab ? langTab.textContent : '');
+  // Extract language extension from editor tab
+  const langTab = doc.querySelector('div.editor ul li.nav-item a, .editor .nav-item a');
+  const language_extension = extensionFromFileLabel(langTab ? langTab.textContent : '');
 
-    // Extract problem description
-    const descEl = doc.querySelector('div.guide-section-description > div.markdown');
-    const problem_description = descEl ? descEl.innerHTML : '';
+  // Extract problem description
+  const descEl = doc.querySelector('div.guide-section-description > div.markdown');
+  const problem_description = descEl ? descEl.innerHTML : '';
 
-    // Extract division from breadcrumb
-    const breadcrumb = doc.querySelector('ol.breadcrumb');
-    const division = breadcrumb
-      ? [...breadcrumb.querySelectorAll('li')]
-          .filter((x) => !x.classList.contains('active'))
-          .map((x) => x.textContent.trim())
-          .map((x) => convertSingleCharToDoubleChar(x))
-          .filter((x) => x)
-          .join('/')
-      : '코딩테스트 연습';
+  // Extract division from breadcrumb
+  const breadcrumb = doc.querySelector('ol.breadcrumb');
+  const division = breadcrumb
+    ? [...breadcrumb.querySelectorAll('li')]
+        .filter((x) => !x.classList.contains('active'))
+        .map((x) => x.textContent.trim())
+        .map((x) => convertSingleCharToDoubleChar(x))
+        .filter((x) => x)
+        .join('/')
+    : '코딩테스트 연습';
 
-    // Extract language name for org option
-    const langBtnEl = doc.querySelector('div#tour7 > button, .language-select button');
-    const language = langBtnEl ? langBtnEl.textContent.trim() : language_extension;
+  // Extract language name for org option
+  const langBtnEl = doc.querySelector('div#tour7 > button, .language-select button');
+  const language = langBtnEl ? langBtnEl.textContent.trim() : language_extension;
 
-    const link = `https://school.programmers.co.kr/learn/courses/30/lessons/${problemId}`;
+  const link = `https://school.programmers.co.kr/learn/courses/30/lessons/${problemId}`;
 
-    return await makeData({ link, problemId, level, title, problem_description, division, language_extension, code, language });
-  } catch (e) {
-    console.error(`Failed to fetch problem ${problemId}:`, e);
-    return null;
-  }
+  return makeData({ link, problemId, level, title, problem_description, division, language_extension, code, language });
 }

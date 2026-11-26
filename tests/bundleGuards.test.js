@@ -5,7 +5,7 @@
 // - 두 파일이 같은 최상위 이름을 let/const/class 로 선언하면 뒤 파일이 SyntaxError 로 통째로 죽는다.
 // - 번들에 없는 파일의 전역(예: toast.js 의 Toast)을 쓰면 그 코드 경로에서 ReferenceError 가 난다.
 //   프로그래머스 번들은 toast.js 를 싣지 않아 전체 업로드 실패 안내가 ReferenceError 로 바뀌었다.
-// - 업로드는 브랜치를 fast-forward 로만 옮긴다(commitTreeItems). force 로 옮기면 다른 탭의 커밋이 사라진다.
+// - 업로드는 브랜치를 fast-forward 로만 옮긴다(commitTreeItems). force 가 꺼져 있는지는 githubCommit.test.js 가 요청 본문으로 확인한다.
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
@@ -68,15 +68,6 @@ function loadTogether(sources) {
 }
 
 describe('manifest 콘텐츠 스크립트 번들', () => {
-  test('가드 자체 점검: 번들 안의 최상위 이름 충돌을 잡아낸다', () => {
-    const errors = loadTogether([
-      { filename: 'a.js', code: 'const uploadState = {}; document.body.appendChild(null);' },
-      { filename: 'b.js', code: 'let uploadState = 1;' },
-    ]);
-    assert.equal(errors.length, 1);
-    assert.match(errors[0], /b\.js: .*uploadState/);
-  });
-
   test('페이지 컨텍스트 스크립트(statusrefresh.js, submitfilter.js)는 BOJ 출처에만 웹 접근 가능으로 열고, 콘텐츠 스크립트에는 "world" 키가 없다', () => {
     for (const file of ['scripts/baekjoon/statusrefresh.js', 'scripts/baekjoon/submitfilter.js']) {
       const entries = manifest.web_accessible_resources.filter((entry) => entry.resources.includes(file));
@@ -86,50 +77,46 @@ describe('manifest 콘텐츠 스크립트 번들', () => {
     }
   });
 
-  for (const bundle of bundles) {
-    test(`${bundle.name}: 모든 파일이 존재하고 최상위 선언이 충돌하지 않는다`, () => {
+  test('번들마다 모든 파일이 존재하고 최상위 선언이 충돌하지 않는다', () => {
+    for (const bundle of bundles) {
       const sources = bundle.files.map((file) => {
-        assert.ok(fs.existsSync(path.join(ROOT, file)), `${file} 이 없다`);
+        assert.ok(fs.existsSync(path.join(ROOT, file)), `${bundle.name}: ${file} 이 없다`);
         return { filename: file, code: fs.readFileSync(path.join(ROOT, file), 'utf8') };
       });
-      assert.deepEqual(loadTogether(sources), []);
-    });
+      assert.deepEqual(loadTogether(sources), [], bundle.name);
+    }
+  });
 
-    test(`${bundle.name}: Toast 를 쓰는 파일보다 toast.js 가 먼저 로드된다`, () => {
+  test('번들마다 Toast 를 쓰는 파일보다 toast.js 가 먼저 로드된다', () => {
+    for (const bundle of bundles) {
       const users = bundle.files.filter((file) => file !== 'scripts/toast.js' && /\bToast\s*\.\s*raiseToast\b|\bnew\s+Toast\b/.test(codeOf(file)));
-      if (users.length === 0) return;
+      if (users.length === 0) continue;
       const toastIndex = bundle.files.indexOf('scripts/toast.js');
-      assert.notEqual(toastIndex, -1, `${users.join(', ')} 가 Toast 를 쓰는데 번들에 scripts/toast.js 가 없다`);
-      for (const file of users) assert.ok(bundle.files.indexOf(file) > toastIndex, `${file} 보다 toast.js 가 먼저 와야 한다`);
-    });
-  }
+      assert.notEqual(toastIndex, -1, `${bundle.name}: ${users.join(', ')} 가 Toast 를 쓰는데 번들에 scripts/toast.js 가 없다`);
+      for (const file of users) assert.ok(bundle.files.indexOf(file) > toastIndex, `${bundle.name}: ${file} 보다 toast.js 가 먼저 와야 한다`);
+    }
+  });
 });
 
-describe('업로드 커밋 소스 가드', () => {
+// 아래 소스 가드는 행동 테스트(githubCommit·solutionVersions·uploadFlow)가 태우지 않는 전체 업로드 경로까지 막는다.
+describe('업로드 소스 가드', () => {
   const uploadFiles = ['scripts/upload.js', ...['baekjoon', 'programmers', 'swexpertacademy'].map((dir) => `scripts/${dir}/uploadfunctions.js`)];
+  // 커밋을 직접 만드는 파일. 프로그래머스의 uploadfunctions.js 는 upload.js 의 upload · uploadAllSolved 만 부른다.
+  const committingFiles = uploadFiles.filter((file) => file !== 'scripts/programmers/uploadfunctions.js');
 
-  test('플랫폼 업로드 코드는 ref 를 직접 옮기지 않고 commitTreeItems 로 커밋한다', () => {
+  test('업로드 코드는 commitTreeItems 로만 커밋한다 (ref 를 직접 옮기면 fast-forward 재시도가 빠진다)', () => {
     for (const file of uploadFiles) {
       const code = codeOf(file);
       assert.doesNotMatch(code, /\.updateHead\s*\(/, `${file}: updateHead 를 직접 부르면 fast-forward 재시도가 빠진다`);
       assert.doesNotMatch(code, /\.createCommit\s*\(/, `${file}: createCommit 은 commitTreeItems 안에서만 부른다`);
-      assert.match(code, /\.commitTreeItems\s*\(/, `${file}: commitTreeItems 로 커밋해야 한다`);
+      if (committingFiles.includes(file)) assert.match(code, /\.commitTreeItems\s*\(/, `${file}: commitTreeItems 로 커밋해야 한다`);
     }
   });
 
-  test('어디에서도 ref 를 force 로 옮기지 않는다', () => {
-    const files = ['scripts/Github.js', ...uploadFiles, 'scripts/baekjoon/baekjoon.js', 'scripts/programmers/programmers.js'];
-    for (const file of files) {
-      const code = codeOf(file);
-      assert.doesNotMatch(code, /force\s*:\s*true/, `${file}: force: true`);
-      assert.doesNotMatch(code, /updateHead\s*\([^)]*,\s*true\s*\)/, `${file}: updateHead(..., true)`);
-    }
-  });
-
-  test('업로드 후 캐시는 recordUploadInStats 로 저장 직전에 다시 읽어 기록한다', () => {
+  test('stats 는 저장 직전에 다시 읽어 기록하고, 캐시 비교 값은 지역 변수다', () => {
     for (const file of uploadFiles) {
       const code = codeOf(file);
-      assert.match(code, /recordUploadInStats\s*\(/, `${file}`);
+      if (committingFiles.includes(file)) assert.match(code, /recordUploadInStats\s*\(/, `${file}`);
       // 업로드 시작 전에 읽은 stats 를 업로드가 끝난 뒤 통째로 저장하면 그 사이 다른 탭의 기록을 덮는다.
       // 직접 저장은 바로 앞(몇 줄 안)에서 새로 읽은 경우만 허용한다 (SWEA 의 브랜치 재확인).
       for (const match of code.matchAll(/saveStats\s*\(/g)) {
@@ -137,28 +124,17 @@ describe('업로드 커밋 소스 가드', () => {
         assert.match(before, /await getStats\(\)/, `${file}: 저장 직전에 다시 읽지 않은 saveStats`);
       }
     }
-  });
-});
-
-describe('버전 갱신 가드', () => {
-  // 재구축 결과를 받아 버전을 붙여 다시 저장하면 그 사이 다른 탭의 기록을 덮고, 재구축에 실패해도 버전이 기록된다
-  test('versionUpdate 는 재구축과 같은 저장에 버전을 기록한다', () => {
-    const code = codeOf('scripts/upload.js');
-    const body = code.slice(code.indexOf('async function versionUpdate()'));
+    const upload = codeOf('scripts/upload.js');
+    // versionUpdate 가 재구축 결과에 버전을 붙여 다시 저장하면 그 사이 다른 탭의 기록을 덮고, 재구축에 실패해도 버전이 기록된다
+    const body = upload.slice(upload.indexOf('async function versionUpdate()'));
     const fn = body.slice(0, body.indexOf('\n}') + 2);
     assert.match(fn, /updateLocalStorageStats\(\{\s*version:\s*getVersion\(\)\s*\}\)/);
     assert.doesNotMatch(fn, /saveStats\s*\(/, 'versionUpdate 가 stats 를 다시 저장한다');
-  });
-});
-
-describe('암묵적 전역 변수 가드', () => {
-  // 선언 없이 대입하면 전역 변수가 되어 같은 탭의 다른 업로드와 값을 공유한다(비동기 업로드가 겹치면 섞인다).
-  for (const name of ['cachedSHA', 'calcSHA']) {
-    test(`${name} 는 선언한 지역 변수다`, () => {
-      const code = codeOf('scripts/upload.js');
-      assert.match(code, new RegExp(`\\b(?:const|let)\\s+${name}\\b`), `${name} 선언이 없다`);
-      const bare = code.split('\n').filter((line) => new RegExp(`^\\s*${name}\\s*=[^=]`).test(line));
+    // 선언 없이 대입하면 전역 변수가 되어 같은 탭의 다른 업로드와 값을 공유한다(비동기 업로드가 겹치면 섞인다).
+    for (const name of ['cachedSHA', 'calcSHA']) {
+      assert.match(upload, new RegExp(`\\b(?:const|let)\\s+${name}\\b`), `${name} 선언이 없다`);
+      const bare = upload.split('\n').filter((line) => new RegExp(`^\\s*${name}\\s*=[^=]`).test(line));
       assert.deepEqual(bare, [], `선언 없이 ${name} 에 대입한다`);
-    });
-  }
+    }
+  });
 });

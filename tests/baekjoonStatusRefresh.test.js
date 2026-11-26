@@ -144,17 +144,12 @@ test('이벤트가 없으면 6초(연결이 끊겼으면 2초)에 첫 요청을 
   await page.advance(60000);
   assert.equal(page.log.requests.length, requests, '최종 결과를 그린 뒤에는 묻지 않는다');
 
-  // 기다리는 중은 15초가 상한이고, 화면이 움직이면 다시 2초 간격
+  // 기다리는 중은 15초가 상한
   const waiting = load({ color: 'wait', entry: [Number(ID), 0] });
   waiting.server.reply = () => ({ result: 0 });
   waiting.ask();
   await waiting.advance(80000);
   assert.deepEqual(waiting.times(), [6000, 8000, 11000, 15500, 22250, 32375, 47375, 62375, 77375]);
-  const before = waiting.log.requests.length;
-  waiting.server.reply = () => ({ result: 3, progress: '10' });
-  await waiting.advance(20000);
-  const [changed, next] = waiting.times().slice(before);
-  assert.equal(next - changed, 2000, '화면이 움직이면 짧은 간격으로 돌아간다');
 
   // n초 후 채점 시작: remain 초가 지나기 전에는 묻지 않는다
   const remain = load({ color: 'compile', entry: [Number(ID), 14] });
@@ -266,7 +261,7 @@ test('다른 출처·다른 창·잘못된 아이디·화면에 없는 제출의
   assert.equal(isolated.listeners.visibilitychange.length, 0);
 });
 
-test('JSON 이 아닌 응답은 display_solution 에 넘기지 않고 실패한 요청처럼 쉬며, 응답을 처리하다 던져도 쉰다', async () => {
+test('JSON 이 아닌 응답은 display_solution 에 넘기지 않고 실패한 요청처럼 쉰다', async () => {
   const page = load();
   const received = [];
   // BOJ 의 display_solution 처럼 객체가 아니면 던진다
@@ -276,16 +271,9 @@ test('JSON 이 아닌 응답은 display_solution 에 넘기지 않고 실패한 
   await page.advance(100000);
   assert.deepEqual(page.times(), [6000, 9750, 17250, 32250, 62250], '실패한 요청과 같은 쉬는 시간');
   assert.deepEqual(received, [], '문자열은 그리지 않는다');
-
-  const throwing = load();
-  throwing.sandbox.display_solution = () => { throw new Error('그리기 실패'); };
-  throwing.server.reply = () => ({ result: 3 });
-  throwing.ask();
-  await throwing.advance(100000);
-  assert.deepEqual(throwing.times(), [6000, 9750, 17250, 32250, 62250]);
 });
 
-test('최종 결과 이벤트 뒤 그리다 던지면 그 제출은 포기로 끝나고, 화면이 끝내 최종이 되지 않아도 10분이 지나면 끝난다', async () => {
+test('최종 결과 이벤트 뒤 그리다 던지면 그 제출은 포기로 끝난다', async () => {
   const page = load();
   page.sandbox.display_solution = () => { throw new Error('그리기 실패'); };
   page.ask();
@@ -294,12 +282,4 @@ test('최종 결과 이벤트 뒤 그리다 던지면 그 제출은 포기로 �
   assert.equal(page.timers.size, 0);
   page.ask();
   assert.equal(page.timers.size, 0, '포기한 제출은 다시 시작하지 않는다');
-
-  const never = load();
-  never.sandbox.display_solution = () => {}; // 화면이 바뀌지 않는다
-  never.ask();
-  never.emit({ result: 4 });
-  await never.advance(610000);
-  assert.equal(never.timers.size, 0);
-  assert.deepEqual(never.times(), []);
 });

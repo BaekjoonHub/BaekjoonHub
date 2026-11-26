@@ -183,7 +183,7 @@ async function makeData(detail) {
   const { title } = detail.problemInfo;
   const safeTitle = convertSingleCharToDoubleChar(title);
   const [language, extension] = jungolLanguage(detail.language);
-  const levelFull = jungolTierName(detail.problemInfo.fTier ?? detail.problemInfo.tier?.tier);
+  const levelFull = solvedTierName(detail.problemInfo.fTier ?? detail.problemInfo.tier?.tier);
   const level = levelFull.split(' ')[0];
   const directory = await buildDirectory('jungol', {
     platform: '정올',

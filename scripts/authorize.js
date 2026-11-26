@@ -1,20 +1,14 @@
-/* 
-    (needs patch) 
-    IMPLEMENTATION OF AUTHENTICATION ROUTE AFTER REDIRECT FROM GITHUB.
-*/
+/* GitHub 인증을 마치고 돌아온 콜백 주소(REDIRECT_URL)에서 code 를 토큰으로 바꿔 background 에 넘긴다. 시작은 oauth2.js 가 한다. */
 
 const localAuth = {
   /**
    * Initialize
    */
   init() {
-    this.KEY = 'BaekjoonHub_token';
     this.ACCESS_TOKEN_URL = 'https://github.com/login/oauth/access_token';
-    this.AUTHORIZATION_URL = 'https://github.com/login/oauth/authorize';
     this.CLIENT_ID = '975f8d5cf6686dd1faed';
     this.CLIENT_SECRET = '934b2bfc3bb3ad239bc67bdfa81a378b1616dd1e';
     this.REDIRECT_URL = 'https://github.com/BaekjoonHub/BaekjoonHub';
-    this.SCOPES = ['repo'];
   },
 
   /**

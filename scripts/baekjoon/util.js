@@ -2,13 +2,10 @@
  * 로딩 버튼 추가
  */
 function startUpload() {
-  let elem = document.getElementById('BaekjoonHub_progress_anchor_element');
-  if (elem !== undefined) {
-    elem = document.createElement('span');
-    elem.id = 'BaekjoonHub_progress_anchor_element';
-    elem.className = 'runcode-wrapper__8rXm';
-    elem.style = 'margin-left: 10px;padding-top: 0px;';
-  }
+  const elem = document.createElement('span');
+  elem.id = 'BaekjoonHub_progress_anchor_element';
+  elem.className = 'runcode-wrapper__8rXm';
+  elem.style = 'margin-left: 10px;padding-top: 0px;';
   elem.innerHTML = `<div id="BaekjoonHub_progress_elem" class="BaekjoonHub_progress"></div>`;
   const target = document.getElementById('status-table')?.childNodes[1].childNodes[0].childNodes[3] || document.querySelector('div.table-responsive > table > tbody > tr > td:nth-child(5)');
   target.append(elem);
@@ -62,61 +59,19 @@ function startUploadCountDown() {
 }
 
 /**
- * 제출 목록 비교함수입니다
- * @param {object} a - 제출 요소 피연산자 a
- * @param {object} b - 제출 요소 피연산자 b
- * @returns {number} - a와 b 아래의 우선순위로 값을 비교하여 정수값을 반환합니다.
- * 1. 서브태스크가 있는 문제이고, 점수(result)의 차이가 있을 경우 a > b 이면 음수, a < b 이면 양수를 반환합니다.
- * 2. 실행시간(runtime)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 3. 사용메모리(memory)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 4. 코드길이(codeLength)의 차이가 있을 경우 그 차이 값을 반환합니다.
- * 5. 위의 요소가 모두 같은 경우 제출한 요소(submissionId)의 그 차이 값의 역을 반환합니다.
- * */
+ * 제출 목록 비교함수입니다. 음수면 a 가 더 좋은 제출이다. (README 의 "백준 제출 기준")
+ * 1. 서브태스크 점수가 있으면 점수가 높은 쪽
+ * 2. 실행시간, 3. 메모리, 4. 코드길이가 작은 쪽 (같은 값이면 다음 기준으로 넘어간다)
+ * 5. 제출번호가 큰(최신) 쪽
+ */
 function compareSubmission(a, b) {
-  // prettier-ignore-start
-  /* eslint-disable */
-  return hasNotSubtask(a.result, b.result)
-          ? a.runtime === b.runtime
-            ? a.memory === b.memory
-              ? a.codeLength === b.codeLength
-                ? -(a.submissionId - b.submissionId)
-                : a.codeLength - b.codeLength
-              : a.memory - b.memory
-            : a.runtime - b.runtime
-          : compareResult(a.result, b.result)
-  ;
-  /* eslint-enable */
-  // prettier-ignore-end
-}
-
-/**
- * 서브태스크가 있는 문제의 경우도 고려해 제출 결과를 비교하는 함수입니다.
- * @param {string} a 제출 결과 피연산자 a
- * @param {string} b 제출 결과 피연산자 b
- * @returns {boolean} 서브 태스크가 없는 경우 true, 서브 태스크가 있는 경우 false를 반환합니다.
- */
-function hasNotSubtask(a, b) {
-  a = parseNumberFromString(a);
-  b = parseNumberFromString(b);
-
-  if (isNaN(a) && isNaN(b)) return true;
-
-  return false;
-}
-
-/**
- * 서브태스크가 있는 문제의 경우 점수가 높은 순서로 정렬되도록 값을 반환합니다.
- * @param {string} a 제출 결과 피연산자 a
- * @param {string} b 제출 결과 피연산자 b
- * @returns {number} a의 점수가 높은 경우 음수, b의 점수가 높은 경우 양수
- */
-function compareResult(a, b) {
-  a = parseNumberFromString(a);
-  b = parseNumberFromString(b);
-
-  if (typeof a === 'number' && typeof b === 'number') return -(a - b);
-  if (isNaN(b)) return -1;
-  if (isNaN(a)) return 1;
+  const scoreA = parseNumberFromString(a.result);
+  const scoreB = parseNumberFromString(b.result);
+  if (!(isNaN(scoreA) && isNaN(scoreB))) return scoreB - scoreA;
+  if (a.runtime !== b.runtime) return a.runtime - b.runtime;
+  if (a.memory !== b.memory) return a.memory - b.memory;
+  if (a.codeLength !== b.codeLength) return a.codeLength - b.codeLength;
+  return b.submissionId - a.submissionId;
 }
 
 /**
@@ -139,97 +94,32 @@ function insertUploadAllButton() {
   const btn = document.createElement('a');
   btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" fill="currentColor"/></svg>전체제출 업로드';
   btn.style.cursor = 'pointer';
-  btn.addEventListener('click', () => {
-    if (confirm('GitHub에 전체 제출을 업로드하시겠습니까?')) {
-      insertMultiLoader();
-      uploadAllSolvedProblem();
-    }
+  btn.addEventListener('click', async () => {
+    if (await confirmModal('GitHub에 전체 제출을 업로드하시겠습니까?', await describeBulkUpload())) uploadAllSolvedProblem();
   });
   li.appendChild(btn);
   navTabs.appendChild(li);
 }
 
 /**
- * 전체 업로드 진행률 표시 DOM을 생성합니다.
- * denom 설정 전까지는 "준비 중…" 표시 — "0 / 0" 이 오류로 오해되던 현상 방지.
+ * 전체 업로드를 시작하기 전에 보여 줄 안내. 프로필의 맞은 문제 목록과 업로드 기록으로 새로 올릴 문제 수를 요청 없이 어림합니다.
+ * 실제 대상은 시작한 뒤 제출 목록과 레포 파일 목록으로 다시 정하므로 조금 다를 수 있다.
+ * @returns {Promise<string|undefined>} 맞은 문제 목록이 없는 화면이면 undefined
  */
-function insertMultiLoader() {
-  const navTabs = document.querySelector('ul.nav.nav-tabs');
-  if (isNull(navTabs)) return;
-  const wrap = document.createElement('li');
-  wrap.className = 'BJH_loading_wrap';
-  wrap.textContent = '준비 중…';
-  navTabs.appendChild(wrap);
-  multiloader.wrap = wrap;
-  multiloader.nom = null;
-  multiloader.denom = null;
+async function describeBulkUpload() {
+  const solved = new Set([...document.querySelectorAll('.problem-list a.result-ac')].map((link) => link.textContent.trim()));
+  if (solved.size === 0) return undefined;
+  const uploaded = extractUploadedProblemIds(await getStats(), await getHook(), '백준');
+  const left = [...solved].filter((id) => !uploaded.has(id)).length;
+  return `새로 올릴 문제는 약 ${left}개입니다. 맞은 문제 ${solved.size}개 중 ${solved.size - left}개는 이미 올라가 있습니다.`;
 }
 
 /**
- * 전체 업로드 전체 개수를 설정합니다.
- * 최초 호출 시 "준비 중…"을 "0 / N" 마크업으로 교체하며 nom/denom 핸들을 부여합니다.
+ * v1.7.2 까지의 업로드가 백준의 403 응답을 풀이로 올린 문제가 있으면(extractUploadedProblemIds), 고치는 방법을 알립니다.
  */
-function setMultiLoaderDenom(num) {
-  if (isNull(multiloader.wrap)) return;
-  if (isNull(multiloader.denom)) {
-    multiloader.wrap.textContent = '';
-    const nom = document.createElement('span');
-    nom.className = 'BJH_loading_number';
-    nom.textContent = '0';
-    const slash = document.createTextNode(' / ');
-    const denom = document.createElement('span');
-    denom.className = 'BJH_loading_number';
-    denom.textContent = String(num);
-    multiloader.wrap.appendChild(nom);
-    multiloader.wrap.appendChild(slash);
-    multiloader.wrap.appendChild(denom);
-    multiloader.nom = nom;
-    multiloader.denom = denom;
-  } else {
-    multiloader.denom.textContent = String(num);
-  }
-}
-
-/**
- * 전체 업로드 완료 개수를 증가시킵니다.
- */
-function incMultiLoader(num) {
-  if (!isNull(multiloader.nom)) {
-    multiloader.nom.textContent = String(Number(multiloader.nom.textContent) + num);
-  }
-}
-
-/**
- * 전체 업로드가 이미 최신 상태임을 표시합니다.
- */
-function MultiloaderUpToDate() {
-  if (!isNull(multiloader.wrap)) {
-    multiloader.wrap.textContent = 'Up To Date';
-  }
-}
-
-/**
- * 전체 업로드 성공을 표시합니다.
- */
-function MultiloaderSuccess() {
-  if (!isNull(multiloader.wrap)) {
-    multiloader.wrap.textContent = 'SUCCESS';
-    setTimeout(() => location.reload(), 3000);
-  }
-}
-
-/**
- * 전체 업로드 실패를 표시합니다. 사용자가 원인을 확인할 수 있도록
- * 로더를 'FAILED'로 바꾸고, 상세 메시지를 title 속성에 담습니다.
- */
-function MultiloaderFail(message) {
-  if (!isNull(multiloader.wrap)) {
-    multiloader.wrap.textContent = 'FAILED';
-    multiloader.wrap.classList.add('BJH_multiloader_fail');
-    if (!isEmpty(message)) {
-      multiloader.wrap.setAttribute('title', message);
-    }
-  }
+async function noticeBlockedUploads() {
+  const count = extractUploadedProblemIds(await getStats(), await getHook(), '백준', true).size;
+  if (count > 0) Toast.raiseToast(`백준이 요청을 막았을 때 잘못 올라간 풀이 ${count}개를 찾았습니다. '전체제출 업로드'를 누르면 다시 올립니다.`, 15000);
 }
 
 function convertResultTableHeader(header) {

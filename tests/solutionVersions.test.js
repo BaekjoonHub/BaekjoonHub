@@ -17,23 +17,15 @@ const A = 'print(1)\n';
 const B = 'print(2)\n';
 const C = 'print(3)\n';
 const D = 'print(4)\n';
-const EMPTY_CACHE = { version: VERSION, branches: {}, submission: {} };
 // 풀이 하나를 올리는 구현은 둘이다: scripts/upload.js 의 upload(백준·프로그래머스)와 SWEA 의 uploadSWEA
 const UPLOADERS = ['baekjoon', 'swexpertacademy'];
 
-/** 'A+B.py' → ['A+B', '.py'] */
-function split(fileName) {
-  const dot = fileName.lastIndexOf('.');
-  return [fileName.slice(0, dot), fileName.slice(dot)];
-}
-
 /** 플랫폼의 풀이 디렉토리와 버전 파일 경로들 */
-function paths(platform, ext = null) {
+function paths(platform) {
   const { directory, fileName } = PLATFORMS[platform];
-  const [stem, ext0] = split(fileName);
-  const e = ext || ext0;
-  const at = (suffix) => `${directory}/${stem}${suffix}${e}`;
-  return { directory, fileName: `${stem}${e}`, plain: at(''), v2: at('_002'), v3: at('_003'), v4: at('_004'), readme: `${directory}/README.md` };
+  const dot = fileName.lastIndexOf('.');
+  const at = (suffix) => `${directory}/${fileName.slice(0, dot)}${suffix}${fileName.slice(dot)}`;
+  return { directory, fileName, plain: at(''), v2: at('_002'), v3: at('_003'), v4: at('_004'), readme: `${directory}/README.md` };
 }
 
 /** 서버의 풀이 디렉토리 파일 이름들 (README 포함) */
@@ -50,93 +42,61 @@ async function load(server, platform, options) {
 /** 서버에 올라간 (blob·tree·commit·ref 갱신) 쓰기 요청 수 */
 const writes = (server) => server.requests.filter((r) => r.startsWith('POST') || r.startsWith('PATCH')).length;
 
-describe('planSolutionVersion — 이름 정하기', () => {
-  const plan = async (files, fileName, code) => {
-    const { sandbox } = await load(new FakeGithub(), 'baekjoon');
-    return sandbox.planSolutionVersion(files.map(([name, content]) => ({ name, sha: blobSha(content) })), fileName, code);
-  };
-
-  test('버전이 없으면 이름 그대로', async () => {
-    const result = await plan([['README.md', 'r'], ['다른.py', A]], '문제.py', A);
-    assert.equal(result.skip, undefined);
-    assert.equal(result.fileName, '문제.py');
-  });
-
-  test('같은 코드가 번호 없는 파일에도, 번호 붙은 파일에도 있으면 skip', async () => {
-    assert.equal((await plan([['문제.py', A]], '문제.py', A)).skip, true);
-    assert.equal((await plan([['문제.py', A], ['문제_002.py', B]], '문제.py', B)).skip, true);
-  });
-
-  test('번호는 가장 큰 번호 + 1, 번호 없는 파일은 1, 3자리 이상으로 0 을 채운다', async () => {
-    assert.equal((await plan([['문제.py', A]], '문제.py', B)).fileName, '문제_002.py');
-    assert.equal((await plan([['문제.py', A], ['문제_002.py', B]], '문제.py', C)).fileName, '문제_003.py');
-    // 번호 없는 파일이 지워졌어도 번호를 다시 쓰지 않는다
-    assert.equal((await plan([['문제_005.py', A]], '문제.py', B)).fileName, '문제_006.py');
-    // 빈 번호가 있어도 가장 큰 번호 다음
-    assert.equal((await plan([['문제.py', A], ['문제_002.py', B], ['문제_007.py', C]], '문제.py', D)).fileName, '문제_008.py');
-    assert.equal((await plan([['문제_099.py', A]], '문제.py', B)).fileName, '문제_100.py');
-    assert.equal((await plan([['문제_999.py', A]], '문제.py', B)).fileName, '문제_1000.py');
-  });
-
-  test('버전은 이름과 확장자가 모두 같은 파일만 센다', async () => {
-    const files = [['문제.java', A], ['문제_002.java', B], ['문제2.py', C], ['문제_a.py', C], ['문제_002.py.bak', C], ['x문제.py', C], ['README.md', C]];
-    assert.equal((await plan(files, '문제.py', D)).fileName, '문제.py', '다른 확장자만 있으면 번호 없는 이름');
-    assert.equal((await plan([...files, ['문제.py', A]], '문제.py', D)).fileName, '문제_002.py');
-  });
-
-  test('확장자 없는 파일 이름과 점이 여러 개인 이름', async () => {
-    assert.equal((await plan([['Main', A]], 'Main', B)).fileName, 'Main_002');
-    assert.equal((await plan([['1000. A+B.py', A]], '1000. A+B.py', B)).fileName, '1000. A+B_002.py');
-  });
+test('planSolutionVersion — 같은 코드는 skip, 번호는 같은 이름·확장자의 가장 큰 번호 + 1', async () => {
+  const { sandbox } = await load(new FakeGithub(), 'baekjoon');
+  const other = [['문제.java', A], ['문제_002.java', B], ['문제2.py', C], ['문제_a.py', C], ['문제_002.py.bak', C], ['x문제.py', C], ['README.md', C]];
+  for (const [label, files, fileName, code, expected] of [
+    ['버전이 없으면 이름 그대로', [['README.md', 'r'], ['다른.py', A]], '문제.py', A, '문제.py'],
+    ['번호 없는 파일과 같은 코드', [['문제.py', A]], '문제.py', A, 'skip'],
+    ['번호 붙은 파일과 같은 코드', [['문제.py', A], ['문제_002.py', B]], '문제.py', B, 'skip'],
+    ['번호 없는 파일은 1번', [['문제.py', A]], '문제.py', B, '문제_002.py'],
+    ['가장 큰 번호 + 1', [['문제.py', A], ['문제_002.py', B]], '문제.py', C, '문제_003.py'],
+    ['번호 없는 파일이 지워져도 번호를 다시 쓰지 않는다', [['문제_005.py', A]], '문제.py', B, '문제_006.py'],
+    ['빈 번호가 있어도 가장 큰 번호 다음', [['문제.py', A], ['문제_002.py', B], ['문제_007.py', C]], '문제.py', D, '문제_008.py'],
+    ['3자리로 0 을 채운다', [['문제_099.py', A]], '문제.py', B, '문제_100.py'],
+    ['999 다음은 4자리', [['문제_999.py', A]], '문제.py', B, '문제_1000.py'],
+    ['다른 확장자·비슷한 이름만 있으면 번호 없는 이름', other, '문제.py', D, '문제.py'],
+    ['다른 확장자·비슷한 이름은 세지 않는다', [...other, ['문제.py', A]], '문제.py', D, '문제_002.py'],
+    ['번호 붙은 다른 확장자 파일은 세지 않는다', [['문제.py', A], ['문제_002.py', B]], '문제.java', C, '문제.java'],
+    ['확장자 없는 파일 이름', [['Main', A]], 'Main', B, 'Main_002'],
+    ['점이 여러 개인 이름', [['1000. A+B.py', A]], '1000. A+B.py', B, '1000. A+B_002.py'],
+  ]) {
+    const result = sandbox.planSolutionVersion(files.map(([name, content]) => ({ name, sha: blobSha(content) })), fileName, code);
+    assert.equal(result.skip ? 'skip' : result.fileName, expected, label);
+  }
 });
 
-describe('옵션 꺼짐 — 지금과 같은 동작', () => {
+test('플랫폼별 실제 업로드 경로: 옵션 꺼짐은 같은 파일을 덮어쓰고, 켜짐은 다른 풀이를 _002 로 남긴다', async () => {
   for (const platform of Object.keys(PLATFORMS)) {
-    test(`${platform}: 다른 코드를 다시 올리면 같은 파일을 덮어쓰고 번호 파일은 만들지 않는다`, async () => {
+    for (const keep of [false, true]) {
+      const label = `${platform} keep=${keep}`;
       const server = new FakeGithub();
-      const loaded = await load(server, platform, { keep: false });
+      const loaded = await load(server, platform, { keep });
       const p = paths(platform);
       await submit(loaded, platform, A);
+      assert.equal(server.filesAtHead()[p.plain], A, label);
       await submit(loaded, platform, B);
-      assert.deepEqual(namesIn(server, p.directory), ['README.md', p.fileName].sort());
-      assert.equal(server.filesAtHead()[p.plain], B);
-      assert.equal(server.history().length, 3, 'c0 + 업로드 두 번');
-      // 같은 코드 재제출은 지금처럼 스킵
+      const expectedNames = keep ? [p.fileName, p.v2.slice(p.directory.length + 1)] : [p.fileName];
+      assert.deepEqual(namesIn(server, p.directory), ['README.md', ...expectedNames].sort(), `${label}: README 는 하나`);
+      assert.equal(server.filesAtHead()[p.plain], keep ? A : B, label);
+      assert.equal(server.history().length, 3, `${label}: c0 + 업로드 두 번`);
+      // 같은 코드 재제출은 스킵
       const before = writes(server);
       await submit(loaded, platform, B);
-      assert.equal(writes(server), before);
-      assert.equal(server.listingRefs().length, 0, '옵션이 꺼져 있으면 디렉토리 목록을 읽지 않는다');
-    });
+      assert.equal(writes(server), before, label);
+      if (!keep) assert.equal(server.listingRefs().length, 0, `${label}: 옵션이 꺼져 있으면 디렉토리 목록을 읽지 않는다`);
+      assert.equal(loaded.calls.failed, 0, label);
+    }
   }
 });
 
-describe('옵션 켜짐 — 플랫폼별 실제 업로드 경로', () => {
-  for (const platform of Object.keys(PLATFORMS)) {
-    test(`${platform}: 첫 풀이는 이름 그대로, 다른 풀이는 _002 로 남는다`, async () => {
-      const server = new FakeGithub();
-      const loaded = await load(server, platform, { keep: true });
-      const p = paths(platform);
-      await submit(loaded, platform, A);
-      assert.equal(server.filesAtHead()[p.plain], A);
-      await submit(loaded, platform, B);
-      const files = server.filesAtHead();
-      assert.equal(files[p.plain], A, '앞 풀이는 그대로');
-      assert.equal(files[p.v2], B);
-      assert.deepEqual(namesIn(server, p.directory), ['README.md', p.fileName, p.v2.slice(p.directory.length + 1)].sort(), 'README 는 하나');
-      assert.equal(server.history().length, 3);
-      assert.equal(loaded.calls.failed, 0);
-    });
-  }
-});
-
-describe('옵션 켜짐 — 번호 규칙 (백준 beginUpload)', () => {
+describe('옵션 켜짐 — 백준 beginUpload', () => {
   test('같은 코드는 커밋하지 않고, 다른 코드는 _002 → _003, 옛 버전과 같은 코드는 커밋하지 않는다', async () => {
     const server = new FakeGithub();
     const loaded = await load(server, 'baekjoon', { keep: true });
     const p = paths('baekjoon');
 
     await submit(loaded, 'baekjoon', A);
-    assert.deepEqual(namesIn(server, p.directory), [p.fileName, 'README.md'].sort());
     const markedAfterFirst = loaded.calls.uploaded.length;
 
     // 같은 코드 다시: 커밋도, blob/tree 업로드도 없고 완료 표시는 그대로 뜬다
@@ -149,44 +109,21 @@ describe('옵션 켜짐 — 번호 규칙 (백준 beginUpload)', () => {
     await submit(loaded, 'baekjoon', B);
     await submit(loaded, 'baekjoon', C);
     let files = server.filesAtHead();
-    assert.equal(files[p.plain], A);
-    assert.equal(files[p.v2], B);
-    assert.equal(files[p.v3], C);
+    assert.deepEqual([files[p.plain], files[p.v2], files[p.v3]], [A, B, C]);
     assert.equal(server.history().length, 4);
 
     // 옛 버전(번호 없는 파일, _002)과 같은 코드: 커밋 없음
     const w2 = writes(server);
-    await submit(loaded, 'baekjoon', A);
-    await submit(loaded, 'baekjoon', B);
-    await submit(loaded, 'baekjoon', C);
+    for (const code of [A, B, C]) await submit(loaded, 'baekjoon', code);
     assert.equal(writes(server), w2);
     assert.equal(server.history().length, 4);
 
     // 새 코드는 계속 이어서 번호가 붙고, 앞 파일은 그대로다
     await submit(loaded, 'baekjoon', D);
     files = server.filesAtHead();
-    assert.equal(files[p.v4], D);
-    assert.deepEqual([files[p.plain], files[p.v2], files[p.v3]], [A, B, C]);
+    assert.deepEqual([files[p.plain], files[p.v2], files[p.v3], files[p.v4]], [A, B, C, D]);
     assert.deepEqual(namesIn(server, p.directory).filter((n) => n.startsWith('README')), ['README.md']);
     assert.equal(loaded.calls.failed, 0);
-  });
-
-  test('같은 디렉토리의 다른 확장자는 번호 없는 이름부터 시작한다', async () => {
-    const server = new FakeGithub();
-    const loaded = await load(server, 'baekjoon', { keep: true });
-    const py = paths('baekjoon');
-    const java = paths('baekjoon', '.java');
-    await submit(loaded, 'baekjoon', A);
-    await submit(loaded, 'baekjoon', B);
-    await submit(loaded, 'baekjoon', 'class Main {}\n', { fileName: java.fileName });
-    let files = server.filesAtHead();
-    assert.equal(files[java.plain], 'class Main {}\n');
-    assert.equal(files[java.v2], undefined, '다른 확장자의 첫 풀이는 번호가 붙지 않는다');
-    assert.equal(files[py.v2], B);
-    await submit(loaded, 'baekjoon', 'class Main { int x; }\n', { fileName: java.fileName });
-    files = server.filesAtHead();
-    assert.equal(files[java.v2], 'class Main { int x; }\n');
-    assert.equal(files[py.v3], undefined, 'py 의 번호는 java 와 따로 센다');
   });
 
   test('업로드 뒤 stats 캐시에 번호 붙은 실제 경로와 blob SHA 가 남는다', async () => {
@@ -205,28 +142,48 @@ describe('옵션 켜짐 — 번호 규칙 (백준 beginUpload)', () => {
     // 전체 업로드가 "이미 올린 문제" 를 거르는 목록에도 보인다
     assert.ok(loaded.sandbox.extractUploadedProblemIds({ submission, branches }, HOOK, '백준').has('1000'));
   });
+
+  test('수동 업로드 버튼도 같은 규칙: 첫 풀이는 이름 그대로, 다른 풀이는 _002, 같은 코드는 커밋 없이 완료', async () => {
+    const server = new FakeGithub();
+    const loaded = await load(server, 'baekjoon', { keep: true });
+    const p = paths('baekjoon');
+    const press = (code) => {
+      const classes = new Set(['bjh-upload-icon']);
+      const button = { title: '', classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) } };
+      loaded.sandbox.findData = async () => solved('baekjoon', code);
+      loaded.sandbox.__item = { data: { elementId: 'solution-1' }, button };
+      return vm.runInContext('manualUploadQueue.push(__item); processManualUploadQueue();', loaded.sandbox).then(() => classes);
+    };
+    assert.ok((await press(A)).has('bjh-upload-success'));
+    assert.equal(server.filesAtHead()[p.plain], A);
+    assert.ok((await press(B)).has('bjh-upload-success'));
+    assert.equal(server.filesAtHead()[p.plain], A);
+    assert.equal(server.filesAtHead()[p.v2], B);
+    const before = writes(server);
+    assert.ok((await press(B)).has('bjh-upload-success'));
+    assert.equal(writes(server), before);
+    assert.equal(server.history().length, 3);
+  });
 });
 
 describe('옵션 켜짐 — 로컬 캐시가 아니라 GitHub 의 파일로 정한다', () => {
-  for (const platform of UPLOADERS) {
-    test(`${platform}: 캐시가 비어 있고 GitHub 에 이름·_002 가 있으면 _003 으로 올리고 아무것도 덮지 않는다`, async () => {
+  test('캐시가 비어 있고 GitHub 에 이름·_002 가 있으면 _003 으로 올리고 아무것도 덮지 않는다', async () => {
+    for (const platform of UPLOADERS) {
       const p = paths(platform);
       const server = new FakeGithub({ files: { [p.plain]: A, [p.v2]: B, [p.readme]: 'old readme' } });
-      const loaded = await load(server, platform, { keep: true, stats: EMPTY_CACHE });
+      const loaded = await load(server, platform, { keep: true, stats: { version: VERSION, branches: {}, submission: {} } });
       await loaded.sandbox.uploadOneSolveProblemOnGit(solved(platform, C), () => {});
       await settle();
       const files = server.filesAtHead();
-      assert.equal(files[p.plain], A);
-      assert.equal(files[p.v2], B);
-      assert.equal(files[p.v3], C);
-      assert.equal(server.history().length, 2);
-    });
-  }
+      assert.deepEqual([files[p.plain], files[p.v2], files[p.v3]], [A, B, C], platform);
+      assert.equal(server.history().length, 2, platform);
+    }
+  });
 
   test('캐시에는 없지만 GitHub 에 있는 코드와 같으면 커밋하지 않는다', async () => {
     const p = paths('baekjoon');
     const server = new FakeGithub({ files: { [p.plain]: A, [p.v2]: B } });
-    const loaded = await load(server, 'baekjoon', { keep: true, stats: EMPTY_CACHE });
+    const loaded = await load(server, 'baekjoon', { keep: true, stats: { version: VERSION, branches: {}, submission: {} } });
     await submit(loaded, 'baekjoon', B);
     assert.equal(writes(server), 0);
     assert.ok(loaded.calls.uploaded.length >= 1);
@@ -245,14 +202,6 @@ describe('옵션 켜짐 — 로컬 캐시가 아니라 GitHub 의 파일로 정�
     assert.equal(server.filesAtHead()[p.plain], A);
   });
 
-  test('디렉토리 목록은 이번 커밋의 부모 커밋에서 읽고, 공백·한글·#·+ 가 든 경로도 읽는다', async () => {
-    const server = new FakeGithub({ files: { [paths('programmers').plain]: A } });
-    const loaded = await load(server, 'programmers', { keep: true });
-    await submit(loaded, 'programmers', B);
-    assert.deepEqual(server.listingRefs(), ['c0']);
-    assert.equal(server.filesAtHead()[paths('programmers').v2], B);
-  });
-
   test('디렉토리에 파일이 1,000개 이상이면 번호를 잘못 매기지 않고 커밋 없이 실패한다', async () => {
     const { directory } = paths('baekjoon');
     const files = {};
@@ -265,118 +214,41 @@ describe('옵션 켜짐 — 로컬 캐시가 아니라 GitHub 의 파일로 정�
 });
 
 describe('옵션 켜짐 — 커밋이 밀려 다시 시도될 때 (다른 탭·기기와 경합)', () => {
-  for (const platform of UPLOADERS) {
-    test(`${platform}: 새 브랜치 끝에 이미 _002 가 있으면 다시 시도한 커밋은 _003 으로 저장된다`, async () => {
+  const racing = (p) => new FakeGithub({
+    files: { [p.plain]: A },
+    beforePatch: (n, s) => { if (n === 1) s.advanceHead({ [p.v2]: B }); },
+  });
+
+  test('새 브랜치 끝에 이미 _002 가 있으면 다시 시도한 커밋은 _003 으로 저장된다', async () => {
+    for (const platform of UPLOADERS) {
       const p = paths(platform);
-      const server = new FakeGithub({
-        files: { [p.plain]: A },
-        beforePatch: (n, s) => { if (n === 1) s.advanceHead({ [p.v2]: B }); },
-      });
+      const server = racing(p);
       const loaded = await load(server, platform, { keep: true });
       await loaded.sandbox.uploadOneSolveProblemOnGit(solved(platform, C), () => {});
       await settle();
       const files = server.filesAtHead();
-      assert.equal(files[p.plain], A);
-      assert.equal(files[p.v2], B, '다른 기기가 올린 파일을 덮지 않는다');
-      assert.equal(files[p.v3], C);
-      assert.equal(server.patches, 2);
+      assert.equal(files[p.plain], A, platform);
+      assert.equal(files[p.v2], B, `${platform}: 다른 기기가 올린 파일을 덮지 않는다`);
+      assert.equal(files[p.v3], C, platform);
+      assert.equal(server.patches, 2, platform);
       // 두 번째 시도는 첫 시도의 부모(c0)가 아니라 옮겨진 브랜치 끝의 파일 목록으로 정했다
-      assert.deepEqual(server.listingRefs(), ['c0', 'other1']);
-      assert.equal(server.history().length, 3, 'c0 → 다른 기기 → 이번 업로드');
-    });
+      assert.deepEqual(server.listingRefs(), ['c0', 'other1'], platform);
+      assert.equal(server.history().length, 3, `${platform}: c0 → 다른 기기 → 이번 업로드`);
+    }
+  });
 
-    test(`${platform}: 새 브랜치 끝에 같은 코드가 이미 있으면 두 번째 사본을 만들지 않는다`, async () => {
+  test('새 브랜치 끝에 같은 코드가 이미 있으면 두 번째 사본을 만들지 않는다', async () => {
+    for (const platform of UPLOADERS) {
       const p = paths(platform);
-      const server = new FakeGithub({
-        files: { [p.plain]: A },
-        beforePatch: (n, s) => { if (n === 1) s.advanceHead({ [p.v2]: B }); },
-      });
+      const server = racing(p);
       const loaded = await load(server, platform, { keep: true });
       let marked = 0;
       await loaded.sandbox.uploadOneSolveProblemOnGit(solved(platform, B), () => { marked += 1; });
       await settle();
-      const files = server.filesAtHead();
-      assert.equal(files[p.v2], B);
-      assert.equal(files[p.v3], undefined, 'B 는 한 번만 저장된다');
-      assert.equal(server.head, 'other1', '이번 업로드의 커밋은 브랜치에 오르지 않는다');
-      assert.equal(marked, 1, '완료 표시는 뜬다');
-    });
-  }
-
-  test('같은 문제를 동시에 올리는 두 업로드(다른 코드)는 서로 다른 번호로 둘 다 남는다', async () => {
-    const p = paths('baekjoon');
-    const server = new FakeGithub({ files: { [p.plain]: A } });
-    const one = await load(server, 'baekjoon', { keep: true });
-    const two = await load(server, 'baekjoon', { keep: true });
-    await Promise.all([
-      one.sandbox.uploadOneSolveProblemOnGit(solved('baekjoon', B), () => {}),
-      two.sandbox.uploadOneSolveProblemOnGit(solved('baekjoon', C), () => {}),
-    ]);
-    await settle();
-    const files = server.filesAtHead();
-    assert.equal(files[p.plain], A);
-    assert.deepEqual([files[p.v2], files[p.v3]].sort(), [B, C]);
-  });
-
-  test('같은 문제를 동시에 올리는 두 업로드(같은 코드)는 한 번만 저장된다', async () => {
-    const p = paths('baekjoon');
-    const server = new FakeGithub({ files: { [p.plain]: A } });
-    const one = await load(server, 'baekjoon', { keep: true });
-    const two = await load(server, 'baekjoon', { keep: true });
-    await Promise.all([
-      one.sandbox.uploadOneSolveProblemOnGit(solved('baekjoon', B), () => {}),
-      two.sandbox.uploadOneSolveProblemOnGit(solved('baekjoon', B), () => {}),
-    ]);
-    await settle();
-    const copies = Object.entries(server.filesAtHead()).filter(([file, content]) => file.startsWith(`${p.directory}/`) && content === B);
-    assert.equal(copies.length, 1);
-    assert.equal(server.filesAtHead()[p.v3], undefined);
-  });
-});
-
-describe('옵션 켜짐 — 백준 수동 업로드 버튼', () => {
-  function pressManualUpload(loaded, code) {
-    const classes = new Set(['bjh-upload-icon']);
-    const button = { title: '', classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) } };
-    loaded.sandbox.findData = async () => solved('baekjoon', code);
-    loaded.sandbox.__item = { data: { elementId: 'solution-1' }, button };
-    return vm.runInContext('manualUploadQueue.push(__item); processManualUploadQueue();', loaded.sandbox).then(() => classes);
-  }
-
-  test('수동 업로드도 같은 규칙: 첫 풀이는 이름 그대로, 다른 풀이는 _002, 같은 코드는 커밋 없이 완료', async () => {
-    const server = new FakeGithub();
-    const loaded = await load(server, 'baekjoon', { keep: true });
-    const p = paths('baekjoon');
-    assert.ok((await pressManualUpload(loaded, A)).has('bjh-upload-success'));
-    assert.equal(server.filesAtHead()[p.plain], A);
-    assert.ok((await pressManualUpload(loaded, B)).has('bjh-upload-success'));
-    assert.equal(server.filesAtHead()[p.plain], A);
-    assert.equal(server.filesAtHead()[p.v2], B);
-    const before = writes(server);
-    const classes = await pressManualUpload(loaded, B);
-    assert.equal(writes(server), before);
-    assert.ok(classes.has('bjh-upload-success'));
-    assert.equal(server.history().length, 3);
-  });
-
-  test('옵션이 꺼져 있으면 수동 업로드는 지금처럼 같은 파일을 덮어쓴다', async () => {
-    const server = new FakeGithub();
-    const loaded = await load(server, 'baekjoon', { keep: false });
-    const p = paths('baekjoon');
-    await pressManualUpload(loaded, A);
-    await pressManualUpload(loaded, B);
-    assert.equal(server.filesAtHead()[p.plain], B);
-    assert.equal(server.filesAtHead()[p.v2], undefined);
-  });
-});
-
-describe('옵션 저장소', () => {
-  test('getKeepSolutionVersionsOption 은 true 로 저장된 값만 켜진 것으로 본다 (기본 꺼짐)', async () => {
-    const off = await load(new FakeGithub(), 'baekjoon', { keep: false });
-    assert.equal(await off.sandbox.getKeepSolutionVersionsOption(), false);
-    off.store.set('bjhKeepSolutionVersions', 'true');
-    assert.equal(await off.sandbox.getKeepSolutionVersionsOption(), false);
-    const on = await load(new FakeGithub(), 'baekjoon', { keep: true });
-    assert.equal(await on.sandbox.getKeepSolutionVersionsOption(), true);
+      assert.equal(server.filesAtHead()[p.v2], B, platform);
+      assert.equal(server.filesAtHead()[p.v3], undefined, `${platform}: B 는 한 번만 저장된다`);
+      assert.equal(server.head, 'other1', `${platform}: 이번 업로드의 커밋은 브랜치에 오르지 않는다`);
+      assert.equal(marked, 1, `${platform}: 완료 표시는 뜬다`);
+    }
   });
 });

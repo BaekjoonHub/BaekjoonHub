@@ -1,9 +1,27 @@
 /* eslint-disable no-unused-vars */
+/* 받은 문제·제출 코드·solved.ac 응답은 stats 안의 캐시 셋에 일주일 동안 둔다. 전체 업로드가 오류나 탭 닫힘으로 멈춰도 받은 것을
+   다시 요청하지 않도록, 항목이 계속 들어오는 중에도 3초마다 저장한다(예전에는 마지막 항목 뒤 1초가 지나야 저장해, 끝나기 전에
+   멈추면 받은 것을 모두 잃었다). 캐시마다 stats 를 따로 읽고 쓰면 서로의 새 항목을 덮으므로 바뀐 캐시를 모아 한 번에 저장한다. */
+const TTL_CACHE_SAVE_MS = 3000;
+const ttlCachesUnsaved = new Set();
+let ttlCacheSaveTimer = null;
+
+function saveTTLCaches() {
+  if (ttlCacheSaveTimer) return;
+  ttlCacheSaveTimer = setTimeout(() => {
+    ttlCacheSaveTimer = null;
+    const caches = [...ttlCachesUnsaved];
+    ttlCachesUnsaved.clear();
+    updateStats((stats) => {
+      for (const cache of caches) stats[cache.name] = cache.stats[cache.name];
+    }).catch((error) => console.warn('[BaekjoonHub] 문제·코드 캐시를 저장하지 못했습니다.', error));
+  }, TTL_CACHE_SAVE_MS);
+}
+
 class TTLCacheStats {
   constructor(name) {
     this.name = name;
     this.stats = null;
-    this.saveTimer = null;
   }
 
   async forceLoad() {
@@ -19,19 +37,9 @@ class TTLCacheStats {
     }
   }
 
-  async save() {
-    // 부하가 많이 일어나는 것을 막기 위해 1초에 한번만 저장
-    if (this.saveTimer) {
-      clearTimeout(this.saveTimer);
-    }
-    this.saveTimer = setTimeout(async () => {
-      const clone = this.stats[this.name]; // 얇은 복사
-      console.log('Saving stats...', clone);
-      await this.forceLoad(); // 최신화
-      this.stats[this.name] = clone; // 업데이트
-      await saveStats(this.stats);
-      this.saveTimer = null;
-    }, 1000);
+  save() {
+    ttlCachesUnsaved.add(this);
+    saveTTLCaches();
   }
 
   async expired() {

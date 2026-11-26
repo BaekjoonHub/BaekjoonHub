@@ -15,7 +15,6 @@ const { normalizePath } = require('../../scripts/utils/pathNormalize.js');
 
 const ROOT = path.join(__dirname, '..', '..');
 const HOOK = 'tester/algorithm';
-const API = `https://api.github.com/repos/${HOOK}`;
 const VERSION = '1.4.22';
 
 /** git blob SHA — 확장 코드(calculateBlobSHA)와 따로 계산한 정답 */
@@ -117,9 +116,6 @@ class FakeGithub {
       this.head = body.sha;
       return jsonResponse(200, { ref: 'refs/heads/main', object: { sha: body.sha } });
     }
-    if (method === 'GET' && apiPath === '/git/trees/HEAD') {
-      return jsonResponse(200, { truncated: false, tree: [...this.commits[this.head].files].map(([p, sha]) => ({ path: p, type: 'blob', sha })) });
-    }
     if (method === 'GET' && apiPath.startsWith('/contents/')) {
       const target = apiPath.slice('/contents/'.length).replace(/\/$/, '');
       const sha = this.resolve(parsed.searchParams.get('ref'));
@@ -185,7 +181,7 @@ function loadPlatform(server, platform, { keep = false, stats = undefined } = {}
     },
     normalizePath,
     runLanguageFolderMigrationIfNeeded: async () => {},
-    fetch: async (url, init = {}) => server.route({ url, method: (init.method || 'GET').toUpperCase(), body: init.body ? JSON.parse(init.body) : null }),
+    fetch: async (url, init = {}) => server.route({ url, method: (init.method || 'GET').toUpperCase(), body: init.body ? JSON.parse(init.body) : null, init }),
     // 플랫폼 util.js / parsing.js 의 DOM 쪽 함수
     markUploadedCSS: (branches, directory) => { calls.uploaded.push(directory); },
     markUploadFailedCSS: () => { calls.failed += 1; },
@@ -198,7 +194,7 @@ function loadPlatform(server, platform, { keep = false, stats = undefined } = {}
   const files = ['library/sha1.min.js', 'scripts/util.js', 'scripts/Github.js', 'scripts/storage.js', 'scripts/upload.js', 'scripts/utils/solutionVersions.js',
     `scripts/${info.dir}/uploadfunctions.js`, `scripts/${info.dir}/${info.main}`];
   for (const file of files) vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), sandbox, { filename: file });
-  return { sandbox, store, calls, info };
+  return { sandbox, store, calls };
 }
 
 /** 플랫폼의 beginUpload 가 받는 파싱 결과 모양 */
@@ -219,4 +215,4 @@ async function submit(loaded, platform, code, overrides) {
   await settle();
 }
 
-module.exports = { FakeGithub, loadPlatform, solved, submit, settle, blobSha, PLATFORMS, HOOK, API, VERSION };
+module.exports = { FakeGithub, loadPlatform, solved, submit, settle, blobSha, PLATFORMS, HOOK, VERSION };

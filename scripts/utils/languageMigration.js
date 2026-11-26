@@ -171,8 +171,8 @@ async function runLanguageFolderMigrationIfNeeded(git, hook) {
       treeData.sha,
       refSHA,
     );
-    // force:false — refSHA 이후 다른 커밋이 끼었으면 422 로 실패시켜 그 커밋을 보호한다.
-    await git.updateHead(ref, commitSHA, false);
+    // fast-forward 로만 옮긴다 — refSHA 이후 다른 커밋이 끼었으면 422 로 실패시켜 그 커밋을 보호한다.
+    await git.updateHead(ref, commitSHA);
     log('language folder migration committed', { hook, moved: plan.moved.length, merged: plan.merged.length, blocked: plan.blocked });
     return true;
   }

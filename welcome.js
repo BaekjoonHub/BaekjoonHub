@@ -315,16 +315,10 @@ const TEMPLATE_PREVIEW_VARS = {
   doj:         { platform: 'DOJ', level: 'Silver', levelFull: 'Silver V', id: '1', title: '레몬 게임', language: 'C++' },
 };
 
-const TEMPLATE_DEFAULTS = {
-  baekjoon:    '${platform}/${level}/${id}. ${title}',
-  programmers: '${platform}/${level}/${id}. ${title}',
-  swea:        '${platform}/${level}/${id}. ${title}',
-  jungol:      '${platform}/${level}/${id}. ${title}',
-  doj:         '${platform}/${level}/${id}. ${title}',
-};
+const TEMPLATE_DEFAULT = '${platform}/${level}/${id}. ${title}';
 
 function updateTemplatePreview(platform) {
-  const template = $id(`tmpl_${platform}`).value || TEMPLATE_DEFAULTS[platform];
+  const template = $id(`tmpl_${platform}`).value || TEMPLATE_DEFAULT;
   const vars = TEMPLATE_PREVIEW_VARS[platform];
   const result = template.replace(/\$\{(\w+)\}/g, (match, key) => (vars.hasOwnProperty(key) ? vars[key] : ''));
   $id(`tmpl_preview_${platform}`).textContent = `➜ ${result}`;

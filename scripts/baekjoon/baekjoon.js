@@ -30,6 +30,7 @@ if (!isNull(username)) {
     getStats().then(async (stats) => {
       if (isEmpty(stats?.version) || stats.version !== getVersion()) await versionUpdate();
       insertUploadAllButton();
+      noticeBlockedUploads();
     });
   }
   if (currentUrl.includes('/status')) injectManualUploadButtons(username);
@@ -113,26 +114,29 @@ async function processManualUploadQueue() {
   isManualUploading = true;
   while (manualUploadQueue.length > 0) {
     const { data, button } = manualUploadQueue.shift();
-    button.classList.remove('bjh-upload-icon');
-    button.classList.add('BaekjoonHub_progress');
-    button.title = '업로드 중...';
+    // 연결이 없으면 uploadOneSolveProblemOnGit 이 올리지 않고 조용히 끝나 버튼이 "업로드 완료"로 바뀌었다. 버튼을 건드리기 전에 알린다.
+    if (isNull(await getToken()) || isNull(await getHook())) {
+      Toast.raiseToast('GitHub 저장소가 연결되어 있지 않습니다. BaekjoonHub 설정을 확인해 주세요.');
+      continue;
+    }
+    const show = (state, title) => {
+      button.classList.remove('bjh-upload-icon');
+      button.classList.remove('BaekjoonHub_progress');
+      button.classList.add(state);
+      button.title = title;
+    };
+    show('BaekjoonHub_progress', '업로드 중...');
     try {
       const bojData = await findData(data);
       if (isNotEmpty(bojData)) {
         await uploadOneSolveProblemOnGit(bojData, markUploadedCSS);
-        button.classList.remove('BaekjoonHub_progress');
-        button.classList.add('bjh-upload-success');
-        button.title = '업로드 완료';
+        show('bjh-upload-success', '업로드 완료');
       } else {
-        button.classList.remove('BaekjoonHub_progress');
-        button.classList.add('bjh-upload-fail');
-        button.title = '데이터 파싱 실패';
+        show('bjh-upload-fail', '데이터 파싱 실패');
       }
     } catch (e) {
       console.error('Manual upload failed:', e);
-      button.classList.remove('BaekjoonHub_progress');
-      button.classList.add('bjh-upload-fail');
-      button.title = '업로드 실패: ' + e.message;
+      show('bjh-upload-fail', `업로드 실패: ${e.message}`);
     }
   }
   isManualUploading = false;
