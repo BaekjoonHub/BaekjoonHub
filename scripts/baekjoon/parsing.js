@@ -79,6 +79,29 @@ async function findDataOfSubmission(data) {
 }
 
 /**
+ * 백준 풀이 폴더 경로. 풀이 업로드와 예제 업로드가 같은 폴더를 쓰도록 여기에서만 만든다
+ * (예제 업로드가 따로 만들던 기본 경로는 번호 뒤가 보통 공백이라, 풀이 폴더 옆에 폴더가 하나 더 생겼다).
+ * @param {string} problemId
+ * @param {string} title
+ * @param {string} level - 'Gold V' 같은 등급 이름
+ * @param {string} language - 언어별 정리와 템플릿의 ${language} 에 쓴다. 예제 업로드는 언어를 몰라 ''
+ * @returns {Promise<string>}
+ */
+function buildBojDirectory(problemId, title, level, language) {
+  const tier = level.replace(/ .*/, '');
+  const safeTitle = convertSingleCharToDoubleChar(title);
+  return buildDirectory('baekjoon', {
+    platform: '백준',
+    level: tier,
+    levelFull: level,
+    id: problemId,
+    title: safeTitle,
+    language,
+    _defaultDir: `백준/${tier}/${problemId}. ${safeTitle}`, // 번호 뒤는 U+2005 (제목의 공백을 바꾸는 문자와 같다)
+  });
+}
+
+/**
  * 문제의 상세 정보를 가지고, 문제의 업로드할 디렉토리, 파일명, 커밋 메시지, 문제 설명을 파싱하여 반환합니다.
  * @param {Object} data
  * @returns {Object} { directory, fileName, message, readme, code }
@@ -88,15 +111,7 @@ async function makeDetailMessageAndReadme(data) {
     problem_description, problem_input, problem_output, submissionTime,
     code, language, memory, runtime, samples, deleted } = data;
   const score = parseNumberFromString(result);
-  const directory = await buildDirectory('baekjoon', {
-    platform: '백준',
-    level: level.replace(/ .*/, ''),
-    levelFull: level,
-    id: problemId,
-    title: convertSingleCharToDoubleChar(title),
-    language: langVersionRemove(language),
-    _defaultDir: `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-  });
+  const directory = await buildBojDirectory(problemId, title, level, langVersionRemove(language));
   const message = `[${level}] Title: ${title}, Time: ${runtime} ms, Memory: ${memory} KB`
     + ((isNaN(score)) ? ' ' : `, Score: ${score} point `) // 서브 태스크가 있는 문제로, 점수가 있는 경우 점수까지 커밋 메시지에 표기
     + `-BaekjoonHub`;

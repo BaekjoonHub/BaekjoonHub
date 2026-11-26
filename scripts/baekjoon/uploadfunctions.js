@@ -58,15 +58,7 @@ async function uploadExamplesFromProblemPage(samples) {
   const solvedJson = await getSolvedACById(problemId);
   const title = solvedJson.titleKo;
   const level = solvedTierName(solvedJson.level);
-  const directory = await buildDirectory('baekjoon', {
-    platform: '백준',
-    level: level.replace(/ .*/, ''),
-    levelFull: level,
-    id: problemId,
-    title: convertSingleCharToDoubleChar(title),
-    language: '',
-    _defaultDir: `백준/${level.replace(/ .*/, '')}/${problemId}. ${convertSingleCharToDoubleChar(title)}`,
-  });
+  const directory = await buildBojDirectory(problemId, title, level, '');
   const commitMessage = `[${level}] Title: ${title} - 예제 입출력 -BaekjoonHub`;
 
   const git = new GitHub(hook, token);

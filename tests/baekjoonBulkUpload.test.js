@@ -143,6 +143,8 @@ function loadBulk(respond, rows, submission = {}) {
     JSZip: class { constructor() { this.files = {}; } folder() { return { file: () => {} }; } },
     GitHub: class {
       async getReference() {}
+      async getDefaultBranchOnRepo() { return 'main'; }
+      async createBlob(content, path) { return { path }; } // 예제 업로드가 쓴다
       // Array.from: vm 안에서 만든 배열은 프로토타입이 달라 deepEqual 이 다르다고 본다
       async commitTreeItems(branch, items) { committed.push(Array.from(items, (item) => item.path)); calls.push('commit'); }
     },
@@ -234,6 +236,15 @@ test('전체 업로드: 예전 버전이 403 응답을 풀이로 올린 문제�
   assert.deepEqual([ids(false), ids(true)], [['1000'], ['25176']]);
   await context.uploadAllSolvedProblem();
   assert.deepEqual(committed, [filesOf(25176)]);
+});
+
+test('예제 업로드는 풀이 업로드와 같은 폴더에 올린다 (예전에는 문제 번호 뒤 공백 문자가 달라 옆에 폴더가 하나 더 생겼다)', async () => {
+  const { context, committed } = loadBulk(() => ({ status: 200, body: SOURCE }), ROWS);
+  context.parseProblemDescription = () => ({ problemId: '1000' });
+  const solution = await context.findDataOfSubmission(ROWS[0]);
+  assert.equal(`${solution.directory}/${solution.fileName}`, filesOf(1000)[0]);
+  await context.uploadExamplesFromProblemPage([{ input: '1 2', output: '3' }]);
+  assert.deepEqual(committed, [[`${solution.directory}/input.txt`, `${solution.directory}/output.txt`]]);
 });
 
 function loadModal() {
