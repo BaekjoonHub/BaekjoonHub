@@ -40,7 +40,7 @@ test('SWEA 제출 이력에서 다른 사람의 Pass를 건너뛰고 내 Pass만
   assert.equal(context.findMyPassedSubmissionSWEA(root, 'my-user'), cards[2]);
 });
 
-test('전체 업로드 버튼은 SWEA 검색 폼을 제출하지 않는다', () => {
+test('전체 업로드 버튼은 SWEA 검색 폼을 제출하지 않는다', async () => {
   let inserted;
   let onClick;
   let uploads = 0;
@@ -52,16 +52,14 @@ test('전체 업로드 버튼은 SWEA 검색 폼을 제출하지 않는다', () 
       createElement: (tag) => { assert.equal(tag, 'button'); return button; },
     },
     isNull: (value) => value == null,
-    confirm: () => true,
-    insertMultiLoader() {},
+    confirmModal: async () => true,
     uploadAllSolvedProblemSWEA: () => { uploads += 1; },
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../scripts/swexpertacademy/util.js'), 'utf8'), ctx);
-  ctx.insertMultiLoader = () => {};
   ctx.insertUploadAllButton();
   assert.equal(inserted, button);
   assert.equal(button.type, 'button');
-  onClick({ preventDefault: () => { prevented = true; } });
+  await onClick({ preventDefault: () => { prevented = true; } });
   assert.equal(prevented, true);
   assert.equal(uploads, 1);
 });
@@ -182,15 +180,15 @@ for (const options of [{ historyStatus: 503 }, { detailStatus: 503 }, { code: ' 
   });
 }
 
-function bulkContext(results) {
+/** 전체 업로드의 공통 흐름(upload.js 의 uploadAllSolved)까지 실제 코드로 돌린다. 결과는 진행 모달의 finish 로 받는다. */
+function bulkContext(results, running = async () => {}) {
   const commits = [];
+  const fetchedIds = [];
   const recorded = [];
-  const notices = [];
-  let upToDate = false;
-  let success = false;
+  const finished = []; // [문구, 옵션]
   let progress = 0;
   const ctx = vm.createContext({
-    console: { error() {} },
+    console: { error() {}, warn() {} },
     JSZip: class { constructor() { this.files = {}; } folder() { return this; } file() { return this; } },
     GitHub: class {
       async getReference() {}
@@ -198,17 +196,19 @@ function bulkContext(results) {
     },
     updateLocalStorageStats: async () => ({ branches: { 'my/repo': 'main' } }),
     getHook: async () => 'my/repo', getToken: async () => 'test',
-    findAllSolvedProblemsSWEA: async () => results.map((result, index) => ({ problemId: String(index) })),
-    fetchSWEASubmissionCode: async ({ problemId }) => results[Number(problemId)],
+    getSaveExamplesOption: async () => false,
+    findAllSolvedProblemsSWEA: async () => results.map((result, index) => ({ problemId: result.problemId || result.data.problemId, index })),
+    fetchSWEASubmissionCode: async ({ index, problemId }) => { fetchedIds.push(problemId); return results[index]; },
     recordUploadInStats: async (hook, branch, items) => recorded.push(items),
-    setMultiLoaderDenom() {}, incMultiLoader: () => { progress += 1; },
-    MultiloaderSuccess: () => { success = true; },
-    MultiloaderUpToDate: () => { upToDate = true; },
-    MultiloaderIncomplete: (message) => notices.push(message),
-    Toast: { raiseToast: (message) => notices.push(message) },
+    progressModal: () => ({
+      update: ({ value }) => { if (value !== undefined) progress = value; },
+      running,
+      finish: (message, options) => finished.push([message, options]),
+    }),
+    location: { reload() {} },
   });
   for (const file of ['util.js', 'upload.js', 'swexpertacademy/uploadfunctions.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../scripts', file), 'utf8'), ctx);
-  return { ctx, commits, recorded, notices, upToDate: () => upToDate, success: () => success, progress: () => progress };
+  return { ctx, commits, recorded, finished, fetchedIds, progress: () => progress };
 }
 
 const validResult = { status: 'success', data: { problemId: '1959', directory: 'SWEA/D2/1959', fileName: 'solution.py', code: 'a[b[i]]>0', readme: '# 1959' } };
@@ -222,56 +222,52 @@ test('addBulkFiles 는 같은 파일을 zip 과 커밋 트리 양쪽에 같은 �
   assert.deepEqual(tree.map((item) => [item.path, item.content, item.mode, item.type]), zipped.map((file) => [...file, '100644', 'blob']));
 });
 
-test('Pass 없음과 요청 실패가 섞여 있어도 정상 코드는 커밋하고 제외된 문제 번호를 알린다', async () => {
+test('Pass 없음과 요청 실패가 섞여 있어도 정상 코드는 커밋하고 제외된 문제 번호와 이유를 알린다', async () => {
   const s = bulkContext([validResult, { status: 'skipped', problemId: '1989' }, { status: 'failed', problemId: '2072' }]);
   await s.ctx.uploadAllSolvedProblemSWEA();
   assert.equal(s.commits.length, 1);
   assert.equal(s.commits[0].length, 2);
   assert.equal(s.commits[0][0].content, 'a[b[i]]>0');
   assert.equal(s.recorded.length, 1);
-  assert.match(s.notices[0], /1개 업로드/);
-  assert.match(s.notices[0], /Pass.*1989/);
-  assert.match(s.notices[0], /실패.*2072/);
-  assert.equal(s.success(), false);
-  assert.equal(s.upToDate(), false);
+  const [message, options] = s.finished[0];
+  assert.equal(message, '1개 문제를 GitHub에 올렸습니다. 2개는 가져오지 못했습니다.');
+  assert.deepEqual(Array.from(options.details), ['1989: Pass 한 제출을 찾지 못했습니다.', '2072: 제출 코드를 가져오지 못했습니다.']);
+  assert.equal(typeof options.onRetry, 'function');
+  assert.equal(options.failed, undefined);
   assert.equal(s.progress(), 3);
 });
 
-test('모든 문제가 제외되면 빈 커밋이나 Up To Date 대신 제외 사유를 알린다', async () => {
+test('모든 문제가 제외되면 빈 커밋이나 "이미 모두 올라가 있습니다" 대신 실패와 제외 사유를 알린다', async () => {
   const s = bulkContext([{ status: 'skipped', problemId: '1989' }, { status: 'failed', problemId: '2072' }]);
   await s.ctx.uploadAllSolvedProblemSWEA();
   assert.equal(s.commits.length, 0);
   assert.equal(s.recorded.length, 0);
-  assert.equal(s.upToDate(), false);
-  assert.match(s.notices[0], /0개 업로드/);
-  assert.match(s.notices[0], /1989/);
-  assert.match(s.notices[0], /2072/);
+  const [message, options] = s.finished[0];
+  assert.equal(message, '문제를 하나도 가져오지 못했습니다.');
+  assert.equal(options.failed, true);
+  assert.match(options.details.join(' '), /1989.*2072/);
+  assert.equal(options.onClose, null, '올린 것이 없으면 새로 고치지 않는다');
 });
 
-test('전체 조회가 성공하면 한 번 커밋하고 성공 표시를 유지한다', async () => {
+test('전체 조회가 성공하면 한 번 커밋하고, 확인을 누를 때 새로 고친다', async () => {
   const s = bulkContext([validResult]);
   await s.ctx.uploadAllSolvedProblemSWEA();
   assert.equal(s.commits.length, 1);
-  assert.equal(s.success(), true);
-  assert.equal(s.notices.length, 0);
+  const [message, options] = s.finished[0];
+  assert.equal(message, '1개 문제를 GitHub에 올렸습니다.');
+  assert.deepEqual([options.details.length, options.onRetry, typeof options.onClose], [0, null, 'function']);
 });
 
-test('일부 제외 알림은 새로고침하지 않고 긴 문제 목록을 읽을 수 있게 표시한다', () => {
-  const wrap = { textContent: '' };
-  const toast = { element: { style: {} } };
-  const ctx = vm.createContext({
-    multiloader: { wrap }, isNull: (value) => value == null,
-    setTimeout: () => assert.fail('부분 완료 뒤에는 새로고침을 예약하면 안 됩니다.'),
-    Toast: { raiseToast: (message, duration) => {
-      assert.equal(message, '전체 업로드: 1개 업로드. Pass 조회 없음: 1989');
-      assert.equal(duration, 60000);
-      return toast;
-    } },
-  });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../scripts/swexpertacademy/util.js'), 'utf8'), ctx);
-  ctx.MultiloaderIncomplete('전체 업로드: 1개 업로드. Pass 조회 없음: 1989');
-  assert.match(wrap.textContent, /일부 제외/);
-  assert.equal(toast.element.style.overflowY, 'auto');
+test('일시정지한 동안에는 다음 문제를 가져오지 않고, 이어하면 나머지를 가져와 올린다', async () => {
+  let resume;
+  const paused = new Promise((resolve) => { resume = resolve; });
+  const s = bulkContext([validResult, { ...validResult, data: { ...validResult.data, problemId: '1989', directory: 'SWEA/D2/1989' } }], () => paused);
+  const run = s.ctx.uploadAllSolvedProblemSWEA();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual([s.fetchedIds.length, s.commits.length, s.finished.length], [0, 0, 0]);
+  resume();
+  await run;
+  assert.deepEqual([s.fetchedIds.sort(), s.commits.length, s.finished[0][0]], [['1959', '1989'], 1, '2개 문제를 GitHub에 올렸습니다.']);
 });
 
 test('자동 업로드는 SWEA 코드 저장이 끝난 뒤 파싱을 시작한다', async () => {

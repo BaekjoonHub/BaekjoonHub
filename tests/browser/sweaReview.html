@@ -7,7 +7,6 @@
 const checks = document.querySelector('#checks');
 function assert(value, message) { if (!value) throw new Error(message); }
 function pass(text) { const li = document.createElement('li'); li.textContent = text; checks.append(li); }
-window.multiloader = { wrap: document.createElement('span'), nom: document.createElement('span'), denom: document.createElement('span') };
 window.log = () => {};
 window.chrome = { runtime: { id: 'local-regression-test' } };
 </script>
@@ -55,13 +54,15 @@ window.chrome = { runtime: { id: 'local-regression-test' } };
   window.GitHub = class { async getReference() {} async commitTreeItems(branch, items) { committed.push(items); } };
   window.JSZip = class { constructor() {this.files={};} folder() {return this;} file() {return this;} };
   window.recordUploadInStats = async () => {};
+  window.getSaveExamplesOption = async () => false;
   await uploadAllSolvedProblemSWEA();
   assert(committed.length === 1 && committed[0].length === 2, 'partial commit');
   assert(committed[0][0].content === rawCode, 'committed source changed');
-  const report = document.querySelector('.toast-notification').textContent;
-  assert(report.includes('1개 업로드') && report.includes('1989') && report.includes('2072'), 'missing report');
-  pass('혼합 결과: 정상 풀이 1개 커밋 + Pass 없음 1989번·조회 실패 2072번 안내');
-  document.querySelectorAll('.toast-notification').forEach((node) => node.remove());
+  const report = document.querySelector('dialog[open]').textContent;
+  assert(report.includes('1개 문제를 GitHub에 올렸습니다') && report.includes('1989') && report.includes('2072'), 'missing report');
+  pass('혼합 결과: 정상 풀이 1개 커밋 + Pass 없음 1989번·조회 실패 2072번을 결과 모달에 안내');
+  // 확인을 누르면 올라간 표시를 보여 주려고 새로 고친다. 이 페이지에서는 닫지 않고 떼어 낸다.
+  document.querySelector('dialog[open]').remove();
   const popup = document.createElement('div'); popup.className = 'popup_layer show';
   popup.innerHTML = '<div><p class="txt">축하합니다. Pass입니다.</p><div class="btn_center"><a href="#closed">확인</a></div></div>';
   document.body.append(popup);

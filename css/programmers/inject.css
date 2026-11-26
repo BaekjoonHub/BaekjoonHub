@@ -89,16 +89,6 @@
   cursor: pointer;
 }
 
-.BJH_loading_wrap {
-  display: inline-block;
-  margin-left: 4px;
-  margin-right: 4px;
-}
-
-.BJH_loading_number {
-  display: inline-block;
-}
-
 /* 토스트 알림 (scripts/toast.js). 사이트 스타일과 겹치지 않도록 하위 선택자는 .toast-notification 아래로 한정하고,
    사이트 헤더·모달 위에 보이도록 z-index 를 높게 둔다. */
 .toast-notification * {

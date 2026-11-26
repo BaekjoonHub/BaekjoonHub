@@ -143,9 +143,3 @@ const RESULT_CATEGORY = {
 
 /* state of upload for progress */
 const uploadState = { uploading: false };
-
-const multiloader = {
-  wrap: null,
-  nom: null,
-  denom: null,
-};

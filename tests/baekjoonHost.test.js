@@ -42,6 +42,7 @@ function load() {
     debug: false,
     console,
     URL,
+    setTimeout, // 요청 사이의 간격(fetchBoj)
     location: new URL(PAGE),
     DOMParser: class { parseFromString(html) { return fakeDocument(html); } },
     updateProblemsFromStats: () => {},
@@ -53,7 +54,7 @@ function load() {
       return { ok: body !== undefined, status: body === undefined ? 404 : 200, text: async () => body };
     },
   });
-  for (const file of ['scripts/util.js', 'scripts/baekjoon/util.js', 'scripts/baekjoon/parsing.js']) {
+  for (const file of ['scripts/util.js', 'scripts/upload.js', 'scripts/baekjoon/util.js', 'scripts/baekjoon/parsing.js']) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), context, { filename: file });
   }
   return { context, requested };

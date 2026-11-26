@@ -139,97 +139,32 @@ function insertUploadAllButton() {
   const btn = document.createElement('a');
   btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" fill="currentColor"/></svg>전체제출 업로드';
   btn.style.cursor = 'pointer';
-  btn.addEventListener('click', () => {
-    if (confirm('GitHub에 전체 제출을 업로드하시겠습니까?')) {
-      insertMultiLoader();
-      uploadAllSolvedProblem();
-    }
+  btn.addEventListener('click', async () => {
+    if (await confirmModal('GitHub에 전체 제출을 업로드하시겠습니까?', await describeBulkUpload())) uploadAllSolvedProblem();
   });
   li.appendChild(btn);
   navTabs.appendChild(li);
 }
 
 /**
- * 전체 업로드 진행률 표시 DOM을 생성합니다.
- * denom 설정 전까지는 "준비 중…" 표시 — "0 / 0" 이 오류로 오해되던 현상 방지.
+ * 전체 업로드를 시작하기 전에 보여 줄 안내. 프로필의 맞은 문제 목록과 업로드 기록으로 새로 올릴 문제 수를 요청 없이 어림합니다.
+ * 실제 대상은 시작한 뒤 제출 목록과 레포 파일 목록으로 다시 정하므로 조금 다를 수 있다.
+ * @returns {Promise<string|undefined>} 맞은 문제 목록이 없는 화면이면 undefined
  */
-function insertMultiLoader() {
-  const navTabs = document.querySelector('ul.nav.nav-tabs');
-  if (isNull(navTabs)) return;
-  const wrap = document.createElement('li');
-  wrap.className = 'BJH_loading_wrap';
-  wrap.textContent = '준비 중…';
-  navTabs.appendChild(wrap);
-  multiloader.wrap = wrap;
-  multiloader.nom = null;
-  multiloader.denom = null;
+async function describeBulkUpload() {
+  const solved = new Set([...document.querySelectorAll('.problem-list a.result-ac')].map((link) => link.textContent.trim()));
+  if (solved.size === 0) return undefined;
+  const uploaded = extractUploadedProblemIds(await getStats(), await getHook(), '백준');
+  const left = [...solved].filter((id) => !uploaded.has(id)).length;
+  return `새로 올릴 문제는 약 ${left}개입니다. 맞은 문제 ${solved.size}개 중 ${solved.size - left}개는 이미 올라가 있습니다.`;
 }
 
 /**
- * 전체 업로드 전체 개수를 설정합니다.
- * 최초 호출 시 "준비 중…"을 "0 / N" 마크업으로 교체하며 nom/denom 핸들을 부여합니다.
+ * v1.7.2 까지의 업로드가 백준의 403 응답을 풀이로 올린 문제가 있으면(extractUploadedProblemIds), 고치는 방법을 알립니다.
  */
-function setMultiLoaderDenom(num) {
-  if (isNull(multiloader.wrap)) return;
-  if (isNull(multiloader.denom)) {
-    multiloader.wrap.textContent = '';
-    const nom = document.createElement('span');
-    nom.className = 'BJH_loading_number';
-    nom.textContent = '0';
-    const slash = document.createTextNode(' / ');
-    const denom = document.createElement('span');
-    denom.className = 'BJH_loading_number';
-    denom.textContent = String(num);
-    multiloader.wrap.appendChild(nom);
-    multiloader.wrap.appendChild(slash);
-    multiloader.wrap.appendChild(denom);
-    multiloader.nom = nom;
-    multiloader.denom = denom;
-  } else {
-    multiloader.denom.textContent = String(num);
-  }
-}
-
-/**
- * 전체 업로드 완료 개수를 증가시킵니다.
- */
-function incMultiLoader(num) {
-  if (!isNull(multiloader.nom)) {
-    multiloader.nom.textContent = String(Number(multiloader.nom.textContent) + num);
-  }
-}
-
-/**
- * 전체 업로드가 이미 최신 상태임을 표시합니다.
- */
-function MultiloaderUpToDate() {
-  if (!isNull(multiloader.wrap)) {
-    multiloader.wrap.textContent = 'Up To Date';
-  }
-}
-
-/**
- * 전체 업로드 성공을 표시합니다.
- */
-function MultiloaderSuccess() {
-  if (!isNull(multiloader.wrap)) {
-    multiloader.wrap.textContent = 'SUCCESS';
-    setTimeout(() => location.reload(), 3000);
-  }
-}
-
-/**
- * 전체 업로드 실패를 표시합니다. 사용자가 원인을 확인할 수 있도록
- * 로더를 'FAILED'로 바꾸고, 상세 메시지를 title 속성에 담습니다.
- */
-function MultiloaderFail(message) {
-  if (!isNull(multiloader.wrap)) {
-    multiloader.wrap.textContent = 'FAILED';
-    multiloader.wrap.classList.add('BJH_multiloader_fail');
-    if (!isEmpty(message)) {
-      multiloader.wrap.setAttribute('title', message);
-    }
-  }
+async function noticeBlockedUploads() {
+  const count = extractUploadedProblemIds(await getStats(), await getHook(), '백준', true).size;
+  if (count > 0) Toast.raiseToast(`백준이 요청을 막았을 때 잘못 올라간 풀이 ${count}개를 찾았습니다. '전체제출 업로드'를 누르면 다시 올립니다.`, 15000);
 }
 
 function convertResultTableHeader(header) {

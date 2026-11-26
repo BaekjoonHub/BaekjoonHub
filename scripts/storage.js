@@ -156,13 +156,32 @@ function recordTreeItemsInStats(submission, hook, treeItems) {
  * @returns {Promise<object>} 저장한 stats
  */
 async function recordUploadInStats(hook, branch, treeItems) {
-  const stats = (await getStats()) || {};
-  if (isNull(stats.submission)) stats.submission = {};
-  if (isNull(stats.branches)) stats.branches = {};
-  if (!isNull(branch)) stats.branches[hook] = branch;
-  recordTreeItemsInStats(stats.submission, hook, treeItems);
-  await saveStats(stats);
-  return stats;
+  return updateStats((stats) => {
+    if (isNull(stats.submission)) stats.submission = {};
+    if (isNull(stats.branches)) stats.branches = {};
+    if (!isNull(branch)) stats.branches[hook] = branch;
+    recordTreeItemsInStats(stats.submission, hook, treeItems);
+  });
+}
+
+/* stats 는 통째로 읽고 고쳐 쓰는 값이라, 한 탭 안의 두 저장이 겹치면 늦게 쓴 쪽이 앞의 변경을 지운다
+   (업로드 기록과 백준의 문제·코드 캐시가 서로를 덮을 수 있었다). 고쳐 쓰는 일은 여기에 한 줄로 세운다. */
+let statsUpdating = Promise.resolve();
+
+/**
+ * stats 를 새로 읽어 change 로 고친 뒤 저장합니다.
+ * @param {function(object): (void|Promise<void>)} change
+ * @returns {Promise<object>} 저장한 stats
+ */
+function updateStats(change) {
+  const run = statsUpdating.then(async () => {
+    const stats = (await getStats()) || {};
+    await change(stats);
+    await saveStats(stats);
+    return stats;
+  });
+  statsUpdating = run.catch(() => {});
+  return run;
 }
 
 /**

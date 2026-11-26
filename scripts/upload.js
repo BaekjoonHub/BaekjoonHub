@@ -94,15 +94,21 @@ function addBulkFiles(zip, treeItems, directory, files) {
   }
 }
 
+/* v1.7.2 까지는 백준이 요청을 막았을 때의 403 응답 본문(134바이트 HTML)을 풀이 코드로 올렸다. 그 파일의 git blob sha 다.
+   이 파일이 든 문제는 올린 문제로 치지 않아, 전체 업로드가 같은 경로에 다시 올린다.
+   shortcut: 풀이 파일 이름이 그때와 달라지면(가장 좋은 제출의 언어가 바뀜) 옛 파일이 남아 계속 다시 올린다, 그런 보고가 오면 옛 파일을 지우는 항목을 커밋에 더한다. */
+const BOJ_BLOCKED_BLOB_SHA = '178a959522ce55eb27b5a8734133a7d4beed8b6e';
+
 /**
  * stats 캐시에서 이미 올린 문제 번호를 모읍니다. (폴더 이름 맨 앞의 숫자)
  * 플랫폼 폴더는 레포 바로 아래(플랫폼별 정리)나 언어 폴더 아래(언어별 정리)에 있다.
  * @param {object} stats
  * @param {string} hook - 'owner/repo'
  * @param {string} platform - 플랫폼 폴더 이름 ('백준', '프로그래머스', 'SWEA')
+ * @param {boolean} [blocked] - true 면 403 응답이 풀이로 올라간 문제만, false 면 그것을 뺀 문제만 모은다
  * @returns {Set<string>}
  */
-function extractUploadedProblemIds(stats, hook, platform) {
+function extractUploadedProblemIds(stats, hook, platform, blocked = false) {
   const uploadedIds = new Set();
   const [owner, repo] = (hook || '').split('/');
   const repoObj = stats?.submission?.[owner]?.[repo];
@@ -110,10 +116,146 @@ function extractUploadedProblemIds(stats, hook, platform) {
   const languageNodes = Object.keys(repoObj).filter((key) => key !== platform).map((key) => repoObj[key]);
   for (const node of [repoObj, ...languageNodes]) {
     if (isNull(node) || typeof node !== 'object' || isNull(node[platform])) continue;
-    for (const key of Object.keys(node[platform])) {
+    for (const [key, folder] of Object.entries(node[platform])) {
       const match = key.match(/^(\d+)/);
-      if (match) uploadedIds.add(match[1]);
+      if (match && Object.values(folder || {}).includes(BOJ_BLOCKED_BLOB_SHA) === blocked) uploadedIds.add(match[1]);
     }
   }
   return uploadedIds;
+}
+
+/* 전체 업로드의 진행 모달(progressModal, toast.js)과 진행 수. modal 은 전체 업로드가 도는 동안에만 있다.
+   reload: 이 페이지에서 올린 문제가 있으면, 결과를 닫을 때 새로 고쳐 올라간 표시를 보여 준다. */
+const multiloader = { modal: null, done: 0, total: 0, startedAt: 0, note: '', reload: false };
+
+/** 전체 업로드 진행 모달을 띄웁니다. 가져올 문제 수를 알기 전의 막대는 비어 있다. */
+function insertMultiLoader(note) {
+  Object.assign(multiloader, { modal: progressModal('전체제출 업로드'), done: 0, total: 0, note });
+  updateMultiLoader({ status: '제출 목록을 읽는 중…', note });
+}
+
+/**
+ * 진행 모달의 문구를 바꿉니다. 모달이 없으면(자동·수동 업로드) 아무 일도 하지 않습니다.
+ * @param {{status?: string, note?: string, value?: number, max?: number, eta?: string, pausable?: boolean}} fields
+ */
+function updateMultiLoader(fields) {
+  multiloader.modal?.update(fields);
+}
+
+/** 가져올 문제 수를 정하고, 이때부터 일시정지할 수 있게 합니다. */
+function setMultiLoaderDenom(num) {
+  multiloader.total = num;
+  multiloader.startedAt = Date.now();
+  updateMultiLoader({ pausable: true });
+  incMultiLoader(0);
+}
+
+/** 가져온 문제 수를 늘립니다. 기다린다는 안내(백준의 fetchBoj)가 떠 있었다면 기본 안내로 되돌립니다. */
+function incMultiLoader(num) {
+  multiloader.done += num;
+  const { done, total, startedAt, note } = multiloader;
+  // 남은 시간은 지금까지의 속도로 어림한다. 처음 몇 문제는 값이 크게 흔들려 보여 주지 않는다.
+  const left = done >= 5 && done < total ? ((Date.now() - startedAt) / done) * (total - done) : null;
+  const eta = left === null ? '' : left < 60000 ? '1분 안에 끝남' : `약 ${Math.round(left / 60000)}분 남음`;
+  updateMultiLoader({ status: '문제와 제출 코드를 가져오는 중…', note, value: done, max: total, eta });
+}
+
+/** 결과를 보여 주고 전체 업로드를 끝냅니다. options 는 progressModal 의 finish 와 같다(onClose 는 여기서 정한다). */
+function finishMultiLoader(message, options = {}) {
+  const { modal } = multiloader;
+  multiloader.modal = null;
+  modal?.finish(message, { ...options, onClose: multiloader.reload ? () => location.reload() : null });
+}
+
+/**
+ * 맞은 문제 전체를 커밋 하나로 올립니다. 백준·프로그래머스·SWEA 의 전체 업로드가 이 흐름을 함께 쓴다.
+ * 레포 파일 목록 동기화 → 맞은 문제 목록 → 이미 올린 문제 제외 → 문제별로 가져오기 → 커밋 → 기록.
+ * 가져오지 못한 문제는 건너뛰고 결과에 번호와 이유를 보여 주며, 그 문제만 다시 시도할 수 있다.
+ * @param {object} platform
+ * @param {string} platform.folder - 레포의 플랫폼 폴더 이름 ('백준', '프로그래머스', 'SWEA')
+ * @param {string} platform.zipName - 커밋에 실패했을 때 내려받는 zip 파일 이름의 앞부분
+ * @param {number} platform.poolLimit - 동시에 가져올 문제 수
+ * @param {function(): Promise<Array<{problemId: string}>>} platform.listSolved - 맞은 문제 목록
+ * @param {function(object): Promise<{directory: string, fileName: string, code: string, readme: string, samples?: Array}>} platform.fetchOne
+ *   - 목록의 한 문제를 올릴 내용으로 바꾼다. 가져오지 못하면 이유를 담아 throw 한다.
+ * @param {string} [platform.note] - 진행 중에 보여 줄 안내
+ * @param {Array<object>} [only] - 다시 시도할 문제들. 주면 맞은 문제 목록을 다시 읽지 않는다.
+ */
+async function uploadAllSolved(platform, only) {
+  const treeItems = [];
+  const zip = new JSZip();
+  insertMultiLoader(platform.note || '이 탭을 닫거나 다른 페이지로 가면 업로드가 멈춥니다.');
+  try {
+    // 1. 레포 파일 목록으로 업로드 기록을 맞춘다
+    const stats = await updateLocalStorageStats();
+    const hook = await getHook();
+    const git = new GitHub(hook, await getToken());
+    const branch = stats.branches[hook];
+    // 브랜치가 없으면 오래 걸리는 파싱 전에 멈춘다. 커밋의 부모는 커밋 직전에 다시 읽는다(commitTreeItems).
+    await git.getReference(branch);
+
+    // 2. 맞은 문제 가운데 아직 올리지 않은 것
+    const uploadedIds = extractUploadedProblemIds(stats, hook, platform.folder);
+    const list = (only || (await platform.listSolved())).filter((item) => !uploadedIds.has(String(item.problemId)));
+    if (list.length === 0) return finishMultiLoader('새로 올릴 문제가 없습니다. 이미 모두 올라가 있습니다.');
+
+    // 3. 문제별로 가져온다. 멈춰 있는 동안(일시정지)에는 다음 문제를 시작하지 않는다.
+    setMultiLoaderDenom(list.length);
+    const failed = [];
+    const fetched = (await asyncPool(platform.poolLimit, list, async (item) => {
+      try {
+        await multiloader.modal?.running();
+        const data = await platform.fetchOne(item);
+        if (isNull(data) || isEmpty(data.code) || isEmpty(data.readme)) throw new Error('제출한 코드나 문제 설명을 찾지 못했습니다.');
+        return data;
+      } catch (error) {
+        console.warn('[BaekjoonHub] 문제를 가져오지 못했습니다.', item.problemId, error);
+        failed.push({ item, reason: error?.message || String(error) });
+        return null;
+      } finally {
+        incMultiLoader(1);
+      }
+    })).filter(Boolean);
+
+    // 4. 커밋 하나로 올린다
+    if (fetched.length > 0) {
+      const saveExamples = await getSaveExamplesOption();
+      for (const data of fetched) {
+        const files = [[data.fileName, data.code], ['README.md', data.readme]];
+        if (saveExamples && data.samples?.length > 0) {
+          for (const entry of samplesToFileEntries(data.samples)) files.push([entry.filename, entry.content]);
+        }
+        addBulkFiles(zip, treeItems, data.directory, files);
+      }
+      /* 파싱에 수 분이 걸리므로 그 사이 다른 탭의 커밋이 올라갔을 수 있다. 부모는 커밋 직전에 읽고,
+         브랜치는 fast-forward 로만 옮긴다(예전에는 파싱 전에 읽은 ref 로 force 갱신해 그 사이 커밋을 지웠다). */
+      updateMultiLoader({ status: 'GitHub에 올리는 중…', pausable: false });
+      await git.commitTreeItems(branch, treeItems, '전체 코드 업로드 -BaekjoonHub');
+      // 확인을 누르면 페이지를 새로 고치므로 기록을 먼저 끝낸다
+      await recordUploadInStats(hook, branch, treeItems);
+      multiloader.reload = true;
+    }
+
+    // 5. 결과. 가져오지 못한 문제는 번호와 이유를 보여 주고, 그 문제만 다시 시도할 수 있게 한다.
+    failed.sort((a, b) => a.item.problemId - b.item.problemId);
+    const result = {
+      details: failed.map(({ item, reason }) => `${item.problemId}: ${reason}`),
+      onRetry: failed.length > 0 ? () => uploadAllSolved(platform, failed.map(({ item }) => item)) : null,
+    };
+    if (fetched.length === 0) return finishMultiLoader('문제를 하나도 가져오지 못했습니다.', { ...result, failed: true });
+    finishMultiLoader(`${fetched.length}개 문제를 GitHub에 올렸습니다.${failed.length > 0 ? ` ${failed.length}개는 가져오지 못했습니다.` : ''}`, result);
+  } catch (error) {
+    console.error('전체 코드 업로드 실패', error);
+    let message = error?.message || String(error);
+    // 토큰 만료(재인증으로 해결)나 올릴 파일을 모으기 전의 실패에는 zip 을 만들지 않는다
+    if (error?.name !== 'TokenExpiredError' && Object.keys(zip.files).length > 0) {
+      try {
+        saveAs(await zip.generateAsync({ type: 'blob' }), `${platform.zipName}_backup_${Date.now()}.zip`);
+        message += ' 올리려던 파일은 zip 파일로 내려받았습니다.';
+      } catch (zipError) {
+        console.error('ZIP 폴백 생성 실패', zipError);
+      }
+    }
+    finishMultiLoader(message, { failed: true, onRetry: () => uploadAllSolved(platform, only) });
+  }
 }

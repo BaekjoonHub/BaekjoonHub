@@ -30,6 +30,7 @@ if (!isNull(username)) {
     getStats().then(async (stats) => {
       if (isEmpty(stats?.version) || stats.version !== getVersion()) await versionUpdate();
       insertUploadAllButton();
+      noticeBlockedUploads();
     });
   }
   if (currentUrl.includes('/status')) injectManualUploadButtons(username);
