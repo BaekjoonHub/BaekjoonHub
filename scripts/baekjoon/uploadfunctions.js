@@ -20,6 +20,7 @@ async function uploadOneSolveProblemOnGit(bojData, cb) {
       }
       return;
     }
+    if (e.name === 'GitHubRateLimitError' && typeof Toast !== 'undefined') Toast.raiseToast(e.message);
     throw e;
   }
 }

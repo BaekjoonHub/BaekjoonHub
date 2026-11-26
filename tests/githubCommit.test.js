@@ -18,8 +18,8 @@ const ROOT = path.join(__dirname, '..');
 const HOOK = 'tester/algorithm';
 const API = `https://api.github.com/repos/${HOOK}`;
 
-function jsonResponse(status, body) {
-  return { status, ok: status >= 200 && status < 300, json: async () => body };
+function jsonResponse(status, body, headers = {}) {
+  return { status, ok: status >= 200 && status < 300, json: async () => body, headers: { get: (name) => headers[name.toLowerCase()] ?? null } };
 }
 
 /**
@@ -160,6 +160,24 @@ describe('commitTreeItems — ref 는 fast-forward 로만 옮긴다', () => {
     });
     assert.equal(server.state.patches, 1);
   });
+});
+
+test('403 은 요청 한도 초과(x-ratelimit-remaining 이 0 이거나 retry-after 가 있음)와 토큰 문제를 가려 던지고, 안내 문구도 다르다', async () => {
+  for (const [label, status, headers, errorName] of [
+    ['남은 요청 수가 0', 403, { 'x-ratelimit-remaining': '0' }, 'GitHubRateLimitError'],
+    ['retry-after 가 있다', 403, { 'x-ratelimit-remaining': '4990', 'retry-after': '60' }, 'GitHubRateLimitError'],
+    ['한도와 무관한 403', 403, { 'x-ratelimit-remaining': '4990' }, 'TokenExpiredError'],
+    ['401 은 헤더와 상관없이 토큰 문제', 401, { 'x-ratelimit-remaining': '0', 'retry-after': '60' }, 'TokenExpiredError'],
+  ]) {
+    const gh = loadGithub(() => jsonResponse(status, { message: 'from GitHub' }, headers));
+    await assert.rejects(new gh.GitHub(HOOK, 'token').getDefaultBranchOnRepo(), (error) => {
+      assert.equal(error.name, errorName, label);
+      assert.equal(error.status, status, label);
+      assert.ok(error instanceof gh.GitHubApiError, label);
+      assert.equal(/요청 한도/.test(error.message), errorName === 'GitHubRateLimitError', `${label}: ${error.message}`);
+      return true;
+    });
+  }
 });
 
 describe('githubRequest·getReference·getFile', () => {

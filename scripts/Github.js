@@ -20,6 +20,13 @@ class GitHubTimeoutError extends GitHubApiError {
   }
 }
 
+class GitHubRateLimitError extends GitHubApiError {
+  constructor(message, status) {
+    super(message, status);
+    this.name = 'GitHubRateLimitError';
+  }
+}
+
 /* GitHub API 요청 하나에 허용하는 최대 시간(ms).
    응답 없이 멈춘 요청이 업로드를 영원히 붙잡지 않도록 끊는다. 프로그래머스는 업로드를 한 줄로 세우므로
    멈춘 요청 하나가 그 탭의 이후 업로드를 모두 막는다. 트리 생성(전체 업로드는 수 MB 본문을 싣는다)과
@@ -80,6 +87,10 @@ async function handleGitHubResponse(res) {
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({}));
     const message = errorBody.message || `GitHub API error: ${res.status}`;
+    // 403 은 요청 한도 초과일 수도 있다(1차 한도: x-ratelimit-remaining 이 0, 2차 한도: retry-after). 재인증으로 풀리지 않으므로 토큰 문제와 가른다.
+    if (res.status === 403 && (res.headers.get('x-ratelimit-remaining') === '0' || res.headers.get('retry-after') !== null)) {
+      throw new GitHubRateLimitError(`GitHub 요청 한도를 넘었습니다. 잠시 뒤 다시 시도해 주세요. (${message})`, res.status);
+    }
     if (res.status === 401 || res.status === 403) {
       throw new TokenExpiredError(message, res.status);
     }

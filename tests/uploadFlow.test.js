@@ -15,8 +15,8 @@ const { FakeGithub, loadPlatform, solved, settle, HOOK, VERSION } = require('./h
 
 const API = `https://api.github.com/repos/${HOOK}`;
 
-function jsonResponse(status, body) {
-  return { status, ok: status >= 200 && status < 300, json: async () => body };
+function jsonResponse(status, body, headers = {}) {
+  return { status, ok: status >= 200 && status < 300, json: async () => body, headers: { get: (name) => headers[name.toLowerCase()] ?? null } };
 }
 
 /**
@@ -104,6 +104,25 @@ test('완료 콜백의 세 번째 인자는 새로 커밋했을 때만 true 다 
   const seen = [];
   for (let i = 0; i < 2; i += 1) await sandbox.uploadUnlessSame(solved('baekjoon', 'print(1)\n'), (branches, directory, committed) => seen.push(committed));
   assert.deepEqual(seen, [true, undefined], '같은 코드를 다시 올리면 커밋 없이 완료 표시만 한다');
+});
+
+test('GitHub 403: 요청 한도 초과와 토큰 문제를 서로 다른 안내로 알린다 (백준 업로드)', async () => {
+  const shown = {};
+  for (const [kind, headers] of [['limit', { 'x-ratelimit-remaining': '0' }], ['token', { 'x-ratelimit-remaining': '4990' }]]) {
+    const { sandbox } = loadPlatform({ route: async () => jsonResponse(403, { message: 'from GitHub' }, headers) }, 'baekjoon');
+    await settle();
+    const toasts = [];
+    sandbox.Toast = { raiseToast: (message) => toasts.push(message) };
+    const upload = sandbox.uploadOneSolveProblemOnGit(solved('baekjoon', 'print(1)\n'), () => {});
+    // 한도 초과는 실패로 던져 부른 쪽이 실패로 표시하고, 토큰 문제는 예전처럼 안내만 하고 끝난다
+    if (kind === 'limit') await assert.rejects(upload, (error) => error.name === 'GitHubRateLimitError');
+    else await upload;
+    assert.equal(toasts.length, 1, kind);
+    shown[kind] = toasts[0];
+  }
+  assert.match(shown.limit, /요청 한도/);
+  assert.doesNotMatch(shown.limit, /토큰/);
+  assert.match(shown.token, /토큰/);
 });
 
 test('백준 수동 업로드: 토큰이나 저장소가 없으면 업로드 완료로 바꾸지 않고, 실패를 알리고 버튼을 원래대로 둔다', async () => {
