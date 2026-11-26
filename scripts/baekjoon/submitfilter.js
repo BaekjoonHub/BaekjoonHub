@@ -3,6 +3,43 @@
 
   const DEBUG = false;
 
+  // 주석과 문자열·문자 리터럴을 같은 길이의 공백으로 바꿔, 그 안의 글자를 Java 검사에서 빼고 위치는 그대로 둔다.
+  // shortcut: 어휘 분석이 아니라 정규식 한 번이라 드문 문법(유니코드 이스케이프 등)은 놓친다. 필요하면 토크나이저로.
+  function blankCommentsAndStrings(text) {
+    return text.replace(/\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|"{3}[\s\S]*?(?:"{3}|$)|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'/g, (m) =>
+      m.replace(/[^\n]/g, ' ')
+    );
+  }
+
+  // 중괄호 깊이로 main 을 직접 품은 클래스를 찾는다. Main 이 하나라도 main 을 품으면 경고하지 않는다.
+  function findMainClassName(text) {
+    const stack = [];
+    const holders = [];
+    let pending = null;
+    for (const m of blankCommentsAndStrings(text).matchAll(/\bclass\s+(\w+)|\bpublic\s+static\s+void\s+main\s*\(|[{}]/g)) {
+      if (m[1]) pending = { name: m[1], start: m.index + m[0].length - m[1].length };
+      else if (m[0] === '{') stack.push(pending), (pending = null);
+      else if (m[0] === '}') stack.pop();
+      else if (stack[stack.length - 1]) holders.push(stack[stack.length - 1]);
+    }
+    if (holders.some((h) => h.name === 'Main')) return [];
+    return [...new Set(holders)].map((h) => ({ start: h.start, end: h.start + h.name.length }));
+  }
+
+  function findPackage(text) {
+    return [...blankCommentsAndStrings(text).matchAll(/^[ \t]*(package[ \t]+[\w.]+[ \t]*;)/gm)].map((m) => ({
+      start: m.index + m[0].length - m[1].length,
+      end: m.index + m[0].length,
+    }));
+  }
+
+  // 제출 페이지의 언어 셀렉트에서 고른 언어가 Java 인지. 셀렉트를 못 찾으면 Java 가 아닌 것으로 본다.
+  function isJava() {
+    const select = document.querySelector('select#language, select[name="language"]');
+    const option = select && select.selectedOptions && select.selectedOptions[0];
+    return !!option && /^Java(\s|$)/.test((option.textContent || '').trim());
+  }
+
   const PATTERNS = [
     { text: 'document.cookie', rule: '941180' },
     { text: 'document.write', rule: '941180' },
@@ -27,6 +64,18 @@
       hintOf: (matched) => (/s\W{0,8}?e\W{0,8}?t[^>\w]$/i.test(matched) ? 'set' : ''),
       hints: { set: '예: vector<set<int>> 는 using S = set<int>; 로 이름을 붙여 vector<S> 처럼 쓰면 됩니다.' },
     },
+    {
+      java: true,
+      rule: 'help.acmicpc.net/language/info/java',
+      tip: '백준허브: 백준은 main 메소드가 있는 클래스의 이름이 Main 이어야 합니다. 제출하기 전에 이 클래스 이름을 Main 으로 바꿔 주세요.',
+      find: findMainClassName,
+    },
+    {
+      java: true,
+      rule: 'user-report',
+      tip: '백준허브: 백준에서는 package 선언을 지우고 제출해야 합니다(사용자 제보, 확인되지 않음). 제출하기 전에 이 줄을 지워 주세요.',
+      find: findPackage,
+    },
   ];
 
   const MAX_LENGTH = 64 * 1024;
@@ -39,19 +88,22 @@
   const INDEX_ATTR = 'data-bjh-pattern';
   const VARIANT_ATTR = 'data-bjh-variant';
 
-  const MATCHERS = PATTERNS.map((p) => p.regex || new RegExp(p.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'));
+  const MATCHERS = PATTERNS.map((p) => p.find || p.regex || new RegExp(p.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'));
 
   function log(...args) {
     if (DEBUG) console.log('[BaekjoonHub submitfilter]', ...args);
   }
 
-  function findHits(text) {
+  function findHits(text, java) {
     const hits = [];
     MATCHERS.forEach((re, index) => {
-      for (const m of text.matchAll(re)) {
+      const p = PATTERNS[index];
+      if (p.java && !java) return;
+      const found = p.find ? p.find(text) : [...text.matchAll(re)].map((m) => ({ start: m.index, end: m.index + m[0].length, matched: m[0] }));
+      for (const f of found) {
         if (hits.length > MAX_HITS) return;
-        const variant = PATTERNS[index].hintOf ? PATTERNS[index].hintOf(m[0]) : '';
-        hits.push({ index, variant, start: m.index, end: m.index + m[0].length });
+        const variant = p.hintOf ? p.hintOf(f.matched) : '';
+        hits.push({ index, variant, start: f.start, end: f.end });
       }
     });
     return hits.sort((a, b) => a.start - b.start);
@@ -122,7 +174,7 @@
           clearMarks();
           const text = cm.getValue();
           if (text.length > MAX_LENGTH) return;
-          const hits = findHits(text);
+          const hits = findHits(text, isJava());
           if (hits.length > MAX_HITS) return;
           for (const h of hits) {
             marks.push(
@@ -155,6 +207,7 @@
       }
     });
     document.addEventListener('mouseout', hideTip);
+    document.addEventListener('change', schedule); // 언어 셀렉트를 바꾸면 다시 본다
     run();
   }
 

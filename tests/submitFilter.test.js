@@ -4,6 +4,7 @@
 // 실제 submitfilter.js 를 vm 에 로드하고, 가짜 편집기·문서·시계로 표시와 툴팁을 본다.
 // 일부러 다루지 않는 것: 툴팁 문구(사람이 읽는 글), 편집기가 5초 안에 나타나지 않는 페이지,
 // 바꾼 뒤 250ms 뒤에 다시 찾기.
+// 파일 끝의 Java 경고(#384, #385) 테스트는 v1.7.3 의 것을 그대로 두어, 그 항목의 툴팁 문구와 언어를 바꾼 뒤 다시 찾기는 본다.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -64,7 +65,8 @@ function fakeElement() {
 }
 
 /** 편집기가 처음부터 있는 페이지에 submitfilter.js 를 로드한다. */
-function load(editor, { touched = [] } = {}) {
+function load(editor, { touched = [], language: initialLanguage = null } = {}) {
+  let language = initialLanguage;
   const listeners = [];
   const timers = [];
   let now = 0;
@@ -74,7 +76,12 @@ function load(editor, { touched = [] } = {}) {
     documentElement: { clientWidth: 1200 },
     addEventListener: (type, fn) => listeners.push({ type, fn }),
     createElement: () => fakeElement(),
-    querySelector: (sel) => (sel === '.CodeMirror' ? { CodeMirror: editor } : touchRecorder(sel, touched)),
+    querySelector: (sel) => {
+      if (sel === '.CodeMirror') return { CodeMirror: editor };
+      // 언어 셀렉트: language 가 null 이면 페이지에 없는 것으로 본다. 읽기만 한다.
+      if (/language/.test(sel)) return language === null ? null : { selectedOptions: [{ textContent: language }] };
+      return touchRecorder(sel, touched);
+    },
   };
   const context = vm.createContext({
     document,
@@ -94,7 +101,7 @@ function load(editor, { touched = [] } = {}) {
     }
   };
   const fire = (type, event) => listeners.filter((l) => l.type === type).forEach((l) => l.fn(event));
-  return { body, advance, fire, listeners };
+  return { body, advance, fire, listeners, setLanguage: (l) => (language = l) };
 }
 
 /** 편집기 안의 표시 요소 흉내: i 번째 표시의 속성을 그대로 달고 있다. */
@@ -166,7 +173,7 @@ test('폼과 버튼은 건드리지 않고 submit 을 가로채지 않는다', (
   const page = load(editor, { touched });
   page.advance(5000);
   assert.deepEqual(touched, []);
-  assert.deepEqual(page.listeners.map((l) => l.type).sort(), ['mouseout', 'mouseover']);
+  assert.deepEqual(page.listeners.map((l) => l.type).sort(), ['change', 'mouseout', 'mouseover']);
   assert.deepEqual(editor.handlers.map((h) => h[0]), ['change']);
 });
 
@@ -198,4 +205,89 @@ test('64KB 를 넘는 소스와 모든 항목을 합쳐 200곳을 넘는 히트�
     assert.equal(marksOf(source).length, count, name);
     assert.ok(Date.now() - t0 < 500, `${name}: ${Date.now() - t0}ms`);
   }
+});
+
+// #384, #385: 언어가 Java 일 때만 Main 클래스 이름과 package 선언을 표시한다.
+const javaMarks = (text, language = 'Java 11') => {
+  const editor = fakeEditor(text);
+  load(editor, { language });
+  return editor.live();
+};
+
+const MAIN_OK = 'import java.util.*;\npublic class Main {\n  public static void main(String[] args) {}\n}\n';
+
+test('Java: main 이 있는 클래스가 Main 이면 표시하지 않는다 (public 이 없어도)', () => {
+  assert.deepEqual(javaMarks(MAIN_OK), []);
+  assert.deepEqual(javaMarks('class Main {\n  public static void main(String[] a) {}\n}'), []);
+});
+
+test('Java: main 이 있는 클래스가 Solution 이면 그 클래스 이름에 표시한다', () => {
+  assert.deepEqual(javaMarks('public class Solution {\n  public static void main(String[] args) {}\n}'), [[[0, 13], [0, 21]]]);
+});
+
+test('Java: 안쪽 클래스가 아니라 main 을 품은 클래스에 표시하고, Main 이 main 을 품으면 다른 클래스는 두고 본다', () => {
+  assert.deepEqual(
+    javaMarks('class Solution {\n  static class Node {}\n  public static void main(String[] a) { if (a == null) { } }\n}'),
+    [[[0, 6], [0, 14]]]
+  );
+  assert.deepEqual(javaMarks('class Helper {\n  public static void main(String[] a) {}\n}\nclass Main {\n  public static void main(String[] a) {}\n}'), []);
+});
+
+test('Java: 주석과 문자열 안의 class·main 은 보지 않고, main 이 없으면 표시하지 않는다', () => {
+  assert.deepEqual(javaMarks('// class Foo { public static void main(String[] a) {}\npublic class Main {\n  String s = "class Bar {";\n}'), []);
+  assert.deepEqual(javaMarks('public class Solution {\n  /* public static void main(String[] a) */\n}'), []);
+});
+
+test('Java: package 선언이 있으면 그 줄(package 부터 ;)에 표시한다', () => {
+  assert.deepEqual(javaMarks('package com.example.app;\n' + MAIN_OK), [[[0, 0], [0, 24]]]);
+  assert.deepEqual(javaMarks('  package a.b ;\npublic class Main { public static void main(String[] a) {} }'), [[[0, 2], [0, 15]]]);
+});
+
+test('Java: 주석과 문자열 안의 package 는 표시하지 않는다', () => {
+  assert.deepEqual(javaMarks('// package foo;\n' + MAIN_OK), []);
+  assert.deepEqual(javaMarks('/*\npackage foo;\n*/\n' + MAIN_OK), []);
+  assert.deepEqual(javaMarks(MAIN_OK + '/* package foo; */'), []);
+});
+
+test('Java 가 아니거나 언어를 알 수 없으면 두 경고 모두 표시하지 않는다', () => {
+  const src = 'package foo;\npublic class Solution {\n  public static void main(String[] a) {}\n}';
+  for (const language of ['Python 3', 'C++17', 'JavaScript', 'Kotlin (JVM)', null]) {
+    assert.deepEqual(javaMarks(src, language), [], String(language));
+  }
+  assert.equal(javaMarks(src, 'Java 8 (OpenJDK)').length, 2);
+  assert.equal(javaMarks(src, 'Java 8').length, 2);
+});
+
+test('Java 경고의 툴팁은 정해 둔 글이고, 언어 셀렉트가 바뀌면 다시 찾는다', () => {
+  const editor = fakeEditor('package foo;\nclass Solution {\n  public static void main(String[] a) {}\n}');
+  const page = load(editor, { language: 'Python 3' });
+  assert.deepEqual(editor.live(), []);
+
+  page.setLanguage('Java 11');
+  page.fire('change', {});
+  page.advance(250);
+  assert.equal(editor.live().length, 2);
+  const tips = [0, 1].map((i) => {
+    page.fire('mouseover', { target: markElement(editor, i) });
+    const tip = page.body.children[page.body.children.length - 1];
+    assert.equal(tip.htmlSet, false);
+    return tip.textContent;
+  });
+  assert.deepEqual(tips, [
+    '백준허브: 백준에서는 package 선언을 지우고 제출해야 합니다(사용자 제보, 확인되지 않음). 제출하기 전에 이 줄을 지워 주세요.',
+    '백준허브: 백준은 main 메소드가 있는 클래스의 이름이 Main 이어야 합니다. 제출하기 전에 이 클래스 이름을 Main 으로 바꿔 주세요.',
+  ]);
+
+  page.setLanguage('C++17');
+  page.fire('change', {});
+  page.advance(250);
+  assert.deepEqual(editor.live(), []);
+});
+
+test('Java 검사도 최악 입력에서 빠르게 끝난다', () => {
+  const t0 = Date.now();
+  assert.deepEqual(javaMarks('package '.repeat(8000)), []);
+  assert.deepEqual(javaMarks('/*'.repeat(30000)), []);
+  assert.deepEqual(javaMarks('{'.repeat(60000)), []);
+  assert.ok(Date.now() - t0 < 1000, `${Date.now() - t0}ms`);
 });
