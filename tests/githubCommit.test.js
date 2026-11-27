@@ -48,7 +48,7 @@ function loadGithub(route) {
   vm.createContext(sandbox);
   for (const file of ['util.js', 'Github.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, 'scripts', file), 'utf8'), sandbox, { filename: file });
   // 클래스·const 는 전역 렉시컬 스코프에 있어 샌드박스 속성이 아니므로 꺼내 둔다
-  const exported = vm.runInContext('({ GitHub, GitHubApiError, GitHubTimeoutError, GITHUB_COMMIT_MAX_ATTEMPTS })', sandbox);
+  const exported = vm.runInContext('({ GitHub, GitHubApiError, GitHubTimeoutError, GITHUB_COMMIT_MAX_ATTEMPTS, GITHUB_TREE_CHUNK_ITEMS })', sandbox);
   return { sandbox, requests, delays, signals, ...exported };
 }
 
@@ -57,11 +57,11 @@ function loadGithub(route) {
  * beforePatch(n) 가 true 를 돌려주면 n 번째 PATCH 직전에 "다른 탭" 커밋이 끼어든다.
  */
 function makeServer({ beforePatch = () => false, patchError = null } = {}) {
-  const state = { head: 'c0', commits: { c0: { parents: [] } }, patches: 0 };
+  const state = { head: 'c0', commits: { c0: { parents: [] } }, patches: 0, trees: 0 };
   let seq = 0;
   const route = ({ url, method, body }) => {
     if (method === 'GET' && url === `${API}/git/ref/heads/main`) return jsonResponse(200, { ref: 'refs/heads/main', object: { sha: state.head } });
-    if (method === 'POST' && url === `${API}/git/trees`) return jsonResponse(201, { sha: 't', tree: [] });
+    if (method === 'POST' && url === `${API}/git/trees`) return jsonResponse(201, { sha: `t${state.trees += 1}`, tree: [] });
     if (method === 'POST' && url === `${API}/git/commits`) {
       seq += 1;
       state.commits[`n${seq}`] = { parents: body.parents };
@@ -159,6 +159,23 @@ describe('commitTreeItems — ref 는 fast-forward 로만 옮긴다', () => {
       return true;
     });
     assert.equal(server.state.patches, 1);
+  });
+
+  // #388: 전체 업로드가 모든 파일을 트리 생성 요청 하나에 실어, GitHub 가 10초 처리 제한으로 끊었다
+  // (2026-11-27 TIL2 실측: content 항목 3,600개 → 422 "Sorry, your request timed out").
+  test('항목이 많으면 앞 묶음의 tree 를 base 로 삼아 나눠 쌓고, 커밋은 마지막 tree 로 하나만 만든다', async () => {
+    const server = makeServer();
+    const gh = loadGithub(server.route);
+    const chunk = gh.GITHUB_TREE_CHUNK_ITEMS;
+    const items = Array.from({ length: 2 * chunk + 1 }, (_, i) => ({ path: `백준/${i}.py`, mode: '100644', type: 'blob', content: `${i}` }));
+    await new gh.GitHub(HOOK, 'token').commitTreeItems('main', items, 'msg');
+
+    const trees = gh.requests.filter((r) => r.url.endsWith('/git/trees'));
+    assert.deepEqual(trees.map((r) => [r.body.base_tree, r.body.tree.length]), [['c0', chunk], ['t1', chunk], ['t2', 1]]);
+    assert.deepEqual(trees.flatMap((r) => r.body.tree.map((item) => item.path)), items.map((item) => item.path), '빠지거나 겹치는 항목이 없다');
+    const commits = gh.requests.filter((r) => r.url.endsWith('/git/commits'));
+    assert.deepEqual(commits.map((r) => [r.body.tree, r.body.parents]), [['t3', ['c0']]]);
+    assert.deepEqual(server.state.history(), ['n1', 'c0']);
   });
 });
 

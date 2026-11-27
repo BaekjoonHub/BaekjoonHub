@@ -33,6 +33,10 @@ class GitHubRateLimitError extends GitHubApiError {
    재귀 트리 조회(응답이 레포 크기에 비례)는 길게 둔다. */
 const GITHUB_FETCH_TIMEOUT_MS = 30000;
 const GITHUB_TREE_TIMEOUT_MS = 120000;
+/* 트리 생성 요청 하나에 싣는 항목 수. GitHub 는 요청 하나를 10초 넘게 처리하면 끊고 422 "Sorry, your request timed out" 을 준다(#388).
+   content 를 직접 실은 항목은 하나에 3~4ms 가 걸린다(2026-11-27 TIL2 실측: 600개 3초, 1,800개 7초, 3,600개는 시간 초과).
+   shortcut: 항목 수로만 나눈다, 본문이 큰 묶음에서 다시 시간 초과가 보고되면 바이트 기준도 더한다. */
+const GITHUB_TREE_CHUNK_ITEMS = 300;
 /* ref 갱신이 fast-forward 가 아니라서 거절될 때(그 사이 다른 탭·기기가 커밋함) 최신 ref 위에 다시 커밋하는
    최대 시도 횟수와, 시도 사이 대기(ms, 시도 번호만큼 늘린다) */
 const GITHUB_COMMIT_MAX_ATTEMPTS = 4;
@@ -166,8 +170,14 @@ class GitHub {
       const { refSHA, ref } = await this.getReference(branch);
       const items = typeof treeItems === 'function' ? await treeItems(refSHA) : treeItems;
       if (items === null) return { commitSHA: null, parentSHA: refSHA };
-      const treeData = await this.createTree(refSHA, items);
-      const commitSHA = await this.createCommit(message, treeData.sha, refSHA);
+      // 전체 업로드처럼 항목이 많으면 앞 묶음의 tree 를 base 로 삼아 나눠 쌓는다. 커밋은 마지막 tree 로 하나만 만든다.
+      let treeSHA = refSHA;
+      let sent = 0;
+      do {
+        treeSHA = (await this.createTree(treeSHA, items.slice(sent, sent + GITHUB_TREE_CHUNK_ITEMS))).sha;
+        sent += GITHUB_TREE_CHUNK_ITEMS;
+      } while (sent < items.length);
+      const commitSHA = await this.createCommit(message, treeSHA, refSHA);
       try {
         await this.updateHead(ref, commitSHA);
         return { commitSHA, parentSHA: refSHA };

@@ -140,7 +140,7 @@ function loadBulk(respond, rows, submission = {}) {
   Object.assign(context, {
     document: fakeDocument(made),
     location: { reload: () => calls.push('reload') },
-    JSZip: class { constructor() { this.files = {}; } folder() { return { file: () => {} }; } },
+    JSZip: class { constructor() { this.files = {}; } file() {} },
     GitHub: class {
       async getReference() {}
       async getDefaultBranchOnRepo() { return 'main'; }
@@ -359,4 +359,36 @@ test('캐시 저장과 업로드 기록이 겹쳐도 둘 다 남는다', async (
   assert.equal(stored.stats.scode['10']?.data, SOURCE);
   assert.equal(await context.getStatsSHAfromPath('me/repo/백준/Bronze/1000. A＋B/A＋B.py'), 'sha-1');
   assert.equal(stored.stats.branches['me/repo'], 'main');
+});
+
+// #388: 커밋에 실패하면 올리려던 파일을 zip 으로 내려받는데, Windows 가 그 zip 을 "올바르지 않습니다" 라며 열지 못했다.
+// 2026-11-27 Windows 11 실측(레포의 JSZip 으로 만든 zip): 항목 경로가 UTF-8 로 259바이트까지는 열리고, 260바이트인 항목이 하나라도 있으면
+// zip 전체가 열리지 않는다. 한글 40자 제목이면 기본 경로가 265바이트다. (tar · 7-Zip 은 그 zip 을 읽는다)
+test('전체 업로드의 zip: 경로가 너무 긴 문제는 zip 안에서만 줄이고, 그 문제의 파일은 한 폴더에 둔다', () => {
+  const { context } = loadParsing(() => ({ status: 200, body: SOURCE }));
+  const JSZip = require('../library/jszip.min.js');
+  const bytes = (text) => Buffer.byteLength(text);
+  const zip = new JSZip();
+  const tree = [];
+  const title = '가'.repeat(40);
+  const long = `백준/Gold/12345. ${title}`;
+  const short = '백준/Bronze/1000. A＋B';
+  context.addBulkFiles(zip, tree, long, [[`${title}.py`, SOURCE], ['README.md', '# 긴 제목'], ['input1.txt', '1 2']]);
+  context.addBulkFiles(zip, tree, short, [['A＋B.py', SOURCE], ['README.md', '# A+B']]);
+
+  // 레포에 올리는 경로는 줄이지 않는다
+  assert.deepEqual(tree.map((item) => item.path), [`${long}/${title}.py`, `${long}/README.md`, `${long}/input1.txt`, `${short}/A＋B.py`, `${short}/README.md`]);
+  assert.equal(bytes(tree[0].path), 265);
+
+  const names = Object.keys(zip.files);
+  const files = names.filter((name) => !zip.files[name].dir);
+  assert.ok(names.every((name) => bytes(name) <= 259), `259바이트를 넘는 항목: ${names.filter((name) => bytes(name) > 259)}`);
+  assert.equal(files.length, 5);
+  // 긴 문제: 문제 번호와 확장자가 남고, 세 파일이 같은 폴더에 있다
+  const folder = path.posix.dirname(files[0]);
+  assert.match(files[0], /^백준\/Gold\/12345\. 가+\/가+\.py$/);
+  assert.deepEqual(files.slice(0, 3).map((name) => path.posix.dirname(name)), [folder, folder, folder]);
+  assert.deepEqual(files.slice(1, 3).map((name) => path.posix.basename(name)), ['README.md', 'input1.txt']);
+  // 짧은 문제는 레포 경로 그대로다
+  assert.deepEqual(files.slice(3), [`${short}/A＋B.py`, `${short}/README.md`]);
 });
