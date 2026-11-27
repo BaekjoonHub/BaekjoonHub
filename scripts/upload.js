@@ -83,10 +83,40 @@ async function upload(token, hook, { code, readme, directory, fileName, message,
  * @param {Array<[string, string]>} files - [파일 이름, 내용]
  */
 function addBulkFiles(zip, treeItems, directory, files) {
+  // 한 문제의 파일은 zip 에서도 한 폴더에 둔다: 하나라도 너무 길면 그 문제의 경로를 모두 같은 한도로 줄인다
+  const tooLong = files.some(([name]) => utf8Size(`${directory}/${name}`) > ZIP_PATH_MAX_BYTES);
   for (const [name, content] of files) {
-    zip.folder(directory).file(name, content);
-    treeItems.push({ path: `${directory}/${name}`, mode: '100644', type: 'blob', content });
+    const path = `${directory}/${name}`;
+    zip.file(tooLong ? shortenZipPath(path) : path, content);
+    treeItems.push({ path, mode: '100644', type: 'blob', content });
   }
+}
+
+/* Windows 의 압축 폴더는 zip 안 경로가 UTF-8 로 260바이트 이상인 항목이 하나라도 있으면 zip 전체를 올바르지 않다며 열지 않는다(#388).
+   한글·전각 문자·U+2005 는 글자당 3바이트라 문제 제목이 40자쯤이면 넘는다. */
+const ZIP_PATH_MAX_BYTES = 259;
+
+function utf8Size(text) {
+  return new TextEncoder().encode(text).length;
+}
+
+/**
+ * zip 안 경로를 Windows 가 열 수 있는 길이로 줄입니다. zip 안에서만 줄인다(레포에 올리는 경로는 그대로다).
+ * 조각(폴더·파일 이름)마다 같은 한도로 뒤를 자르고, 파일 이름의 확장자는 남긴다.
+ * shortcut: 줄인 폴더 이름이 겹치면 한 폴더로 합쳐진다(기본 경로는 문제 번호로 시작해 겹치지 않는다), 사용자 지정 경로에서 보고되면 번호를 붙인다.
+ * @param {string} path
+ * @returns {string}
+ */
+function shortenZipPath(path) {
+  const segments = path.split('/');
+  const limit = Math.floor((ZIP_PATH_MAX_BYTES - (segments.length - 1)) / segments.length);
+  return segments.map((segment, index) => {
+    const dot = index === segments.length - 1 ? segment.lastIndexOf('.') : -1;
+    const extension = dot > 0 ? segment.slice(dot) : '';
+    const stem = [...segment.slice(0, segment.length - extension.length)]; // 글자(코드 포인트) 단위로 자른다
+    while (stem.length > 0 && utf8Size(stem.join('') + extension) > limit) stem.pop();
+    return stem.join('') + extension;
+  }).join('/');
 }
 
 /* v1.7.2 까지는 백준이 요청을 막았을 때의 403 응답 본문(134바이트 HTML)을 풀이 코드로 올렸다. 그 파일의 git blob sha 다.

@@ -184,6 +184,7 @@ function bulkContext(results) {
   let progress = 0;
   const ctx = vm.createContext({
     console: { error() {}, warn() {} },
+    TextEncoder,
     JSZip: class { constructor() { this.files = {}; } folder() { return this; } file() { return this; } },
     GitHub: class {
       async getReference() {}
@@ -211,7 +212,7 @@ const validResult = { status: 'success', data: { problemId: '1959', directory: '
 test('addBulkFiles 는 같은 파일을 zip 과 커밋 트리 양쪽에 같은 경로로 넣는다', () => {
   const zipped = [];
   const tree = [];
-  const zip = { folder: (dir) => ({ file: (name, content) => zipped.push([`${dir}/${name}`, content]) }) };
+  const zip = { file: (name, content) => zipped.push([name, content]) };
   bulkContext([]).ctx.addBulkFiles(zip, tree, 'SWEA/D2/1959', [['a.py', 'x'], ['README.md', 'y']]);
   assert.deepEqual(zipped, [['SWEA/D2/1959/a.py', 'x'], ['SWEA/D2/1959/README.md', 'y']]);
   assert.deepEqual(tree.map((item) => [item.path, item.content, item.mode, item.type]), zipped.map((file) => [...file, '100644', 'blob']));
